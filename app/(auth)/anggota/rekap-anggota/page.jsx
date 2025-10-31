@@ -25,7 +25,6 @@ import { Button } from "@/components/ui/button";
 import { ClipLoader } from "react-spinners";
 import Image from "next/image";
 import * as XLSX from "xlsx";
-import TabNavigation from "@/app/_components/TabNavigation";
 
 const NotificationPopup = ({ type, message, onClose }) => {
   useEffect(() => {
@@ -211,7 +210,9 @@ function RekapAnggota() {
   const now = new Date();
   const [selectedBulan, setSelectedBulan] = useState(now.getMonth() + 1);
   const [selectedTahun, setSelectedTahun] = useState(now.getFullYear());
-
+  // State untuk tagihan bulan
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const filteredMonths = selectedTahun === 2025 ? months.slice(4) : months;
 
   useEffect(() => {
@@ -356,34 +357,48 @@ function RekapAnggota() {
     setNamaAnggotaInput("");
 
     try {
-      const response = await GlobalApi.getNominalAggregatedData(
-        cabang.kecamatan || ""
+      const bulan = selectedBulan;
+      const tahun = selectedTahun;
+
+      // Menggunakan getAllByNominal instead of getNominalAggregatedData
+      const response = await GlobalApi.getAllByNominal(
+        cabang.kecamatan || "",
+        bulan,
+        tahun
       );
 
-      const totalRow = response.find(
-        (item) => item.cabang === "Total" && !item.unitKerja
+      // Karena getAllByNominal tidak mengembalikan baris "Total",
+      // kita proses data dan hitung manual
+      const processed = processData(response);
+
+      // Hitung grand total manual dari data yang diproses
+      const grandTotals = processed.reduce(
+        (acc, group) => {
+          acc.jumlah += group.jumlah;
+          acc.pgri += group.pgri;
+          acc.sanduka += group.sanduka;
+          acc.daspen += group.daspen;
+          acc.derap += group.derap;
+          acc.kalender += group.kalender;
+          acc.lainLain += group.lainLain;
+          acc.total += group.total;
+          return acc;
+        },
+        {
+          jumlah: 0,
+          pgri: 0,
+          sanduka: 0,
+          daspen: 0,
+          derap: 0,
+          kalender: 0,
+          lainLain: 0,
+          total: 0,
+        }
       );
-      const regularData = response.filter(
-        (item) => !(item.cabang === "Total" && !item.unitKerja)
-      );
 
-      if (totalRow) {
-        setGrandTotals({
-          jumlah: parseInt(totalRow.jumlah) || 0,
-          pgri: parseFloat(totalRow.pgri) || 0,
-          sanduka: parseFloat(totalRow.sanduka) || 0,
-          daspen: parseFloat(totalRow.daspen) || 0,
-          derap: parseFloat(totalRow.derap) || 0,
-          kalnder: parseFloat(totalRow.kalender) || 0,
-          daspen: parseFloat(totalRow.daspen) || 0,
-          totalIuran: parseFloat(totalRow.totalIuran) || 0,
-        });
-      }
-
-      setData(regularData);
-      setOriginalRekapData(regularData);
-
-      const processed = processData(regularData);
+      setGrandTotals(grandTotals);
+      setData(response);
+      setOriginalRekapData(response);
       setGroupedData(processed);
 
       const filtered = unitKerjaList.filter(
@@ -434,7 +449,7 @@ function RekapAnggota() {
     const uniqueMap = new Map();
 
     rawData.forEach((item) => {
-      const key = `${item.namaAnggota}-${item.npaPgri}`;
+      const key = `${item.namaAnggota}-${item.npa}`;
       if (!uniqueMap.has(key)) {
         uniqueMap.set(key, item);
       }
@@ -457,51 +472,46 @@ function RekapAnggota() {
           daspen: 0,
           derap: 0,
           kalender: 0,
-          sumbangan: 0,
-          totalIuran: 0,
-          nomorRekening: 0,
-          lastUpdatedAtIuranAnggota: "",
-          sumbanganDetail: {
-            "Cetak Kartu Biasa": 25000,
-            "IURAN HUT 80 PGRI": 30000,
-          },
+          lainLain: 0,
+          total: 0,
         };
       }
 
+      // Hitung tiap anggota
+      const pgri = (item.defaultPgri || 0) + (item.manualPgri || 0);
+      const sanduka = (item.defaultSanduka || 0) + (item.manualSanduka || 0);
+      const daspen = (item.defaultDaspen || 0) + (item.manualDaspen || 0);
+      const derap = (item.defaultDerap || 0) + (item.manualDerap || 0);
+      const kalender = (item.defaultKalender || 0) + (item.manualKalender || 0);
+      const lainLain = (item.defaultLainLain || 0) + (item.manualLainLain || 0);
+      const total = item.total || 0;
+
       acc[unitKey].members.push({
         namaAnggota: item.namaAnggota,
-        npaPgri: item.npaPgri,
-        nomorRekening: item.nomorRekening,
         nip: item.nip,
-        statusPotongan: item.statusPotongan,
-        potongan: item.potongan,
-        pgri: parseFloat(item.pgri) || 0,
-        sanduka: parseFloat(item.sanduka) || 0,
-        daspen: parseFloat(item.daspen) || 0,
-        derap: parseFloat(item.derap) || 0,
-        kalender: parseFloat(item.kalender) || 0,
-        sumbangan: parseFloat(item.sumbangan) || 0,
-        totalIuran: parseFloat(item.totalIuran) || 0,
-        lastUpdatedAtIuranAnggota: item.lastUpdatedAtIuranAnggota,
+        npa: item.npa,
+        nomorRekening: item.nomorRekening,
+        cabang: item.cabang,
+        unitKerja: item.unitKerja,
+        pgri,
+        sanduka,
+        daspen,
+        derap,
+        kalender,
+        lainLain,
+        total,
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
       });
 
       acc[unitKey].jumlah += 1;
-      acc[unitKey].pgri += parseFloat(item.pgri) || 0;
-      acc[unitKey].sanduka += parseFloat(item.sanduka) || 0;
-      acc[unitKey].daspen += parseFloat(item.daspen) || 0;
-      acc[unitKey].derap += parseFloat(item.derap) || 0;
-      acc[unitKey].kalender += parseFloat(item.kalender) || 0;
-      acc[unitKey].sumbangan += parseFloat(item.sumbangan) || 0;
-      acc[unitKey].totalIuran += parseFloat(item.totalIuran) || 0;
-
-      if (Array.isArray(item.iuranSumbanganList)) {
-        item.iuranSumbanganList.forEach((s) => {
-          if (!acc[unitKey].sumbanganDetail[s.jenis]) {
-            acc[unitKey].sumbanganDetail[s.jenis] = 0;
-          }
-          acc[unitKey].sumbanganDetail[s.jenis] += s.jumlah;
-        });
-      }
+      acc[unitKey].pgri += pgri;
+      acc[unitKey].sanduka += sanduka;
+      acc[unitKey].daspen += daspen;
+      acc[unitKey].derap += derap;
+      acc[unitKey].kalender += kalender;
+      acc[unitKey].lainLain += lainLain;
+      acc[unitKey].total += total;
 
       return acc;
     }, {});
@@ -522,50 +532,43 @@ function RekapAnggota() {
       if (storedRole === "ADMIN" && storedCabang) {
         setIsAdmin(true);
         setSelectedCabang(storedCabang);
-        response = await GlobalApi.getNominalAggregatedData(
-          storedCabang,
-          null,
-          null,
-          bulan,
-          tahun
-        );
+        response = await GlobalApi.getAllByNominal(storedCabang, bulan, tahun);
       } else {
-        response = await GlobalApi.getNominalAggregatedData(
-          "",
-          null,
-          null,
-          bulan,
-          tahun
-        );
-      }
-      const totalRow = response.find(
-        (item) => item.cabang === "Total" && !item.unitKerja
-      );
-      const regularData = response.filter(
-        (item) => !(item.cabang === "Total" && !item.unitKerja)
-      );
-
-      if (totalRow) {
-        setGrandTotals({
-          jumlah: parseInt(totalRow.jumlah) || 0,
-          pgri: parseFloat(totalRow.pgri) || 0,
-          sanduka: parseFloat(totalRow.sanduka) || 0,
-          daspen: parseFloat(totalRow.daspen) || 0,
-          derap: parseFloat(totalRow.derap) || 0,
-          kalender: parseFloat(totalRow.kalender) || 0,
-          lainlain: parseFloat(totalRow.lainlain) || 0,
-          totalIuran: parseFloat(totalRow.totalIuran) || 0,
-        });
+        response = await GlobalApi.getAllByNominal("", bulan, tahun);
       }
 
-      const processed = processData(regularData);
+      // Karena struktur baru tidak punya baris "Total", hitung manual nanti dari data
+      const processed = processData(response);
+
+      // Hitung grand total manual
+      const grandTotals = processed.reduce(
+        (acc, group) => {
+          acc.jumlah += group.jumlah;
+          acc.pgri += group.pgri;
+          acc.sanduka += group.sanduka;
+          acc.daspen += group.daspen;
+          acc.derap += group.derap;
+          acc.kalender += group.kalender;
+          acc.lainLain += group.lainLain;
+          acc.total += group.total;
+          return acc;
+        },
+        {
+          jumlah: 0,
+          pgri: 0,
+          sanduka: 0,
+          daspen: 0,
+          derap: 0,
+          kalender: 0,
+          lainLain: 0,
+          total: 0,
+        }
+      );
+
+      setGrandTotals(grandTotals);
       setGroupedData(processed);
-      setData(regularData);
-      setOriginalRekapData(regularData);
-      // const allUnits = new Set(
-      //   processed.map((group) => group.unitKerja || "Tidak Ada Unit Kerja")
-      // );
-      // setExpandedRows(allUnits);
+      setData(response);
+      setOriginalRekapData(response);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching initial data:", error);
@@ -806,7 +809,7 @@ function RekapAnggota() {
     setIsModalOpen(false);
 
     try {
-      const response = await GlobalApi.cekNpaList([member.npaPgri]);
+      const response = await GlobalApi.cekNpaList([member.npa]);
 
       setSelectedMember(member);
       setDataNpa(response[0]);
@@ -822,7 +825,7 @@ function RekapAnggota() {
       }
 
       try {
-        const iuranResponse = await GlobalApi.getIuranAnggota(member.npaPgri);
+        const iuranResponse = await GlobalApi.getIuranAnggota(member.npa);
         setDataIuran(iuranResponse);
       } catch (error) {
         console.error("Gagal mengambil data iuran anggota:", error);
@@ -908,6 +911,12 @@ function RekapAnggota() {
     setNotifDaspen(null);
     setNomorRekening("");
 
+    // Reset state untuk data manual
+    setNominalBaruList({});
+    setResetKeys([]);
+    setAddedCategories([]);
+    setManualInputs({});
+
     try {
       const fileResponse = await GlobalApi.getFileByNip(member.nip);
       if (fileResponse?.sumbangan) {
@@ -923,7 +932,7 @@ function RekapAnggota() {
     }
 
     try {
-      const response = await GlobalApi.cekNpaList([member.npaPgri]);
+      const response = await GlobalApi.cekNpaList([member.npa]);
       setSelectedMember(member);
       setDataNpa(response[0]);
 
@@ -938,16 +947,16 @@ function RekapAnggota() {
       }
 
       try {
-        const allIuran = await GlobalApi.getIuranAnggotaAll(
-          selectedBulan,
-          selectedTahun
-        );
+        // PERBAIKAN: Gunakan getAllByNominal instead of getIuranAnggotaAll
+        const allIuran = await GlobalApi.getAllByNominal();
 
+        // Filter by NPA
         const filteredByNpa = allIuran.filter(
-          (item) => item.npa === member.npaPgri
+          (item) => item.npa === member.npa
         );
 
         if (filteredByNpa.length > 0) {
+          // Sort by tanggal terbaru
           const sortedByDate = filteredByNpa.sort((a, b) => {
             const dateA = new Date(...a.createdAt);
             const dateB = new Date(...b.createdAt);
@@ -955,7 +964,7 @@ function RekapAnggota() {
           });
 
           const latestData = sortedByDate[0];
-          // console.log("🆕 Latest Iuran Data:", latestData);
+          console.log("🆕 Latest Iuran Data dari getAllByNominal:", latestData);
 
           setDataIuran(latestData);
 
@@ -965,13 +974,56 @@ function RekapAnggota() {
           if (latestData?.nomorRekening) {
             setNomorRekening(latestData.nomorRekening);
           }
+
+          // --- PERBAIKAN: Set manual values dari API ke nominalBaruList dengan nama yang sama
+          const manualValues = {};
+
+          // Map manual values dari API ke format yang digunakan di frontend - SAMAKAN NAMA
+          if (latestData.manualPgri && latestData.manualPgri > 0) {
+            manualValues.manualPgri = latestData.manualPgri;
+          }
+          if (latestData.manualSanduka && latestData.manualSanduka > 0) {
+            manualValues.manualSanduka = latestData.manualSanduka;
+          }
+          if (latestData.manualDaspen && latestData.manualDaspen > 0) {
+            manualValues.manualDaspen = latestData.manualDaspen;
+          }
+          if (latestData.manualDerap && latestData.manualDerap > 0) {
+            manualValues.manualDerap = latestData.manualDerap;
+          }
+          if (latestData.manualKalender && latestData.manualKalender > 0) {
+            manualValues.manualKalender = latestData.manualKalender;
+          }
+          if (latestData.manualLainLain && latestData.manualLainLain > 0) {
+            manualValues.manualLainLain = latestData.manualLainLain;
+          }
+
+          console.log("🔄 Manual values dari API:", manualValues);
+          setNominalBaruList(manualValues);
+
+          // --- Set tagihanUntukBulan untuk dropdown
+          if (
+            latestData.tagihanUntukBulan &&
+            Array.isArray(latestData.tagihanUntukBulan)
+          ) {
+            const [year, month, day] = latestData.tagihanUntukBulan;
+            setSelectedYear(year);
+            setSelectedMonth(month);
+          } else {
+            // Default ke bulan dan tahun sekarang
+            const now = new Date();
+            setSelectedYear(now.getFullYear());
+            setSelectedMonth(now.getMonth() + 1);
+          }
         } else {
-          console.warn(
-            "⚠️ Tidak ditemukan data iuran untuk NPA:",
-            member.npaPgri
-          );
+          console.warn("⚠️ Tidak ditemukan data iuran untuk NPA:", member.npa);
           setDataIuran(null);
           setIdIuran(null);
+
+          // Set default bulan dan tahun
+          const now = new Date();
+          setSelectedYear(now.getFullYear());
+          setSelectedMonth(now.getMonth() + 1);
         }
       } catch (error) {
         console.error("❌ Gagal mengambil data iuran anggota:", error);
@@ -979,7 +1031,7 @@ function RekapAnggota() {
         if (error.response?.status === 500) {
           console.warn("⚠️ Server error 500: menggunakan fallback data");
           const pgriData = JSON.parse(sessionStorage.getItem("PGRIData"));
-          // console.log("📦 Fallback PGRI Data:", pgriData);
+          console.log("📦 Fallback PGRI Data:", pgriData);
 
           const totalIuranPGRI =
             parseInt(pgriData.pb || 0) +
@@ -988,21 +1040,26 @@ function RekapAnggota() {
             parseInt(pgriData.cabang || 0);
 
           const fallbackData = {
-            iuranAnggota: totalIuranPGRI,
-            manualIuranAnggota: 0,
-            totalIuranAnggota: totalIuranPGRI,
-            iuranSanduka: parseInt(pgriData.sanduka || 0),
-            manualIuranSanduka: 0,
-            totalIuranSanduka: parseInt(pgriData.sanduka || 0),
-            iuranDaspen: daspenFromMember,
-            manualIuranDaspen: 0,
-            totalIuranDaspen: daspenFromMember,
+            defaultPgri: totalIuranPGRI,
+            manualPgri: 0,
+            pgri: totalIuranPGRI,
+            defaultSanduka: parseInt(pgriData.sanduka || 0),
+            manualSanduka: 0,
+            sanduka: parseInt(pgriData.sanduka || 0),
+            defaultDaspen: daspenFromMember,
+            manualDaspen: 0,
+            daspen: daspenFromMember,
           };
 
-          // console.log("📦 Fallback Data Iuran:", fallbackData);
+          console.log("📦 Fallback Data Iuran:", fallbackData);
 
           setDataIuran(fallbackData);
           setIdIuran(null);
+
+          // Set default bulan dan tahun untuk fallback
+          const now = new Date();
+          setSelectedYear(now.getFullYear());
+          setSelectedMonth(now.getMonth() + 1);
         }
       }
       setIsPopupVisible(true);
@@ -1012,7 +1069,7 @@ function RekapAnggota() {
   };
 
   const handleTagihanClick = async (member) => {
-    const npa = member?.npaPgri?.trim();
+    const npa = member?.npa?.trim();
 
     if (!npa) {
       console.error("NPA tidak ditemukan!");
@@ -1036,26 +1093,38 @@ function RekapAnggota() {
   const groupIuranData = (dataIuran) => {
     if (!dataIuran) return [];
 
-    const keys = ["Anggota", "Daspen", "Derap", "Kalender", "Sanduka"];
+    // Mapping key untuk match dengan response getAllByNominal
+    const keyMap = [
+      { key: "anggota", apiKey: "Pgri" },
+      { key: "sanduka", apiKey: "Sanduka" },
+      { key: "daspen", apiKey: "Daspen" },
+      { key: "derap", apiKey: "Derap" },
+      { key: "kalender", apiKey: "Kalender" },
+      { key: "lainlain", apiKey: "LainLain" },
+    ];
 
-    let result = keys
-      .map((key) => {
-        const keySuffix = key === "Anggota" ? "Anggota" : key;
+    let result = keyMap
+      .map(({ key, apiKey }) => {
         return {
           key,
-          iuran: dataIuran[`iuran${keySuffix}`],
-          manual: dataIuran[`manualIuran${keySuffix}`],
-          total: dataIuran[`totalIuran${keySuffix}`],
+          iuran: dataIuran[`default${apiKey}`] || 0,
+          manual: dataIuran[`manual${apiKey}`] || 0,
+          total: dataIuran[`${apiKey.toLowerCase()}`] || 0,
         };
       })
-      .filter((item) => item.iuran !== undefined);
+      .filter(
+        (item) =>
+          item.iuran !== undefined && (item.iuran > 0 || item.manual > 0)
+      );
 
+    // Handle iuranSumbanganList
     if (Array.isArray(dataIuran.iuranSumbanganList)) {
       const sumbanganItems = dataIuran.iuranSumbanganList.map((sumb) => ({
         key: sumb.jenis,
         iuran: sumb.jumlah,
         manual: 0,
         total: sumb.jumlah,
+        isSumbanganDetail: true,
       }));
 
       result = [...result, ...sumbanganItems];
@@ -1067,19 +1136,20 @@ function RekapAnggota() {
   useEffect(() => {
     if (dataIuran) {
       const defaultNominalBaru = {};
-      const keys = [
-        "Anggota",
-        "Daspen",
-        "Derap",
-        "Kalender",
-        "Sanduka",
-        "Sumbangan",
+
+      // Mapping key untuk match dengan response getAllByNominal
+      const keyMap = [
+        { frontendKey: "anggota", apiKey: "Pgri" },
+        { frontendKey: "sanduka", apiKey: "Sanduka" },
+        { frontendKey: "daspen", apiKey: "Daspen" },
+        { frontendKey: "derap", apiKey: "Derap" },
+        { frontendKey: "kalender", apiKey: "Kalender" },
+        { frontendKey: "lainlain", apiKey: "LainLain" },
       ];
 
-      keys.forEach((key) => {
-        const suffix = key === "Anggota" ? "Anggota" : key;
-        const manualValue = dataIuran[`manualIuran${suffix}`] || 0;
-        defaultNominalBaru[key] = manualValue;
+      keyMap.forEach(({ frontendKey, apiKey }) => {
+        const manualValue = dataIuran[`manual${apiKey}`] || 0;
+        defaultNominalBaru[frontendKey] = manualValue;
       });
 
       setNominalBaruList(defaultNominalBaru);
@@ -1308,7 +1378,7 @@ function RekapAnggota() {
     const payload = {
       namaAnggota: dataNpa.namaLengkap,
       tempatTanggalLahir: tempatTanggalLahir,
-      npa: dataNpa.npaPgri,
+      npa: dataNpa.npa,
       nip: dataNpa.nip || "-",
       nik: dataNpa.nik,
       cabang: dataNpa.cabang,
@@ -1385,16 +1455,18 @@ function RekapAnggota() {
     if (!dataNpa || !idIuran) return;
 
     try {
+      // Format tanggal untuk tagihanUntukBulan (YYYY-MM-DD)
+      const tagihanUntukBulan = `${selectedYear}-${selectedMonth
+        .toString()
+        .padStart(2, "0")}-01`;
+
       const payload = {
         namaAnggota: dataNpa.namaLengkap,
-        tempatTanggalLahir: `${dataNpa.tempatLahir}, ${dataNpa.tanggalLahir?.[2]}-${dataNpa.tanggalLahir?.[1]}-${dataNpa.tanggalLahir?.[0]}`,
-        npa: dataNpa.npaPgri,
         nip: dataNpa.nip,
-        nik: dataNpa.nik,
+        npa: dataNpa.npa,
+        nomorRekening: nomorRekening || null,
         cabang: dataNpa.cabang,
         unitKerja: dataNpa.unitKerja,
-        jabatan: dataNpa.jabatan,
-        nomorRekening: nomorRekening || "",
       };
 
       const capitalizeFirstLetter = (string) =>
@@ -1407,60 +1479,138 @@ function RekapAnggota() {
         const manual = isReset ? 0 : parseInt(nominalBaruList[key] || 0);
         const total = iuran + manual;
 
-        payload[`iuran${capitalizeFirstLetter(key)}`] = iuran || 0;
-        payload[`manualIuran${capitalizeFirstLetter(key)}`] = manual || 0;
-        payload[`totalIuran${capitalizeFirstLetter(key)}`] = total || 0;
+        if (key === "anggota") {
+          payload.iuranAnggota = iuran;
+          payload.manualIuranAnggota = manual;
+          payload.totalIuranAnggota = total;
+        } else if (key === "sanduka") {
+          payload.iuranSanduka = iuran;
+          payload.manualIuranSanduka = manual;
+          payload.totalIuranSanduka = total;
+        } else if (key === "daspen") {
+          payload.iuranDaspen = iuran;
+          payload.manualIuranDaspen = manual;
+          payload.totalIuranDaspen = total;
+        } else if (key === "derap") {
+          payload.iuranDerap = iuran;
+          payload.manualIuranDerap = manual;
+          payload.totalIuranDerap = total;
+        } else if (key === "kalender") {
+          payload.iuranKalender = iuran;
+          payload.manualIuranKalender = manual;
+          payload.totalIuranKalender = total;
+        }
       });
 
-      // 🔹 Update iuranSumbanganList
-      payload.iuranSumbanganList = dataIuran.iuranSumbanganList.map((item) => {
-        const tambahan = nominalBaruList[item.jenis] || 0;
+      const initialSumbanganList = dataIuran?.iuranSumbanganList || [];
+      let updatedSumbanganList = [...initialSumbanganList];
+      let manualSumbanganTotal = 0;
 
-        // kalau item masuk resetKeys → selalu paksa 0
-        const jumlahBaru = resetKeys.includes(item.jenis)
-          ? 0
-          : item.jumlah + tambahan;
+      addedCategories.forEach((category) => {
+        const value = parseInt(newValues[category.key] || 0);
+        const manualValue = parseInt(manualInputs[category.key] || 0);
+        const totalValue = value + manualValue;
 
-        // console.log(
-        //   `Sumbangan: ${item.jenis}, Awal: ${
-        //     item.jumlah
-        //   }, Tambahan: ${tambahan}, Reset: ${resetKeys.includes(
-        //     item.jenis
-        //   )}, Akhir: ${jumlahBaru}`
-        // );
+        if (totalValue > 0) {
+          const jenis = category.keterangan || category.label;
 
-        return {
-          ...item,
-          jumlah: jumlahBaru,
-        };
+          const existingIndex = updatedSumbanganList.findIndex(
+            (item) => item.jenis === jenis
+          );
+
+          if (existingIndex === -1) {
+            updatedSumbanganList.push({
+              jenis: jenis,
+              jumlah: totalValue,
+            });
+          } else {
+            updatedSumbanganList[existingIndex].jumlah = totalValue;
+          }
+          manualSumbanganTotal += manualValue;
+        }
       });
 
-      // 🔹 Hitung total iuran sumbangan dari list yang sudah diupdate
-      payload.totalIuranSumbangan = payload.iuranSumbanganList.reduce(
-        (acc, curr) => acc + curr.jumlah,
-        0
+      Object.keys(nominalBaruList).forEach((key) => {
+        const nominalValue = parseInt(nominalBaruList[key] || 0);
+
+        if (
+          nominalValue > 0 &&
+          key !== "pgri" &&
+          key !== "sanduka" &&
+          key !== "daspen" &&
+          key !== "derap" &&
+          key !== "kalender"
+        ) {
+          const category = addedCategories.find((cat) => cat.key === key);
+          const jenis = category?.keterangan || category?.label || key;
+
+          const existingIndex = updatedSumbanganList.findIndex(
+            (item) => item.jenis === jenis
+          );
+
+          if (existingIndex === -1) {
+            updatedSumbanganList.push({
+              jenis: jenis,
+              jumlah: nominalValue,
+            });
+          } else {
+            updatedSumbanganList[existingIndex].jumlah += nominalValue;
+          }
+          manualSumbanganTotal += nominalValue;
+        }
+      });
+
+      updatedSumbanganList = updatedSumbanganList.filter(
+        (item) => item.jumlah > 0
       );
 
-      // console.log("Data yang akan diupdate:", payload);
+      payload.iuranSumbanganList = updatedSumbanganList;
 
-      await GlobalApi.putIuranAnggota(idIuran, payload);
+      payload.manualIuranSumbangan = manualSumbanganTotal;
+
+      const totalSumbangan = updatedSumbanganList.reduce(
+        (acc, curr) => acc + (curr.jumlah || 0),
+        0
+      );
+      payload.totalIuranSumbangan = totalSumbangan;
+
+      // console.log("=== DEBUG PAYLOAD ===");
+      // console.log("nominalBaruList:", nominalBaruList);
+      // console.log("manualIuranAnggota:", payload.manualIuranAnggota);
+      // console.log("manualIuranSanduka:", payload.manualIuranSanduka);
+      // console.log("manualIuranDaspen:", payload.manualIuranDaspen);
+      // console.log("Payload to update:", payload);
+
+      await GlobalApi.updateByNominalByBulan(
+        dataNpa.nip,
+        tagihanUntukBulan,
+        payload
+      );
+
       await fetchInitialData();
 
       setNotification({
         type: "success",
-        message: "Data berhasil diupdate!",
+        message: `Data berhasil diupdate untuk bulan ${selectedMonth
+          .toString()
+          .padStart(2, "0")}-${selectedYear}!`,
       });
+
       setIsPopupVisible(false);
       setResetKeys([]);
       setAddedCategories([]);
-      setManualInputs([]);
+      setNewValues({});
+      setManualInputs({});
+      setNominalBaruList({});
       setSelectedKategori("");
+      setSelectedKeterangan("");
       setLastUpdatedMemberNip(dataNpa.nip);
     } catch (error) {
       console.error("Gagal update data:", error);
+      console.error("Error details:", error.response?.data);
       setNotification({
         type: "error",
-        message: "Gagal update data.",
+        message: "Gagal update data. Periksa format data.",
       });
     }
   };
@@ -1645,7 +1795,8 @@ function RekapAnggota() {
 
       let anggotaAll = [];
       try {
-        const allData = await GlobalApi.getIuranAnggotaAll(bulan, tahun);
+        // Menggunakan getAllByNominal untuk mendapatkan data lengkap
+        const allData = await GlobalApi.getAllByNominal("", bulan, tahun);
 
         const latestPerNpa = Object.values(
           allData.reduce((acc, item) => {
@@ -1728,7 +1879,7 @@ function RekapAnggota() {
                   return members
                     ?.map((member, memberIndex) => {
                       const nomorRekeningFinal =
-                        npaToRekeningMap[member.npaPgri] ||
+                        npaToRekeningMap[member.npa] ||
                         member.nomorRekening ||
                         "-";
                       return `
@@ -1774,10 +1925,10 @@ function RekapAnggota() {
                               member.kalender || 0
                             ).toLocaleString("id-ID")}</td>
                             <td>Rp. ${parseInt(
-                              member.sumbangan || 0
+                              member.lainLain || 0
                             ).toLocaleString("id-ID")}</td>
                             <td>Rp. ${parseInt(
-                              member.totalIuran || 0
+                              member.total || 0
                             ).toLocaleString("id-ID")}</td>
                           </tr>
                         `;
@@ -1826,13 +1977,13 @@ function RekapAnggota() {
                 <td>
                   Rp. ${groupedData
                     .flatMap((g) => g.members || [])
-                    .reduce((sum, m) => sum + parseInt(m.lainlain || 0), 0)
+                    .reduce((sum, m) => sum + parseInt(m.lainLain || 0), 0)
                     .toLocaleString("id-ID")}
                 </td>
                 <td>
                   Rp. ${groupedData
                     .flatMap((g) => g.members || [])
-                    .reduce((sum, m) => sum + parseInt(m.totalIuran || 0), 0)
+                    .reduce((sum, m) => sum + parseInt(m.total || 0), 0)
                     .toLocaleString("id-ID")}
                 </td>
               </tr>
@@ -2050,8 +2201,8 @@ function RekapAnggota() {
       const bulan = selectedBulan || new Date().getMonth() + 1;
       const tahun = selectedTahun || new Date().getFullYear();
 
-      // Ambil semua data dari API
-      const allData = await GlobalApi.getIuranAnggotaAll(bulan, tahun);
+      // Ambil semua data dari API getAllByNominal
+      const allData = await GlobalApi.getAllByNominal("", bulan, tahun);
 
       if (!allData || allData.length === 0) {
         alert("Tidak ada data anggota ditemukan untuk bulan & tahun ini.");
@@ -2160,17 +2311,14 @@ function RekapAnggota() {
 
       let no = 1;
       latestPerNpa.forEach((item) => {
-        const pgri = parseInt(item.totalIuranAnggota || item.iuranAnggota || 0);
-        const sanduka = parseInt(
-          item.totalIuranSanduka || item.iuranSanduka || 0
-        );
-        const daspen = parseInt(item.totalIuranDaspen || item.iuranDaspen || 0);
-        const derap = parseInt(item.totalIuranDerap || item.iuranDerap || 0);
-        const kalender = parseInt(
-          item.totalIuranKalender || item.iuranKalender || 0
-        );
-        const lain = parseInt(item.totalIuranSumbangan || 0);
-        const total = pgri + sanduka + daspen + derap + kalender + lain;
+        // Gunakan nilai langsung dari response
+        const pgri = parseInt(item.pgri || 0);
+        const sanduka = parseInt(item.sanduka || 0);
+        const daspen = parseInt(item.daspen || 0);
+        const derap = parseInt(item.derap || 0);
+        const kalender = parseInt(item.kalender || 0);
+        const lainLain = parseInt(item.lainLain || 0);
+        const total = parseInt(item.total || 0);
 
         excelData.push([
           no++,
@@ -2184,44 +2332,40 @@ function RekapAnggota() {
           daspen,
           derap,
           kalender,
-          lain,
+          lainLain,
           total,
         ]);
       });
 
       // total keseluruhan
       const totalPgri = latestPerNpa.reduce(
-        (sum, g) => sum + parseInt(g.totalIuranAnggota || g.iuranAnggota || 0),
+        (sum, g) => sum + parseInt(g.pgri || 0),
         0
       );
       const totalSanduka = latestPerNpa.reduce(
-        (sum, g) => sum + parseInt(g.totalIuranSanduka || g.iuranSanduka || 0),
+        (sum, g) => sum + parseInt(g.sanduka || 0),
         0
       );
       const totalDaspen = latestPerNpa.reduce(
-        (sum, g) => sum + parseInt(g.totalIuranDaspen || g.iuranDaspen || 0),
+        (sum, g) => sum + parseInt(g.daspen || 0),
         0
       );
       const totalDerap = latestPerNpa.reduce(
-        (sum, g) => sum + parseInt(g.totalIuranDerap || g.iuranDerap || 0),
+        (sum, g) => sum + parseInt(g.derap || 0),
         0
       );
       const totalKalender = latestPerNpa.reduce(
-        (sum, g) =>
-          sum + parseInt(g.totalIuranKalender || g.iuranKalender || 0),
+        (sum, g) => sum + parseInt(g.kalender || 0),
         0
       );
-      const totalLainlain = latestPerNpa.reduce(
-        (sum, g) => sum + parseInt(g.totalIuranSumbangan || 0),
+      const totalLainLain = latestPerNpa.reduce(
+        (sum, g) => sum + parseInt(g.lainLain || 0),
         0
       );
-      const totalIuran =
-        totalPgri +
-        totalSanduka +
-        totalDaspen +
-        totalDerap +
-        totalKalender +
-        totalLainlain;
+      const totalIuran = latestPerNpa.reduce(
+        (sum, g) => sum + parseInt(g.total || 0),
+        0
+      );
 
       excelData.push([]);
       excelData.push([
@@ -2236,7 +2380,7 @@ function RekapAnggota() {
         totalDaspen,
         totalDerap,
         totalKalender,
-        totalLainlain,
+        totalLainLain,
         totalIuran,
       ]);
 
@@ -2666,7 +2810,7 @@ function RekapAnggota() {
       if (group.members && group.members.length > 0) {
         group.members.forEach((member) => {
           const nomorRekeningFinal =
-            npaToRekeningMap[member.npaPgri] || member.nomorRekening || "";
+            npaToRekeningMap[member.npa] || member.nomorRekening || "";
           if (nomorRekeningFinal && nomorRekeningFinal.trim() !== "") {
             const tagihan = parseInt(member.totalIuran || 0);
             totalTagihanSemua += tagihan;
@@ -2842,9 +2986,7 @@ function RekapAnggota() {
             onClose={() => setNotification(null)}
           />
         )}
-        <div className="mt-8">
-          <TabNavigation />
-        </div>
+        <div className="mt-8"></div>
         <div
           className={`flex-1 transition-all duration-300 ease-in-out ${
             isSidebarOpen ? "ml-64" : "ml-0"
@@ -3561,6 +3703,7 @@ function RekapAnggota() {
                     <h2 className="text-center text-2xl font-bold text-white bg-red-700 py-2 rounded">
                       Form Keuangan
                     </h2>
+
                     <div className="flex flex-col md:flex-row gap-4 items-start">
                       <div className="flex gap-4 w-full md:w-2/3">
                         <Image
@@ -3609,7 +3752,10 @@ function RekapAnggota() {
                         )}
                       </div>
                     </div>
+
+                    {/* Form Input Data */}
                     <div className="gap-6">
+                      {/* Nomor Rekening */}
                       <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Nomor Rekening
@@ -3622,6 +3768,82 @@ function RekapAnggota() {
                           className="w-full border border-black px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
                         />
                       </div>
+
+                      {/* Tagihan Untuk Bulan */}
+                      <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                          Tagihan Untuk Bulan
+                        </label>
+                        <div className="flex gap-4">
+                          {/* Select Bulan */}
+                          <div className="flex-1">
+                            <label className="block text-xs text-gray-600 mb-1">
+                              Bulan
+                            </label>
+                            <select
+                              value={selectedMonth}
+                              onChange={(e) =>
+                                setSelectedMonth(parseInt(e.target.value))
+                              }
+                              className="w-full border border-gray-300 px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            >
+                              <option value={1}>Januari</option>
+                              <option value={2}>Februari</option>
+                              <option value={3}>Maret</option>
+                              <option value={4}>April</option>
+                              <option value={5}>Mei</option>
+                              <option value={6}>Juni</option>
+                              <option value={7}>Juli</option>
+                              <option value={8}>Agustus</option>
+                              <option value={9}>September</option>
+                              <option value={10}>Oktober</option>
+                              <option value={11}>November</option>
+                              <option value={12}>Desember</option>
+                            </select>
+                          </div>
+
+                          {/* Select Tahun */}
+                          <div className="flex-1">
+                            <label className="block text-xs text-gray-600 mb-1">
+                              Tahun
+                            </label>
+                            <select
+                              value={selectedYear}
+                              onChange={(e) =>
+                                setSelectedYear(parseInt(e.target.value))
+                              }
+                              className="w-full border border-gray-300 px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            >
+                              {Array.from({ length: 10 }, (_, i) => {
+                                const year = new Date().getFullYear() + i - 5;
+                                return (
+                                  <option key={year} value={year}>
+                                    {year}
+                                  </option>
+                                );
+                              })}
+                            </select>
+                          </div>
+
+                          {/* Display Current Selection */}
+                          <div className="flex-1">
+                            <label className="block text-xs text-gray-600 mb-1">
+                              Dipilih
+                            </label>
+                            <div className="w-full border border-gray-300 bg-white px-3 py-2 rounded text-sm font-medium">
+                              {selectedMonth.toString().padStart(2, "0")}-
+                              {selectedYear}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Informasi */}
+                        <p className="text-xs text-gray-500 mt-2">
+                          Data akan diupdate untuk bulan dan tahun yang dipilih
+                        </p>
+                      </div>
+
+                      {/* Rest of your existing code for iuran items... */}
                       <div className="space-y-2">
                         {groupedIuran
                           .filter(
@@ -3903,12 +4125,6 @@ function RekapAnggota() {
                     </div>
 
                     <div className="flex justify-end gap-4 pt-4">
-                      {/* <button
-                        className="bg-red-700 hover:bg-red-600 text-white px-6 py-2 rounded-md"
-                        onClick={handleReset}
-                      >
-                        RESET
-                      </button> */}
                       <button
                         className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
                         onClick={closePopup}
@@ -3926,11 +4142,7 @@ function RekapAnggota() {
                           if (loadButton) return;
                           setLoadButton(true);
                           try {
-                            if (idIuran && addedCategories.length === 0) {
-                              await handleUpdateClick();
-                            } else {
-                              await handleSaveClick();
-                            }
+                            await handleUpdateClick();
                           } finally {
                             setLoadButton(false);
                           }
@@ -3961,12 +4173,8 @@ function RekapAnggota() {
                             </svg>
                             Loading...
                           </>
-                        ) : addedCategories.length > 0 ? (
-                          "Save"
-                        ) : idIuran ? (
-                          "Update"
                         ) : (
-                          "Save"
+                          "Update"
                         )}
                       </button>
                     </div>
