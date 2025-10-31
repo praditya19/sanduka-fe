@@ -3432,7 +3432,7 @@ function RekapAnggota() {
                               <span>Lain-lain:</span>
                               <span className="text-gray-700">
                                 Rp.{" "}
-                                {parseInt(group.sumbangan).toLocaleString(
+                                {parseInt(group.lainLain).toLocaleString(
                                   "id-ID"
                                 )}
                               </span>
@@ -3442,9 +3442,7 @@ function RekapAnggota() {
                           <td className="p-3 border-b text-center font-semibold">
                             <span className="bg-teal-100 text-teal-800 py-1 px-3 rounded-full">
                               Rp.{" "}
-                              {parseInt(group.totalIuran).toLocaleString(
-                                "id-ID"
-                              )}
+                              {parseInt(group.total).toLocaleString("id-ID")}
                             </span>
                           </td>
                         </tr>
@@ -3572,7 +3570,7 @@ function RekapAnggota() {
                                         <span>
                                           Rp.{" "}
                                           {parseInt(
-                                            member.sumbangan
+                                            member.lainLain
                                           ).toLocaleString("id-ID")}
                                         </span>
                                       </div>
@@ -3583,7 +3581,7 @@ function RekapAnggota() {
                                         <span className="text-teal-800">
                                           Rp.{" "}
                                           {parseInt(
-                                            member.totalIuran
+                                            member.total
                                           ).toLocaleString("id-ID")}
                                         </span>
                                       </div>
@@ -3649,16 +3647,16 @@ function RekapAnggota() {
                                     <span>Lain-lain:</span>
                                     <span className="text-gray-700">
                                       Rp.{" "}
-                                      {parseInt(
-                                        member.sumbangan
-                                      ).toLocaleString("id-ID")}
+                                      {parseInt(member.lainLain).toLocaleString(
+                                        "id-ID"
+                                      )}
                                     </span>
                                   </div>
                                 </td>
                                 <td className="p-3 border-b text-center hidden lg:table-cell">
                                   <span className="bg-teal-100 text-teal-800 py-1 px-2 rounded-full text-sm">
                                     Rp.{" "}
-                                    {parseInt(member.totalIuran).toLocaleString(
+                                    {parseInt(member.total).toLocaleString(
                                       "id-ID"
                                     )}
                                   </span>
@@ -4469,7 +4467,7 @@ function RekapAnggota() {
                         Rp.{" "}
                         {groupedData
                           .reduce(
-                            (sum, g) => sum + parseInt(g.sumbangan || 0),
+                            (sum, g) => sum + parseInt(g.lainLain || 0),
                             0
                           )
                           .toLocaleString("id-ID")}
@@ -4479,7 +4477,7 @@ function RekapAnggota() {
                   <td className="p-3 text-center">
                     Rp.{" "}
                     {groupedData
-                      .reduce((sum, g) => sum + parseInt(g.totalIuran || 0), 0)
+                      .reduce((sum, g) => sum + parseInt(g.total || 0), 0)
                       .toLocaleString("id-ID")}
                   </td>
                   <td className="p-3 text-center"></td>
