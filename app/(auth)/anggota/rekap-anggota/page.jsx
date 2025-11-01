@@ -809,7 +809,7 @@ function RekapAnggota() {
     setIsModalOpen(false);
 
     try {
-      const response = await GlobalApi.cekNpaList([member.npa]);
+      const response = await GlobalApi.cekNpaList([member.npaPgri]);
 
       setSelectedMember(member);
       setDataNpa(response[0]);
@@ -825,7 +825,7 @@ function RekapAnggota() {
       }
 
       try {
-        const iuranResponse = await GlobalApi.getIuranAnggota(member.npa);
+        const iuranResponse = await GlobalApi.getIuranAnggota(member.npaPgri);
         setDataIuran(iuranResponse);
       } catch (error) {
         console.error("Gagal mengambil data iuran anggota:", error);
@@ -1006,7 +1006,7 @@ function RekapAnggota() {
   };
 
   const handleTagihanClick = async (member) => {
-    const npa = member?.npa?.trim();
+    const npa = member?.npaPgri?.trim();
 
     if (!npa) {
       console.error("NPA tidak ditemukan!");
