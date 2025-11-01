@@ -171,7 +171,8 @@ const DataAnggota = () => {
       pageSize,
       selectedCabang,
       selectedUnitKerja,
-      namaAnggota
+      namaAnggota,
+      status
     );
   };
 
@@ -179,18 +180,29 @@ const DataAnggota = () => {
     const selectedKecamatan = value;
     setSelectedCabang(selectedKecamatan);
     updateUnitKerja(selectedKecamatan);
+    setSelectedUnitKerja("");
+    setCurrentPage(0); // 
     fetchDataAnggota(
-      currentPage,
+      0,
       pageSize,
       selectedKecamatan,
-      selectedUnitKerja,
-      nama
+      "",
+      nama,
+      status
     );
   };
 
   const handleUnitKerjaChange = (value) => {
     setSelectedUnitKerja(value);
-    fetchDataAnggota(currentPage, pageSize, selectedCabang, value, nama);
+    setCurrentPage(0);
+    fetchDataAnggota(
+      0,
+      pageSize,
+      selectedCabang,
+      value,
+      nama,
+      status
+    );
   };
 
   const updateUnitKerja = (kecamatan) => {
@@ -239,7 +251,7 @@ const DataAnggota = () => {
     };
 
     initializeData();
-  }, [token, router, currentPage, pageSize, status]);
+  }, [token, router]);
 
   const handleUserClick = (rowId, index) => {
     const row = anggotaData.find((item) => item.id === rowId);
@@ -284,7 +296,14 @@ const DataAnggota = () => {
 
   const handleSearchClick = () => {
     setCurrentPage(0);
-    fetchDataAnggota(0, pageSize, selectedCabang, selectedUnitKerja, nama);
+    fetchDataAnggota(
+      0,
+      pageSize,
+      selectedCabang,
+      selectedUnitKerja,
+      nama,
+      status
+    );
   };
 
   const formatDate = (dateArray) => {
