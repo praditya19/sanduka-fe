@@ -3071,6 +3071,15 @@ const getAllByNominal = async () => {
   }
 };
 
+const getByIdByNominal = async (id) => {
+  try {
+    const response = await axiosClient.get(`/api/by-nominal-new/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 const importByNominal = async (file, tagihanUntukBulan) => {
   try {
     const formData = new FormData();
@@ -3364,4 +3373,5 @@ export default {
   deleteByNominal,
   updateByNominal,
   updateByNominalByBulan,
+  getByIdByNominal,
 };
