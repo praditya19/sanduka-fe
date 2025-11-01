@@ -207,7 +207,7 @@ function RekapAnggota() {
   ];
 
   const now = new Date();
- const [selectedBulan, setSelectedBulan] = useState(""); // <- kosong, tidak otomatis
+  const [selectedBulan, setSelectedBulan] = useState(""); // <- kosong, tidak otomatis
   const [selectedTahun, setSelectedTahun] = useState(new Date().getFullYear());
   // State untuk tagihan bulan
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
@@ -219,7 +219,7 @@ function RekapAnggota() {
     setSelectedMonth(now.getMonth() + 1); // bulan dimulai dari 0, jadi +1
     setSelectedYear(now.getFullYear());
   }, []);
-  
+
   useEffect(() => {
     const fetchCabangData = async () => {
       try {
@@ -951,7 +951,7 @@ function RekapAnggota() {
 
       // 🔹 Ambil data iuran berdasarkan NPA langsung
       const dataIuran = await GlobalApi.getByIdByNominal(member.idByNominal);
-      // console.log("📦 Data Iuran by NPA:", dataIuran);
+      console.log("📦 Data Iuran by NPA:", dataIuran);
 
       // Set ke state utama
       setDataIuran(dataIuran);
@@ -990,19 +990,10 @@ function RekapAnggota() {
         setSumbanganList([]);
       }
 
-      // 🔹 Atur bulan & tahun iuran
-      if (
-        dataIuran?.tagihanUntukBulan &&
-        Array.isArray(dataIuran.tagihanUntukBulan)
-      ) {
-        const [year, month] = dataIuran.tagihanUntukBulan;
-        setSelectedYear(year);
-        setSelectedMonth(month);
-      } else {
-        const now = new Date();
-        setSelectedYear(now.getFullYear());
-        setSelectedMonth(now.getMonth() + 1);
-      }
+      // 🔹 SELALU GUNAKAN BULAN DAN TAHUN SEKARANG
+      const now = new Date();
+      setSelectedYear(now.getFullYear());
+      setSelectedMonth(now.getMonth() + 1);
 
       setIsPopupVisible(true);
     } catch (error) {
