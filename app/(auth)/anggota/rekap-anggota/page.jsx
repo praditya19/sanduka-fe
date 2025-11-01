@@ -491,6 +491,7 @@ function RekapAnggota() {
         nip: item.nip,
         npa: item.npa,
         nomorRekening: item.nomorRekening,
+        statusPegawai: item.statusPegawai,
         cabang: item.cabang,
         unitKerja: item.unitKerja,
         pgri,
@@ -2944,16 +2945,12 @@ function RekapAnggota() {
 
   const getNextPotonganBulan = () => {
     const today = new Date();
-    const tanggal = today.getDate();
-    let bulan = today.getMonth();
+    let bulan = today.getMonth() + 1;
     let tahun = today.getFullYear();
 
-    if (tanggal >= 22) {
-      bulan += 1;
-      if (bulan > 11) {
-        bulan = 0;
-        tahun += 1;
-      }
+    if (bulan > 11) {
+      bulan = 0;
+      tahun += 1;
     }
 
     const namaBulan = [
@@ -3487,10 +3484,13 @@ function RekapAnggota() {
                                           {member.nomorRekening}
                                         </div>
                                         <div className="text-sm text-teal-700 italic">
+                                          {member.statusPegawai}
+                                        </div>
+                                        <div className="text-sm text-teal-700 italic">
                                           Inputan Tagihan untuk Bulan{" "}
                                           {getNextPotonganBulan()} :{" "}
                                           {parseInt(
-                                            member.totalIuran
+                                            member.total
                                           ).toLocaleString("id-ID")}
                                         </div>
                                         <div className="text-sm text-teal-700 italic">
@@ -4184,7 +4184,7 @@ function RekapAnggota() {
                   <div className="bg-white p-6 rounded-lg w-[800px] relative shadow-lg">
                     <button
                       className="absolute top-2 right-2 text-gray-500 hover:text-teal-600 text-xl"
-                      onClick={closePopup}
+                      onClick={closeModal}
                     >
                       ✕
                     </button>
@@ -4288,9 +4288,7 @@ function RekapAnggota() {
                             Sumbangan
                           </span>
                           : Rp.{" "}
-                          {(dataIuran.totalIuranSumbangan || 0).toLocaleString(
-                            "id-ID"
-                          )}
+                          {(dataIuran.lainLain || 0).toLocaleString("id-ID")}
                         </p>
 
                         <hr className="my-2 border-t-2 border-gray-300" />
@@ -4306,7 +4304,7 @@ function RekapAnggota() {
                             (dataIuran.totalIuranDaspen || 0) +
                             (dataIuran.totalIuranDerap || 0) +
                             (dataIuran.totalIuranKalender || 0) +
-                            (dataIuran.totalIuranSumbangan || 0)
+                            (dataIuran.lainLain || 0)
                           ).toLocaleString("id-ID")}
                         </p>
                       </div>
