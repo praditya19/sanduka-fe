@@ -184,7 +184,6 @@ function RekapAnggota() {
   const [notifDaspen, setNotifDaspen] = useState(null);
   const [pesanDaspen, setPesanDaspen] = useState("");
   const [listNoRekening, setListNoRekening] = useState([]);
-  const [iuranSumbanganList, setIuranSumbanganList] = useState([]);
   const [sumbanganList, setSumbanganList] = useState([]);
   const currentYear = new Date().getFullYear();
   const years = Array.from(
@@ -208,13 +207,19 @@ function RekapAnggota() {
   ];
 
   const now = new Date();
-  const [selectedBulan, setSelectedBulan] = useState(now.getMonth() + 1);
-  const [selectedTahun, setSelectedTahun] = useState(now.getFullYear());
+ const [selectedBulan, setSelectedBulan] = useState(""); // <- kosong, tidak otomatis
+  const [selectedTahun, setSelectedTahun] = useState(new Date().getFullYear());
   // State untuk tagihan bulan
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const filteredMonths = selectedTahun === 2025 ? months.slice(4) : months;
 
+  useEffect(() => {
+    const now = new Date();
+    setSelectedMonth(now.getMonth() + 1); // bulan dimulai dari 0, jadi +1
+    setSelectedYear(now.getFullYear());
+  }, []);
+  
   useEffect(() => {
     const fetchCabangData = async () => {
       try {
