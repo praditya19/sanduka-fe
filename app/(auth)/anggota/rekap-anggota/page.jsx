@@ -20,7 +20,7 @@ import {
   FaFileInvoiceDollar,
   FaDatabase,
 } from "react-icons/fa";
-import { FiTrash } from "react-icons/fi";
+import { FiPlus, FiSave, FiTrash } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import { ClipLoader } from "react-spinners";
 import Image from "next/image";
@@ -185,7 +185,7 @@ function RekapAnggota() {
   const [pesanDaspen, setPesanDaspen] = useState("");
   const [listNoRekening, setListNoRekening] = useState([]);
   const [iuranSumbanganList, setIuranSumbanganList] = useState([]);
-
+  const [sumbanganList, setSumbanganList] = useState([]);
   const currentYear = new Date().getFullYear();
   const years = Array.from(
     { length: currentYear - 2025 + 6 },
@@ -357,48 +357,34 @@ function RekapAnggota() {
     setNamaAnggotaInput("");
 
     try {
-      const bulan = selectedBulan;
-      const tahun = selectedTahun;
-
-      // Menggunakan getAllByNominal instead of getNominalAggregatedData
-      const response = await GlobalApi.getAllByNominal(
-        cabang.kecamatan || "",
-        bulan,
-        tahun
+      const response = await GlobalApi.getNominalAggregatedData(
+        cabang.kecamatan || ""
       );
 
-      // Karena getAllByNominal tidak mengembalikan baris "Total",
-      // kita proses data dan hitung manual
-      const processed = processData(response);
-
-      // Hitung grand total manual dari data yang diproses
-      const grandTotals = processed.reduce(
-        (acc, group) => {
-          acc.jumlah += group.jumlah;
-          acc.pgri += group.pgri;
-          acc.sanduka += group.sanduka;
-          acc.daspen += group.daspen;
-          acc.derap += group.derap;
-          acc.kalender += group.kalender;
-          acc.lainLain += group.lainLain;
-          acc.total += group.total;
-          return acc;
-        },
-        {
-          jumlah: 0,
-          pgri: 0,
-          sanduka: 0,
-          daspen: 0,
-          derap: 0,
-          kalender: 0,
-          lainLain: 0,
-          total: 0,
-        }
+      const totalRow = response.find(
+        (item) => item.cabang === "Total" && !item.unitKerja
+      );
+      const regularData = response.filter(
+        (item) => !(item.cabang === "Total" && !item.unitKerja)
       );
 
-      setGrandTotals(grandTotals);
-      setData(response);
-      setOriginalRekapData(response);
+      if (totalRow) {
+        setGrandTotals({
+          jumlah: parseInt(totalRow.jumlah) || 0,
+          pgri: parseFloat(totalRow.pgri) || 0,
+          sanduka: parseFloat(totalRow.sanduka) || 0,
+          daspen: parseFloat(totalRow.daspen) || 0,
+          derap: parseFloat(totalRow.derap) || 0,
+          kalnder: parseFloat(totalRow.kalender) || 0,
+          daspen: parseFloat(totalRow.daspen) || 0,
+          totalIuran: parseFloat(totalRow.totalIuran) || 0,
+        });
+      }
+
+      setData(regularData);
+      setOriginalRekapData(regularData);
+
+      const processed = processData(regularData);
       setGroupedData(processed);
 
       const filtered = unitKerjaList.filter(
@@ -449,7 +435,7 @@ function RekapAnggota() {
     const uniqueMap = new Map();
 
     rawData.forEach((item) => {
-      const key = `${item.namaAnggota}-${item.npa}`;
+      const key = `${item.namaAnggota}-${item.npaPgri}`;
       if (!uniqueMap.has(key)) {
         uniqueMap.set(key, item);
       }
@@ -472,47 +458,53 @@ function RekapAnggota() {
           daspen: 0,
           derap: 0,
           kalender: 0,
-          lainLain: 0,
-          total: 0,
+          sumbangan: 0,
+          totalIuran: 0,
+          nomorRekening: 0,
+          lastUpdatedAtIuranAnggota: "",
+          sumbanganDetail: {
+            "Cetak Kartu Biasa": 25000,
+            "IURAN HUT 80 PGRI": 30000,
+          },
         };
       }
 
-      // Hitung tiap anggota
-      const pgri = (item.defaultPgri || 0) + (item.manualPgri || 0);
-      const sanduka = (item.defaultSanduka || 0) + (item.manualSanduka || 0);
-      const daspen = (item.defaultDaspen || 0) + (item.manualDaspen || 0);
-      const derap = (item.defaultDerap || 0) + (item.manualDerap || 0);
-      const kalender = (item.defaultKalender || 0) + (item.manualKalender || 0);
-      const lainLain = (item.defaultLainLain || 0) + (item.manualLainLain || 0);
-      const total = item.total || 0;
-
       acc[unitKey].members.push({
         namaAnggota: item.namaAnggota,
-        nip: item.nip,
-        npa: item.npa,
+        npaPgri: item.npaPgri,
         nomorRekening: item.nomorRekening,
+        nip: item.nip,
         statusPegawai: item.statusPegawai,
-        cabang: item.cabang,
-        unitKerja: item.unitKerja,
-        pgri,
-        sanduka,
-        daspen,
-        derap,
-        kalender,
-        lainLain,
-        total,
-        createdAt: item.createdAt,
-        updatedAt: item.updatedAt,
+        idByNominal: item.idByNominal,
+        statusPotongan: item.statusPotongan,
+        potongan: item.potongan,
+        pgri: parseFloat(item.pgri) || 0,
+        sanduka: parseFloat(item.sanduka) || 0,
+        daspen: parseFloat(item.daspen) || 0,
+        derap: parseFloat(item.derap) || 0,
+        kalender: parseFloat(item.kalender) || 0,
+        sumbangan: parseFloat(item.lainLain) || 0,
+        totalIuran: parseFloat(item.totalIuran) || 0,
+        lastUpdatedAtIuranAnggota: item.lastUpdatedAtIuranAnggota,
       });
 
       acc[unitKey].jumlah += 1;
-      acc[unitKey].pgri += pgri;
-      acc[unitKey].sanduka += sanduka;
-      acc[unitKey].daspen += daspen;
-      acc[unitKey].derap += derap;
-      acc[unitKey].kalender += kalender;
-      acc[unitKey].lainLain += lainLain;
-      acc[unitKey].total += total;
+      acc[unitKey].pgri += parseFloat(item.pgri) || 0;
+      acc[unitKey].sanduka += parseFloat(item.sanduka) || 0;
+      acc[unitKey].daspen += parseFloat(item.daspen) || 0;
+      acc[unitKey].derap += parseFloat(item.derap) || 0;
+      acc[unitKey].kalender += parseFloat(item.kalender) || 0;
+      acc[unitKey].sumbangan += parseFloat(item.lainLain) || 0;
+      acc[unitKey].totalIuran += parseFloat(item.totalIuran) || 0;
+
+      if (Array.isArray(item.iuranSumbanganList)) {
+        item.iuranSumbanganList.forEach((s) => {
+          if (!acc[unitKey].sumbanganDetail[s.jenis]) {
+            acc[unitKey].sumbanganDetail[s.jenis] = 0;
+          }
+          acc[unitKey].sumbanganDetail[s.jenis] += s.jumlah;
+        });
+      }
 
       return acc;
     }, {});
@@ -533,43 +525,50 @@ function RekapAnggota() {
       if (storedRole === "ADMIN" && storedCabang) {
         setIsAdmin(true);
         setSelectedCabang(storedCabang);
-        response = await GlobalApi.getAllByNominal(storedCabang, bulan, tahun);
+        response = await GlobalApi.getNominalAggregatedData(
+          storedCabang,
+          null,
+          null,
+          bulan,
+          tahun
+        );
       } else {
-        response = await GlobalApi.getAllByNominal("", bulan, tahun);
+        response = await GlobalApi.getNominalAggregatedData(
+          "",
+          null,
+          null,
+          bulan,
+          tahun
+        );
       }
-
-      // Karena struktur baru tidak punya baris "Total", hitung manual nanti dari data
-      const processed = processData(response);
-
-      // Hitung grand total manual
-      const grandTotals = processed.reduce(
-        (acc, group) => {
-          acc.jumlah += group.jumlah;
-          acc.pgri += group.pgri;
-          acc.sanduka += group.sanduka;
-          acc.daspen += group.daspen;
-          acc.derap += group.derap;
-          acc.kalender += group.kalender;
-          acc.lainLain += group.lainLain;
-          acc.total += group.total;
-          return acc;
-        },
-        {
-          jumlah: 0,
-          pgri: 0,
-          sanduka: 0,
-          daspen: 0,
-          derap: 0,
-          kalender: 0,
-          lainLain: 0,
-          total: 0,
-        }
+      const totalRow = response.find(
+        (item) => item.cabang === "Total" && !item.unitKerja
+      );
+      const regularData = response.filter(
+        (item) => !(item.cabang === "Total" && !item.unitKerja)
       );
 
-      setGrandTotals(grandTotals);
+      if (totalRow) {
+        setGrandTotals({
+          jumlah: parseInt(totalRow.jumlah) || 0,
+          pgri: parseFloat(totalRow.pgri) || 0,
+          sanduka: parseFloat(totalRow.sanduka) || 0,
+          daspen: parseFloat(totalRow.daspen) || 0,
+          derap: parseFloat(totalRow.derap) || 0,
+          kalender: parseFloat(totalRow.kalender) || 0,
+          lainlain: parseFloat(totalRow.lainlain) || 0,
+          totalIuran: parseFloat(totalRow.totalIuran) || 0,
+        });
+      }
+
+      const processed = processData(regularData);
       setGroupedData(processed);
-      setData(response);
-      setOriginalRekapData(response);
+      setData(regularData);
+      setOriginalRekapData(regularData);
+      // const allUnits = new Set(
+      //   processed.map((group) => group.unitKerja || "Tidak Ada Unit Kerja")
+      // );
+      // setExpandedRows(allUnits);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching initial data:", error);
@@ -902,6 +901,7 @@ function RekapAnggota() {
     const daspenFromMember = member.daspen ? parseInt(member.daspen) : 0;
     setDaspenValue(daspenFromMember);
 
+    // Reset semua state lama
     setNipValue(member.nip);
     setSelectedMember(null);
     setDataNpa(null);
@@ -911,32 +911,29 @@ function RekapAnggota() {
     setIdIuran(null);
     setNotifDaspen(null);
     setNomorRekening("");
-
-    // Reset state untuk data manual
     setNominalBaruList({});
     setResetKeys([]);
     setAddedCategories([]);
     setManualInputs({});
 
     try {
+      // 🔹 Ambil file tambahan (opsional)
       const fileResponse = await GlobalApi.getFileByNip(member.nip);
       if (fileResponse?.sumbangan) {
         setDaspenValue(parseInt(fileResponse.sumbangan));
       }
-      if (fileResponse?.dataDaspen === true) {
-        setNotifDaspen(true);
-      } else {
-        setNotifDaspen(false);
-      }
+      setNotifDaspen(fileResponse?.dataDaspen === true);
     } catch (error) {
       console.error("❌ Gagal mengambil file by NIP:", error);
     }
 
     try {
-      const response = await GlobalApi.cekNpaList([member.npa]);
+      // 🔹 Ambil data NPA
+      const response = await GlobalApi.cekNpaList([member.npaPgri]);
       setSelectedMember(member);
       setDataNpa(response[0]);
 
+      // Tampilkan foto (jika ada)
       if (response[0]?.foto) {
         try {
           const decodedString = atob(response[0].foto);
@@ -947,125 +944,64 @@ function RekapAnggota() {
         }
       }
 
-      try {
-        // PERBAIKAN: Gunakan getAllByNominal instead of getIuranAnggotaAll
-        const allIuran = await GlobalApi.getAllByNominal();
+      // 🔹 Ambil data iuran berdasarkan NPA langsung
+      const dataIuran = await GlobalApi.getByIdByNominal(member.idByNominal);
+      // console.log("📦 Data Iuran by NPA:", dataIuran);
 
-        // Filter by NPA
-        const filteredByNpa = allIuran.filter(
-          (item) => item.npa === member.npa
-        );
+      // Set ke state utama
+      setDataIuran(dataIuran);
+      setIdIuran(dataIuran.id || null);
+      setNomorRekening(dataIuran.nomorRekening || "");
 
-        if (filteredByNpa.length > 0) {
-          // Sort by tanggal terbaru
-          const sortedByDate = filteredByNpa.sort((a, b) => {
-            const dateA = new Date(...a.createdAt);
-            const dateB = new Date(...b.createdAt);
-            return dateB - dateA;
-          });
+      // 🔹 Siapkan nilai manual
+      const manualValues = {};
+      const manualKeys = [
+        "Pgri",
+        "Sanduka",
+        "Daspen",
+        "Derap",
+        "Kalender",
+        "LainLain",
+      ];
 
-          const latestData = sortedByDate[0];
-          console.log("🆕 Latest Iuran Data dari getAllByNominal:", latestData);
-
-          setDataIuran(latestData);
-
-          if (latestData?.id) {
-            setIdIuran(latestData.id);
-          }
-          if (latestData?.nomorRekening) {
-            setNomorRekening(latestData.nomorRekening);
-          }
-
-          // --- PERBAIKAN: Set manual values dari API ke nominalBaruList dengan nama yang sama
-          const manualValues = {};
-
-          // Map manual values dari API ke format yang digunakan di frontend - SAMAKAN NAMA
-          if (latestData.manualPgri && latestData.manualPgri > 0) {
-            manualValues.manualPgri = latestData.manualPgri;
-          }
-          if (latestData.manualSanduka && latestData.manualSanduka > 0) {
-            manualValues.manualSanduka = latestData.manualSanduka;
-          }
-          if (latestData.manualDaspen && latestData.manualDaspen > 0) {
-            manualValues.manualDaspen = latestData.manualDaspen;
-          }
-          if (latestData.manualDerap && latestData.manualDerap > 0) {
-            manualValues.manualDerap = latestData.manualDerap;
-          }
-          if (latestData.manualKalender && latestData.manualKalender > 0) {
-            manualValues.manualKalender = latestData.manualKalender;
-          }
-          if (latestData.manualLainLain && latestData.manualLainLain > 0) {
-            manualValues.manualLainLain = latestData.manualLainLain;
-          }
-
-          console.log("🔄 Manual values dari API:", manualValues);
-          setNominalBaruList(manualValues);
-
-          // --- Set tagihanUntukBulan untuk dropdown
-          if (
-            latestData.tagihanUntukBulan &&
-            Array.isArray(latestData.tagihanUntukBulan)
-          ) {
-            const [year, month, day] = latestData.tagihanUntukBulan;
-            setSelectedYear(year);
-            setSelectedMonth(month);
-          } else {
-            // Default ke bulan dan tahun sekarang
-            const now = new Date();
-            setSelectedYear(now.getFullYear());
-            setSelectedMonth(now.getMonth() + 1);
-          }
-        } else {
-          console.warn("⚠️ Tidak ditemukan data iuran untuk NPA:", member.npa);
-          setDataIuran(null);
-          setIdIuran(null);
-
-          // Set default bulan dan tahun
-          const now = new Date();
-          setSelectedYear(now.getFullYear());
-          setSelectedMonth(now.getMonth() + 1);
+      manualKeys.forEach((key) => {
+        const manualKey = `manual${key}`;
+        if (dataIuran[manualKey] && dataIuran[manualKey] > 0) {
+          manualValues[`manual${key.toLowerCase()}`] =
+            dataIuran[manualKey] || 0;
         }
-      } catch (error) {
-        console.error("❌ Gagal mengambil data iuran anggota:", error);
+      });
 
-        if (error.response?.status === 500) {
-          console.warn("⚠️ Server error 500: menggunakan fallback data");
-          const pgriData = JSON.parse(sessionStorage.getItem("PGRIData"));
-          console.log("📦 Fallback PGRI Data:", pgriData);
+      setNominalBaruList(manualValues);
 
-          const totalIuranPGRI =
-            parseInt(pgriData.pb || 0) +
-            parseInt(pgriData.propinsi || 0) +
-            parseInt(pgriData.kabupaten || 0) +
-            parseInt(pgriData.cabang || 0);
-
-          const fallbackData = {
-            defaultPgri: totalIuranPGRI,
-            manualPgri: 0,
-            pgri: totalIuranPGRI,
-            defaultSanduka: parseInt(pgriData.sanduka || 0),
-            manualSanduka: 0,
-            sanduka: parseInt(pgriData.sanduka || 0),
-            defaultDaspen: daspenFromMember,
-            manualDaspen: 0,
-            daspen: daspenFromMember,
-          };
-
-          console.log("📦 Fallback Data Iuran:", fallbackData);
-
-          setDataIuran(fallbackData);
-          setIdIuran(null);
-
-          // Set default bulan dan tahun untuk fallback
-          const now = new Date();
-          setSelectedYear(now.getFullYear());
-          setSelectedMonth(now.getMonth() + 1);
-        }
+      // 🔹 Simpan data iuranSumbanganList ke state terpisah untuk ditampilkan
+      if (
+        dataIuran?.iuranSumbanganList &&
+        Array.isArray(dataIuran.iuranSumbanganList)
+      ) {
+        // Simpan ke state khusus untuk sumbangan
+        setSumbanganList(dataIuran.iuranSumbanganList);
+      } else {
+        setSumbanganList([]);
       }
+
+      // 🔹 Atur bulan & tahun iuran
+      if (
+        dataIuran?.tagihanUntukBulan &&
+        Array.isArray(dataIuran.tagihanUntukBulan)
+      ) {
+        const [year, month] = dataIuran.tagihanUntukBulan;
+        setSelectedYear(year);
+        setSelectedMonth(month);
+      } else {
+        const now = new Date();
+        setSelectedYear(now.getFullYear());
+        setSelectedMonth(now.getMonth() + 1);
+      }
+
       setIsPopupVisible(true);
     } catch (error) {
-      console.error("❌ Error saat cek NPA:", error);
+      console.error("❌ Gagal mengambil data iuran anggota:", error);
     }
   };
 
@@ -1453,7 +1389,7 @@ function RekapAnggota() {
   };
 
   const handleUpdateClick = async () => {
-    if (!dataNpa || !idIuran) return;
+    if (!dataNpa) return;
 
     try {
       // Format tanggal untuk tagihanUntukBulan (YYYY-MM-DD)
@@ -1461,26 +1397,57 @@ function RekapAnggota() {
         .toString()
         .padStart(2, "0")}-01`;
 
+      // Siapkan payload dasar
       const payload = {
         namaAnggota: dataNpa.namaLengkap,
         nip: dataNpa.nip,
-        npa: dataNpa.npa,
-        nomorRekening: nomorRekening || null,
+        npa: dataNpa.npaPgri || dataNpa.npa,
+        nomorRekening: nomorRekening ? parseInt(nomorRekening) : null,
         cabang: dataNpa.cabang,
         unitKerja: dataNpa.unitKerja,
+
+        // Inisialisasi semua field iuran dengan nilai default 0
+        iuranAnggota: 0,
+        manualIuranAnggota: 0,
+        totalIuranAnggota: 0,
+
+        iuranSanduka: 0,
+        manualIuranSanduka: 0,
+        totalIuranSanduka: 0,
+
+        iuranDaspen: 0,
+        manualIuranDaspen: 0,
+        totalIuranDaspen: 0,
+
+        iuranDerap: 0,
+        manualIuranDerap: 0,
+        totalIuranDerap: 0,
+
+        iuranKalender: 0,
+        manualIuranKalender: 0,
+        totalIuranKalender: 0,
+
+        manualIuranSumbangan: 0,
+        iuranSumbanganList: [],
       };
 
-      const capitalizeFirstLetter = (string) =>
-        string.charAt(0).toUpperCase() + string.slice(1);
-
+      // Process groupedIuran (iuran reguler)
       groupedIuran.forEach((item) => {
         const key = item.key;
         const isReset = resetKeys.includes(key);
         const iuran = isReset ? 0 : parseInt(item.iuran || 0);
-        const manual = isReset ? 0 : parseInt(nominalBaruList[key] || 0);
+        const manual = isReset
+          ? 0
+          : parseInt(
+              nominalBaruList[`manual${key}`] || nominalBaruList[key] || 0
+            );
         const total = iuran + manual;
 
-        if (key === "anggota") {
+        // console.log(
+        //   `Processing ${key}: iuran=${iuran}, manual=${manual}, total=${total}`
+        // );
+
+        if (key === "pgri" || key === "anggota") {
           payload.iuranAnggota = iuran;
           payload.manualIuranAnggota = manual;
           payload.totalIuranAnggota = total;
@@ -1503,100 +1470,190 @@ function RekapAnggota() {
         }
       });
 
-      const initialSumbanganList = dataIuran?.iuranSumbanganList || [];
-      let updatedSumbanganList = [...initialSumbanganList];
+      // Process sumbangan data
       let manualSumbanganTotal = 0;
+      const updatedSumbanganList = [];
 
+      // 1. Process data dari sumbanganList (data sistem - readonly)
+      if (sumbanganList && Array.isArray(sumbanganList)) {
+        sumbanganList.forEach((sumbangan) => {
+          if (sumbangan.jenis && sumbangan.jumlah > 0) {
+            updatedSumbanganList.push({
+              jenis: sumbangan.jenis,
+              jumlah: parseInt(sumbangan.jumlah || 0),
+            });
+            // console.log(
+            //   `Added system sumbangan: ${sumbangan.jenis} - ${sumbangan.jumlah}`
+            // );
+          }
+        });
+      }
+
+      // 2. Process addedCategories (kategori manual yang ditambah user)
       addedCategories.forEach((category) => {
-        const value = parseInt(newValues[category.key] || 0);
+        const oldValue = parseInt(newValues[category.key] || 0);
         const manualValue = parseInt(manualInputs[category.key] || 0);
-        const totalValue = value + manualValue;
+        const totalValue = oldValue + manualValue;
 
         if (totalValue > 0) {
-          const jenis = category.keterangan || category.label;
+          // Tentukan jenis/judul berdasarkan struktur category
+          let jenis = "";
 
-          const existingIndex = updatedSumbanganList.findIndex(
-            (item) => item.jenis === jenis
-          );
-
-          if (existingIndex === -1) {
-            updatedSumbanganList.push({
-              jenis: jenis,
-              jumlah: totalValue,
-            });
-          } else {
-            updatedSumbanganList[existingIndex].jumlah = totalValue;
+          // Priority 1: Gunakan keterangan jika ada (untuk lainlain)
+          if (category.keterangan) {
+            jenis = category.keterangan;
           }
-          manualSumbanganTotal += manualValue;
+          // Priority 2: Gunakan label jika ada
+          else if (category.label) {
+            jenis = category.label;
+          }
+          // Priority 3: Gunakan key sebagai fallback
+          else {
+            jenis = category.key;
+          }
+
+          // console.log(
+          //   `Category debug: key=${category.key}, label=${category.label}, keterangan=${category.keterangan}, final jenis=${jenis}`
+          // );
+
+          // Untuk kategori yang sudah ada di groupedIuran, skip (karena sudah diproses di atas)
+          const isRegularIuran = [
+            "pgri",
+            "anggota",
+            "sanduka",
+            "daspen",
+            "derap",
+            "kalender",
+          ].includes(category.key);
+
+          if (!isRegularIuran && jenis) {
+            // Cek apakah sudah ada dalam list
+            const existingIndex = updatedSumbanganList.findIndex(
+              (item) => item.jenis === jenis
+            );
+
+            if (existingIndex === -1) {
+              updatedSumbanganList.push({
+                jenis: jenis,
+                jumlah: totalValue,
+              });
+            } else {
+              updatedSumbanganList[existingIndex].jumlah += totalValue;
+            }
+
+            manualSumbanganTotal += manualValue; // Hanya manual value yang ditambahkan
+            // console.log(
+            //   `Added manual category: ${jenis} - total: ${totalValue}, manual: ${manualValue}`
+            // );
+          }
         }
       });
 
+      // 3. Process nominalBaruList untuk sumbangan lainnya (fallback)
       Object.keys(nominalBaruList).forEach((key) => {
         const nominalValue = parseInt(nominalBaruList[key] || 0);
 
+        // Hanya proses yang bukan iuran reguler dan nilai > 0
         if (
           nominalValue > 0 &&
-          key !== "pgri" &&
-          key !== "sanduka" &&
-          key !== "daspen" &&
-          key !== "derap" &&
-          key !== "kalender"
+          ![
+            "pgri",
+            "sanduka",
+            "daspen",
+            "derap",
+            "kalender",
+            "anggota",
+          ].includes(key) &&
+          !key.startsWith("manualpgri") &&
+          !key.startsWith("manualsanduka") &&
+          !key.startsWith("manualdaspen") &&
+          !key.startsWith("manualderap") &&
+          !key.startsWith("manualkalender") &&
+          !key.startsWith("manualanggota")
         ) {
+          // Cari di addedCategories untuk mendapatkan label yang benar
           const category = addedCategories.find((cat) => cat.key === key);
-          const jenis = category?.keterangan || category?.label || key;
+          if (category) {
+            let jenis = "";
 
-          const existingIndex = updatedSumbanganList.findIndex(
-            (item) => item.jenis === jenis
-          );
+            // Priority 1: Gunakan keterangan jika ada (untuk lainlain)
+            if (category.keterangan) {
+              jenis = category.keterangan;
+            }
+            // Priority 2: Gunakan label jika ada
+            else if (category.label) {
+              jenis = category.label;
+            }
+            // Priority 3: Gunakan key sebagai fallback
+            else {
+              jenis = category.key;
+            }
 
-          if (existingIndex === -1) {
-            updatedSumbanganList.push({
-              jenis: jenis,
-              jumlah: nominalValue,
-            });
-          } else {
-            updatedSumbanganList[existingIndex].jumlah += nominalValue;
+            if (jenis) {
+              const existingIndex = updatedSumbanganList.findIndex(
+                (item) => item.jenis === jenis
+              );
+
+              if (existingIndex === -1) {
+                updatedSumbanganList.push({
+                  jenis: jenis,
+                  jumlah: nominalValue,
+                });
+              } else {
+                updatedSumbanganList[existingIndex].jumlah += nominalValue;
+              }
+
+              manualSumbanganTotal += nominalValue;
+            }
           }
-          manualSumbanganTotal += nominalValue;
         }
       });
 
-      updatedSumbanganList = updatedSumbanganList.filter(
-        (item) => item.jumlah > 0
-      );
-
-      payload.iuranSumbanganList = updatedSumbanganList;
-
+      // Update payload dengan data sumbangan
       payload.manualIuranSumbangan = manualSumbanganTotal;
 
-      const totalSumbangan = updatedSumbanganList.reduce(
-        (acc, curr) => acc + (curr.jumlah || 0),
-        0
-      );
-      payload.totalIuranSumbangan = totalSumbangan;
+      // Remove duplicates berdasarkan jenis
+      const uniqueSumbanganList = [];
+      const seenTypes = new Set();
 
-      // console.log("=== DEBUG PAYLOAD ===");
-      // console.log("nominalBaruList:", nominalBaruList);
-      // console.log("manualIuranAnggota:", payload.manualIuranAnggota);
-      // console.log("manualIuranSanduka:", payload.manualIuranSanduka);
-      // console.log("manualIuranDaspen:", payload.manualIuranDaspen);
-      // console.log("Payload to update:", payload);
+      updatedSumbanganList.forEach((item) => {
+        if (!seenTypes.has(item.jenis) && item.jumlah > 0) {
+          seenTypes.add(item.jenis);
+          uniqueSumbanganList.push(item);
+        }
+      });
 
-      await GlobalApi.updateByNominalByBulan(
-        dataNpa.nip,
-        tagihanUntukBulan,
-        payload
-      );
+      payload.iuranSumbanganList = uniqueSumbanganList;
 
+      // console.log("=== FINAL PAYLOAD ===");
+      // console.log("iuranSumbanganList:", payload.iuranSumbanganList);
+      // console.log("manualIuranSumbangan:", payload.manualIuranSumbangan);
+      // console.log("addedCategories:", addedCategories);
+      // console.log("manualInputs:", manualInputs);
+      // console.log("newValues:", newValues);
+
+      // Panggil API update
+      if (idIuran) {
+        await GlobalApi.updateByNominalByBulan(
+          dataNpa.nip,
+          tagihanUntukBulan,
+          payload
+        );
+      } else {
+        await GlobalApi.createByNominal(payload);
+      }
+
+      // Refresh data
       await fetchInitialData();
 
       setNotification({
         type: "success",
-        message: `Data berhasil diupdate untuk bulan ${selectedMonth
+        message: `Data berhasil diupdate untuk periode ${selectedMonth
           .toString()
           .padStart(2, "0")}-${selectedYear}!`,
       });
 
+      // Reset state
       setIsPopupVisible(false);
       setResetKeys([]);
       setAddedCategories([]);
@@ -1611,7 +1668,7 @@ function RekapAnggota() {
       console.error("Error details:", error.response?.data);
       setNotification({
         type: "error",
-        message: "Gagal update data. Periksa format data.",
+        message: "Gagal update data. Silakan coba lagi.",
       });
     }
   };
@@ -3429,7 +3486,7 @@ function RekapAnggota() {
                               <span>Lain-lain:</span>
                               <span className="text-gray-700">
                                 Rp.{" "}
-                                {parseInt(group.lainLain).toLocaleString(
+                                {parseInt(group.sumbangan).toLocaleString(
                                   "id-ID"
                                 )}
                               </span>
@@ -3439,7 +3496,9 @@ function RekapAnggota() {
                           <td className="p-3 border-b text-center font-semibold">
                             <span className="bg-teal-100 text-teal-800 py-1 px-3 rounded-full">
                               Rp.{" "}
-                              {parseInt(group.total).toLocaleString("id-ID")}
+                              {parseInt(group.totalIuran).toLocaleString(
+                                "id-ID"
+                              )}
                             </span>
                           </td>
                         </tr>
@@ -3490,7 +3549,7 @@ function RekapAnggota() {
                                           Inputan Tagihan untuk Bulan{" "}
                                           {getNextPotonganBulan()} :{" "}
                                           {parseInt(
-                                            member.total
+                                            member.totalIuran
                                           ).toLocaleString("id-ID")}
                                         </div>
                                         <div className="text-sm text-teal-700 italic">
@@ -3570,7 +3629,7 @@ function RekapAnggota() {
                                         <span>
                                           Rp.{" "}
                                           {parseInt(
-                                            member.lainLain
+                                            member.sumbangan
                                           ).toLocaleString("id-ID")}
                                         </span>
                                       </div>
@@ -3581,7 +3640,7 @@ function RekapAnggota() {
                                         <span className="text-teal-800">
                                           Rp.{" "}
                                           {parseInt(
-                                            member.total
+                                            member.totalIuran
                                           ).toLocaleString("id-ID")}
                                         </span>
                                       </div>
@@ -3647,16 +3706,16 @@ function RekapAnggota() {
                                     <span>Lain-lain:</span>
                                     <span className="text-gray-700">
                                       Rp.{" "}
-                                      {parseInt(member.lainLain).toLocaleString(
-                                        "id-ID"
-                                      )}
+                                      {parseInt(
+                                        member.sumbangan
+                                      ).toLocaleString("id-ID")}
                                     </span>
                                   </div>
                                 </td>
                                 <td className="p-3 border-b text-center hidden lg:table-cell">
                                   <span className="bg-teal-100 text-teal-800 py-1 px-2 rounded-full text-sm">
                                     Rp.{" "}
-                                    {parseInt(member.total).toLocaleString(
+                                    {parseInt(member.totalIuran).toLocaleString(
                                       "id-ID"
                                     )}
                                   </span>
@@ -3843,12 +3902,13 @@ function RekapAnggota() {
 
                       {/* Rest of your existing code for iuran items... */}
                       <div className="space-y-2">
+                        {/* Tampilkan iuran reguler */}
                         {groupedIuran
                           .filter(
                             (item) =>
                               parseInt(item.iuran || 0) +
                                 parseInt(item.manual || 0) >
-                              0
+                                0 && !item.isSumbanganDetail
                           )
                           .map((item, idx) => {
                             const isReset = resetKeys.includes(item.key);
@@ -3863,88 +3923,145 @@ function RekapAnggota() {
                             return (
                               <div
                                 key={idx}
-                                className={`space-y-1 px-3 py-2 rounded-md ${
-                                  item.isSumbanganDetail
-                                    ? "ml-6 bg-purple-50"
-                                    : ""
-                                }`}
+                                className="space-y-2 p-3 rounded-lg bg-white border border-gray-200 hover:border-blue-300 transition-colors"
                               >
                                 <div className="flex items-center justify-between">
-                                  <span className="font-medium">
+                                  <span className="font-semibold text-gray-800 text-sm uppercase tracking-wide">
                                     {item.key}
                                   </span>
-                                  {!item.isSumbanganDetail && (
-                                    <button
-                                      type="button"
-                                      className="text-red-500 hover:text-red-700"
-                                      onClick={() => {
-                                        setResetKeys((prev) => [
-                                          ...prev,
-                                          item.key,
-                                        ]);
+                                  <button
+                                    type="button"
+                                    className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition-colors"
+                                    onClick={() => {
+                                      setResetKeys((prev) => [
+                                        ...prev,
+                                        item.key,
+                                      ]);
+                                      setNominalBaruList((prev) => ({
+                                        ...prev,
+                                        [item.key]: 0,
+                                      }));
+                                    }}
+                                  >
+                                    <FiTrash size={16} />
+                                  </button>
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-3">
+                                  <div>
+                                    <label className="block text-xs text-gray-500 mb-1">
+                                      Default
+                                    </label>
+                                    <input
+                                      type="text"
+                                      readOnly
+                                      value={`Rp. ${oldValue.toLocaleString(
+                                        "id-ID"
+                                      )}`}
+                                      className="w-full border border-gray-300 px-3 py-2 rounded text-center bg-gray-50 text-gray-700 font-medium"
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <label className="block text-xs text-gray-500 mb-1">
+                                      Tambahan Cabang
+                                    </label>
+                                    <input
+                                      type="text"
+                                      placeholder="Rp. 0"
+                                      value={
+                                        inputValue === 0
+                                          ? ""
+                                          : `Rp. ${inputValue.toLocaleString(
+                                              "id-ID"
+                                            )}`
+                                      }
+                                      onChange={(e) => {
+                                        const angka =
+                                          parseInt(
+                                            e.target.value.replace(/[^\d]/g, "")
+                                          ) || 0;
                                         setNominalBaruList((prev) => ({
                                           ...prev,
-                                          [item.key]: 0,
+                                          [item.key]: angka,
                                         }));
                                       }}
-                                    >
-                                      <FiTrash />
-                                    </button>
-                                  )}
+                                      className="w-full border border-blue-300 px-3 py-2 rounded text-center bg-white text-blue-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <label className="block text-xs text-gray-500 mb-1">
+                                      Total
+                                    </label>
+                                    <input
+                                      type="text"
+                                      readOnly
+                                      value={`Rp. ${totalValue.toLocaleString(
+                                        "id-ID"
+                                      )}`}
+                                      className="w-full border border-green-300 px-3 py-2 rounded text-center bg-green-50 text-green-700 font-medium"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+
+                        {/* Tampilkan iuranSumbanganList dari API */}
+                        {sumbanganList.length > 0 && (
+                          <div className="mt-4">
+                            <h4 className="font-semibold text-purple-700 mb-2">
+                              Sumbangan Lainnya:
+                            </h4>
+                            {sumbanganList.map((sumbangan, index) => (
+                              <div
+                                key={index}
+                                className="space-y-1 px-3 py-2 rounded-md bg-purple-50 border-l-4 border-purple-400 mb-2"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span className="font-medium text-purple-800">
+                                    {sumbangan.jenis}
+                                  </span>
                                 </div>
 
                                 <div className="grid grid-cols-3 gap-2 mt-2">
                                   <input
                                     type="text"
                                     readOnly
-                                    value={`Rp. ${oldValue.toLocaleString(
-                                      "id-ID"
-                                    )}`}
-                                    className="border px-2 py-1 rounded bg-gray-200 text-center"
+                                    value={`Rp. ${parseInt(
+                                      sumbangan.jumlah || 0
+                                    ).toLocaleString("id-ID")}`}
+                                    className="border px-2 py-1 rounded bg-purple-100 text-center text-purple-700 font-medium"
                                   />
 
-                                  {!item.isSumbanganDetail && (
-                                    <>
-                                      <input
-                                        type="text"
-                                        placeholder="Tambahan cabang"
-                                        value={
-                                          inputValue === 0
-                                            ? ""
-                                            : `Rp. ${inputValue.toLocaleString(
-                                                "id-ID"
-                                              )}`
-                                        }
-                                        onChange={(e) => {
-                                          const angka =
-                                            parseInt(
-                                              e.target.value.replace(
-                                                /[^\d]/g,
-                                                ""
-                                              )
-                                            ) || 0;
-                                          setNominalBaruList((prev) => ({
-                                            ...prev,
-                                            [item.key]: angka,
-                                          }));
-                                        }}
-                                        className="border px-2 py-1 rounded text-center"
-                                      />
+                                  <input
+                                    type="text"
+                                    readOnly
+                                    value="Tidak bisa diubah"
+                                    className="border px-2 py-1 rounded bg-gray-100 text-center text-gray-500"
+                                  />
 
-                                      <input
-                                        type="text"
-                                        readOnly
-                                        value={`Rp. ${totalValue.toLocaleString(
-                                          "id-ID"
-                                        )}`}
-                                        className="border px-2 py-1 rounded bg-gray-200 text-center"
-                                      />
-                                    </>
-                                  )}
+                                  <input
+                                    type="text"
+                                    readOnly
+                                    value={`Rp. ${parseInt(
+                                      sumbangan.jumlah || 0
+                                    ).toLocaleString("id-ID")}`}
+                                    className="border px-2 py-1 rounded bg-purple-100 text-center text-purple-700 font-medium"
+                                  />
                                 </div>
+
+                                {/* Informasi tambahan jika ada */}
+                                {sumbangan.keterangan && (
+                                  <p className="text-xs text-gray-600 mt-1">
+                                    Keterangan: {sumbangan.keterangan}
+                                  </p>
+                                )}
                               </div>
-                            );
-                          })}
+                            ))}
+                          </div>
+                        )}
 
                         {/* 🔹 Tambahan kategori manual */}
                         {addedCategories.map((item, idx) => {
@@ -3952,16 +4069,18 @@ function RekapAnggota() {
                           const inputValue = manualInputs[item.key] ?? 0;
                           const totalValue = oldValue + inputValue;
 
+                          // Tentukan display name
+                          const displayName =
+                            item.keterangan || item.label || item.key;
+
                           return (
                             <div
                               key={`added-${idx}`}
-                              className="space-y-1 px-3 py-2 rounded-md relative"
+                              className="space-y-2 p-3 rounded-lg bg-yellow-50 border-l-4 border-yellow-400 hover:border-yellow-500 transition-colors"
                             >
                               <div className="flex items-center justify-between">
-                                <span className="font-medium">
-                                  {item.key === "lainlain"
-                                    ? selectedKeterangan
-                                    : item.key}
+                                <span className="font-semibold text-yellow-800">
+                                  {displayName}
                                 </span>
                                 <button
                                   type="button"
@@ -3976,113 +4095,143 @@ function RekapAnggota() {
                                       delete newInputs[item.key];
                                       return newInputs;
                                     });
+                                    setNewValues((prev) => {
+                                      const newValues = { ...prev };
+                                      delete newValues[item.key];
+                                      return newValues;
+                                    });
                                   }}
-                                  className="text-red-500 hover:text-red-700"
+                                  className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition-colors"
                                 >
-                                  <FiTrash />
+                                  <FiTrash size={16} />
                                 </button>
                               </div>
 
-                              <div className="grid grid-cols-3 gap-2 mt-2">
-                                <input
-                                  type="text"
-                                  readOnly
-                                  value={`Rp. ${oldValue.toLocaleString(
-                                    "id-ID"
-                                  )}`}
-                                  className="border px-2 py-1 rounded bg-gray-200 text-center"
-                                />
+                              <div className="grid grid-cols-3 gap-3">
+                                <div>
+                                  <label className="block text-xs text-yellow-600 mb-1">
+                                    Default
+                                  </label>
+                                  <input
+                                    type="text"
+                                    readOnly
+                                    value={`Rp. ${oldValue.toLocaleString(
+                                      "id-ID"
+                                    )}`}
+                                    className="w-full border border-yellow-300 px-3 py-2 rounded text-center bg-yellow-100 text-yellow-700 font-medium"
+                                  />
+                                </div>
 
-                                <input
-                                  type="text"
-                                  placeholder="Tambahan cabang"
-                                  value={
-                                    inputValue === 0
-                                      ? ""
-                                      : `Rp. ${inputValue.toLocaleString(
-                                          "id-ID"
-                                        )}`
-                                  }
-                                  onChange={(e) => {
-                                    const angka =
-                                      parseInt(
-                                        e.target.value.replace(/[^\d]/g, "")
-                                      ) || 0;
-                                    setManualInputs((prev) => ({
-                                      ...prev,
-                                      [item.key]: angka,
-                                    }));
-                                  }}
-                                  className="border px-2 py-1 rounded text-center"
-                                />
+                                <div>
+                                  <label className="block text-xs text-yellow-600 mb-1">
+                                    Tambahan
+                                  </label>
+                                  <input
+                                    type="text"
+                                    placeholder="Rp. 0"
+                                    value={
+                                      inputValue === 0
+                                        ? ""
+                                        : `Rp. ${inputValue.toLocaleString(
+                                            "id-ID"
+                                          )}`
+                                    }
+                                    onChange={(e) => {
+                                      const angka =
+                                        parseInt(
+                                          e.target.value.replace(/[^\d]/g, "")
+                                        ) || 0;
+                                      setManualInputs((prev) => ({
+                                        ...prev,
+                                        [item.key]: angka,
+                                      }));
+                                    }}
+                                    className="w-full border border-yellow-300 px-3 py-2 rounded text-center bg-white text-yellow-700 font-medium focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                  />
+                                </div>
 
-                                <input
-                                  type="text"
-                                  readOnly
-                                  value={`Rp. ${totalValue.toLocaleString(
-                                    "id-ID"
-                                  )}`}
-                                  className="border px-2 py-1 rounded bg-gray-200 text-center"
-                                />
+                                <div>
+                                  <label className="block text-xs text-yellow-600 mb-1">
+                                    Total
+                                  </label>
+                                  <input
+                                    type="text"
+                                    readOnly
+                                    value={`Rp. ${totalValue.toLocaleString(
+                                      "id-ID"
+                                    )}`}
+                                    className="w-full border border-yellow-300 px-3 py-2 rounded text-center bg-yellow-100 text-yellow-700 font-medium"
+                                  />
+                                </div>
                               </div>
                             </div>
                           );
                         })}
 
-                        <div className="flex items-center justify-between bg-purple-200 px-3 py-2 rounded-md font-bold">
+                        {/* Total */}
+                        <div className="flex items-center justify-between bg-purple-200 px-3 py-2 rounded-md font-bold mt-4">
                           <span>Total</span>
                           <span>Rp. {grandTotal.toLocaleString("id-ID")}</span>
                         </div>
 
-                        <div className="bg-gray-100 rounded-md p-4 mt-4">
-                          <h3 className="text-lg font-semibold text-purple-800 mb-3">
+                        {/* Form Tambah Kategori */}
+                        <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg border border-gray-300 p-4 mt-6">
+                          <h3 className="text-lg font-semibold text-purple-800 mb-3 flex items-center">
+                            <span className="bg-purple-600 text-white p-2 rounded-full mr-3">
+                              <FiPlus size={18} />
+                            </span>
                             Tambah Keuangan
                           </h3>
 
                           <button
                             onClick={() => setShowDropdown(!showDropdown)}
-                            className="flex items-center text-teal-600 hover:text-teal-800 mb-3"
+                            className="flex items-center text-blue-600 hover:text-blue-800 mb-4 p-3 bg-white rounded-lg border border-blue-200 hover:border-blue-300 transition-colors w-full"
                           >
-                            <span className="text-xl mr-2">➕</span> Tambah
-                            Kategori
+                            <span className="bg-blue-100 text-blue-600 p-2 rounded-full mr-3">
+                              <FiPlus size={16} />
+                            </span>
+                            <span className="font-medium">
+                              Tambah Kategori Baru
+                            </span>
                           </button>
 
                           {showDropdown && (
-                            <div className="space-y-3">
+                            <div className="space-y-4 bg-white p-4 rounded-lg border border-blue-200">
                               <div>
-                                <label className="block text-sm font-medium">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
                                   Pilih Kategori Tambahan
                                 </label>
                                 <select
-                                  className="w-full border rounded px-3 py-2"
+                                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                   value={selectedKategori}
                                   onChange={(e) =>
                                     setSelectedKategori(e.target.value)
                                   }
                                 >
-                                  <option value="">-- Pilih --</option>
+                                  <option value="">-- Pilih Kategori --</option>
                                   <option value="pgri">PGRI</option>
                                   <option value="sanduka">Sanduka</option>
                                   <option value="daspen">
                                     Daspen{" "}
                                     {notifDaspen === true
-                                      ? "__ (✓ Sinkron)"
+                                      ? " (✓ Sinkron)"
                                       : notifDaspen === false
-                                      ? "__ (× Tidak Sinkron)"
-                                      : "__ (× Tidak Sinkron)"}
+                                      ? " (× Tidak Sinkron)"
+                                      : " (× Tidak Sinkron)"}
                                   </option>
                                   <option value="kalender">Kalender</option>
                                   <option value="derap">Derap</option>
                                   <option value="lainlain">Lain-Lain</option>
                                 </select>
                               </div>
+
                               {selectedKategori === "lainlain" && (
                                 <div>
-                                  <label className="block text-sm font-medium">
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
                                     Pilih Keterangan
                                   </label>
                                   <select
-                                    className="w-full border rounded px-3 py-2"
+                                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                                     value={selectedKeterangan}
                                     onChange={(e) =>
                                       setSelectedKeterangan(e.target.value)
@@ -4106,13 +4255,21 @@ function RekapAnggota() {
                                   </select>
                                 </div>
                               )}
+
                               {selectedKategori && (
-                                <div className="flex justify-end">
+                                <div className="flex justify-end space-x-3 pt-2">
+                                  <button
+                                    onClick={() => setShowDropdown(false)}
+                                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                                  >
+                                    Batal
+                                  </button>
                                   <button
                                     onClick={handleSave}
-                                    className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded"
+                                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center"
                                   >
-                                    Simpan
+                                    <FiSave className="mr-2" size={16} />
+                                    Simpan Kategori
                                   </button>
                                 </div>
                               )}
