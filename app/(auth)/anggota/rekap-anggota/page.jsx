@@ -1204,6 +1204,18 @@ function RekapAnggota() {
     }
   };
 
+  // Fungsi untuk menghapus sumbangan (set nominal menjadi 0)
+// Fungsi untuk menghapus sumbangan (set nominal menjadi 0)
+const handleDeleteSumbangan = (sumbanganJenis) => {
+  setSumbanganList(prev => 
+    prev.map(item => 
+      item.jenis === sumbanganJenis 
+        ? { ...item, jumlah: 0 }  // Set jumlah menjadi 0, tapi tetap ada di array
+        : item
+    )
+  );
+};
+  
   const handleSaveClick = async () => {
     if (!dataNpa) return;
 
@@ -1467,166 +1479,154 @@ function RekapAnggota() {
 
       // Process sumbangan data
       let manualSumbanganTotal = 0;
-      const updatedSumbanganList = [];
+const updatedSumbanganList = [];
 
-      // 1. Process data dari sumbanganList (data sistem - readonly)
-      if (sumbanganList && Array.isArray(sumbanganList)) {
-        sumbanganList.forEach((sumbangan) => {
-          if (sumbangan.jenis && sumbangan.jumlah > 0) {
-            updatedSumbanganList.push({
-              jenis: sumbangan.jenis,
-              jumlah: parseInt(sumbangan.jumlah || 0),
-            });
-            // console.log(
-            //   `Added system sumbangan: ${sumbangan.jenis} - ${sumbangan.jumlah}`
-            // );
-          }
-        });
-      }
+// 1. Process data dari sumbanganList (data sistem - readonly)
+if (sumbanganList && Array.isArray(sumbanganList)) {
+  sumbanganList.forEach((sumbangan) => {
+    // SELALU masukkan ke array, bahkan jika jumlah = 0
+    // Ini memastikan semua jenis sumbangan tetap ada dalam array
+    if (sumbangan.jenis) {
+      updatedSumbanganList.push({
+        jenis: sumbangan.jenis,
+        jumlah: parseInt(sumbangan.jumlah || 0),
+      });
+      // console.log(
+      //   `Added sumbangan to list: ${sumbangan.jenis} - ${sumbangan.jumlah}`
+      // );
+    }
+  });
+}
 
       // 2. Process addedCategories (kategori manual yang ditambah user)
       addedCategories.forEach((category) => {
-        const oldValue = parseInt(newValues[category.key] || 0);
-        const manualValue = parseInt(manualInputs[category.key] || 0);
-        const totalValue = oldValue + manualValue;
+  const oldValue = parseInt(newValues[category.key] || 0);
+  const manualValue = parseInt(manualInputs[category.key] || 0);
+  const totalValue = oldValue + manualValue;
 
-        if (totalValue > 0) {
-          // Tentukan jenis/judul berdasarkan struktur category
-          let jenis = "";
+  // SELALU masukkan ke array, bahkan jika totalValue = 0
+  // Tentukan jenis/judul berdasarkan struktur category
+  let jenis = "";
 
-          // Priority 1: Gunakan keterangan jika ada (untuk lainlain)
-          if (category.keterangan) {
-            jenis = category.keterangan;
-          }
-          // Priority 2: Gunakan label jika ada
-          else if (category.label) {
-            jenis = category.label;
-          }
-          // Priority 3: Gunakan key sebagai fallback
-          else {
-            jenis = category.key;
-          }
+  // Priority 1: Gunakan keterangan jika ada (untuk lainlain)
+  if (category.keterangan) {
+    jenis = category.keterangan;
+  }
+  // Priority 2: Gunakan label jika ada
+  else if (category.label) {
+    jenis = category.label;
+  }
+  // Priority 3: Gunakan key sebagai fallback
+  else {
+    jenis = category.key;
+  }
 
-          // console.log(
-          //   `Category debug: key=${category.key}, label=${category.label}, keterangan=${category.keterangan}, final jenis=${jenis}`
-          // );
+  // Untuk kategori yang sudah ada di groupedIuran, skip (karena sudah diproses di atas)
+  const isRegularIuran = [
+    "pgri",
+    "anggota",
+    "sanduka",
+    "daspen",
+    "derap",
+    "kalender",
+  ].includes(category.key);
 
-          // Untuk kategori yang sudah ada di groupedIuran, skip (karena sudah diproses di atas)
-          const isRegularIuran = [
-            "pgri",
-            "anggota",
-            "sanduka",
-            "daspen",
-            "derap",
-            "kalender",
-          ].includes(category.key);
+  if (!isRegularIuran && jenis) {
+    // Cek apakah sudah ada dalam list
+    const existingIndex = updatedSumbanganList.findIndex(
+      (item) => item.jenis === jenis
+    );
 
-          if (!isRegularIuran && jenis) {
-            // Cek apakah sudah ada dalam list
-            const existingIndex = updatedSumbanganList.findIndex(
-              (item) => item.jenis === jenis
-            );
-
-            if (existingIndex === -1) {
-              updatedSumbanganList.push({
-                jenis: jenis,
-                jumlah: totalValue,
-              });
-            } else {
-              updatedSumbanganList[existingIndex].jumlah += totalValue;
-            }
-
-            manualSumbanganTotal += manualValue; // Hanya manual value yang ditambahkan
-            // console.log(
-            //   `Added manual category: ${jenis} - total: ${totalValue}, manual: ${manualValue}`
-            // );
-          }
-        }
+    if (existingIndex === -1) {
+      // Jika belum ada, tambahkan baru
+      updatedSumbanganList.push({
+        jenis: jenis,
+        jumlah: totalValue,
       });
+    } else {
+      // Jika sudah ada, update jumlahnya
+      updatedSumbanganList[existingIndex].jumlah = totalValue;
+    }
 
-      // 3. Process nominalBaruList untuk sumbangan lainnya (fallback)
-      Object.keys(nominalBaruList).forEach((key) => {
-        const nominalValue = parseInt(nominalBaruList[key] || 0);
+    manualSumbanganTotal += manualValue; // Hanya manual value yang ditambahkan
+    // console.log(
+    //   `Processed manual category: ${jenis} - total: ${totalValue}, manual: ${manualValue}`
+    // );
+  }
+});
 
-        // Hanya proses yang bukan iuran reguler dan nilai > 0
-        if (
-          nominalValue > 0 &&
-          ![
-            "pgri",
-            "sanduka",
-            "daspen",
-            "derap",
-            "kalender",
-            "anggota",
-          ].includes(key) &&
-          !key.startsWith("manualpgri") &&
-          !key.startsWith("manualsanduka") &&
-          !key.startsWith("manualdaspen") &&
-          !key.startsWith("manualderap") &&
-          !key.startsWith("manualkalender") &&
-          !key.startsWith("manualanggota")
-        ) {
-          // Cari di addedCategories untuk mendapatkan label yang benar
-          const category = addedCategories.find((cat) => cat.key === key);
-          if (category) {
-            let jenis = "";
+// 3. Process nominalBaruList untuk sumbangan lainnya (fallback)
+Object.keys(nominalBaruList).forEach((key) => {
+  const nominalValue = parseInt(nominalBaruList[key] || 0);
 
-            // Priority 1: Gunakan keterangan jika ada (untuk lainlain)
-            if (category.keterangan) {
-              jenis = category.keterangan;
-            }
-            // Priority 2: Gunakan label jika ada
-            else if (category.label) {
-              jenis = category.label;
-            }
-            // Priority 3: Gunakan key sebagai fallback
-            else {
-              jenis = category.key;
-            }
+  // Hanya proses yang bukan iuran reguler
+  if (
+    ![
+      "pgri",
+      "sanduka",
+      "daspen",
+      "derap",
+      "kalender",
+      "anggota",
+    ].includes(key) &&
+    !key.startsWith("manualpgri") &&
+    !key.startsWith("manualsanduka") &&
+    !key.startsWith("manualdaspen") &&
+    !key.startsWith("manualderap") &&
+    !key.startsWith("manualkalender") &&
+    !key.startsWith("manualanggota")
+  ) {
+    // Cari di addedCategories untuk mendapatkan label yang benar
+    const category = addedCategories.find((cat) => cat.key === key);
+    if (category) {
+      let jenis = "";
 
-            if (jenis) {
-              const existingIndex = updatedSumbanganList.findIndex(
-                (item) => item.jenis === jenis
-              );
+      // Priority 1: Gunakan keterangan jika ada (untuk lainlain)
+      if (category.keterangan) {
+        jenis = category.keterangan;
+      }
+      // Priority 2: Gunakan label jika ada
+      else if (category.label) {
+        jenis = category.label;
+      }
+      // Priority 3: Gunakan key sebagai fallback
+      else {
+        jenis = category.key;
+      }
 
-              if (existingIndex === -1) {
-                updatedSumbanganList.push({
-                  jenis: jenis,
-                  jumlah: nominalValue,
-                });
-              } else {
-                updatedSumbanganList[existingIndex].jumlah += nominalValue;
-              }
+      if (jenis) {
+        const existingIndex = updatedSumbanganList.findIndex(
+          (item) => item.jenis === jenis
+        );
 
-              manualSumbanganTotal += nominalValue;
-            }
-          }
+        if (existingIndex === -1) {
+          updatedSumbanganList.push({
+            jenis: jenis,
+            jumlah: nominalValue,
+          });
+        } else {
+          updatedSumbanganList[existingIndex].jumlah = nominalValue;
         }
-      });
 
-      // Update payload dengan data sumbangan
-      payload.manualIuranSumbangan = manualSumbanganTotal;
+        manualSumbanganTotal += nominalValue;
+      }
+    }
+  }
+});
 
-      // Remove duplicates berdasarkan jenis
-      const uniqueSumbanganList = [];
-      const seenTypes = new Set();
+// Update payload dengan data sumbangan
+payload.manualIuranSumbangan = manualSumbanganTotal;
 
-      updatedSumbanganList.forEach((item) => {
-        if (!seenTypes.has(item.jenis) && item.jumlah > 0) {
-          seenTypes.add(item.jenis);
-          uniqueSumbanganList.push(item);
-        }
-      });
+// Filter hanya items dengan jumlah > 0 untuk dikirim ke API
+// Tapi jika ingin mengirim semua (termasuk yang 0), hapus filter ini
+payload.iuranSumbanganList = updatedSumbanganList.filter(item => item.jumlah > 0);
 
-      payload.iuranSumbanganList = uniqueSumbanganList;
+// Atau jika ingin mengirim SEMUA data (termasuk yang jumlah = 0), gunakan ini:
+// payload.iuranSumbanganList = updatedSumbanganList;
 
-      // console.log("Data yg akan update",payload);
-      // console.log("=== FINAL PAYLOAD ===");
-      // console.log("iuranSumbanganList:", payload.iuranSumbanganList);
-      // console.log("manualIuranSumbangan:", payload.manualIuranSumbangan);
-      // console.log("addedCategories:", addedCategories);
-      // console.log("manualInputs:", manualInputs);
-      // console.log("newValues:", newValues);
+console.log("=== FINAL SUMBANGAN DATA ===");
+console.log("manualIuranSumbangan:", payload.manualIuranSumbangan);
+console.log("iuranSumbanganList:", payload.iuranSumbanganList);
 
       // Panggil API update
       if (idIuran) {
@@ -4043,59 +4043,111 @@ function RekapAnggota() {
                           })}
 
                         {/* Tampilkan iuranSumbanganList dari API */}
-                        {sumbanganList.length > 0 && (
-                          <div className="mt-4">
-                            <h4 className="font-semibold text-purple-700 mb-2">
-                              Sumbangan Lainnya:
-                            </h4>
-                            {sumbanganList.map((sumbangan, index) => (
-                              <div
-                                key={index}
-                                className="space-y-1 px-3 py-2 rounded-md bg-purple-50 border-l-4 border-purple-400 mb-2"
-                              >
-                                <div className="flex items-center justify-between">
-                                  <span className="font-medium text-purple-800">
-                                    {sumbangan.jenis}
-                                  </span>
-                                </div>
+{sumbanganList.length > 0 && (
+  <div className="mt-4">
+    <h4 className="font-semibold text-purple-700 mb-2">
+      Sumbangan Lainnya:
+    </h4>
+    {sumbanganList.map((sumbangan, index) => {
+      const jumlahValue = parseInt(sumbangan.jumlah || 0);
+      const isDeleted = jumlahValue === 0;
+      
+      return (
+        <div
+          key={index}
+          className={`space-y-1 px-3 py-2 rounded-md border-l-4 mb-2 ${
+            isDeleted 
+              ? 'bg-gray-100 border-gray-400 opacity-60' 
+              : 'bg-purple-50 border-purple-400'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className={`font-medium ${
+              isDeleted ? 'text-gray-500' : 'text-purple-800'
+            }`}>
+              {sumbangan.jenis}
+              {isDeleted && <span className="text-red-500 ml-2 text-sm">(Dihapus)</span>}
+            </span>
+            
+            {/* Tombol Trash - selalu tampil, bahkan untuk yang sudah di-delete */}
+            <button
+              type="button"
+              className={`p-1 rounded-full transition-colors ${
+                isDeleted 
+                  ? 'text-gray-400 cursor-not-allowed' 
+                  : 'text-red-500 hover:text-red-700 hover:bg-red-50'
+              }`}
+              onClick={() => !isDeleted && handleDeleteSumbangan(sumbangan.jenis)}
+              disabled={isDeleted}
+              title={isDeleted ? "Sudah dihapus" : "Hapus item"}
+            >
+              <FiTrash size={16} />
+            </button>
+          </div>
 
-                                <div className="grid grid-cols-3 gap-2 mt-2">
-                                  <input
-                                    type="text"
-                                    readOnly
-                                    value={`Rp. ${parseInt(
-                                      sumbangan.jumlah || 0
-                                    ).toLocaleString("id-ID")}`}
-                                    className="border px-2 py-1 rounded bg-purple-100 text-center text-purple-700 font-medium"
-                                  />
+          <div className="grid grid-cols-3 gap-2 mt-2">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">
+                Nilai Sumbangan
+              </label>
+              <input
+                type="text"
+                readOnly
+                value={`Rp. ${jumlahValue.toLocaleString("id-ID")}`}
+                className={`w-full border px-2 py-1 rounded text-center font-medium ${
+                  isDeleted 
+                    ? 'bg-gray-200 text-gray-500' 
+                    : 'bg-purple-100 text-purple-700'
+                }`}
+              />
+            </div>
 
-                                  <input
-                                    type="text"
-                                    readOnly
-                                    value="Tidak bisa diubah"
-                                    className="border px-2 py-1 rounded bg-gray-100 text-center text-gray-500"
-                                  />
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">
+                Tambahan Cabang
+              </label>
+              <input
+                type="text"
+                readOnly
+                value={isDeleted ? "Dihapus" : "Tidak bisa diubah"}
+                className={`w-full border px-2 py-1 rounded text-center ${
+                  isDeleted 
+                    ? 'bg-gray-200 text-gray-500' 
+                    : 'bg-gray-100 text-gray-500'
+                }`}
+              />
+            </div>
 
-                                  <input
-                                    type="text"
-                                    readOnly
-                                    value={`Rp. ${parseInt(
-                                      sumbangan.jumlah || 0
-                                    ).toLocaleString("id-ID")}`}
-                                    className="border px-2 py-1 rounded bg-purple-100 text-center text-purple-700 font-medium"
-                                  />
-                                </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">
+                Total
+              </label>
+              <input
+                type="text"
+                readOnly
+                value={`Rp. ${jumlahValue.toLocaleString("id-ID")}`}
+                className={`w-full border px-2 py-1 rounded text-center font-medium ${
+                  isDeleted 
+                    ? 'bg-gray-200 text-gray-500' 
+                    : 'bg-purple-100 text-purple-700'
+                }`}
+              />
+            </div>
+          </div>
 
-                                {/* Informasi tambahan jika ada */}
-                                {sumbangan.keterangan && (
-                                  <p className="text-xs text-gray-600 mt-1">
-                                    Keterangan: {sumbangan.keterangan}
-                                  </p>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        )}
+          {/* Informasi tambahan jika ada */}
+          {sumbangan.keterangan && (
+            <p className={`text-xs mt-1 ${
+              isDeleted ? 'text-gray-400' : 'text-gray-600'
+            }`}>
+              Keterangan: {sumbangan.keterangan}
+            </p>
+          )}
+        </div>
+      );
+    })}
+  </div>
+)}
 
                         {/* 🔹 Tambahan kategori manual */}
                         {addedCategories.map((item, idx) => {
