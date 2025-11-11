@@ -1025,7 +1025,6 @@ function RekapAnggota() {
   const groupIuranData = (dataIuran) => {
     if (!dataIuran) return [];
 
-    // Mapping key untuk match dengan response getAllByNominal
     const keyMap = [
       { key: "anggota", apiKey: "Pgri" },
       { key: "sanduka", apiKey: "Sanduka" },
@@ -1069,7 +1068,6 @@ function RekapAnggota() {
     if (dataIuran) {
       const defaultNominalBaru = {};
 
-      // Mapping key untuk match dengan response getAllByNominal
       const keyMap = [
         { frontendKey: "anggota", apiKey: "Pgri" },
         { frontendKey: "sanduka", apiKey: "Sanduka" },
@@ -1412,6 +1410,7 @@ const handleDeleteSumbangan = (sumbanganJenis) => {
         nomorRekening: nomorRekening ? parseInt(nomorRekening) : null,
         cabang: dataNpa.cabang,
         unitKerja: dataNpa.unitKerja,
+        statusPegawai: dataNpa.statusPegawai,
 
         // Inisialisasi semua field iuran dengan nilai default 0
         iuranAnggota: 0,
@@ -1849,7 +1848,6 @@ console.log("iuranSumbanganList:", payload.iuranSumbanganList);
 
       let anggotaAll = [];
       try {
-        // Menggunakan getAllByNominal untuk mendapatkan data lengkap
         const allData = await GlobalApi.getAllByNominal("", bulan, tahun);
 
         const latestPerNpa = Object.values(
