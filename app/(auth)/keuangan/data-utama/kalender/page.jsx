@@ -643,9 +643,9 @@ function KalenderForm() {
                       <div className="flex justify-between items-center mb-4">
                         <div>
                           <h2 className="text-xl font-bold text-teal-800">
-                            Nominal Peruntukan Derap
+                            Nominal Peruntukan Kalender
                           </h2>
-                          <p>Atur besaran nominal peruntukan untuk Derap.</p>
+                          <p>Atur besaran nominal peruntukan untuk Kalender.</p>
                         </div>
                         <button
                           onClick={() => setModalNominal(false)}
