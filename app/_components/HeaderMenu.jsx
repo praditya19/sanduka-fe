@@ -253,7 +253,7 @@ const HeaderMenu = () => {
 
   return (
     <>
-      <nav className="bg-teal-500 shadow-md fixed top-0 inset-x-0 z-50">
+      <nav className="bg-teal-500 shadow-md fixed top-0 inset-x-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-12">
             <div className="flex items-center space-x-4">

@@ -135,7 +135,6 @@ function RekapAnggota() {
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedKategori, setSelectedKategori] = useState("");
-  const [nominal, setNominal] = useState("");
   const [dataNpa, setDataNpa] = useState(null);
   const [fotoBase64, setFotoBase64] = useState(null);
   const profileImageUrl = "/profile.png";
@@ -180,7 +179,6 @@ function RekapAnggota() {
   const [resetKeys, setResetKeys] = useState([]);
   const [progress, setProgress] = useState(0);
   const [notifDaspen, setNotifDaspen] = useState(null);
-  const [pesanDaspen, setPesanDaspen] = useState("");
   const [listNoRekening, setListNoRekening] = useState([]);
   const [sumbanganList, setSumbanganList] = useState([]);
   const [isExporting, setIsExporting] = useState(false);
@@ -205,19 +203,26 @@ function RekapAnggota() {
     "Desember",
   ];
 
-  const now = new Date();
-  const [selectedBulan, setSelectedBulan] = useState(""); // <- kosong, tidak otomatis
+  const [selectedBulan, setSelectedBulan] = useState("");
   const [selectedTahun, setSelectedTahun] = useState(new Date().getFullYear());
-  // State untuk tagihan bulan
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const filteredMonths = selectedTahun === 2025 ? months.slice(4) : months;
-
-  useEffect(() => {
+  // State untuk tagihan bulan
+  const getNextMonthYear = () => {
     const now = new Date();
-    setSelectedMonth(now.getMonth() + 1); // bulan dimulai dari 0, jadi +1
-    setSelectedYear(now.getFullYear());
-  }, []);
+    const nextMonthDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+    return {
+      month: nextMonthDate.getMonth() + 1,
+      year: nextMonthDate.getFullYear(),
+    };
+  };
+
+  const [selectedMonth, setSelectedMonth] = useState(
+    () => getNextMonthYear().month
+  );
+  const [selectedYear, setSelectedYear] = useState(
+    () => getNextMonthYear().year
+  );
 
   useEffect(() => {
     const fetchCabangData = async () => {
@@ -921,7 +926,6 @@ function RekapAnggota() {
     setManualInputs({});
 
     try {
-      // 🔹 Ambil file tambahan (opsional)
       const fileResponse = await GlobalApi.getFileByNip(member.nip);
       if (fileResponse?.sumbangan) {
         setDaspenValue(parseInt(fileResponse.sumbangan));
@@ -932,12 +936,10 @@ function RekapAnggota() {
     }
 
     try {
-      // 🔹 Ambil data NPA
       const response = await GlobalApi.cekNpaList([member.npaPgri]);
       setSelectedMember(member);
       setDataNpa(response[0]);
 
-      // Tampilkan foto (jika ada)
       if (response[0]?.foto) {
         try {
           const decodedString = atob(response[0].foto);
@@ -948,16 +950,13 @@ function RekapAnggota() {
         }
       }
 
-      // 🔹 Ambil data iuran berdasarkan NPA langsung
       const dataIuran = await GlobalApi.getByIdByNominal(member.idByNominal);
       console.log("📦 Data Iuran by NPA:", dataIuran);
 
-      // Set ke state utama
       setDataIuran(dataIuran);
       setIdIuran(dataIuran.id || null);
       setNomorRekening(dataIuran.nomorRekening || "");
 
-      // 🔹 Siapkan nilai manual
       const manualValues = {};
       const manualKeys = [
         "Pgri",
@@ -978,21 +977,14 @@ function RekapAnggota() {
 
       setNominalBaruList(manualValues);
 
-      // 🔹 Simpan data iuranSumbanganList ke state terpisah untuk ditampilkan
       if (
         dataIuran?.iuranSumbanganList &&
         Array.isArray(dataIuran.iuranSumbanganList)
       ) {
-        // Simpan ke state khusus untuk sumbangan
         setSumbanganList(dataIuran.iuranSumbanganList);
       } else {
         setSumbanganList([]);
       }
-
-      // 🔹 SELALU GUNAKAN BULAN DAN TAHUN SEKARANG
-      const now = new Date();
-      setSelectedYear(now.getFullYear());
-      setSelectedMonth(now.getMonth() + 1);
 
       setIsPopupVisible(true);
     } catch (error) {
@@ -1048,7 +1040,6 @@ function RekapAnggota() {
           item.iuran !== undefined && (item.iuran > 0 || item.manual > 0)
       );
 
-    // Handle iuranSumbanganList
     if (Array.isArray(dataIuran.iuranSumbanganList)) {
       const sumbanganItems = dataIuran.iuranSumbanganList.map((sumb) => ({
         key: sumb.jenis,
@@ -1202,18 +1193,14 @@ function RekapAnggota() {
     }
   };
 
-  // Fungsi untuk menghapus sumbangan (set nominal menjadi 0)
-// Fungsi untuk menghapus sumbangan (set nominal menjadi 0)
-const handleDeleteSumbangan = (sumbanganJenis) => {
-  setSumbanganList(prev => 
-    prev.map(item => 
-      item.jenis === sumbanganJenis 
-        ? { ...item, jumlah: 0 }  // Set jumlah menjadi 0, tapi tetap ada di array
-        : item
-    )
-  );
-};
-  
+  const handleDeleteSumbangan = (sumbanganJenis) => {
+    setSumbanganList((prev) =>
+      prev.map((item) =>
+        item.jenis === sumbanganJenis ? { ...item, jumlah: 0 } : item
+      )
+    );
+  };
+
   const handleSaveClick = async () => {
     if (!dataNpa) return;
 
@@ -1397,12 +1384,10 @@ const handleDeleteSumbangan = (sumbanganJenis) => {
     if (!dataNpa) return;
 
     try {
-      // Format tanggal untuk tagihanUntukBulan (YYYY-MM-DD)
       const tagihanUntukBulan = `${selectedYear}-${selectedMonth
         .toString()
         .padStart(2, "0")}-01`;
 
-      // Siapkan payload dasar
       const payload = {
         namaAnggota: dataNpa.namaLengkap,
         nip: dataNpa.nip,
@@ -1412,7 +1397,6 @@ const handleDeleteSumbangan = (sumbanganJenis) => {
         unitKerja: dataNpa.unitKerja,
         statusPegawai: dataNpa.statusPegawai,
 
-        // Inisialisasi semua field iuran dengan nilai default 0
         iuranAnggota: 0,
         manualIuranAnggota: 0,
         totalIuranAnggota: 0,
@@ -1437,7 +1421,6 @@ const handleDeleteSumbangan = (sumbanganJenis) => {
         iuranSumbanganList: [],
       };
 
-      // Process groupedIuran (iuran reguler)
       groupedIuran.forEach((item) => {
         const key = item.key;
         const isReset = resetKeys.includes(key);
@@ -1448,10 +1431,6 @@ const handleDeleteSumbangan = (sumbanganJenis) => {
               nominalBaruList[`manual${key}`] || nominalBaruList[key] || 0
             );
         const total = iuran + manual;
-
-        // console.log(
-        //   `Processing ${key}: iuran=${iuran}, manual=${manual}, total=${total}`
-        // );
 
         if (key === "pgri" || key === "anggota") {
           payload.iuranAnggota = iuran;
@@ -1476,158 +1455,123 @@ const handleDeleteSumbangan = (sumbanganJenis) => {
         }
       });
 
-      // Process sumbangan data
       let manualSumbanganTotal = 0;
-const updatedSumbanganList = [];
+      const updatedSumbanganList = [];
 
-// 1. Process data dari sumbanganList (data sistem - readonly)
-if (sumbanganList && Array.isArray(sumbanganList)) {
-  sumbanganList.forEach((sumbangan) => {
-    // SELALU masukkan ke array, bahkan jika jumlah = 0
-    // Ini memastikan semua jenis sumbangan tetap ada dalam array
-    if (sumbangan.jenis) {
-      updatedSumbanganList.push({
-        jenis: sumbangan.jenis,
-        jumlah: parseInt(sumbangan.jumlah || 0),
-      });
-      // console.log(
-      //   `Added sumbangan to list: ${sumbangan.jenis} - ${sumbangan.jumlah}`
-      // );
-    }
-  });
-}
+      if (sumbanganList && Array.isArray(sumbanganList)) {
+        sumbanganList.forEach((sumbangan) => {
+          if (sumbangan.jenis) {
+            updatedSumbanganList.push({
+              jenis: sumbangan.jenis,
+              jumlah: parseInt(sumbangan.jumlah || 0),
+            });
+          }
+        });
+      }
 
-      // 2. Process addedCategories (kategori manual yang ditambah user)
       addedCategories.forEach((category) => {
-  const oldValue = parseInt(newValues[category.key] || 0);
-  const manualValue = parseInt(manualInputs[category.key] || 0);
-  const totalValue = oldValue + manualValue;
+        const oldValue = parseInt(newValues[category.key] || 0);
+        const manualValue = parseInt(manualInputs[category.key] || 0);
+        const totalValue = oldValue + manualValue;
 
-  // SELALU masukkan ke array, bahkan jika totalValue = 0
-  // Tentukan jenis/judul berdasarkan struktur category
-  let jenis = "";
+        let jenis = "";
 
-  // Priority 1: Gunakan keterangan jika ada (untuk lainlain)
-  if (category.keterangan) {
-    jenis = category.keterangan;
-  }
-  // Priority 2: Gunakan label jika ada
-  else if (category.label) {
-    jenis = category.label;
-  }
-  // Priority 3: Gunakan key sebagai fallback
-  else {
-    jenis = category.key;
-  }
-
-  // Untuk kategori yang sudah ada di groupedIuran, skip (karena sudah diproses di atas)
-  const isRegularIuran = [
-    "pgri",
-    "anggota",
-    "sanduka",
-    "daspen",
-    "derap",
-    "kalender",
-  ].includes(category.key);
-
-  if (!isRegularIuran && jenis) {
-    // Cek apakah sudah ada dalam list
-    const existingIndex = updatedSumbanganList.findIndex(
-      (item) => item.jenis === jenis
-    );
-
-    if (existingIndex === -1) {
-      // Jika belum ada, tambahkan baru
-      updatedSumbanganList.push({
-        jenis: jenis,
-        jumlah: totalValue,
-      });
-    } else {
-      // Jika sudah ada, update jumlahnya
-      updatedSumbanganList[existingIndex].jumlah = totalValue;
-    }
-
-    manualSumbanganTotal += manualValue; // Hanya manual value yang ditambahkan
-    // console.log(
-    //   `Processed manual category: ${jenis} - total: ${totalValue}, manual: ${manualValue}`
-    // );
-  }
-});
-
-// 3. Process nominalBaruList untuk sumbangan lainnya (fallback)
-Object.keys(nominalBaruList).forEach((key) => {
-  const nominalValue = parseInt(nominalBaruList[key] || 0);
-
-  // Hanya proses yang bukan iuran reguler
-  if (
-    ![
-      "pgri",
-      "sanduka",
-      "daspen",
-      "derap",
-      "kalender",
-      "anggota",
-    ].includes(key) &&
-    !key.startsWith("manualpgri") &&
-    !key.startsWith("manualsanduka") &&
-    !key.startsWith("manualdaspen") &&
-    !key.startsWith("manualderap") &&
-    !key.startsWith("manualkalender") &&
-    !key.startsWith("manualanggota")
-  ) {
-    // Cari di addedCategories untuk mendapatkan label yang benar
-    const category = addedCategories.find((cat) => cat.key === key);
-    if (category) {
-      let jenis = "";
-
-      // Priority 1: Gunakan keterangan jika ada (untuk lainlain)
-      if (category.keterangan) {
-        jenis = category.keterangan;
-      }
-      // Priority 2: Gunakan label jika ada
-      else if (category.label) {
-        jenis = category.label;
-      }
-      // Priority 3: Gunakan key sebagai fallback
-      else {
-        jenis = category.key;
-      }
-
-      if (jenis) {
-        const existingIndex = updatedSumbanganList.findIndex(
-          (item) => item.jenis === jenis
-        );
-
-        if (existingIndex === -1) {
-          updatedSumbanganList.push({
-            jenis: jenis,
-            jumlah: nominalValue,
-          });
+        if (category.keterangan) {
+          jenis = category.keterangan;
+        } else if (category.label) {
+          jenis = category.label;
         } else {
-          updatedSumbanganList[existingIndex].jumlah = nominalValue;
+          jenis = category.key;
         }
 
-        manualSumbanganTotal += nominalValue;
-      }
-    }
-  }
-});
+        const isRegularIuran = [
+          "pgri",
+          "anggota",
+          "sanduka",
+          "daspen",
+          "derap",
+          "kalender",
+        ].includes(category.key);
 
-// Update payload dengan data sumbangan
-payload.manualIuranSumbangan = manualSumbanganTotal;
+        if (!isRegularIuran && jenis) {
+          const existingIndex = updatedSumbanganList.findIndex(
+            (item) => item.jenis === jenis
+          );
 
-// Filter hanya items dengan jumlah > 0 untuk dikirim ke API
-// Tapi jika ingin mengirim semua (termasuk yang 0), hapus filter ini
-payload.iuranSumbanganList = updatedSumbanganList.filter(item => item.jumlah > 0);
+          if (existingIndex === -1) {
+            updatedSumbanganList.push({
+              jenis: jenis,
+              jumlah: totalValue,
+            });
+          } else {
+            updatedSumbanganList[existingIndex].jumlah = totalValue;
+          }
 
-// Atau jika ingin mengirim SEMUA data (termasuk yang jumlah = 0), gunakan ini:
-// payload.iuranSumbanganList = updatedSumbanganList;
+          manualSumbanganTotal += manualValue;
+        }
+      });
 
-console.log("=== FINAL SUMBANGAN DATA ===");
-console.log("manualIuranSumbangan:", payload.manualIuranSumbangan);
-console.log("iuranSumbanganList:", payload.iuranSumbanganList);
+      Object.keys(nominalBaruList).forEach((key) => {
+        const nominalValue = parseInt(nominalBaruList[key] || 0);
 
-      // Panggil API update
+        if (
+          ![
+            "pgri",
+            "sanduka",
+            "daspen",
+            "derap",
+            "kalender",
+            "anggota",
+          ].includes(key) &&
+          !key.startsWith("manualpgri") &&
+          !key.startsWith("manualsanduka") &&
+          !key.startsWith("manualdaspen") &&
+          !key.startsWith("manualderap") &&
+          !key.startsWith("manualkalender") &&
+          !key.startsWith("manualanggota")
+        ) {
+          const category = addedCategories.find((cat) => cat.key === key);
+          if (category) {
+            let jenis = "";
+
+            if (category.keterangan) {
+              jenis = category.keterangan;
+            } else if (category.label) {
+              jenis = category.label;
+            } else {
+              jenis = category.key;
+            }
+
+            if (jenis) {
+              const existingIndex = updatedSumbanganList.findIndex(
+                (item) => item.jenis === jenis
+              );
+
+              if (existingIndex === -1) {
+                updatedSumbanganList.push({
+                  jenis: jenis,
+                  jumlah: nominalValue,
+                });
+              } else {
+                updatedSumbanganList[existingIndex].jumlah = nominalValue;
+              }
+
+              manualSumbanganTotal += nominalValue;
+            }
+          }
+        }
+      });
+
+      payload.manualIuranSumbangan = manualSumbanganTotal;
+
+      payload.iuranSumbanganList = updatedSumbanganList.filter(
+        (item) => item.jumlah > 0
+      );
+
+      // console.log("=== FINAL SUMBANGAN DATA ===");
+      // console.log("manualIuranSumbangan:", payload.manualIuranSumbangan);
+      // console.log("iuranSumbanganList:", payload.iuranSumbanganList);
+
       if (idIuran) {
         await GlobalApi.updateByNominalByBulan(
           dataNpa.nip,
@@ -1638,7 +1582,6 @@ console.log("iuranSumbanganList:", payload.iuranSumbanganList);
         await GlobalApi.createByNominal(payload);
       }
 
-      // Refresh data
       await fetchInitialData();
 
       setNotification({
@@ -1648,7 +1591,6 @@ console.log("iuranSumbanganList:", payload.iuranSumbanganList);
           .padStart(2, "0")}-${selectedYear}!`,
       });
 
-      // Reset state
       setIsPopupVisible(false);
       setResetKeys([]);
       setAddedCategories([]);
@@ -2249,229 +2191,234 @@ console.log("iuranSumbanganList:", payload.iuranSumbanganList);
 
   // berantakan tapi benar
   const exportToExcel = async () => {
-  try {
-    setIsExporting(true);
-     const cabangParam = selectedCabang?.kecamatan || "";
-    const unitKerjaParam = selectedUnitKerja?.unitKerja || "";
-    const bulanParam = selectedBulan || null;
-    const tahunParam = selectedTahun || null;
+    try {
+      setIsExporting(true);
+      const cabangParam = selectedCabang?.kecamatan || "";
+      const unitKerjaParam = selectedUnitKerja?.unitKerja || "";
+      const bulanParam = selectedBulan || null;
+      const tahunParam = selectedTahun || null;
 
-    const allData = await GlobalApi.getNominalAggregatedData(
-      cabangParam,
-      unitKerjaParam,
-      null,
-      bulanParam,
-      tahunParam
-    );
-
-    console.log(`📊 Jumlah data yang didapat: ${allData?.length || 0} data`);
-
-    if (!allData || allData.length === 0) {
-      alert("Tidak ada data anggota ditemukan untuk tahun ini.");
-      return;
-    }
-
-    // --- FILTER DATA BERDASARKAN INPUT ---
-    let filteredData = allData;
-
-    if (selectedCabang && selectedCabang.trim() !== "") {
-      filteredData = filteredData.filter(
-        (item) =>
-          item.cabang &&
-          item.cabang.toLowerCase().includes(selectedCabang.toLowerCase())
+      const allData = await GlobalApi.getNominalAggregatedData(
+        cabangParam,
+        unitKerjaParam,
+        null,
+        bulanParam,
+        tahunParam
       );
-    }
 
-    if (selectedUnitKerja && selectedUnitKerja.trim() !== "") {
-      filteredData = filteredData.filter(
-        (item) =>
-          item.unitKerja &&
-          item.unitKerja
-            .toLowerCase()
-            .includes(selectedUnitKerja.toLowerCase())
-      );
-    }
+      console.log(`📊 Jumlah data yang didapat: ${allData?.length || 0} data`);
 
-    if (namaAnggotaInput && namaAnggotaInput.trim() !== "") {
-      filteredData = filteredData.filter(
-        (item) =>
-          item.namaAnggota &&
-          item.namaAnggota
-            .toLowerCase()
-            .includes(namaAnggotaInput.toLowerCase())
-      );
-    }
+      if (!allData || allData.length === 0) {
+        alert("Tidak ada data anggota ditemukan untuk tahun ini.");
+        return;
+      }
 
-    if (filteredData.length === 0) {
-      alert("Tidak ada data sesuai dengan filter yang dipilih.");
-      return;
-    }
+      // --- FILTER DATA BERDASARKAN INPUT ---
+      let filteredData = allData;
 
-    console.log(`🔍 Jumlah data setelah filter: ${filteredData.length} data`);
+      if (selectedCabang && selectedCabang.trim() !== "") {
+        filteredData = filteredData.filter(
+          (item) =>
+            item.cabang &&
+            item.cabang.toLowerCase().includes(selectedCabang.toLowerCase())
+        );
+      }
 
-    // --- Ambil data terbaru per NPA berdasarkan lastUpdatedAtIuran ---
-    const latestPerNpa = Object.values(
-      filteredData.reduce((acc, item) => {
-        const npa = item.npaPgri; // Menggunakan npaPgri dari response baru
-        if (!npa) return acc;
+      if (selectedUnitKerja && selectedUnitKerja.trim() !== "") {
+        filteredData = filteredData.filter(
+          (item) =>
+            item.unitKerja &&
+            item.unitKerja
+              .toLowerCase()
+              .includes(selectedUnitKerja.toLowerCase())
+        );
+      }
 
-        // Jika belum ada data untuk NPA ini, langsung simpan
-        if (!acc[npa]) {
-          acc[npa] = item;
-        } else {
-          // Bandingkan lastUpdatedAtIuran untuk mengambil yang terbaru
-          const currentDate = item.lastUpdatedAtIuran ? new Date(item.lastUpdatedAtIuran) : new Date(0);
-          const existingDate = acc[npa].lastUpdatedAtIuran ? new Date(acc[npa].lastUpdatedAtIuran) : new Date(0);
+      if (namaAnggotaInput && namaAnggotaInput.trim() !== "") {
+        filteredData = filteredData.filter(
+          (item) =>
+            item.namaAnggota &&
+            item.namaAnggota
+              .toLowerCase()
+              .includes(namaAnggotaInput.toLowerCase())
+        );
+      }
 
-          if (currentDate > existingDate) {
+      if (filteredData.length === 0) {
+        alert("Tidak ada data sesuai dengan filter yang dipilih.");
+        return;
+      }
+
+      console.log(`🔍 Jumlah data setelah filter: ${filteredData.length} data`);
+
+      // --- Ambil data terbaru per NPA berdasarkan lastUpdatedAtIuran ---
+      const latestPerNpa = Object.values(
+        filteredData.reduce((acc, item) => {
+          const npa = item.npaPgri; // Menggunakan npaPgri dari response baru
+          if (!npa) return acc;
+
+          // Jika belum ada data untuk NPA ini, langsung simpan
+          if (!acc[npa]) {
             acc[npa] = item;
+          } else {
+            // Bandingkan lastUpdatedAtIuran untuk mengambil yang terbaru
+            const currentDate = item.lastUpdatedAtIuran
+              ? new Date(item.lastUpdatedAtIuran)
+              : new Date(0);
+            const existingDate = acc[npa].lastUpdatedAtIuran
+              ? new Date(acc[npa].lastUpdatedAtIuran)
+              : new Date(0);
+
+            if (currentDate > existingDate) {
+              acc[npa] = item;
+            }
           }
-        }
-        return acc;
-      }, {})
-    );
+          return acc;
+        }, {})
+      );
 
-    console.log(`✅ Jumlah data unik setelah ambil terbaru: ${latestPerNpa.length} data`);
+      console.log(
+        `✅ Jumlah data unik setelah ambil terbaru: ${latestPerNpa.length} data`
+      );
 
-    // --- Proses data ke Excel ---
-    const bulanSekarang = new Date();
-    const bulanBerikutnya = new Date(
-      bulanSekarang.getFullYear(),
-      bulanSekarang.getMonth() + 1
-    );
-    const namaBulan = bulanBerikutnya.toLocaleString("id-ID", {
-      month: "long",
-      year: "numeric",
-    });
+      // --- Proses data ke Excel ---
+      const bulanSekarang = new Date();
+      const bulanBerikutnya = new Date(
+        bulanSekarang.getFullYear(),
+        bulanSekarang.getMonth() + 1
+      );
+      const namaBulan = bulanBerikutnya.toLocaleString("id-ID", {
+        month: "long",
+        year: "numeric",
+      });
 
-    const excelData = [];
-    excelData.push([`Tagihan Untuk Bulan ${namaBulan}`]);
-    excelData.push([]);
+      const excelData = [];
+      excelData.push([`Tagihan Untuk Bulan ${namaBulan}`]);
+      excelData.push([]);
 
-    // Header dengan tambahan kolom NPA setelah NIP
-    excelData.push([
-      "No",
-      "Cabang",
-      "Unit Kerja",
-      "Nama Anggota",
-      "NIP",
-      "NPA", // Kolom NPA baru ditambahkan di sini
-      "Nomor Rekening",
-      "PGRI",
-      "Sanduka",
-      "Daspen",
-      "Derap",
-      "Kalender",
-      "Lain-Lain",
-      "Total",
-    ]);
-
-    let no = 1;
-    latestPerNpa.forEach((item) => {
-      // Gunakan nilai langsung dari response baru
-      const pgri = parseInt(item.pgri || 0);
-      const sanduka = parseInt(item.sanduka || 0);
-      const daspen = parseInt(item.daspen || 0);
-      const derap = parseInt(item.derap || 0);
-      const kalender = parseInt(item.kalender || 0);
-      const lainLain = parseInt(item.lainLain || 0);
-      const total = parseInt(item.totalIuran || 0); // Menggunakan totalIuran dari response baru
-
+      // Header dengan tambahan kolom NPA setelah NIP
       excelData.push([
-        no++,
-        item.cabang || "-",
-        item.unitKerja || "-",
-        item.namaAnggota,
-        item.nip || "-",
-        item.npaPgri || "-", // Kolom NPA ditambahkan di sini
-        item.nomorRekening || "-",
-        pgri,
-        sanduka,
-        daspen,
-        derap,
-        kalender,
-        lainLain,
-        total,
+        "No",
+        "Cabang",
+        "Unit Kerja",
+        "Nama Anggota",
+        "NIP",
+        "NPA", // Kolom NPA baru ditambahkan di sini
+        "Nomor Rekening",
+        "PGRI",
+        "Sanduka",
+        "Daspen",
+        "Derap",
+        "Kalender",
+        "Lain-Lain",
+        "Total",
       ]);
-    });
 
-    // total keseluruhan
-    const totalPgri = latestPerNpa.reduce(
-      (sum, g) => sum + parseInt(g.pgri || 0),
-      0
-    );
-    const totalSanduka = latestPerNpa.reduce(
-      (sum, g) => sum + parseInt(g.sanduka || 0),
-      0
-    );
-    const totalDaspen = latestPerNpa.reduce(
-      (sum, g) => sum + parseInt(g.daspen || 0),
-      0
-    );
-    const totalDerap = latestPerNpa.reduce(
-      (sum, g) => sum + parseInt(g.derap || 0),
-      0
-    );
-    const totalKalender = latestPerNpa.reduce(
-      (sum, g) => sum + parseInt(g.kalender || 0),
-      0
-    );
-    const totalLainLain = latestPerNpa.reduce(
-      (sum, g) => sum + parseInt(g.lainLain || 0),
-      0
-    );
-    const totalIuran = latestPerNpa.reduce(
-      (sum, g) => sum + parseInt(g.totalIuran || 0), // Menggunakan totalIuran dari response baru
-      0
-    );
+      let no = 1;
+      latestPerNpa.forEach((item) => {
+        // Gunakan nilai langsung dari response baru
+        const pgri = parseInt(item.pgri || 0);
+        const sanduka = parseInt(item.sanduka || 0);
+        const daspen = parseInt(item.daspen || 0);
+        const derap = parseInt(item.derap || 0);
+        const kalender = parseInt(item.kalender || 0);
+        const lainLain = parseInt(item.lainLain || 0);
+        const total = parseInt(item.totalIuran || 0); // Menggunakan totalIuran dari response baru
 
-    excelData.push([]);
-    excelData.push([
-      "",
-      "",
-      "",
-      "Total Keseluruhan:",
-      "",
-      "", // Kolom kosong untuk NPA
-      "", // Kolom kosong untuk Nomor Rekening
-      totalPgri,
-      totalSanduka,
-      totalDaspen,
-      totalDerap,
-      totalKalender,
-      totalLainLain,
-      totalIuran,
-    ]);
+        excelData.push([
+          no++,
+          item.cabang || "-",
+          item.unitKerja || "-",
+          item.namaAnggota,
+          item.nip || "-",
+          item.npaPgri || "-", // Kolom NPA ditambahkan di sini
+          item.nomorRekening || "-",
+          pgri,
+          sanduka,
+          daspen,
+          derap,
+          kalender,
+          lainLain,
+          total,
+        ]);
+      });
 
-    // --- Buat file Excel ---
-    const ws = XLSX.utils.aoa_to_sheet(excelData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "RekapData");
+      // total keseluruhan
+      const totalPgri = latestPerNpa.reduce(
+        (sum, g) => sum + parseInt(g.pgri || 0),
+        0
+      );
+      const totalSanduka = latestPerNpa.reduce(
+        (sum, g) => sum + parseInt(g.sanduka || 0),
+        0
+      );
+      const totalDaspen = latestPerNpa.reduce(
+        (sum, g) => sum + parseInt(g.daspen || 0),
+        0
+      );
+      const totalDerap = latestPerNpa.reduce(
+        (sum, g) => sum + parseInt(g.derap || 0),
+        0
+      );
+      const totalKalender = latestPerNpa.reduce(
+        (sum, g) => sum + parseInt(g.kalender || 0),
+        0
+      );
+      const totalLainLain = latestPerNpa.reduce(
+        (sum, g) => sum + parseInt(g.lainLain || 0),
+        0
+      );
+      const totalIuran = latestPerNpa.reduce(
+        (sum, g) => sum + parseInt(g.totalIuran || 0), // Menggunakan totalIuran dari response baru
+        0
+      );
 
-    const waktuDownload = new Date().toLocaleString("id-ID", {
-      dateStyle: "short",
-      timeStyle: "medium",
-    });
+      excelData.push([]);
+      excelData.push([
+        "",
+        "",
+        "",
+        "Total Keseluruhan:",
+        "",
+        "", // Kolom kosong untuk NPA
+        "", // Kolom kosong untuk Nomor Rekening
+        totalPgri,
+        totalSanduka,
+        totalDaspen,
+        totalDerap,
+        totalKalender,
+        totalLainLain,
+        totalIuran,
+      ]);
 
-    const safeWaktuDownload = waktuDownload
-      .replace(/[/:]/g, "-")
-      .replace(/[ ]/g, "_");
+      // --- Buat file Excel ---
+      const ws = XLSX.utils.aoa_to_sheet(excelData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "RekapData");
 
-    const fileName = `Backupbynominal_${namaBulan}_${safeWaktuDownload}${
-      selectedCabang ? `_Cabang_${selectedCabang}` : ""
-    }${selectedUnitKerja ? `_Unit_Kerja_${selectedUnitKerja}` : ""}.xlsx`;
+      const waktuDownload = new Date().toLocaleString("id-ID", {
+        dateStyle: "short",
+        timeStyle: "medium",
+      });
 
-    XLSX.writeFile(wb, fileName);
-    
-    console.log(`📁 File Excel berhasil dibuat: ${fileName}`);
+      const safeWaktuDownload = waktuDownload
+        .replace(/[/:]/g, "-")
+        .replace(/[ ]/g, "_");
 
-  } catch (error) {
-    console.error("❌ Gagal ekspor data:", error);
-    alert("Terjadi kesalahan saat mengekspor data ke Excel.");
-  }finally {
-    setIsExporting(false);
-  }
-};
+      const fileName = `Backupbynominal_${namaBulan}_${safeWaktuDownload}${
+        selectedCabang ? `_Cabang_${selectedCabang}` : ""
+      }${selectedUnitKerja ? `_Unit_Kerja_${selectedUnitKerja}` : ""}.xlsx`;
+
+      XLSX.writeFile(wb, fileName);
+
+      console.log(`📁 File Excel berhasil dibuat: ${fileName}`);
+    } catch (error) {
+      console.error("❌ Gagal ekspor data:", error);
+      alert("Terjadi kesalahan saat mengekspor data ke Excel.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   // rapi tapi salah
   // const exportToExcel = async () => {
@@ -3080,48 +3027,50 @@ console.log("iuranSumbanganList:", payload.iuranSumbanganList);
                     </button>
 
                     <button
-  className="py-2 px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-2 disabled:bg-teal-400 disabled:cursor-not-allowed"
-  onClick={exportToExcel}
-  disabled={isExporting}
-  title={isExporting ? "Sedang mengekspor..." : "Export to Excel"}
->
-  {isExporting ? (
-    // Loading spinner
-    <svg
-      className="animate-spin h-4 w-4 text-white"
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-    >
-      <circle
-        className="opacity-25"
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        strokeWidth="4"
-      ></circle>
-      <path
-        className="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-      ></path>
-    </svg>
-  ) : (
-    // Excel icon
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
-      fill="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path d="M4 2h10a2 2 0 0 1 2 2v4h4a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm0 2v16h16V10h-6a2 2 0 0 1-2-2V4H4zm5.5 5 1.7 2.5L9.5 12l1.7 2.5H9.5L8 13.3 6.5 14.5H5.8l1.7-2.5L5.8 9.5h.7L8 10.7 9.5 9H10.2z" />
-    </svg>
-  )}
+                      className="py-2 px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-2 disabled:bg-teal-400 disabled:cursor-not-allowed"
+                      onClick={exportToExcel}
+                      disabled={isExporting}
+                      title={
+                        isExporting ? "Sedang mengekspor..." : "Export to Excel"
+                      }
+                    >
+                      {isExporting ? (
+                        // Loading spinner
+                        <svg
+                          className="animate-spin h-4 w-4 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                      ) : (
+                        // Excel icon
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M4 2h10a2 2 0 0 1 2 2v4h4a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm0 2v16h16V10h-6a2 2 0 0 1-2-2V4H4zm5.5 5 1.7 2.5L9.5 12l1.7 2.5H9.5L8 13.3 6.5 14.5H5.8l1.7-2.5L5.8 9.5h.7L8 10.7 9.5 9H10.2z" />
+                        </svg>
+                      )}
 
-  <span>{isExporting ? "Exporting..." : "Excel"}</span>
-</button>
+                      <span>{isExporting ? "Exporting..." : "Excel"}</span>
+                    </button>
 
                     {sessionStorage.getItem("role") === "SUPER ADMIN" && (
                       <button
@@ -3781,7 +3730,7 @@ console.log("iuranSumbanganList:", payload.iuranSumbanganList);
               </tbody>
               {isPopupVisible && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40">
-                  <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-4xl relative space-y-6 max-h-screen overflow-y-auto">
+                  <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-4xl relative space-y-6  overflow-y-auto  max-h-screen">
                     <button
                       type="button"
                       className="absolute top-2 right-2 text-gray-500 hover:text-teal-600 text-xl"
@@ -3932,9 +3881,7 @@ console.log("iuranSumbanganList:", payload.iuranSumbanganList);
                         </p>
                       </div>
 
-                      {/* Rest of your existing code for iuran items... */}
                       <div className="space-y-2">
-                        {/* Tampilkan iuran reguler */}
                         {groupedIuran
                           .filter(
                             (item) =>
@@ -4041,111 +3988,140 @@ console.log("iuranSumbanganList:", payload.iuranSumbanganList);
                           })}
 
                         {/* Tampilkan iuranSumbanganList dari API */}
-{sumbanganList.length > 0 && (
-  <div className="mt-4">
-    <h4 className="font-semibold text-purple-700 mb-2">
-      Sumbangan Lainnya:
-    </h4>
-    {sumbanganList.map((sumbangan, index) => {
-      const jumlahValue = parseInt(sumbangan.jumlah || 0);
-      const isDeleted = jumlahValue === 0;
-      
-      return (
-        <div
-          key={index}
-          className={`space-y-1 px-3 py-2 rounded-md border-l-4 mb-2 ${
-            isDeleted 
-              ? 'bg-gray-100 border-gray-400 opacity-60' 
-              : 'bg-purple-50 border-purple-400'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className={`font-medium ${
-              isDeleted ? 'text-gray-500' : 'text-purple-800'
-            }`}>
-              {sumbangan.jenis}
-              {isDeleted && <span className="text-red-500 ml-2 text-sm">(Dihapus)</span>}
-            </span>
-            
-            {/* Tombol Trash - selalu tampil, bahkan untuk yang sudah di-delete */}
-            <button
-              type="button"
-              className={`p-1 rounded-full transition-colors ${
-                isDeleted 
-                  ? 'text-gray-400 cursor-not-allowed' 
-                  : 'text-red-500 hover:text-red-700 hover:bg-red-50'
-              }`}
-              onClick={() => !isDeleted && handleDeleteSumbangan(sumbangan.jenis)}
-              disabled={isDeleted}
-              title={isDeleted ? "Sudah dihapus" : "Hapus item"}
-            >
-              <FiTrash size={16} />
-            </button>
-          </div>
+                        {sumbanganList.length > 0 && (
+                          <div className="mt-4">
+                            <h4 className="font-semibold text-purple-700 mb-2">
+                              Sumbangan Lainnya:
+                            </h4>
+                            {sumbanganList.map((sumbangan, index) => {
+                              const jumlahValue = parseInt(
+                                sumbangan.jumlah || 0
+                              );
+                              const isDeleted = jumlahValue === 0;
 
-          <div className="grid grid-cols-3 gap-2 mt-2">
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">
-                Nilai Sumbangan
-              </label>
-              <input
-                type="text"
-                readOnly
-                value={`Rp. ${jumlahValue.toLocaleString("id-ID")}`}
-                className={`w-full border px-2 py-1 rounded text-center font-medium ${
-                  isDeleted 
-                    ? 'bg-gray-200 text-gray-500' 
-                    : 'bg-purple-100 text-purple-700'
-                }`}
-              />
-            </div>
+                              return (
+                                <div
+                                  key={index}
+                                  className={`space-y-1 px-3 py-2 rounded-md border-l-4 mb-2 ${
+                                    isDeleted
+                                      ? "bg-gray-100 border-gray-400 opacity-60"
+                                      : "bg-purple-50 border-purple-400"
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <span
+                                      className={`font-medium ${
+                                        isDeleted
+                                          ? "text-gray-500"
+                                          : "text-purple-800"
+                                      }`}
+                                    >
+                                      {sumbangan.jenis}
+                                      {isDeleted && (
+                                        <span className="text-red-500 ml-2 text-sm">
+                                          (Dihapus)
+                                        </span>
+                                      )}
+                                    </span>
 
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">
-                Tambahan Cabang
-              </label>
-              <input
-                type="text"
-                readOnly
-                value={isDeleted ? "Dihapus" : "Tidak bisa diubah"}
-                className={`w-full border px-2 py-1 rounded text-center ${
-                  isDeleted 
-                    ? 'bg-gray-200 text-gray-500' 
-                    : 'bg-gray-100 text-gray-500'
-                }`}
-              />
-            </div>
+                                    {/* Tombol Trash - selalu tampil, bahkan untuk yang sudah di-delete */}
+                                    <button
+                                      type="button"
+                                      className={`p-1 rounded-full transition-colors ${
+                                        isDeleted
+                                          ? "text-gray-400 cursor-not-allowed"
+                                          : "text-red-500 hover:text-red-700 hover:bg-red-50"
+                                      }`}
+                                      onClick={() =>
+                                        !isDeleted &&
+                                        handleDeleteSumbangan(sumbangan.jenis)
+                                      }
+                                      disabled={isDeleted}
+                                      title={
+                                        isDeleted
+                                          ? "Sudah dihapus"
+                                          : "Hapus item"
+                                      }
+                                    >
+                                      <FiTrash size={16} />
+                                    </button>
+                                  </div>
 
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">
-                Total
-              </label>
-              <input
-                type="text"
-                readOnly
-                value={`Rp. ${jumlahValue.toLocaleString("id-ID")}`}
-                className={`w-full border px-2 py-1 rounded text-center font-medium ${
-                  isDeleted 
-                    ? 'bg-gray-200 text-gray-500' 
-                    : 'bg-purple-100 text-purple-700'
-                }`}
-              />
-            </div>
-          </div>
+                                  <div className="grid grid-cols-3 gap-2 mt-2">
+                                    <div>
+                                      <label className="block text-xs text-gray-500 mb-1">
+                                        Nilai Sumbangan
+                                      </label>
+                                      <input
+                                        type="text"
+                                        readOnly
+                                        value={`Rp. ${jumlahValue.toLocaleString(
+                                          "id-ID"
+                                        )}`}
+                                        className={`w-full border px-2 py-1 rounded text-center font-medium ${
+                                          isDeleted
+                                            ? "bg-gray-200 text-gray-500"
+                                            : "bg-purple-100 text-purple-700"
+                                        }`}
+                                      />
+                                    </div>
 
-          {/* Informasi tambahan jika ada */}
-          {sumbangan.keterangan && (
-            <p className={`text-xs mt-1 ${
-              isDeleted ? 'text-gray-400' : 'text-gray-600'
-            }`}>
-              Keterangan: {sumbangan.keterangan}
-            </p>
-          )}
-        </div>
-      );
-    })}
-  </div>
-)}
+                                    <div>
+                                      <label className="block text-xs text-gray-500 mb-1">
+                                        Tambahan Cabang
+                                      </label>
+                                      <input
+                                        type="text"
+                                        readOnly
+                                        value={
+                                          isDeleted
+                                            ? "Dihapus"
+                                            : "Tidak bisa diubah"
+                                        }
+                                        className={`w-full border px-2 py-1 rounded text-center ${
+                                          isDeleted
+                                            ? "bg-gray-200 text-gray-500"
+                                            : "bg-gray-100 text-gray-500"
+                                        }`}
+                                      />
+                                    </div>
+
+                                    <div>
+                                      <label className="block text-xs text-gray-500 mb-1">
+                                        Total
+                                      </label>
+                                      <input
+                                        type="text"
+                                        readOnly
+                                        value={`Rp. ${jumlahValue.toLocaleString(
+                                          "id-ID"
+                                        )}`}
+                                        className={`w-full border px-2 py-1 rounded text-center font-medium ${
+                                          isDeleted
+                                            ? "bg-gray-200 text-gray-500"
+                                            : "bg-purple-100 text-purple-700"
+                                        }`}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {/* Informasi tambahan jika ada */}
+                                  {sumbangan.keterangan && (
+                                    <p
+                                      className={`text-xs mt-1 ${
+                                        isDeleted
+                                          ? "text-gray-400"
+                                          : "text-gray-600"
+                                      }`}
+                                    >
+                                      Keterangan: {sumbangan.keterangan}
+                                    </p>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
 
                         {/* 🔹 Tambahan kategori manual */}
                         {addedCategories.map((item, idx) => {
