@@ -1603,7 +1603,6 @@ function RekapAnggota() {
         await GlobalApi.createByNominal(payload);
       }
 
-      console.log("📦 Payload yang dikirim:", payload);
       await fetchInitialData();
 
       setNotification({
