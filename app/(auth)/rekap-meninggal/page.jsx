@@ -112,6 +112,7 @@ const Page = () => {
   const [notification, setNotification] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const cekRole = sessionStorage.getItem("role");
+  const [searchText, setSearchText] = useState("");
 
   // Kwitansi
   const [showPopup, setShowPopup] = useState(false);
@@ -192,6 +193,32 @@ const Page = () => {
 
     fetchBulan();
   }, []);
+
+  const sortAndFilterData = (data, status, search) => {
+    if (!data) return [];
+
+    const filteredBySearch = data.filter(item => {
+      if (!search) return true;
+
+      const dataMeninggal = item.Data_Meninggal ? item.Data_Meninggal.toLowerCase() : '';
+      return dataMeninggal.includes(search.toLowerCase());
+    });
+
+    return filteredBySearch;
+  };
+
+  useEffect(() => {
+    let dataToDisplay = [];
+    if (filterStatus === "Terima") {
+      dataToDisplay = dataLaporDiterima;
+    } else if (filterStatus === "Belum") {
+      dataToDisplay = dataLaporBelum;
+    }
+
+    const processedData = sortAndFilterData(dataToDisplay, filterStatus, searchText);
+    setDisplayedDataLapor(processedData);
+
+  }, [filterStatus, dataLaporDiterima, dataLaporBelum, searchText]);
 
   const years = Array.from(
     { length: currentYear - startYear + 1 },
@@ -356,15 +383,30 @@ const Page = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="min-h-screen bg-gray-50 p-4 md:p-6">
             <div className="p-4 mt-5">
               <h1 className="text-teal-700 font-bold text-xl mb-4">
                 REKAP LAPOR SANDUKA
               </h1>
+
+              <div className="mb-4">
+                <label
+                  className="block text-gray-700 text-sm font-semibold mb-2"
+                  htmlFor="search"
+                >
+                  Cari Data Meninggal (Nama)
+                </label>
+                <Input
+                  className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  type="text"
+                  placeholder="Masukkan nama..."
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                />
+              </div>
 
               <div className="flex flex-wrap sm:flex-nowrap sm:space-x-4 items-center justify-between">
                 <div className="relative w-full sm:w-64">
@@ -582,9 +624,9 @@ const Page = () => {
                         <td className="py-3 px-4 text-center">
                           {filterStatus === "Terima"
                             ? new Intl.NumberFormat("id-ID", {
-                                style: "currency",
-                                currency: "IDR",
-                              }).format(item.Nominal)
+                              style: "currency",
+                              currency: "IDR",
+                            }).format(item.Nominal)
                             : "-"}
                         </td>
                       </tr>
