@@ -1641,6 +1641,19 @@ const postToBackup = async (tagihanUntukBulan) => {
   }
 };
 
+const postToBackupNew = async (tagihanUntukBulan) => {
+  try {
+    const response = await axiosClient.post(
+      `/api/by-nominal-new/create-from-by-nominal?tagihanUntukBulan=${tagihanUntukBulan}`,
+      {}
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error posting to new backup API:", error);
+    throw error;
+  }
+};
+
 const postToBackupByNominal = async (tahun, bulan) => {
   try {
     const response = await axiosClient.post(
@@ -3374,4 +3387,5 @@ export default {
   updateByNominal,
   updateByNominalByBulan,
   getByIdByNominal,
+  postToBackupNew,
 };
