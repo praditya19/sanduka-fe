@@ -2699,43 +2699,36 @@ function RekapAnggota() {
     }
   };
 
-  const handleBackupByNominal = async () => {
-    const now = new Date();
-    const bulan = now.getMonth() + 1;
-    const tahun = now.getFullYear();
+ const handleBackupByNominal = async () => {
+  if (!selectedDate) {
+    setNotification({
+      type: "error",
+      message: "Silakan pilih bulan terlebih dahulu.",
+    });
+    return;
+  }
 
-    try {
-      const response = await GlobalApi.postToBackupByNominal(tahun, bulan);
-      const fullMessage = response || "";
-      const shortMessage = fullMessage.split("Detail kegagalan:")[0].trim();
-      const formattedMessage = shortMessage.replace(/\\n/g, "\n");
+  try {
+    // Format date: 2025-12 → 2025-12-01
+    const formattedDate = `${selectedDate}-01`;
 
-      setNotification({
-        type: "success",
-        message: formattedMessage,
-      });
-      setPopupRekapByNominal(false);
-      await fetchInitialData();
-    } catch (error) {
-      let errorMessage =
-        error?.response?.data ||
-        error?.response?.data?.message ||
-        error?.message ||
-        "Gagal backup bulan sebelumnya.";
+    await GlobalApi.postToBackupNew(formattedDate);
 
-      if (typeof errorMessage === "object") {
-        errorMessage = JSON.stringify(errorMessage);
-      }
-      errorMessage = errorMessage.split("Detail kegagalan:")[0].trim();
-      errorMessage = errorMessage.replace(/\\n/g, "\n");
+    setNotification({
+      type: "success",
+      message: "Backup berhasil!",
+    });
 
-      setNotification({
-        type: "error",
-        message: errorMessage,
-      });
-    }
     setPopupRekapByNominal(false);
-  };
+    await fetchInitialData();
+  } catch (error) {
+    setNotification({
+      type: "error",
+      message: "Gagal melakukan backup.",
+    });
+    console.error("Backup error:", error);
+  }
+};
 
   const handleRekapClick = () => {
     setOpen((prev) => !prev);
@@ -3098,7 +3091,7 @@ function RekapAnggota() {
                         className="py-2 px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-3"
                         onClick={() => setPopupBackup(true)}
                       >
-                        <span>Backup Tagihan</span>
+                        <span>Potongan Gaji</span>
                       </button>
                     )}
 
@@ -3146,7 +3139,7 @@ function RekapAnggota() {
                         className="py-2 px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-3"
                         onClick={() => setPopupRekapByNominal(true)}
                       >
-                        <span>Backup By-Nominal</span>
+                        <span>Backup Target</span>
                       </button>
                     )}
                   </div>
@@ -3314,7 +3307,7 @@ function RekapAnggota() {
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
                 <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
                   <h2 className="text-lg font-semibold mb-4">
-                    Pilih Bulan Tagihan
+                    Pilih Bulan Tagihan Untuk Potongan Gaji
                   </h2>
 
                   <input
@@ -3344,25 +3337,54 @@ function RekapAnggota() {
             {popupBackupRekapByNominal && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
                 <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-                  <h2 className="text-lg font-semibold mb-4 text-center">
-                    Apakah anda ingin membackup data di bulan sebelumnya?
+                  <h2 className="text-lg font-semibold mb-4">
+                    Pilih Bulan Tagihan Untuk Backup Target
                   </h2>
-                  <div className="flex justify-center gap-4 mt-6">
+
+                  <input
+                    type="month"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="w-full mb-4 p-2 border border-gray-300 rounded"
+                  />
+
+                  <div className="flex justify-end gap-2">
                     <button
-                      className="px-4 py-2 bg-red-400 hover:bg-red-500 text-white rounded"
                       onClick={() => setPopupRekapByNominal(false)}
+                      className="px-4 py-2 bg-gray-400 hover:bg-gray-500 text-white rounded"
                     >
-                      Tidak
+                      Batal
                     </button>
                     <button
-                      className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded"
                       onClick={handleBackupByNominal}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
                     >
-                      Ya
+                      Konfirmasi
                     </button>
                   </div>
                 </div>
               </div>
+              // <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+              //   <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+              //     <h2 className="text-lg font-semibold mb-4 text-center">
+              //       Apakah anda ingin membackup data di bulan sebelumnya?
+              //     </h2>
+              //     <div className="flex justify-center gap-4 mt-6">
+              //       <button
+              //         className="px-4 py-2 bg-red-400 hover:bg-red-500 text-white rounded"
+              //         onClick={() => setPopupRekapByNominal(false)}
+              //       >
+              //         Tidak
+              //       </button>
+              //       <button
+              //         className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded"
+              //         onClick={handleBackupByNominal}
+              //       >
+              //         Ya
+              //       </button>
+              //     </div>
+              //   </div>
+              // </div>
             )}
             <table className="w-full table-auto bg-white">
               <thead>
