@@ -666,7 +666,7 @@ export default function BankTransactionPage() {
   const handleEditClick = async (id) => {
     try {
       const data = await GlobalApi.getBalancingById(id);
-
+// console.log("Data yang diambil untuk edit:", data);
       setEditData(data);
       setShowEditModal(true);
     } catch (err) {
@@ -675,87 +675,75 @@ export default function BankTransactionPage() {
   };
 
   const handleSaveEdit = async () => {
-    if (!editData || !editData.id) {
-      alert("Data tidak valid!");
-      return;
-    }
+  if (!editData || !editData.id) {
+    alert("Data tidak valid!");
+    return;
+  }
 
-    try {
-      const payload = {
-        namaAnggota: editData.namaAnggota,
-        tempatTanggalLahir: editData.tempatTanggalLahir,
-        npa: editData.npa,
-        nip: editData.nip,
-        nik: editData.nik,
-        cabang: editData.cabang,
-        unitKerja: editData.unitKerja,
-        jabatan: editData.jabatan,
-        nomorRekening: editData.nomorRekening,
+  try {
+    const payload = {
+      namaAnggota: editData.namaAnggota,
+      nip: editData.nip,
+      npa: editData.npa,
+      nomorRekening: editData.nomorRekening,
+      cabang: editData.cabang,
+      unitKerja: editData.unitKerja,
+      statusPegawai: editData.statusPegawai,
 
-        // iuran anggota
-        iuranAnggota: editData.iuranAnggota || 0,
-        manualIuranAnggota: editData.manualIuranAnggota || 0,
-        totalIuranAnggota:
-          (editData.iuranAnggota || 0) + (editData.manualIuranAnggota || 0),
+      defaultPgri: editData.defaultPgri || 0,
+      manualPgri: editData.manualPgri || 0,
+      pgri: (editData.defaultPgri || 0) + (editData.manualPgri || 0),
 
-        // iuran sanduka
-        iuranSanduka: editData.iuranSanduka || 0,
-        manualIuranSanduka: editData.manualIuranSanduka || 0,
-        totalIuranSanduka:
-          (editData.iuranSanduka || 0) + (editData.manualIuranSanduka || 0),
+      defaultSanduka: editData.defaultSanduka || 0,
+      manualSanduka: editData.manualSanduka || 0,
+      sanduka: (editData.defaultSanduka || 0) + (editData.manualSanduka || 0),
 
-        // iuran daspen
-        iuranDaspen: editData.iuranDaspen || 0,
-        manualIuranDaspen: editData.manualIuranDaspen || 0,
-        totalIuranDaspen:
-          (editData.iuranDaspen || 0) + (editData.manualIuranDaspen || 0),
+      defaultDaspen: editData.defaultDaspen || 0,
+      manualDaspen: editData.manualDaspen || 0,
+      daspen: (editData.defaultDaspen || 0) + (editData.manualDaspen || 0),
 
-        // iuran derap
-        iuranDerap: editData.iuranDerap || 0,
-        manualIuranDerap: editData.manualIuranDerap || 0,
-        totalIuranDerap:
-          (editData.iuranDerap || 0) + (editData.manualIuranDerap || 0),
+      defaultDerap: editData.defaultDerap || 0,
+      manualDerap: editData.manualDerap || 0,
+      derap: (editData.defaultDerap || 0) + (editData.manualDerap || 0),
 
-        // iuran kalender
-        iuranKalender: editData.iuranKalender || 0,
-        manualIuranKalender: editData.manualIuranKalender || 0,
-        totalIuranKalender:
-          (editData.iuranKalender || 0) + (editData.manualIuranKalender || 0),
+      defaultKalender: editData.defaultKalender || 0,
+      manualKalender: editData.manualKalender || 0,
+      kalender: (editData.defaultKalender || 0) + (editData.manualKalender || 0),
 
-        // iuran sumbangan
-        iuranSumbangan: editData.iuranSumbangan || 0,
-        manualIuranSumbangan: editData.manualIuranSumbangan || 0,
-        totalIuranSumbangan:
-          (editData.iuranSumbangan || 0) + (editData.manualIuranSumbangan || 0),
+      defaultLainLain: editData.defaultLainLain || 0,
+      manualLainLain: editData.manualLainLain || 0,
+      lainLain: (editData.defaultLainLain || 0) + (editData.manualLainLain || 0),
 
-        // tagihan untuk bulan (array [YYYY, MM, DD])
-        tagihanUntukBulan: editData.tagihanUntukBulan,
-      };
-      await GlobalApi.updateBalancing(editData.id, payload);
+      total:
+        (editData.defaultPgri || 0) + (editData.manualPgri || 0) +
+        (editData.defaultSanduka || 0) + (editData.manualSanduka || 0) +
+        (editData.defaultDaspen || 0) + (editData.manualDaspen || 0) +
+        (editData.defaultDerap || 0) + (editData.manualDerap || 0) +
+        (editData.defaultKalender || 0) + (editData.manualKalender || 0) +
+        (editData.defaultLainLain || 0) + (editData.manualLainLain || 0),
 
-      setNotification({
-        type: "success",
-        message: "Data berhasil diperbarui!",
-      });
-      setShowEditModal(false);
-      setUpdatedId(editData.id);
-      await getBalancingdata();
-      setTimeout(() => {
-        if (updatedRowRef.current) {
-          updatedRowRef.current.scrollIntoView({
-            behavior: "smooth",
-            block: "center",
-          });
-        }
-      }, 300);
-    } catch (err) {
-      console.error("Gagal update data:", err);
-      setNotification({
-        type: "error",
-        message: "Terjadi kesalahan saat update data.",
-      });
-    }
-  };
+      tagihanUntukBulan: editData.tagihanUntukBulan,
+    };
+
+    await GlobalApi.updateBalancing(editData.id, payload);
+
+    setNotification({
+      type: "success",
+      message: "Data berhasil diperbarui!",
+    });
+
+    setShowEditModal(false);
+    await getBalancingdata();
+    
+  } catch (err) {
+    console.error("Gagal update data:", err);
+    setNotification({
+      type: "error",
+      message: "Terjadi kesalahan saat update data.",
+    });
+  }
+};
+
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -3455,7 +3443,7 @@ export default function BankTransactionPage() {
               </div>
 
               {/* Tempat Tanggal Lahir */}
-              <div>
+              <div className="hidden">
                 <label className="block text-sm font-medium">
                   Tempat Tanggal Lahir
                 </label>
@@ -3499,7 +3487,7 @@ export default function BankTransactionPage() {
               </div>
 
               {/* NIK */}
-              <div>
+              <div className="hidden">
                 <label className="block text-sm font-medium">NIK</label>
                 <input
                   type="text"
@@ -3538,7 +3526,7 @@ export default function BankTransactionPage() {
               </div>
 
               {/* Jabatan */}
-              <div>
+              <div className="hidden">
                 <label className="block text-sm font-medium">Jabatan</label>
                 <input
                   type="text"
@@ -3573,11 +3561,11 @@ export default function BankTransactionPage() {
                 <input
                   type="number"
                   className="w-full border px-3 py-2 rounded"
-                  value={editData.iuranAnggota || 0}
+                  value={editData.defaultPgri || 0}
                   onChange={(e) =>
                     setEditData({
                       ...editData,
-                      iuranAnggota: Number(e.target.value),
+                      defaultPgri: Number(e.target.value),
                     })
                   }
                 />
@@ -3591,11 +3579,11 @@ export default function BankTransactionPage() {
                 <input
                   type="number"
                   className="w-full border px-3 py-2 rounded"
-                  value={editData.manualIuranAnggota || 0}
+                  value={editData.manualPgri || 0}
                   onChange={(e) =>
                     setEditData({
                       ...editData,
-                      manualIuranAnggota: Number(e.target.value),
+                      manualPgri: Number(e.target.value),
                     })
                   }
                 />
@@ -3609,11 +3597,11 @@ export default function BankTransactionPage() {
                 <input
                   type="number"
                   className="w-full border px-3 py-2 rounded"
-                  value={editData.iuranSanduka || 0}
+                  value={editData.defaultSanduka || 0}
                   onChange={(e) =>
                     setEditData({
                       ...editData,
-                      iuranSanduka: Number(e.target.value),
+                      defaultSanduka: Number(e.target.value),
                     })
                   }
                 />
@@ -3627,11 +3615,11 @@ export default function BankTransactionPage() {
                 <input
                   type="number"
                   className="w-full border px-3 py-2 rounded"
-                  value={editData.manualIuranSanduka || 0}
+                  value={editData.manualSanduka || 0}
                   onChange={(e) =>
                     setEditData({
                       ...editData,
-                      manualIuranSanduka: Number(e.target.value),
+                      manualSanduka: Number(e.target.value),
                     })
                   }
                 />
@@ -3644,11 +3632,11 @@ export default function BankTransactionPage() {
                 <input
                   type="number"
                   className="w-full border px-3 py-2 rounded"
-                  value={editData.iuranDaspen || 0}
+                  value={editData.defaultDaspen || 0}
                   onChange={(e) =>
                     setEditData({
                       ...editData,
-                      iuranDaspen: Number(e.target.value),
+                      defaultDaspen: Number(e.target.value),
                     })
                   }
                 />
@@ -3662,11 +3650,11 @@ export default function BankTransactionPage() {
                 <input
                   type="number"
                   className="w-full border px-3 py-2 rounded"
-                  value={editData.manualIuranDaspen || 0}
+                  value={editData.manualDaspen || 0}
                   onChange={(e) =>
                     setEditData({
                       ...editData,
-                      manualIuranDaspen: Number(e.target.value),
+                      manualDaspen: Number(e.target.value),
                     })
                   }
                 />
@@ -3677,11 +3665,11 @@ export default function BankTransactionPage() {
                 <input
                   type="number"
                   className="w-full border px-3 py-2 rounded"
-                  value={editData.iuranDerap || 0}
+                  value={editData.defaultDerap || 0}
                   onChange={(e) =>
                     setEditData({
                       ...editData,
-                      iuranDerap: Number(e.target.value),
+                      defaultDerap: Number(e.target.value),
                     })
                   }
                 />
@@ -3695,11 +3683,11 @@ export default function BankTransactionPage() {
                 <input
                   type="number"
                   className="w-full border px-3 py-2 rounded"
-                  value={editData.manualIuranDerap || 0}
+                  value={editData.manualDerap || 0}
                   onChange={(e) =>
                     setEditData({
                       ...editData,
-                      manualIuranDerap: Number(e.target.value),
+                      manualDerap: Number(e.target.value),
                     })
                   }
                 />
@@ -3712,11 +3700,11 @@ export default function BankTransactionPage() {
                 <input
                   type="number"
                   className="w-full border px-3 py-2 rounded"
-                  value={editData.iuranKalender || 0}
+                  value={editData.defaultKalender || 0}
                   onChange={(e) =>
                     setEditData({
                       ...editData,
-                      iuranKalender: Number(e.target.value),
+                      defaultKalender: Number(e.target.value),
                     })
                   }
                 />
@@ -3730,11 +3718,11 @@ export default function BankTransactionPage() {
                 <input
                   type="number"
                   className="w-full border px-3 py-2 rounded"
-                  value={editData.manualIuranKalender || 0}
+                  value={editData.manualKalender || 0}
                   onChange={(e) =>
                     setEditData({
                       ...editData,
-                      manualIuranKalender: Number(e.target.value),
+                      manualKalender: Number(e.target.value),
                     })
                   }
                 />
@@ -3747,11 +3735,11 @@ export default function BankTransactionPage() {
                 <input
                   type="number"
                   className="w-full border px-3 py-2 rounded"
-                  value={editData.iuranSumbangan || 0}
+                  value={editData.defaultLainLain || 0}
                   onChange={(e) =>
                     setEditData({
                       ...editData,
-                      iuranSumbangan: Number(e.target.value),
+                      defaultLainLain: Number(e.target.value),
                     })
                   }
                 />
@@ -3765,11 +3753,11 @@ export default function BankTransactionPage() {
                 <input
                   type="number"
                   className="w-full border px-3 py-2 rounded"
-                  value={editData.manualIuranSumbangan || 0}
+                  value={editData.manualLainLain || 0}
                   onChange={(e) =>
                     setEditData({
                       ...editData,
-                      manualIuranSumbangan: Number(e.target.value),
+                      manualLainLain: Number(e.target.value),
                     })
                   }
                 />
