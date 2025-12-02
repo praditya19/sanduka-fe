@@ -1305,6 +1305,16 @@ const updateBalancing = async (id, payload) => {
   }
 };
 
+const deleteBalancingById = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/target-iuran-anggota/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error delete iuran data: ", error);
+    throw error;
+  }
+};
+
 const deleteBalancing = async (tagihanUntukBulan) => {
   try {
     const response = await axiosClient.delete(`/api/target-iuran-anggota/by-bulan/${tagihanUntukBulan}`);
@@ -3388,4 +3398,5 @@ export default {
   updateByNominalByBulan,
   getByIdByNominal,
   postToBackupNew,
+  deleteBalancingById,
 };
