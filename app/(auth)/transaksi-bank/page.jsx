@@ -183,6 +183,8 @@ export default function BankTransactionPage() {
   const updatedRowRef = useRef(null);
   const [updatedId, setUpdatedId] = useState(null);
   const cekRole = sessionStorage.getItem("role");
+  const [showDeletePopup, setShowDeletePopup] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
 
   const handleFilter = async () => {
     setLoadingFilter(true);
@@ -267,7 +269,10 @@ export default function BankTransactionPage() {
           currentPageBalancing - 1
         );
       }
+      console.log("Hasil API:", result);
 
+      // 👉 Jika ingin melihat isi tabel saja
+      console.log("Content:", result.content);
       setDataBalancing(result.content);
       setTotalPagesBalancing(result.totalPages);
     } catch (err) {
@@ -276,6 +281,7 @@ export default function BankTransactionPage() {
       setLoadingBalancing(false);
     }
   };
+
   useEffect(() => {
     handleFilter();
     getBalancingdata();
@@ -589,6 +595,31 @@ export default function BankTransactionPage() {
     }
   };
 
+  const handleDeleteClick = async (id) => {
+    try {
+      setLoader(true);
+      setProgress(0);
+
+      await GlobalApi.deleteBalancingById(`/api/target-iuran-anggota/${id}`, {
+        onDownloadProgress: (progressEvent) => {
+          const total = progressEvent.total;
+          const current = progressEvent.loaded;
+          const percentCompleted = Math.round((current / total) * 100);
+          setProgress(percentCompleted);
+        },
+      });
+
+      alert("Data berhasil dihapus!");
+      setShowDeletePopup(false);
+      getData(); // refresh data
+    } catch (error) {
+      console.error(error);
+      alert("Gagal menghapus data!");
+    } finally {
+      setLoader(false);
+    }
+  };
+
   const handleDelete = async (e) => {
     e.preventDefault();
     if (!resetUntukBulan) {
@@ -666,7 +697,7 @@ export default function BankTransactionPage() {
   const handleEditClick = async (id) => {
     try {
       const data = await GlobalApi.getBalancingById(id);
-// console.log("Data yang diambil untuk edit:", data);
+      console.log("Data yang diambil untuk edit:", data);
       setEditData(data);
       setShowEditModal(true);
     } catch (err) {
@@ -675,75 +706,81 @@ export default function BankTransactionPage() {
   };
 
   const handleSaveEdit = async () => {
-  if (!editData || !editData.id) {
-    alert("Data tidak valid!");
-    return;
-  }
+    if (!editData || !editData.id) {
+      alert("Data tidak valid!");
+      return;
+    }
 
-  try {
-    const payload = {
-      namaAnggota: editData.namaAnggota,
-      nip: editData.nip,
-      npa: editData.npa,
-      nomorRekening: editData.nomorRekening,
-      cabang: editData.cabang,
-      unitKerja: editData.unitKerja,
-      statusPegawai: editData.statusPegawai,
+    try {
+      const payload = {
+        namaAnggota: editData.namaAnggota,
+        nip: editData.nip,
+        npa: editData.npa,
+        nomorRekening: editData.nomorRekening,
+        cabang: editData.cabang,
+        unitKerja: editData.unitKerja,
+        statusPegawai: editData.statusPegawai,
 
-      defaultPgri: editData.defaultPgri || 0,
-      manualPgri: editData.manualPgri || 0,
-      pgri: (editData.defaultPgri || 0) + (editData.manualPgri || 0),
+        defaultPgri: editData.defaultPgri || 0,
+        manualPgri: editData.manualPgri || 0,
+        pgri: (editData.defaultPgri || 0) + (editData.manualPgri || 0),
 
-      defaultSanduka: editData.defaultSanduka || 0,
-      manualSanduka: editData.manualSanduka || 0,
-      sanduka: (editData.defaultSanduka || 0) + (editData.manualSanduka || 0),
+        defaultSanduka: editData.defaultSanduka || 0,
+        manualSanduka: editData.manualSanduka || 0,
+        sanduka: (editData.defaultSanduka || 0) + (editData.manualSanduka || 0),
 
-      defaultDaspen: editData.defaultDaspen || 0,
-      manualDaspen: editData.manualDaspen || 0,
-      daspen: (editData.defaultDaspen || 0) + (editData.manualDaspen || 0),
+        defaultDaspen: editData.defaultDaspen || 0,
+        manualDaspen: editData.manualDaspen || 0,
+        daspen: (editData.defaultDaspen || 0) + (editData.manualDaspen || 0),
 
-      defaultDerap: editData.defaultDerap || 0,
-      manualDerap: editData.manualDerap || 0,
-      derap: (editData.defaultDerap || 0) + (editData.manualDerap || 0),
+        defaultDerap: editData.defaultDerap || 0,
+        manualDerap: editData.manualDerap || 0,
+        derap: (editData.defaultDerap || 0) + (editData.manualDerap || 0),
 
-      defaultKalender: editData.defaultKalender || 0,
-      manualKalender: editData.manualKalender || 0,
-      kalender: (editData.defaultKalender || 0) + (editData.manualKalender || 0),
+        defaultKalender: editData.defaultKalender || 0,
+        manualKalender: editData.manualKalender || 0,
+        kalender:
+          (editData.defaultKalender || 0) + (editData.manualKalender || 0),
 
-      defaultLainLain: editData.defaultLainLain || 0,
-      manualLainLain: editData.manualLainLain || 0,
-      lainLain: (editData.defaultLainLain || 0) + (editData.manualLainLain || 0),
+        defaultLainLain: editData.defaultLainLain || 0,
+        manualLainLain: editData.manualLainLain || 0,
+        lainLain:
+          (editData.defaultLainLain || 0) + (editData.manualLainLain || 0),
 
-      total:
-        (editData.defaultPgri || 0) + (editData.manualPgri || 0) +
-        (editData.defaultSanduka || 0) + (editData.manualSanduka || 0) +
-        (editData.defaultDaspen || 0) + (editData.manualDaspen || 0) +
-        (editData.defaultDerap || 0) + (editData.manualDerap || 0) +
-        (editData.defaultKalender || 0) + (editData.manualKalender || 0) +
-        (editData.defaultLainLain || 0) + (editData.manualLainLain || 0),
+        total:
+          (editData.defaultPgri || 0) +
+          (editData.manualPgri || 0) +
+          (editData.defaultSanduka || 0) +
+          (editData.manualSanduka || 0) +
+          (editData.defaultDaspen || 0) +
+          (editData.manualDaspen || 0) +
+          (editData.defaultDerap || 0) +
+          (editData.manualDerap || 0) +
+          (editData.defaultKalender || 0) +
+          (editData.manualKalender || 0) +
+          (editData.defaultLainLain || 0) +
+          (editData.manualLainLain || 0),
 
-      tagihanUntukBulan: editData.tagihanUntukBulan,
-    };
+        tagihanUntukBulan: editData.tagihanUntukBulan,
+      };
 
-    await GlobalApi.updateBalancing(editData.id, payload);
+      await GlobalApi.updateBalancing(editData.id, payload);
 
-    setNotification({
-      type: "success",
-      message: "Data berhasil diperbarui!",
-    });
+      setNotification({
+        type: "success",
+        message: "Data berhasil diperbarui!",
+      });
 
-    setShowEditModal(false);
-    await getBalancingdata();
-    
-  } catch (err) {
-    console.error("Gagal update data:", err);
-    setNotification({
-      type: "error",
-      message: "Terjadi kesalahan saat update data.",
-    });
-  }
-};
-
+      setShowEditModal(false);
+      await getBalancingdata();
+    } catch (err) {
+      console.error("Gagal update data:", err);
+      setNotification({
+        type: "error",
+        message: "Terjadi kesalahan saat update data.",
+      });
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -2233,15 +2270,15 @@ export default function BankTransactionPage() {
               </div>
 
               <div className="w-full">
-                <table className="w-full">
+                <table className="w-full table-auto">
                   <thead>
                     <tr className="bg-gray-50">
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                      <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                         No
                       </th>
                       <th
                         onClick={() => handleSort("cabang")}
-                        className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
+                        className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
                       >
                         Cabang{" "}
                         <span
@@ -2259,7 +2296,7 @@ export default function BankTransactionPage() {
                       </th>
                       <th
                         onClick={() => handleSort("unitKerja")}
-                        className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
+                        className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
                       >
                         Unit Kerja{" "}
                         <span
@@ -2277,7 +2314,7 @@ export default function BankTransactionPage() {
                       </th>
                       <th
                         onClick={() => handleSort("nama")}
-                        className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
+                        className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
                       >
                         Nama{" "}
                         <span
@@ -2295,7 +2332,7 @@ export default function BankTransactionPage() {
                       </th>
                       <th
                         onClick={() => handleSort("rekening")}
-                        className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
+                        className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
                       >
                         Rekening
                         <span
@@ -2313,7 +2350,7 @@ export default function BankTransactionPage() {
                       </th>
                       <th
                         onClick={() => handleSort("totalIuranAnggota")}
-                        className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
+                        className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
                       >
                         Iuran{" "}
                         <span
@@ -2331,7 +2368,7 @@ export default function BankTransactionPage() {
                       </th>
                       <th
                         onClick={() => handleSort("totalIuranSanduka")}
-                        className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
+                        className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
                       >
                         Sanduka
                         <span
@@ -2349,7 +2386,7 @@ export default function BankTransactionPage() {
                       </th>
                       <th
                         onClick={() => handleSort("totalIuranDaspen")}
-                        className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
+                        className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
                       >
                         Daspen{" "}
                         <span
@@ -2367,7 +2404,7 @@ export default function BankTransactionPage() {
                       </th>
                       <th
                         onClick={() => handleSort("totalIuranDerap")}
-                        className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
+                        className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
                       >
                         Derap
                         <span
@@ -2385,7 +2422,7 @@ export default function BankTransactionPage() {
                       </th>
                       <th
                         onClick={() => handleSort("totalIuranKalender")}
-                        className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
+                        className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
                       >
                         Kalender
                         <span
@@ -2403,7 +2440,7 @@ export default function BankTransactionPage() {
                       </th>
                       <th
                         onClick={() => handleSort("Lain-lain")}
-                        className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
+                        className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
                       >
                         Lain-lain
                         <span
@@ -2421,7 +2458,7 @@ export default function BankTransactionPage() {
                       </th>
                       <th
                         onClick={() => handleSort("totalIuran")}
-                        className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
+                        className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
                       >
                         Total Iuran
                         <span
@@ -2439,7 +2476,7 @@ export default function BankTransactionPage() {
                       </th>
                       <th
                         onClick={() => handleSort("potongan")}
-                        className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
+                        className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
                       >
                         Potongan Bank
                         <span
@@ -2457,7 +2494,7 @@ export default function BankTransactionPage() {
                       </th>
                       <th
                         onClick={() => handleSort("selisih")}
-                        className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
+                        className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
                       >
                         Selisih
                         <span
@@ -2475,7 +2512,7 @@ export default function BankTransactionPage() {
                       </th>
                       <th
                         onClick={() => handleSort("keterangan")}
-                        className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
+                        className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
                       >
                         Keterangan
                         <span
@@ -2492,7 +2529,7 @@ export default function BankTransactionPage() {
                         </span>
                       </th>
                       {cekRole === "SUPER ADMIN" && (
-                        <th className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                        <th className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                           Action
                         </th>
                       )}
@@ -2521,46 +2558,47 @@ export default function BankTransactionPage() {
                                 index +
                                 1}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="text-center text-sm text-gray-900 whitespace-normal break-words max-w-[90px]">
                             {item.cabang}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="text-sm text-gray-900 whitespace-normal break-words max-w-[90px]">
                             {item.unitKerja}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {item.nama}
+                          <td className=" text-sm text-gray-900 whitespace-normal break-words max-w-[100px]">
+                            <div>{item.nama}</div>
+                            {item.statusPegawai}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                          <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
                             {item.rekening}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                          <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
                             {formatRupiah(item.totalIuranAnggota)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                          <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
                             {formatRupiah(item.totalIuranSanduka)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                          <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
                             {formatRupiah(item.totalIuranDaspen)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                          <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
                             {formatRupiah(item.totalIuranDerap)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                          <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
                             {formatRupiah(item.totalIuranKalender)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                          <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
                             {formatRupiah(item.totalIuranSumbangan)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                          <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
                             {formatRupiah(item.totalIuran)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                          <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
                             {formatRupiah(item.potongan)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                          <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
                             {formatRupiah(item.selisih)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                          <td className=" whitespace-nowrap text-sm text-center">
                             <span
                               className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
       ${
@@ -2583,7 +2621,13 @@ export default function BankTransactionPage() {
                                 >
                                   <FaEdit />
                                 </button>
-                                <button className="text-red-500 hover:text-red-700">
+                                <button
+                                  className="text-red-500 hover:text-red-700"
+                                  onClick={() => {
+                                    setSelectedId(item.id);
+                                    setShowDeletePopup(true);
+                                  }}
+                                >
                                   <FaTrash />
                                 </button>
                               </div>
@@ -2613,10 +2657,10 @@ export default function BankTransactionPage() {
                   </tbody>
                   <tfoot>
                     <tr className="bg-gray-200">
-                      <td colSpan={5} className="px-6 py-4 text-center">
+                      <td colSpan={5} className=" text-center">
                         Total
                       </td>
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
                         {formatRupiah(
                           dataBalancing.reduce(
                             (sum, item) => sum + item.totalIuranAnggota,
@@ -2624,7 +2668,7 @@ export default function BankTransactionPage() {
                           )
                         )}
                       </td>
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
                         {formatRupiah(
                           dataBalancing.reduce(
                             (sum, item) => sum + item.totalIuranSanduka,
@@ -2632,7 +2676,7 @@ export default function BankTransactionPage() {
                           )
                         )}
                       </td>
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
                         {formatRupiah(
                           dataBalancing.reduce(
                             (sum, item) => sum + item.totalIuranDaspen,
@@ -2640,7 +2684,7 @@ export default function BankTransactionPage() {
                           )
                         )}
                       </td>
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
                         {formatRupiah(
                           dataBalancing.reduce(
                             (sum, item) => sum + item.totalIuranDerap,
@@ -2648,7 +2692,7 @@ export default function BankTransactionPage() {
                           )
                         )}
                       </td>
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
                         {formatRupiah(
                           dataBalancing.reduce(
                             (sum, item) => sum + item.totalIuranKalender,
@@ -2656,7 +2700,7 @@ export default function BankTransactionPage() {
                           )
                         )}
                       </td>
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
                         {formatRupiah(
                           dataBalancing.reduce(
                             (sum, item) => sum + item.totalIuranSumbangan,
@@ -2664,7 +2708,7 @@ export default function BankTransactionPage() {
                           )
                         )}
                       </td>
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
                         {formatRupiah(
                           dataBalancing.reduce(
                             (sum, item) => sum + item.totalIuran,
@@ -2672,7 +2716,7 @@ export default function BankTransactionPage() {
                           )
                         )}
                       </td>
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
                         {formatRupiah(
                           dataBalancing.reduce(
                             (sum, item) => sum + item.potongan,
@@ -2680,7 +2724,7 @@ export default function BankTransactionPage() {
                           )
                         )}
                       </td>
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
                         {formatRupiah(
                           dataBalancing.reduce(
                             (sum, item) => sum + item.selisih,
@@ -3167,49 +3211,49 @@ export default function BankTransactionPage() {
                       <table className="min-w-full">
                         <thead>
                           <tr className="bg-gray-50">
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                            <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                               No
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                            <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                               Cabang
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                            <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                               Unit Kerja
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                            <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                               Nama
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                            <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                               Rekening
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                            <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                               Iuran
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                            <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                               Sanduka
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                            <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                               Daspen
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                            <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                               Derap
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                            <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                               Kalender
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                            <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                               Lain-lain
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                            <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                               Total Iuran
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                            <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                               Potongan Bank
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                            <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                               Selisih
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                            <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                               Keterangan
                             </th>
                           </tr>
@@ -3426,133 +3470,45 @@ export default function BankTransactionPage() {
 
             <h2 className="text-lg font-semibold mb-4">Edit Data Balancing</h2>
 
-            <div className="space-y-4">
-              {/* Nama Anggota */}
+            {/* ==========================
+          DATA DIRI ANGGOTA (Tampilan Simple)
+      ========================== */}
+            <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg mb-6 border">
               <div>
-                <label className="block text-sm font-medium">
-                  Nama Anggota
-                </label>
-                <input
-                  type="text"
-                  className="w-full border px-3 py-2 rounded"
-                  value={editData.namaAnggota || ""}
-                  onChange={(e) =>
-                    setEditData({ ...editData, namaAnggota: e.target.value })
-                  }
-                />
+                <p className="text-xs text-gray-500">Nama Anggota</p>
+                <p>{editData.namaAnggota}</p>
               </div>
 
-              {/* Tempat Tanggal Lahir */}
-              <div className="hidden">
-                <label className="block text-sm font-medium">
-                  Tempat Tanggal Lahir
-                </label>
-                <input
-                  type="text"
-                  className="w-full border px-3 py-2 rounded"
-                  value={editData.tempatTanggalLahir || ""}
-                  onChange={(e) =>
-                    setEditData({
-                      ...editData,
-                      tempatTanggalLahir: e.target.value,
-                    })
-                  }
-                />
-              </div>
-
-              {/* NPA */}
               <div>
-                <label className="block text-sm font-medium">NPA</label>
-                <input
-                  type="text"
-                  className="w-full border px-3 py-2 rounded"
-                  value={editData.npa || ""}
-                  onChange={(e) =>
-                    setEditData({ ...editData, npa: e.target.value })
-                  }
-                />
+                <p className="text-xs text-gray-500">NPA</p>
+                <p>{editData.npa}</p>
               </div>
 
-              {/* NIP */}
               <div>
-                <label className="block text-sm font-medium">NIP</label>
-                <input
-                  type="text"
-                  className="w-full border px-3 py-2 rounded"
-                  value={editData.nip || ""}
-                  onChange={(e) =>
-                    setEditData({ ...editData, nip: e.target.value })
-                  }
-                />
+                <p className="text-xs text-gray-500">NIP</p>
+                <p>{editData.nip}</p>
               </div>
 
-              {/* NIK */}
-              <div className="hidden">
-                <label className="block text-sm font-medium">NIK</label>
-                <input
-                  type="text"
-                  className="w-full border px-3 py-2 rounded"
-                  value={editData.nik || ""}
-                  onChange={(e) =>
-                    setEditData({ ...editData, nik: e.target.value })
-                  }
-                />
-              </div>
-
-              {/* Cabang */}
               <div>
-                <label className="block text-sm font-medium">Cabang</label>
-                <input
-                  type="text"
-                  className="w-full border px-3 py-2 rounded"
-                  value={editData.cabang || ""}
-                  onChange={(e) =>
-                    setEditData({ ...editData, cabang: e.target.value })
-                  }
-                />
+                <p className="text-xs text-gray-500">Nomor Rekening</p>
+                <p>{editData.nomorRekening}</p>
               </div>
 
-              {/* Unit Kerja */}
               <div>
-                <label className="block text-sm font-medium">Unit Kerja</label>
-                <input
-                  type="text"
-                  className="w-full border px-3 py-2 rounded"
-                  value={editData.unitKerja || ""}
-                  onChange={(e) =>
-                    setEditData({ ...editData, unitKerja: e.target.value })
-                  }
-                />
+                <p className="text-xs text-gray-500">Cabang</p>
+                <p>{editData.cabang}</p>
               </div>
 
-              {/* Jabatan */}
-              <div className="hidden">
-                <label className="block text-sm font-medium">Jabatan</label>
-                <input
-                  type="text"
-                  className="w-full border px-3 py-2 rounded"
-                  value={editData.jabatan || ""}
-                  onChange={(e) =>
-                    setEditData({ ...editData, jabatan: e.target.value })
-                  }
-                />
-              </div>
-
-              {/* Nomor Rekening */}
               <div>
-                <label className="block text-sm font-medium">
-                  Nomor Rekening
-                </label>
-                <input
-                  type="text"
-                  className="w-full border px-3 py-2 rounded"
-                  value={editData.nomorRekening || ""}
-                  onChange={(e) =>
-                    setEditData({ ...editData, nomorRekening: e.target.value })
-                  }
-                />
+                <p className="text-xs text-gray-500">Unit Kerja</p>
+                <p>{editData.unitKerja}</p>
               </div>
+            </div>
 
+            {/* ==========================
+          INPUT NOMINAL MASIH FORM
+      ========================== */}
+            <div className="grid grid-cols-2 gap-4 mt-4">
               {/* Iuran Anggota */}
               <div>
                 <label className="block text-sm font-medium">
@@ -3625,6 +3581,7 @@ export default function BankTransactionPage() {
                 />
               </div>
 
+              {/* Iuran Daspen */}
               <div>
                 <label className="block text-sm font-medium">
                   Iuran Daspen
@@ -3642,7 +3599,7 @@ export default function BankTransactionPage() {
                 />
               </div>
 
-              {/* Manual Iuran Sanduka */}
+              {/* Manual Iuran Daspen */}
               <div>
                 <label className="block text-sm font-medium">
                   Manual Iuran Daspen
@@ -3660,6 +3617,7 @@ export default function BankTransactionPage() {
                 />
               </div>
 
+              {/* Iuran Derap */}
               <div>
                 <label className="block text-sm font-medium">Iuran Derap</label>
                 <input
@@ -3675,7 +3633,7 @@ export default function BankTransactionPage() {
                 />
               </div>
 
-              {/* Manual Iuran Sanduka */}
+              {/* Manual Iuran Derap */}
               <div>
                 <label className="block text-sm font-medium">
                   Manual Iuran Derap
@@ -3693,6 +3651,7 @@ export default function BankTransactionPage() {
                 />
               </div>
 
+              {/* Iuran Kalender */}
               <div>
                 <label className="block text-sm font-medium">
                   Iuran Kalender
@@ -3710,7 +3669,7 @@ export default function BankTransactionPage() {
                 />
               </div>
 
-              {/* Manual Iuran Sanduka */}
+              {/* Manual Iuran Kalender */}
               <div>
                 <label className="block text-sm font-medium">
                   Manual Iuran Kalender
@@ -3728,6 +3687,7 @@ export default function BankTransactionPage() {
                 />
               </div>
 
+              {/* Iuran Sumbangan */}
               <div>
                 <label className="block text-sm font-medium">
                   Iuran Sumbangan
@@ -3745,7 +3705,7 @@ export default function BankTransactionPage() {
                 />
               </div>
 
-              {/* Manual Iuran Sanduka */}
+              {/* Manual Iuran Sumbangan */}
               <div>
                 <label className="block text-sm font-medium">
                   Manual Iuran Sumbangan
@@ -3762,43 +3722,8 @@ export default function BankTransactionPage() {
                   }
                 />
               </div>
-              {/* dst: buat input untuk iuranDaspen, Derap, Kalender, Sumbangan sama pola seperti di atas */}
-
-              {/* Tagihan Untuk Bulan */}
-              <div>
-                <label className="block text-sm font-medium">
-                  Tagihan Untuk Bulan
-                </label>
-                <input
-                  type="date"
-                  className="w-full border px-3 py-2 rounded"
-                  value={
-                    editData.tagihanUntukBulan
-                      ? new Date(
-                          editData.tagihanUntukBulan[0],
-                          editData.tagihanUntukBulan[1] - 1,
-                          editData.tagihanUntukBulan[2]
-                        )
-                          .toISOString()
-                          .split("T")[0]
-                      : ""
-                  }
-                  onChange={(e) => {
-                    const d = new Date(e.target.value);
-                    setEditData({
-                      ...editData,
-                      tagihanUntukBulan: [
-                        d.getFullYear(),
-                        d.getMonth() + 1,
-                        d.getDate(),
-                      ],
-                    });
-                  }}
-                />
-              </div>
             </div>
 
-            {/* Tombol Simpan & Batal */}
             <div className="mt-6 flex justify-end space-x-2">
               <button
                 onClick={() => setShowEditModal(false)}
@@ -3806,12 +3731,39 @@ export default function BankTransactionPage() {
               >
                 Batal
               </button>
+
               <button
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center"
                 onClick={handleSaveEdit}
               >
                 <FaSave className="mr-2" />
                 Simpan Perubahan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeletePopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-sm text-center">
+            <h2 className="text-xl font-semibold mb-4">Konfirmasi Hapus</h2>
+            <p className="text-gray-600 mb-6">
+              Apakah Anda yakin ingin menghapus data ini?
+            </p>
+
+            <div className="flex justify-center space-x-3">
+              <button
+                onClick={() => setShowDeletePopup(false)}
+                className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
+              >
+                Batal
+              </button>
+              <button
+                onClick={() => handleDeleteClick(selectedId)}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              >
+                Ya, Hapus
               </button>
             </div>
           </div>
