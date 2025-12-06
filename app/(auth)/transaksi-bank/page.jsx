@@ -2330,6 +2330,9 @@ export default function BankTransactionPage() {
                             : "▲"}
                         </span>
                       </th>
+                      <th className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                        Status Pegawai <span className={`text-xs`}></span>
+                      </th>
                       <th
                         onClick={() => handleSort("rekening")}
                         className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
@@ -2564,8 +2567,10 @@ export default function BankTransactionPage() {
                           <td className="text-sm text-gray-900 whitespace-normal break-words max-w-[90px]">
                             {item.unitKerja}
                           </td>
-                          <td className=" text-sm text-gray-900 whitespace-normal break-words max-w-[100px]">
-                            <div>{item.nama}</div>
+                          <td className=" text-sm text-gray-900 whitespace-normal">
+                            {item.nama}
+                          </td>
+                          <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
                             {item.statusPegawai}
                           </td>
                           <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
