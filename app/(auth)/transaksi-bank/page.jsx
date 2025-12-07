@@ -269,10 +269,7 @@ export default function BankTransactionPage() {
           currentPageBalancing - 1
         );
       }
-      console.log("Hasil API:", result);
 
-      // 👉 Jika ingin melihat isi tabel saja
-      console.log("Content:", result.content);
       setDataBalancing(result.content);
       setTotalPagesBalancing(result.totalPages);
     } catch (err) {
@@ -600,7 +597,7 @@ export default function BankTransactionPage() {
       setLoader(true);
       setProgress(0);
 
-      await GlobalApi.deleteBalancingById(`/api/target-iuran-anggota/${id}`, {
+      await GlobalApi.deleteBalancingById(id, {
         onDownloadProgress: (progressEvent) => {
           const total = progressEvent.total;
           const current = progressEvent.loaded;
@@ -611,7 +608,7 @@ export default function BankTransactionPage() {
 
       alert("Data berhasil dihapus!");
       setShowDeletePopup(false);
-      getData(); // refresh data
+      await getBalancingdata();
     } catch (error) {
       console.error(error);
       alert("Gagal menghapus data!");
@@ -697,9 +694,10 @@ export default function BankTransactionPage() {
   const handleEditClick = async (id) => {
     try {
       const data = await GlobalApi.getBalancingById(id);
-      console.log("Data yang diambil untuk edit:", data);
+      // console.log("Data yang diambil untuk edit:", data);
       setEditData(data);
       setShowEditModal(true);
+      await getBalancingdata();
     } catch (err) {
       console.error("Gagal ambil data balancing:", err);
     }

@@ -1310,7 +1310,7 @@ const deleteBalancingById = async (id) => {
     const response = await axiosClient.delete(`/api/target-iuran-anggota/${id}`);
     return response.data;
   } catch (error) {
-    console.error("Error delete iuran data: ", error);
+    console.error("Error delete balancing data: ", error);
     throw error;
   }
 };
