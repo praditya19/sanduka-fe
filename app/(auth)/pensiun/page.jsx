@@ -124,7 +124,7 @@ const Page = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [expandedIndex, setExpandedIndex] = useState(null);
-  const [totalAnggota, setTotalAnggota] = useState(0); // State untuk menyimpan jumlah total anggota
+  const [totalAnggota, setTotalAnggota] = useState(0);
   const router = useRouter();
   const { token } = useAuth();
   const [popupVisible, setPopupVisible] = useState(false);
