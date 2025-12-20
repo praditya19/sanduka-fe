@@ -206,6 +206,18 @@ function RekapAnggota() {
   const [selectedBulan, setSelectedBulan] = useState("");
   const [selectedTahun, setSelectedTahun] = useState(new Date().getFullYear());
   const filteredMonths = selectedTahun === 2025 ? months.slice(4) : months;
+// otomatis bulan
+  useEffect(() => {
+  const now = new Date();
+  const currentMonth = now.getMonth() + 1;
+
+  if (selectedTahun === 2025) {
+    setSelectedBulan(currentMonth < 5 ? 5 : currentMonth);
+  } else {
+    setSelectedBulan(currentMonth);
+  }
+  }, [selectedTahun]);
+  // 
   // State untuk tagihan bulan
   const getNextMonthYear = () => {
     const now = new Date();
