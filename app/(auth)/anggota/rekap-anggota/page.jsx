@@ -204,19 +204,20 @@ function RekapAnggota() {
   ];
 
   const [selectedBulan, setSelectedBulan] = useState("");
-  const [selectedTahun, setSelectedTahun] = useState(new Date().getFullYear());
+  const [selectedTahun, setSelectedTahun] = useState("");
+  // const [selectedTahun, setSelectedTahun] = useState(new Date().getFullYear());
   const filteredMonths = selectedTahun === 2025 ? months.slice(4) : months;
 // otomatis bulan
-  useEffect(() => {
-  const now = new Date();
-  const currentMonth = now.getMonth() + 1;
+  // useEffect(() => {
+  // const now = new Date();
+  // const currentMonth = now.getMonth() + 1;
 
-  if (selectedTahun === 2025) {
-    setSelectedBulan(currentMonth < 5 ? 5 : currentMonth);
-  } else {
-    setSelectedBulan(currentMonth);
-  }
-  }, [selectedTahun]);
+  // if (selectedTahun === 2025) {
+  //   setSelectedBulan(currentMonth < 5 ? 5 : currentMonth);
+  // } else {
+  //   setSelectedBulan(currentMonth);
+  // }
+  // }, [selectedTahun]);
   // 
   // State untuk tagihan bulan
   const getNextMonthYear = () => {
@@ -3273,7 +3274,7 @@ function RekapAnggota() {
                     Daftar iuran anggota per unit kerja
                   </p>
                 </div>
-                <div className="flex gap-2 items-center">
+                {/* <div className="flex gap-2 items-center">
                   <select
                     value={selectedBulan}
                     onChange={(e) => setSelectedBulan(Number(e.target.value))}
@@ -3303,7 +3304,7 @@ function RekapAnggota() {
                       </option>
                     ))}
                   </select>
-                </div>
+                </div> */}
               </div>
             </div>
             {popupBackup && (
