@@ -207,7 +207,7 @@ function RekapAnggota() {
   const [selectedTahun, setSelectedTahun] = useState("");
   // const [selectedTahun, setSelectedTahun] = useState(new Date().getFullYear());
   const filteredMonths = selectedTahun === 2025 ? months.slice(4) : months;
-// otomatis bulan
+  // otomatis bulan
   // useEffect(() => {
   // const now = new Date();
   // const currentMonth = now.getMonth() + 1;
@@ -1616,7 +1616,61 @@ function RekapAnggota() {
         await GlobalApi.createByNominal(payload);
       }
 
-      await fetchInitialData();
+      // Optimistic update - update state lokal tanpa fetch ulang semua data
+      const updatedMemberData = {
+        namaAnggota: payload.namaAnggota,
+        nip: payload.nip,
+        npaPgri: payload.npa,
+        nomorRekening: payload.nomorRekening,
+        cabang: payload.cabang,
+        unitKerja: payload.unitKerja,
+        statusPegawai: payload.statusPegawai,
+        pgri: payload.totalIuranAnggota,
+        sanduka: payload.totalIuranSanduka,
+        daspen: payload.totalIuranDaspen,
+        derap: payload.totalIuranDerap,
+        kalender: payload.totalIuranKalender,
+        lainLain: payload.manualIuranSumbangan,
+        totalIuran:
+          payload.totalIuranAnggota +
+          payload.totalIuranSanduka +
+          payload.totalIuranDaspen +
+          payload.totalIuranDerap +
+          payload.totalIuranKalender +
+          payload.manualIuranSumbangan,
+        iuranSumbanganList: payload.iuranSumbanganList,
+        lastUpdatedAtIuranAnggota: new Date().toISOString(),
+      };
+
+      // Update originalRekapData
+      setOriginalRekapData((prevData) => {
+        const newData = prevData.map((item) =>
+          item.nip === dataNpa.nip
+            ? { ...item, ...updatedMemberData }
+            : item
+        );
+        // Jika data baru (create), tambahkan ke array
+        if (!idIuran && !prevData.find((item) => item.nip === dataNpa.nip)) {
+          newData.push(updatedMemberData);
+        }
+        return newData;
+      });
+
+      // Update data dan groupedData
+      setData((prevData) => {
+        const newData = prevData.map((item) =>
+          item.nip === dataNpa.nip
+            ? { ...item, ...updatedMemberData }
+            : item
+        );
+        if (!idIuran && !prevData.find((item) => item.nip === dataNpa.nip)) {
+          newData.push(updatedMemberData);
+        }
+        // Update groupedData berdasarkan data baru
+        const processed = processData(newData);
+        setGroupedData(processed);
+        return newData;
+      });
 
       setNotification({
         type: "success",
