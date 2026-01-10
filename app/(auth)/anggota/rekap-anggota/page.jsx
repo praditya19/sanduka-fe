@@ -14,7 +14,7 @@ import {
   FaTimesCircle,
   FaCheckCircle,
   FaExclamationCircle,
-  FaPlus,
+  FaEdit,
   FaPrint,
   FaSearch,
   FaFileInvoiceDollar,
@@ -218,7 +218,7 @@ function RekapAnggota() {
   //   setSelectedBulan(currentMonth);
   // }
   // }, [selectedTahun]);
-  // 
+  //
   // State untuk tagihan bulan
   const getNextMonthYear = () => {
     const now = new Date();
@@ -413,7 +413,7 @@ function RekapAnggota() {
         (unitKerja) =>
           unitKerja.cabang &&
           unitKerja.cabang.toLowerCase() ===
-          (cabang.kecamatan || "").toLowerCase()
+            (cabang.kecamatan || "").toLowerCase()
       );
       setFilteredUnitKerja(filtered);
     } catch (error) {
@@ -663,7 +663,7 @@ function RekapAnggota() {
             item.cabang?.toLowerCase() === selectedCabang.toLowerCase()) &&
           (!selectedUnitKerja ||
             item.unitKerja?.toLowerCase() ===
-            selectedUnitKerja.toLowerCase()) &&
+              selectedUnitKerja.toLowerCase()) &&
           item.namaAnggota?.toLowerCase().includes(query.toLowerCase())
       );
 
@@ -923,7 +923,6 @@ function RekapAnggota() {
     const daspenFromMember = member.daspen ? parseInt(member.daspen) : 0;
     setDaspenValue(daspenFromMember);
 
-
     setNipValue(member.nip);
     setSelectedMember(null);
     setDataNpa(null);
@@ -1098,8 +1097,8 @@ function RekapAnggota() {
         selectedKategori === "lainlain" && selectedKeterangan
           ? `${selectedKeterangan}`
           : selectedKategori === "pgri"
-            ? "anggota"
-            : selectedKategori;
+          ? "anggota"
+          : selectedKategori;
 
       if (!addedCategories.find((cat) => cat.key === uniqueKey)) {
         const labelMap = {
@@ -1353,8 +1352,6 @@ function RekapAnggota() {
       totalIuranSumbangan: totalIuranLainLain || 0,
     };
 
-
-
     try {
       if (nomorRekening && nomorRekening.trim() !== "") {
         const rekeningBaru = nomorRekening.trim();
@@ -1441,8 +1438,8 @@ function RekapAnggota() {
         const manual = isReset
           ? 0
           : parseInt(
-            nominalBaruList[`manual${key}`] || nominalBaruList[key] || 0
-          );
+              nominalBaruList[`manual${key}`] || nominalBaruList[key] || 0
+            );
         const total = iuran + manual;
 
         if (key === "pgri" || key === "anggota") {
@@ -1645,9 +1642,7 @@ function RekapAnggota() {
       // Update originalRekapData
       setOriginalRekapData((prevData) => {
         const newData = prevData.map((item) =>
-          item.nip === dataNpa.nip
-            ? { ...item, ...updatedMemberData }
-            : item
+          item.nip === dataNpa.nip ? { ...item, ...updatedMemberData } : item
         );
         // Jika data baru (create), tambahkan ke array
         if (!idIuran && !prevData.find((item) => item.nip === dataNpa.nip)) {
@@ -1659,9 +1654,7 @@ function RekapAnggota() {
       // Update data dan groupedData
       setData((prevData) => {
         const newData = prevData.map((item) =>
-          item.nip === dataNpa.nip
-            ? { ...item, ...updatedMemberData }
-            : item
+          item.nip === dataNpa.nip ? { ...item, ...updatedMemberData } : item
         );
         if (!idIuran && !prevData.find((item) => item.nip === dataNpa.nip)) {
           newData.push(updatedMemberData);
@@ -1905,8 +1898,9 @@ function RekapAnggota() {
         npaToRekeningMap[item.npa] = item.nomorRekening;
       });
 
-      const titleText = `Rekap By Nominal${selectedCabang ? ` Cabang ${selectedCabang}` : ""
-        }${selectedUnitKerja ? ` Unit Kerja ${selectedUnitKerja}` : ""}`;
+      const titleText = `Rekap By Nominal${
+        selectedCabang ? ` Cabang ${selectedCabang}` : ""
+      }${selectedUnitKerja ? ` Unit Kerja ${selectedUnitKerja}` : ""}`;
 
       const htmlContent = `
       <html>
@@ -1955,112 +1949,117 @@ function RekapAnggota() {
             </thead>
             <tbody>
               ${groupedData
-          ?.map((group, index) => {
-            const members = group.members || [];
-            return members
-              ?.map((member, memberIndex) => {
-                const nomorRekeningFinal =
-                  npaToRekeningMap[member.npa] ||
-                  member.nomorRekening ||
-                  "-";
-                return `
+                ?.map((group, index) => {
+                  const members = group.members || [];
+                  return members
+                    ?.map((member, memberIndex) => {
+                      const nomorRekeningFinal =
+                        npaToRekeningMap[member.npa] ||
+                        member.nomorRekening ||
+                        "-";
+                      return `
                           <tr>
-                            ${memberIndex === 0
-                    ? `
+                            ${
+                              memberIndex === 0
+                                ? `
                               <td rowspan="${members.length}">${index + 1}</td>
-                              <td rowspan="${members.length}">${group.cabang
-                    }</td>
-                              <td rowspan="${members.length}">${group.unitKerja
-                    }</td>
+                              <td rowspan="${members.length}">${
+                                    group.cabang
+                                  }</td>
+                              <td rowspan="${members.length}">${
+                                    group.unitKerja
+                                  }</td>
                             `
-                    : ""
-                  }
+                                : ""
+                            }
                             <td class="member-list">
                               <div>${member.namaAnggota}</div>
                               <div>${member.nip || "-"}</div>
                               <div>${nomorRekeningFinal}</div>
                             </td>
-                            ${memberIndex === 0
-                    ? `<td rowspan="${members.length}">${group.jumlah || 0
-                    }</td>`
-                    : ""
-                  }
+                            ${
+                              memberIndex === 0
+                                ? `<td rowspan="${members.length}">${
+                                    group.jumlah || 0
+                                  }</td>`
+                                : ""
+                            }
                             <td>Rp. ${parseInt(member.pgri || 0).toLocaleString(
-                    "id-ID"
-                  )}</td>
+                              "id-ID"
+                            )}</td>
                             <td>Rp. ${parseInt(
-                    member.sanduka || 0
-                  ).toLocaleString("id-ID")}</td>
+                              member.sanduka || 0
+                            ).toLocaleString("id-ID")}</td>
                             <td>Rp. ${parseInt(
-                    member.daspen || 0
-                  ).toLocaleString("id-ID")}</td>
+                              member.daspen || 0
+                            ).toLocaleString("id-ID")}</td>
                             <td>Rp. ${parseInt(
-                    member.derap || 0
-                  ).toLocaleString("id-ID")}</td>
+                              member.derap || 0
+                            ).toLocaleString("id-ID")}</td>
                             <td>Rp. ${parseInt(
-                    member.kalender || 0
-                  ).toLocaleString("id-ID")}</td>
+                              member.kalender || 0
+                            ).toLocaleString("id-ID")}</td>
                             <td>Rp. ${parseInt(
-                    member.lainLain || 0
-                  ).toLocaleString("id-ID")}</td>
+                              member.lainLain || 0
+                            ).toLocaleString("id-ID")}</td>
                             <td>Rp. ${parseInt(
-                    member.total || 0
-                  ).toLocaleString("id-ID")}</td>
+                              member.total || 0
+                            ).toLocaleString("id-ID")}</td>
                           </tr>
                         `;
-              })
-              .join("");
-          })
-          .join("")}
+                    })
+                    .join("");
+                })
+                .join("")}
               <tr class="total-row">
                 <td colspan="4" style="text-align: center">Total Keseluruhan :</td>
                 <td>
                   ${groupedData.reduce(
-            (sum, group) => sum + parseInt(group.jumlah || 0),
-            0
-          )}
+                    (sum, group) => sum + parseInt(group.jumlah || 0),
+                    0
+                  )}
                 </td>
                 <td>
                   Rp. ${groupedData
-          .flatMap((g) => g.members || [])
-          .reduce((sum, m) => sum + parseInt(m.pgri || 0), 0)
-          .toLocaleString("id-ID")}
+                    .flatMap((g) => g.members || [])
+                    .reduce((sum, m) => sum + parseInt(m.pgri || 0), 0)
+                    .toLocaleString("id-ID")}
                 </td>
                 <td>
                   Rp. ${groupedData
-          .flatMap((g) => g.members || [])
-          .reduce((sum, m) => sum + parseInt(m.sanduka || 0), 0)
-          .toLocaleString("id-ID")}
+                    .flatMap((g) => g.members || [])
+                    .reduce((sum, m) => sum + parseInt(m.sanduka || 0), 0)
+                    .toLocaleString("id-ID")}
                 </td>
                 <td>
                   Rp. ${groupedData
-          .flatMap((g) => g.members || [])
-          .reduce((sum, m) => sum + parseInt(m.daspen || 0), 0)
-          .toLocaleString("id-ID")}
+                    .flatMap((g) => g.members || [])
+                    .reduce((sum, m) => sum + parseInt(m.daspen || 0), 0)
+                    .toLocaleString("id-ID")}
                 </td>
                 <td>
                   Rp. ${groupedData
-          .flatMap((g) => g.members || [])
-          .reduce((sum, m) => sum + parseInt(m.derap || 0), 0)
-          .toLocaleString("id-ID")}
+                    .flatMap((g) => g.members || [])
+                    .reduce((sum, m) => sum + parseInt(m.derap || 0), 0)
+                    .toLocaleString("id-ID")}
                 </td>
                 <td>
                   Rp. ${groupedData
-          .flatMap((g) => g.members || [])
-          .reduce((sum, m) => sum + parseInt(m.kalender || 0), 0)
-          .toLocaleString("id-ID")}
+                    .flatMap((g) => g.members || [])
+                    .reduce((sum, m) => sum + parseInt(m.kalender || 0), 0)
+                    .toLocaleString("id-ID")}
                 </td>
                 <td>
                   Rp. ${groupedData
-          .flatMap((g) => g.members || [])
-          .reduce((sum, m) => sum + parseInt(m.lainLain || 0), 0)
-          .toLocaleString("id-ID")}
+                    .flatMap((g) => g.members || [])
+                    .reduce((sum, m) => sum + parseInt(m.lainLain || 0), 0)
+                    .toLocaleString("id-ID")}
                 </td>
                 <td>
                   Rp. ${groupedData
-          .flatMap((g) => g.members || [])
-          .reduce((sum, m) => sum + parseInt(m.total || 0), 0)
-          .toLocaleString("id-ID")}
+                    .flatMap((g) => g.members || [])
+                    .reduce((sum, m) => sum + parseInt(m.total || 0), 0)
+                    .toLocaleString("id-ID")}
                 </td>
               </tr>
             </tbody>
@@ -2487,8 +2486,9 @@ function RekapAnggota() {
         .replace(/[/:]/g, "-")
         .replace(/[ ]/g, "_");
 
-      const fileName = `Backupbynominal_${namaBulan}_${safeWaktuDownload}${selectedCabang ? `_Cabang_${selectedCabang}` : ""
-        }${selectedUnitKerja ? `_Unit_Kerja_${selectedUnitKerja}` : ""}.xlsx`;
+      const fileName = `Backupbynominal_${namaBulan}_${safeWaktuDownload}${
+        selectedCabang ? `_Cabang_${selectedCabang}` : ""
+      }${selectedUnitKerja ? `_Unit_Kerja_${selectedUnitKerja}` : ""}.xlsx`;
 
       XLSX.writeFile(wb, fileName);
 
@@ -3056,7 +3056,7 @@ function RekapAnggota() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-teal-50 to-white p-2 md:p-6">
+    <div className="min-h-screen bg-gradient-to-b from-teal-50 to-white p-2 md:p-4 w-[110%]">
       {isMobile ? <HeaderMobile /> : <HeaderMenu />}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
@@ -3069,13 +3069,14 @@ function RekapAnggota() {
         )}
         <div className="mt-8"></div>
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
-          <div className="mb-6 mx-4 md:mx-12">
+          <div className="mb-6 mx-4 md:mx-4">
             <div className="flex flex-wrap items-start mt-8 justify-between">
               {!isMobile && (
-                <div className="flex justify-between items-end mt-2 md:mt-0 p-4 w-full">
+                <div className="flex justify-between items-end mt-2 md:mt-2 p-4 w-full">
                   <div className="flex items-center gap-2">
                     <FaDatabase className="text-2xl text-gray-700" />
                     <h1 className="font-semibold text-2xl">By Nominal</h1>
@@ -3207,7 +3208,7 @@ function RekapAnggota() {
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-lg shadow-lg mx-4 md:mx-12">
+          <div className="rounded-lg shadow-lg mx-4 md:mx-0">
             <div className="flex gap-4">
               <div className="flex flex-col relative w-64" ref={cabangRef}>
                 <p>Cabang</p>
@@ -3216,8 +3217,9 @@ function RekapAnggota() {
                   value={selectedCabang}
                   readOnly
                   onClick={!isAdmin ? handleCabangClick : undefined}
-                  className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${isAdmin ? "bg-gray-100" : ""
-                    }`}
+                  className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${
+                    isAdmin ? "bg-gray-100" : ""
+                  }`}
                   placeholder="Pilih Cabang"
                   disabled={isAdmin}
                 />
@@ -3459,398 +3461,135 @@ function RekapAnggota() {
                   <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600">
                     Nama Anggota
                   </th>
-                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 hidden lg:table-cell">
-                    Jumlah Anggota
+                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 text-center">
+                    PGRI
                   </th>
-                  <th
-                    className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 hidden lg:table-cell text-center"
-                    colSpan="2"
-                  >
-                    Rincian Potongan
+                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 text-center">
+                    Sanduka
                   </th>
-                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600  w-36">
+                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 text-center">
+                    Daspen
+                  </th>
+                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 text-center">
+                    Derap
+                  </th>
+                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 text-center">
+                    Kalender
+                  </th>
+                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 text-center">
+                    Lain-lain
+                  </th>
+                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 text-center">
                     Total
                   </th>
-                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 w-28 rounded-tr-lg **hidden lg:table-cell**">
-                    Action
+                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 rounded-tr-lg w-28 text-center">
+                    Aksi
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {[...groupedData]
                   .sort((a, b) => a.unitKerja.localeCompare(b.unitKerja))
-                  .map((group, index) => {
-                    const isExpanded = expandedRows.has(group.unitKerja);
-                    const rowSpanCount = isExpanded
-                      ? group.members.length + 1
-                      : 1;
-                    return (
-                      <React.Fragment key={group.unitKerja}>
-                        <tr
-                          className={
-                            index % 2 === 0 ? "bg-white" : "bg-teal-50"
-                          }
-                        >
-                          <td className="p-3 border-b text-center">
-                            <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-teal-100 text-teal-700 font-semibold">
-                              {index + 1}
-                            </div>
-                          </td>
-                          <td className="p-3 border-b">{group.cabang}</td>
-                          <td className="p-3 border-b font-medium">
-                            {group.unitKerja}
-                          </td>
-                          <td className="p-3 border-b text-center">
-                            <Button
-                              className="text-teal-600 bg-transparent hover:bg-teal-50 hover:text-teal-700 rounded-full p-2 transition-all duration-200"
-                              onClick={() => toggleExpand(group.unitKerja)}
-                            >
-                              {isExpanded ? (
-                                <span className="flex items-center gap-1">
-                                  <FaMinusCircle />{" "}
-                                  <span className="text-sm">Tutup</span>
-                                </span>
-                              ) : (
-                                <span className="flex items-center gap-1">
-                                  <FaPlusCircle />{" "}
-                                  <span className="text-sm">Detail</span>
-                                </span>
-                              )}
-                            </Button>
-                          </td>
-                          <td className="p-3 border-b text-center hidden lg:table-cell font-medium">
-                            {group.jumlah}
-                          </td>
-                          <td
-                            colSpan={2}
-                            className="p-3 border-b text-left hidden lg:table-cell"
+                  .flatMap((group) =>
+                    group.members.map((member) => ({
+                      ...member,
+                      cabang: group.cabang,
+                      unitKerja: group.unitKerja,
+                    }))
+                  )
+                  .map((member, rowIndex) => (
+                    <tr
+                      key={`${member.unitKerja}-member-${member.nip}`}
+                      className={rowIndex % 2 === 0 ? "bg-white" : "bg-teal-50"}
+                      ref={
+                        member.nip === lastUpdatedMemberNip
+                          ? lastUpdatedMemberRef
+                          : null
+                      }
+                    >
+                      <td className="p-3 border-b text-center">
+                        <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-teal-100 text-teal-700 font-semibold text-xs">
+                          {rowIndex + 1}
+                        </div>
+                      </td>
+                      <td className="p-3 border-b">{member.cabang}</td>
+                      <td className="p-3 border-b font-medium">
+                        {member.unitKerja}
+                      </td>
+                      <td className="p-3 border-b text-sm">
+                        <div className="font-medium">{member.namaAnggota}</div>
+                        <div className="text-xs text-gray-600">
+                          {member.nip}
+                        </div>
+                        <div className="text-xs text-gray-600">
+                          {member.nomorRekening}
+                        </div>
+                      </td>
+                      <td className="p-3 border-b text-right text-sm">
+                        Rp. {parseInt(member.pgri || 0).toLocaleString("id-ID")}
+                      </td>
+                      <td className="p-3 border-b text-right text-sm">
+                        Rp.{" "}
+                        {parseInt(member.sanduka || 0).toLocaleString("id-ID")}
+                      </td>
+                      <td className="p-3 border-b text-right text-sm">
+                        {parseInt(member.daspen || 0) === 0 ? (
+                          <span className=" text-red-800 py-1 px-2 rounded text-xs font-medium">
+                            Belum Input
+                          </span>
+                        ) : (
+                          `Rp. ${parseInt(member.daspen || 0).toLocaleString(
+                            "id-ID"
+                          )}`
+                        )}
+                      </td>
+                      <td className="p-3 border-b text-right text-sm">
+                        Rp.{" "}
+                        {parseInt(member.derap || 0).toLocaleString("id-ID")}
+                      </td>
+                      <td className="p-3 border-b text-right text-sm">
+                        Rp.{" "}
+                        {parseInt(member.kalender || 0).toLocaleString("id-ID")}
+                      </td>
+                      <td className="p-3 border-b text-right text-sm">
+                        Rp.{" "}
+                        {parseInt(member.sumbangan || 0).toLocaleString(
+                          "id-ID"
+                        )}
+                      </td>
+                      <td className="p-3 border-b text-right text-sm text-teal-800 font-semibold">
+                        Rp.{" "}
+                        {parseInt(member.totalIuran || 0).toLocaleString(
+                          "id-ID"
+                        )}
+                      </td>
+                      <td className="p-3 border-b text-center">
+                        <div className="flex justify-center gap-2">
+                          <button
+                            className="text-teal-600 hover:text-teal-800 text-lg p-1 hover:bg-teal-50 rounded transition-colors"
+                            onClick={() => handleMemberClick(member)}
+                            title="Edit Iuran"
                           >
-                            <div className="flex justify-between py-1">
-                              <span>PGRI:</span>
-                              <span className="text-gray-700">
-                                Rp.{" "}
-                                {parseInt(group.pgri).toLocaleString("id-ID")}
-                              </span>
-                            </div>
-                            <div className="flex justify-between py-1">
-                              <span>Sanduka:</span>
-                              <span className="text-gray-700">
-                                Rp.{" "}
-                                {parseInt(group.sanduka).toLocaleString(
-                                  "id-ID"
-                                )}
-                              </span>
-                            </div>
-                            <div className="flex justify-between py-1">
-                              <span>Daspen:</span>
-                              <span className="text-gray-700">
-                                Rp.{" "}
-                                {parseInt(group.daspen).toLocaleString("id-ID")}
-                              </span>
-                            </div>
-                            <div className="flex justify-between py-1">
-                              <span>Derap:</span>
-                              <span className="text-gray-700">
-                                Rp.{" "}
-                                {parseInt(group.derap).toLocaleString("id-ID")}
-                              </span>
-                            </div>
-                            <div className="flex justify-between py-1">
-                              <span>Kalender:</span>
-                              <span className="text-gray-700">
-                                Rp.{" "}
-                                {parseInt(group.kalender).toLocaleString(
-                                  "id-ID"
-                                )}
-                              </span>
-                            </div>
-                            <div className="flex justify-between py-1">
-                              <span>Lain-lain:</span>
-                              <span className="text-gray-700">
-                                Rp.{" "}
-                                {parseInt(group.sumbangan).toLocaleString(
-                                  "id-ID"
-                                )}
-                              </span>
-                            </div>
-                          </td>
-
-                          <td className="p-3 border-b text-center font-semibold">
-                            <span className="bg-teal-100 text-teal-800 py-1 px-3 rounded-full">
-                              Rp.{" "}
-                              {parseInt(group.totalIuran).toLocaleString(
-                                "id-ID"
-                              )}
-                            </span>
-                          </td>
-                        </tr>
-
-                        {isExpanded &&
-                          group.members.map((member, idx) => {
-                            const daspenValue = parseInt(member.daspen || 0);
-                            const showDaspenBadge = daspenValue === 0;
-
-                            return (
-                              <tr
-                                key={`${group.unitKerja}-member-${idx}`}
-                                className="bg-teal-50/30 hover:bg-teal-50"
-                                ref={
-                                  member.nip === lastUpdatedMemberNip
-                                    ? lastUpdatedMemberRef
-                                    : null
-                                }
-                              >
-                                <td></td>
-                                <td></td>
-                                <td></td>
-
-                                <td
-                                  className="p-3 border-b"
-                                  colSpan={isMobile ? 4 : 1}
-                                >
-                                  <div className="flex flex-col lg:flex-row">
-                                    <div className="font-medium mb-2 lg:mb-0 flex items-center">
-                                      <span className="w-6 h-6 flex items-center justify-center bg-teal-200 text-teal-800 rounded-full mr-2 text-xs">
-                                        {idx + 1}
-                                      </span>
-                                      <span className="text-teal-700">
-                                        {member.namaAnggota}
-                                        {member.nip &&
-                                          member.nip.length >= 10 && (
-                                            <div className="text-sm text-teal-700 italic">
-                                              {member.nip}
-                                            </div>
-                                          )}
-                                        <div className="text-sm text-teal-700 italic">
-                                          {member.nomorRekening}
-                                        </div>
-                                        <div className="text-sm text-teal-700 italic">
-                                          {member.statusPegawai}
-                                        </div>
-                                        <div className="text-sm text-teal-700 italic">
-                                          Inputan Tagihan untuk Bulan{" "}
-                                          {getNextPotonganBulan()} :{" "}
-                                          {parseInt(
-                                            member.totalIuran
-                                          ).toLocaleString("id-ID")}
-                                        </div>
-                                        <div className="text-sm text-teal-700 italic">
-                                          Update tanggal:{" "}
-                                          {member.lastUpdatedAtIuranAnggota}
-                                        </div>
-                                      </span>
-                                    </div>
-                                    <div className="lg:hidden space-y-2 mt-2 bg-white p-3 rounded-lg shadow-sm">
-                                      <div className="flex justify-between px-4">
-                                        <span className="font-medium text-teal-700">
-                                          PGRI:
-                                        </span>
-                                        <span>
-                                          Rp.{" "}
-                                          {parseInt(member.pgri).toLocaleString(
-                                            "id-ID"
-                                          )}
-                                        </span>
-                                      </div>
-                                      <div className="flex justify-between px-4">
-                                        <span className="font-medium text-teal-700">
-                                          Sanduka:
-                                        </span>
-                                        <span>
-                                          Rp.{" "}
-                                          {parseInt(
-                                            member.sanduka
-                                          ).toLocaleString("id-ID")}
-                                        </span>
-                                      </div>
-                                      <div className="flex justify-between px-4">
-                                        <span className="font-medium text-teal-700">
-                                          Daspen:
-                                        </span>
-                                        {showDaspenBadge ? (
-                                          <span className="bg-red-100 text-red-800 py-1  rounded-full text-xs">
-                                            Belum Input
-                                          </span>
-                                        ) : (
-                                          <span>
-                                            Rp.{" "}
-                                            {parseInt(
-                                              member.daspen
-                                            ).toLocaleString("id-ID")}
-                                          </span>
-                                        )}
-                                      </div>
-                                      <div className="flex justify-between px-4">
-                                        <span className="font-medium text-teal-700">
-                                          Derap:
-                                        </span>
-                                        <span>
-                                          Rp.{" "}
-                                          {parseInt(
-                                            member.derap
-                                          ).toLocaleString("id-ID")}
-                                        </span>
-                                      </div>
-
-                                      <div className="flex justify-between px-4">
-                                        <span className="font-medium text-teal-700">
-                                          Kalender:
-                                        </span>
-                                        <span>
-                                          Rp.{" "}
-                                          {parseInt(
-                                            member.kalender
-                                          ).toLocaleString("id-ID")}
-                                        </span>
-                                      </div>
-
-                                      <div className="flex justify-between px-4">
-                                        <span className="font-medium text-teal-700">
-                                          Lain-lain:
-                                        </span>
-                                        <span>
-                                          Rp.{" "}
-                                          {parseInt(
-                                            member.sumbangan
-                                          ).toLocaleString("id-ID")}
-                                        </span>
-                                      </div>
-                                      <div className="flex justify-between px-4 font-medium bg-teal-100 p-2 rounded-lg">
-                                        <span className="text-teal-800">
-                                          Total:
-                                        </span>
-                                        <span className="text-teal-800">
-                                          Rp.{" "}
-                                          {parseInt(
-                                            member.totalIuran
-                                          ).toLocaleString("id-ID")}
-                                        </span>
-                                      </div>
-                                      <div className="flex justify-around px-4 pt-4 border-t mt-4 border-teal-200">
-                                        <button
-                                          className="text-teal-600 hover:text-teal-800 text-2xl"
-                                          onClick={() => handleMemberClick(member)}
-                                          title="Edit Iuran"
-                                        >
-                                          <FaPlusCircle />
-                                        </button>
-                                        <button
-                                          className="text-teal-600 hover:text-teal-800 text-2xl"
-                                          onClick={() => handlePrintClick(member)}
-                                          title="Cetak Kartu Iuran"
-                                        >
-                                          <FaPrint />
-                                        </button>
-                                        <button
-                                          className="text-teal-600 hover:text-teal-800 text-2xl"
-                                          onClick={() => handleTagihanClick(member)}
-                                          title="Lihat Tagihan"
-                                        >
-                                          <FaFileInvoiceDollar />
-                                        </button>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </td>
-                                <td
-                                  colSpan={3}
-                                  className="p-3 border-b text-left hidden lg:table-cell"
-                                >
-                                  <div className="flex justify-between py-1">
-                                    <span>PGRI:</span>
-                                    <span className="text-gray-700">
-                                      Rp.{" "}
-                                      {parseInt(member.pgri).toLocaleString(
-                                        "id-ID"
-                                      )}
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between py-1">
-                                    <span>Sanduka:</span>
-                                    <span className="text-gray-700">
-                                      Rp.{" "}
-                                      {parseInt(member.sanduka).toLocaleString(
-                                        "id-ID"
-                                      )}
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between py-1 items-center">
-                                    <span>Daspen:</span>
-                                    {showDaspenBadge ? (
-                                      <span className="bg-red-100 text-red-800 py-1 px-1 rounded-full text-xs">
-                                        Belum Input
-                                      </span>
-                                    ) : (
-                                      <span className="text-gray-700">
-                                        Rp.{" "}
-                                        {parseInt(member.daspen).toLocaleString(
-                                          "id-ID"
-                                        )}
-                                      </span>
-                                    )}
-                                  </div>
-                                  <div className="flex justify-between py-1">
-                                    <span>Derap:</span>
-                                    <span className="text-gray-700">
-                                      Rp.{" "}
-                                      {parseInt(member.derap).toLocaleString(
-                                        "id-ID"
-                                      )}
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between py-1">
-                                    <span>Kalender:</span>
-                                    <span className="text-gray-700">
-                                      Rp.{" "}
-                                      {parseInt(member.kalender).toLocaleString(
-                                        "id-ID"
-                                      )}
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between py-1">
-                                    <span>Lain-lain:</span>
-                                    <span className="text-gray-700">
-                                      Rp.{" "}
-                                      {parseInt(
-                                        member.sumbangan
-                                      ).toLocaleString("id-ID")}
-                                    </span>
-                                  </div>
-                                </td>
-                                <td className="p-3 border-b text-center hidden lg:table-cell">
-                                  <span className="bg-teal-100 text-teal-800 py-1 px-2 rounded-full text-sm">
-                                    Rp.{" "}
-                                    {parseInt(member.totalIuran).toLocaleString(
-                                      "id-ID"
-                                    )}
-                                  </span>
-                                </td>
-                                <td className="p-3 border-b text-center space-x-2 hidden lg:table-cell">
-                                  <button
-                                    className="text-teal-600 hover:text-teal-800 text-xl"
-                                    onClick={() => handleMemberClick(member)}
-                                  >
-                                    <FaPlus />
-                                  </button>
-                                  <button
-                                    className="text-teal-600 hover:text-teal-800 text-xl"
-                                    onClick={() => handlePrintClick(member)}
-                                  >
-                                    <FaPrint />
-                                  </button>
-                                  <button
-                                    className="text-teal-600 hover:text-teal-800 text-xl"
-                                    onClick={() => handleTagihanClick(member)}
-                                  >
-                                    <FaFileInvoiceDollar />
-                                  </button>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                      </React.Fragment>
-                    );
-                  })}
+                            <FaEdit />
+                          </button>
+                          <button
+                            className="text-teal-600 hover:text-teal-800 text-lg p-1 hover:bg-teal-50 rounded transition-colors"
+                            onClick={() => handlePrintClick(member)}
+                            title="Cetak Kartu Iuran"
+                          >
+                            <FaPrint />
+                          </button>
+                          <button
+                            className="text-teal-600 hover:text-teal-800 text-lg p-1 hover:bg-teal-50 rounded transition-colors"
+                            onClick={() => handleTagihanClick(member)}
+                            title="Lihat Tagihan"
+                          >
+                            <FaFileInvoiceDollar />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
               {isPopupVisible && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40">
@@ -4010,8 +3749,8 @@ function RekapAnggota() {
                           .filter(
                             (item) =>
                               parseInt(item.iuran || 0) +
-                              parseInt(item.manual || 0) >
-                              0 && !item.isSumbanganDetail
+                                parseInt(item.manual || 0) >
+                                0 && !item.isSumbanganDetail
                           )
                           .map((item, idx) => {
                             const isReset = resetKeys.includes(item.key);
@@ -4076,8 +3815,8 @@ function RekapAnggota() {
                                         inputValue === 0
                                           ? ""
                                           : `Rp. ${inputValue.toLocaleString(
-                                            "id-ID"
-                                          )}`
+                                              "id-ID"
+                                            )}`
                                       }
                                       onChange={(e) => {
                                         const angka =
@@ -4126,17 +3865,19 @@ function RekapAnggota() {
                               return (
                                 <div
                                   key={index}
-                                  className={`space-y-1 px-3 py-2 rounded-md border-l-4 mb-2 ${isDeleted
-                                    ? "bg-gray-100 border-gray-400 opacity-60"
-                                    : "bg-purple-50 border-purple-400"
-                                    }`}
+                                  className={`space-y-1 px-3 py-2 rounded-md border-l-4 mb-2 ${
+                                    isDeleted
+                                      ? "bg-gray-100 border-gray-400 opacity-60"
+                                      : "bg-purple-50 border-purple-400"
+                                  }`}
                                 >
                                   <div className="flex items-center justify-between">
                                     <span
-                                      className={`font-medium ${isDeleted
-                                        ? "text-gray-500"
-                                        : "text-purple-800"
-                                        }`}
+                                      className={`font-medium ${
+                                        isDeleted
+                                          ? "text-gray-500"
+                                          : "text-purple-800"
+                                      }`}
                                     >
                                       {sumbangan.jenis}
                                       {isDeleted && (
@@ -4149,10 +3890,11 @@ function RekapAnggota() {
                                     {/* Tombol Trash - selalu tampil, bahkan untuk yang sudah di-delete */}
                                     <button
                                       type="button"
-                                      className={`p-1 rounded-full transition-colors ${isDeleted
-                                        ? "text-gray-400 cursor-not-allowed"
-                                        : "text-red-500 hover:text-red-700 hover:bg-red-50"
-                                        }`}
+                                      className={`p-1 rounded-full transition-colors ${
+                                        isDeleted
+                                          ? "text-gray-400 cursor-not-allowed"
+                                          : "text-red-500 hover:text-red-700 hover:bg-red-50"
+                                      }`}
                                       onClick={() =>
                                         !isDeleted &&
                                         handleDeleteSumbangan(sumbangan.jenis)
@@ -4179,10 +3921,11 @@ function RekapAnggota() {
                                         value={`Rp. ${jumlahValue.toLocaleString(
                                           "id-ID"
                                         )}`}
-                                        className={`w-full border px-2 py-1 rounded text-center font-medium ${isDeleted
-                                          ? "bg-gray-200 text-gray-500"
-                                          : "bg-purple-100 text-purple-700"
-                                          }`}
+                                        className={`w-full border px-2 py-1 rounded text-center font-medium ${
+                                          isDeleted
+                                            ? "bg-gray-200 text-gray-500"
+                                            : "bg-purple-100 text-purple-700"
+                                        }`}
                                       />
                                     </div>
 
@@ -4198,10 +3941,11 @@ function RekapAnggota() {
                                             ? "Dihapus"
                                             : "Tidak bisa diubah"
                                         }
-                                        className={`w-full border px-2 py-1 rounded text-center ${isDeleted
-                                          ? "bg-gray-200 text-gray-500"
-                                          : "bg-gray-100 text-gray-500"
-                                          }`}
+                                        className={`w-full border px-2 py-1 rounded text-center ${
+                                          isDeleted
+                                            ? "bg-gray-200 text-gray-500"
+                                            : "bg-gray-100 text-gray-500"
+                                        }`}
                                       />
                                     </div>
 
@@ -4215,10 +3959,11 @@ function RekapAnggota() {
                                         value={`Rp. ${jumlahValue.toLocaleString(
                                           "id-ID"
                                         )}`}
-                                        className={`w-full border px-2 py-1 rounded text-center font-medium ${isDeleted
-                                          ? "bg-gray-200 text-gray-500"
-                                          : "bg-purple-100 text-purple-700"
-                                          }`}
+                                        className={`w-full border px-2 py-1 rounded text-center font-medium ${
+                                          isDeleted
+                                            ? "bg-gray-200 text-gray-500"
+                                            : "bg-purple-100 text-purple-700"
+                                        }`}
                                       />
                                     </div>
                                   </div>
@@ -4226,10 +3971,11 @@ function RekapAnggota() {
                                   {/* Informasi tambahan jika ada */}
                                   {sumbangan.keterangan && (
                                     <p
-                                      className={`text-xs mt-1 ${isDeleted
-                                        ? "text-gray-400"
-                                        : "text-gray-600"
-                                        }`}
+                                      className={`text-xs mt-1 ${
+                                        isDeleted
+                                          ? "text-gray-400"
+                                          : "text-gray-600"
+                                      }`}
                                     >
                                       Keterangan: {sumbangan.keterangan}
                                     </p>
@@ -4310,8 +4056,8 @@ function RekapAnggota() {
                                       inputValue === 0
                                         ? ""
                                         : `Rp. ${inputValue.toLocaleString(
-                                          "id-ID"
-                                        )}`
+                                            "id-ID"
+                                          )}`
                                     }
                                     onChange={(e) => {
                                       const angka =
@@ -4393,8 +4139,8 @@ function RekapAnggota() {
                                     {notifDaspen === true
                                       ? " (✓ Sinkron)"
                                       : notifDaspen === false
-                                        ? " (× Tidak Sinkron)"
-                                        : " (× Tidak Sinkron)"}
+                                      ? " (× Tidak Sinkron)"
+                                      : " (× Tidak Sinkron)"}
                                   </option>
                                   <option value="kalender">Kalender</option>
                                   <option value="derap">Derap</option>
@@ -4418,7 +4164,7 @@ function RekapAnggota() {
                                       -- Pilih Keterangan --
                                     </option>
                                     {Array.isArray(keteranganLainLain) &&
-                                      keteranganLainLain.length > 0 ? (
+                                    keteranganLainLain.length > 0 ? (
                                       keteranganLainLain.map((item, index) => (
                                         <option key={index} value={item}>
                                           {item}
@@ -4465,10 +4211,11 @@ function RekapAnggota() {
                       </button>
                       <button
                         type="button"
-                        className={`flex items-center justify-center bg-blue-600 text-white font-bold py-2 px-4 rounded ${loadButton
-                          ? "opacity-60 cursor-not-allowed"
-                          : "hover:bg-blue-700"
-                          }`}
+                        className={`flex items-center justify-center bg-blue-600 text-white font-bold py-2 px-4 rounded ${
+                          loadButton
+                            ? "opacity-60 cursor-not-allowed"
+                            : "hover:bg-blue-700"
+                        }`}
                         onClick={async () => {
                           if (loadButton) return;
                           setLoadButton(true);
@@ -4731,84 +4478,58 @@ function RekapAnggota() {
               )}
               <tfoot>
                 <tr className="bg-teal-700 text-white font-bold">
-                  <td colSpan={isMobile ? 4 : 4} className="p-3 text-center">
+                  <td colSpan={2} className="p-3 text-center">
                     Total Keseluruhan:
                   </td>
-                  <td className="p-3 text-center hidden lg:table-cell">
-                    {groupedData.reduce(
-                      (sum, g) => sum + parseInt(g.jumlah),
-                      0
-                    )}
-                  </td>
-                  <td
-                    colSpan={2}
-                    className="p-3 text-left hidden lg:table-cell"
-                  >
-                    <div className="flex justify-between py-1">
-                      <span className="text-xs">PGRI:</span>
-                      <span className="text-xs">
-                        Rp.{" "}
-                        {groupedData
-                          .reduce((sum, g) => sum + parseInt(g.pgri || 0), 0)
-                          .toLocaleString("id-ID")}
-                      </span>
-                    </div>
-                    <div className="flex justify-between py-1">
-                      <span className="text-xs">Sanduka:</span>
-                      <span className="text-xs">
-                        Rp.{" "}
-                        {groupedData
-                          .reduce((sum, g) => sum + parseInt(g.sanduka || 0), 0)
-                          .toLocaleString("id-ID")}
-                      </span>
-                    </div>
-                    <div className="flex justify-between py-1">
-                      <span className="text-xs">Daspen:</span>
-                      <span className="text-xs">
-                        Rp.{" "}
-                        {groupedData
-                          .reduce((sum, g) => sum + parseInt(g.daspen || 0), 0)
-                          .toLocaleString("id-ID")}
-                      </span>
-                    </div>
-                    <div className="flex justify-between py-1">
-                      <span className="text-xs">Derap:</span>
-                      <span className="text-xs">
-                        Rp.{" "}
-                        {groupedData
-                          .reduce((sum, g) => sum + parseInt(g.derap || 0), 0)
-                          .toLocaleString("id-ID")}
-                      </span>
-                    </div>
-                    <div className="flex justify-between py-1">
-                      <span className="text-xs">Kalender:</span>
-                      <span className="text-xs">
-                        Rp.{" "}
-                        {groupedData
-                          .reduce(
-                            (sum, g) => sum + parseInt(g.kalender || 0),
-                            0
-                          )
-                          .toLocaleString("id-ID")}
-                      </span>
-                    </div>
-                    <div className="flex justify-between py-1">
-                      <span className="text-xs">Lain-lain:</span>
-                      <span className="text-xs">
-                        Rp.{" "}
-                        {groupedData
-                          .reduce(
-                            (sum, g) => sum + parseInt(g.sumbangan || 0),
-                            0
-                          )
-                          .toLocaleString("id-ID")}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="p-3 text-center">
+                  <td className="p-3 text-center"></td>
+                  <td className="p-3 text-center"></td>
+                  <td className="p-3 text-right text-sm">
                     Rp.{" "}
                     {groupedData
-                      .reduce((sum, g) => sum + parseInt(g.totalIuran || 0), 0)
+                      .flatMap((g) => g.members || [])
+                      .reduce((sum, m) => sum + parseInt(m.pgri || 0), 0)
+                      .toLocaleString("id-ID")}
+                  </td>
+                  <td className="p-3 text-right text-sm">
+                    Rp.{" "}
+                    {groupedData
+                      .flatMap((g) => g.members || [])
+                      .reduce((sum, m) => sum + parseInt(m.sanduka || 0), 0)
+                      .toLocaleString("id-ID")}
+                  </td>
+                  <td className="p-3 text-right text-sm">
+                    Rp.{" "}
+                    {groupedData
+                      .flatMap((g) => g.members || [])
+                      .reduce((sum, m) => sum + parseInt(m.daspen || 0), 0)
+                      .toLocaleString("id-ID")}
+                  </td>
+                  <td className="p-3 text-right text-sm">
+                    Rp.{" "}
+                    {groupedData
+                      .flatMap((g) => g.members || [])
+                      .reduce((sum, m) => sum + parseInt(m.derap || 0), 0)
+                      .toLocaleString("id-ID")}
+                  </td>
+                  <td className="p-3 text-right text-sm">
+                    Rp.{" "}
+                    {groupedData
+                      .flatMap((g) => g.members || [])
+                      .reduce((sum, m) => sum + parseInt(m.kalender || 0), 0)
+                      .toLocaleString("id-ID")}
+                  </td>
+                  <td className="p-3 text-right text-sm">
+                    Rp.{" "}
+                    {groupedData
+                      .flatMap((g) => g.members || [])
+                      .reduce((sum, m) => sum + parseInt(m.sumbangan || 0), 0)
+                      .toLocaleString("id-ID")}
+                  </td>
+                  <td className="p-3 text-right text-sm font-bold">
+                    Rp.{" "}
+                    {groupedData
+                      .flatMap((g) => g.members || [])
+                      .reduce((sum, m) => sum + parseInt(m.totalIuran || 0), 0)
                       .toLocaleString("id-ID")}
                   </td>
                   <td className="p-3 text-center"></td>
