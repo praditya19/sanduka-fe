@@ -3499,7 +3499,7 @@ function RekapAnggota() {
                   )
                   .map((member, rowIndex) => (
                     <tr
-                      key={`${member.unitKerja}-member-${member.nip}`}
+                      key={`${member.unitKerja}-${member.npaPgri}-${member.namaAnggota}`}
                       className={rowIndex % 2 === 0 ? "bg-white" : "bg-teal-50"}
                       ref={
                         member.nip === lastUpdatedMemberNip
