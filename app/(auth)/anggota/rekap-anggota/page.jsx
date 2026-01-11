@@ -136,6 +136,7 @@ function RekapAnggota() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedKategori, setSelectedKategori] = useState("");
   const [dataNpa, setDataNpa] = useState(null);
+  const [statusPegawai, setStatusPegawai] = useState(null);
   const [fotoBase64, setFotoBase64] = useState(null);
   const profileImageUrl = "/profile.png";
   const [nominalBaruList, setNominalBaruList] = useState([]);
@@ -994,6 +995,7 @@ function RekapAnggota() {
     setResetKeys([]);
     setAddedCategories([]);
     setManualInputs({});
+    setStatusPegawai(member.statusPegawai || null);
 
     try {
       const fileResponse = await GlobalApi.getFileByNip(member.nip);
@@ -1021,7 +1023,7 @@ function RekapAnggota() {
       }
 
       const dataIuran = await GlobalApi.getByIdByNominal(member.idByNominal);
-      console.log("📦 Data Iuran by NPA:", dataIuran);
+      // console.log("📦 Data Iuran by NPA:", dataIuran);
 
       setDataIuran(dataIuran);
       setIdIuran(dataIuran.id || null);
@@ -1463,8 +1465,7 @@ function RekapAnggota() {
         nomorRekening: nomorRekening ? parseInt(nomorRekening) : null,
         cabang: dataNpa.cabang,
         unitKerja: dataNpa.unitKerja,
-        statusPegawai: dataNpa.statusPegawai,
-        statusPegawai: member.statusPegawai,
+        statusPegawai: statusPegawai,
 
         iuranAnggota: 0,
         manualIuranAnggota: 0,
@@ -1661,8 +1662,7 @@ function RekapAnggota() {
       payload.iuranSumbanganList = updatedSumbanganList.filter(
         (item) => item.jumlah > 0
       );
-console.log("status pegawai:", dataNpa.statusPegawai);
-console.log("status pegawai:", member.statusPegawai);
+
       if (idIuran) {
         await GlobalApi.updateByNominalByBulan(
           dataNpa.nip,
@@ -2352,7 +2352,7 @@ console.log("status pegawai:", member.statusPegawai);
       // Ganti true dengan false jika ingin berdasarkan idByNominal terbesar
       allData = processApiResponse(allData, null, true);
 
-      console.log(`📊 Jumlah data yang didapat: ${allData?.length || 0} data`);
+      // console.log(`📊 Jumlah data yang didapat: ${allData?.length || 0} data`);
 
       if (!allData || allData.length === 0) {
         alert("Tidak ada data anggota ditemukan untuk tahun ini.");
@@ -2395,7 +2395,7 @@ console.log("status pegawai:", member.statusPegawai);
         return;
       }
 
-      console.log(`🔍 Jumlah data setelah filter: ${filteredData.length} data`);
+      // console.log(`🔍 Jumlah data setelah filter: ${filteredData.length} data`);
 
       // --- Ambil data terbaru per NPA berdasarkan lastUpdatedAtIuran ---
       const latestPerNpa = Object.values(
@@ -2423,9 +2423,9 @@ console.log("status pegawai:", member.statusPegawai);
         }, {})
       );
 
-      console.log(
-        `✅ Jumlah data unik setelah ambil terbaru: ${latestPerNpa.length} data`
-      );
+      // console.log(
+      //   `✅ Jumlah data unik setelah ambil terbaru: ${latestPerNpa.length} data`
+      // );
 
       // --- Proses data ke Excel ---
       const bulanSekarang = new Date();
@@ -2557,7 +2557,7 @@ console.log("status pegawai:", member.statusPegawai);
 
       XLSX.writeFile(wb, fileName);
 
-      console.log(`📁 File Excel berhasil dibuat: ${fileName}`);
+      // console.log(`📁 File Excel berhasil dibuat: ${fileName}`);
     } catch (error) {
       console.error("❌ Gagal ekspor data:", error);
       alert("Terjadi kesalahan saat mengekspor data ke Excel.");
@@ -3077,20 +3077,7 @@ console.log("status pegawai:", member.statusPegawai);
     XLSX.writeFile(wb, "Rekap_Laporan_Mandiri.xlsx");
   };
 
-  if (loading) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-        }}
-      >
-        <ClipLoader color="#3498db" size={50} />
-      </div>
-    );
-  }
+  // Loading state dipindahkan ke dalam tabel, bukan di layar penuh
 
   const getNextPotonganBulan = () => {
     const today = new Date();
@@ -3553,108 +3540,159 @@ console.log("status pegawai:", member.statusPegawai);
                 </tr>
               </thead>
               <tbody>
-                {[...groupedData]
-                  .sort((a, b) => a.unitKerja.localeCompare(b.unitKerja))
-                  .flatMap((group) =>
-                    group.members.map((member) => ({
-                      ...member,
-                      cabang: group.cabang,
-                      unitKerja: group.unitKerja,
-                    }))
-                  )
-                  .map((member, rowIndex) => (
-                    <tr
-                      key={`${member.unitKerja}-${member.npaPgri}-${member.namaAnggota}`}
-                      className={rowIndex % 2 === 0 ? "bg-white" : "bg-teal-50"}
-                      ref={
-                        member.nip === lastUpdatedMemberNip
-                          ? lastUpdatedMemberRef
-                          : null
-                      }
-                    >
-                      <td className="p-3 border-b text-center">
-                        <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-teal-100 text-teal-700 font-semibold text-xs">
-                          {rowIndex + 1}
-                        </div>
-                      </td>
-                      <td className="p-3 border-b">{member.cabang}</td>
-                      <td className="p-3 border-b font-medium">
-                        {member.unitKerja}
-                      </td>
-                      <td className="p-3 border-b text-sm">
-                        <div className="font-medium">{member.namaAnggota}</div>
-                        <div className="text-xs text-gray-600">
-                          {member.nip}
-                        </div>
-                        <div className="text-xs text-gray-600">
-                          {member.nomorRekening}
-                        </div>
-                      </td>
-                      <td className="p-3 border-b text-right text-sm">
-                        Rp. {parseInt(member.pgri || 0).toLocaleString("id-ID")}
-                      </td>
-                      <td className="p-3 border-b text-right text-sm">
-                        Rp.{" "}
-                        {parseInt(member.sanduka || 0).toLocaleString("id-ID")}
-                      </td>
-                      <td className="p-3 border-b text-right text-sm">
-                        {parseInt(member.daspen || 0) === 0 ? (
-                          <span className=" text-red-800 py-1 px-2 rounded text-xs font-medium">
-                            Belum Input
-                          </span>
-                        ) : (
-                          `Rp. ${parseInt(member.daspen || 0).toLocaleString(
-                            "id-ID"
-                          )}`
-                        )}
-                      </td>
-                      <td className="p-3 border-b text-right text-sm">
-                        Rp.{" "}
-                        {parseInt(member.derap || 0).toLocaleString("id-ID")}
-                      </td>
-                      <td className="p-3 border-b text-right text-sm">
-                        Rp.{" "}
-                        {parseInt(member.kalender || 0).toLocaleString("id-ID")}
-                      </td>
-                      <td className="p-3 border-b text-right text-sm">
-                        Rp.{" "}
-                        {parseInt(member.sumbangan || 0).toLocaleString(
-                          "id-ID"
-                        )}
-                      </td>
-                      <td className="p-3 border-b text-right text-sm text-teal-800 font-semibold">
-                        Rp.{" "}
-                        {parseInt(member.totalIuran || 0).toLocaleString(
-                          "id-ID"
-                        )}
-                      </td>
-                      <td className="p-3 border-b text-center">
-                        <div className="flex justify-center gap-2">
-                          <button
-                            className="text-teal-600 hover:text-teal-800 text-lg p-1 hover:bg-teal-50 rounded transition-colors"
-                            onClick={() => handleMemberClick(member)}
-                            title="Edit Iuran"
-                          >
-                            <FaEdit />
-                          </button>
-                          <button
-                            className="text-teal-600 hover:text-teal-800 text-lg p-1 hover:bg-teal-50 rounded transition-colors"
-                            onClick={() => handlePrintClick(member)}
-                            title="Cetak Kartu Iuran"
-                          >
-                            <FaPrint />
-                          </button>
-                          <button
-                            className="text-teal-600 hover:text-teal-800 text-lg p-1 hover:bg-teal-50 rounded transition-colors"
-                            onClick={() => handleTagihanClick(member)}
-                            title="Lihat Tagihan"
-                          >
-                            <FaFileInvoiceDollar />
-                          </button>
+                {loading ? (
+                  <>
+                    {/* Loading message */}
+                    <tr>
+                      <td colSpan="12" className="p-6 text-center">
+                        <div className="flex flex-col items-center justify-center space-y-3">
+                          <div className="flex items-center space-x-2">
+                            <div
+                              className="h-3 w-3 bg-teal-500 rounded-full animate-bounce"
+                              style={{ animationDelay: "0s" }}
+                            ></div>
+                            <div
+                              className="h-3 w-3 bg-teal-500 rounded-full animate-bounce"
+                              style={{ animationDelay: "0.2s" }}
+                            ></div>
+                            <div
+                              className="h-3 w-3 bg-teal-500 rounded-full animate-bounce"
+                              style={{ animationDelay: "0.4s" }}
+                            ></div>
+                          </div>
+                          <p className="text-gray-600 font-medium text-sm">
+                            Data sedang diproses...
+                          </p>
                         </div>
                       </td>
                     </tr>
-                  ))}
+                    {/* Loading skeleton rows */}
+                    {Array.from({ length: 4 }).map((_, idx) => (
+                      <tr key={`skeleton-${idx}`} className="bg-white">
+                        {Array.from({ length: 12 }).map((_, cellIdx) => (
+                          <td
+                            key={`skeleton-cell-${cellIdx}`}
+                            className="p-3 border-b"
+                          >
+                            <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </>
+                ) : (
+                  [...groupedData]
+                    .sort((a, b) => a.unitKerja.localeCompare(b.unitKerja))
+                    .flatMap((group) =>
+                      group.members.map((member) => ({
+                        ...member,
+                        cabang: group.cabang,
+                        unitKerja: group.unitKerja,
+                      }))
+                    )
+                    .map((member, rowIndex) => (
+                      <tr
+                        key={`${member.unitKerja}-${member.npaPgri}-${member.namaAnggota}`}
+                        className={
+                          rowIndex % 2 === 0 ? "bg-white" : "bg-teal-50"
+                        }
+                        ref={
+                          member.nip === lastUpdatedMemberNip
+                            ? lastUpdatedMemberRef
+                            : null
+                        }
+                      >
+                        <td className="p-3 border-b text-center">
+                          <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-teal-100 text-teal-700 font-semibold text-xs">
+                            {rowIndex + 1}
+                          </div>
+                        </td>
+                        <td className="p-3 border-b">{member.cabang}</td>
+                        <td className="p-3 border-b font-medium">
+                          {member.unitKerja}
+                        </td>
+                        <td className="p-3 border-b text-sm">
+                          <div className="font-medium">
+                            {member.namaAnggota}
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            {member.nip}
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            {member.nomorRekening}
+                          </div>
+                        </td>
+                        <td className="p-3 border-b text-right text-sm">
+                          Rp.{" "}
+                          {parseInt(member.pgri || 0).toLocaleString("id-ID")}
+                        </td>
+                        <td className="p-3 border-b text-right text-sm">
+                          Rp.{" "}
+                          {parseInt(member.sanduka || 0).toLocaleString(
+                            "id-ID"
+                          )}
+                        </td>
+                        <td className="p-3 border-b text-right text-sm">
+                          {parseInt(member.daspen || 0) === 0 ? (
+                            <span className=" text-red-800 py-1 px-2 rounded text-xs font-medium">
+                              Belum Input
+                            </span>
+                          ) : (
+                            `Rp. ${parseInt(member.daspen || 0).toLocaleString(
+                              "id-ID"
+                            )}`
+                          )}
+                        </td>
+                        <td className="p-3 border-b text-right text-sm">
+                          Rp.{" "}
+                          {parseInt(member.derap || 0).toLocaleString("id-ID")}
+                        </td>
+                        <td className="p-3 border-b text-right text-sm">
+                          Rp.{" "}
+                          {parseInt(member.kalender || 0).toLocaleString(
+                            "id-ID"
+                          )}
+                        </td>
+                        <td className="p-3 border-b text-right text-sm">
+                          Rp.{" "}
+                          {parseInt(member.sumbangan || 0).toLocaleString(
+                            "id-ID"
+                          )}
+                        </td>
+                        <td className="p-3 border-b text-right text-sm text-teal-800 font-semibold">
+                          Rp.{" "}
+                          {parseInt(member.totalIuran || 0).toLocaleString(
+                            "id-ID"
+                          )}
+                        </td>
+                        <td className="p-3 border-b text-center">
+                          <div className="flex justify-center gap-2">
+                            <button
+                              className="text-teal-600 hover:text-teal-800 text-lg p-1 hover:bg-teal-50 rounded transition-colors"
+                              onClick={() => handleMemberClick(member)}
+                              title="Edit Iuran"
+                            >
+                              <FaEdit />
+                            </button>
+                            <button
+                              className="text-teal-600 hover:text-teal-800 text-lg p-1 hover:bg-teal-50 rounded transition-colors"
+                              onClick={() => handlePrintClick(member)}
+                              title="Cetak Kartu Iuran"
+                            >
+                              <FaPrint />
+                            </button>
+                            <button
+                              className="text-teal-600 hover:text-teal-800 text-lg p-1 hover:bg-teal-50 rounded transition-colors"
+                              onClick={() => handleTagihanClick(member)}
+                              title="Lihat Tagihan"
+                            >
+                              <FaFileInvoiceDollar />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                )}
               </tbody>
               {isPopupVisible && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40">
