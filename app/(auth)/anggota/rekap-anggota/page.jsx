@@ -303,6 +303,53 @@ function RekapAnggota() {
     setShowCabangDropdown(true);
   };
 
+  /**
+   * Helper function untuk memproses API response dan mengambil data terbaru
+   * Bisa berdasarkan lastUpdatedAtIuran atau idByNominal terbesar
+   * Optional: filter berdasarkan npaPgri tertentu
+   */
+  const processApiResponse = (
+    apiData,
+    filterByNpa = null,
+    useLatestDate = true
+  ) => {
+    if (!apiData || !Array.isArray(apiData)) {
+      return apiData;
+    }
+
+    // Filter berdasarkan npaPgri jika diperlukan
+    let filteredData = apiData;
+    if (filterByNpa) {
+      filteredData = apiData.filter((item) => item.npaPgri === filterByNpa);
+    }
+
+    // Kelompokkan berdasarkan npaPgri untuk mengambil data terbaru per anggota
+    const groupedByNpa = {};
+
+    filteredData.forEach((item) => {
+      const npa = item.npaPgri;
+
+      if (!groupedByNpa[npa]) {
+        groupedByNpa[npa] = item;
+      } else {
+        const shouldReplace = useLatestDate
+          ? // Bandingkan berdasarkan lastUpdatedAtIuran (data terbaru)
+            new Date(item.lastUpdatedAtIuran || 0) >
+            new Date(groupedByNpa[npa].lastUpdatedAtIuran || 0)
+          : // Atau bandingkan berdasarkan idByNominal (ID terbesar)
+            (item.idByNominal || 0) > (groupedByNpa[npa].idByNominal || 0);
+
+        if (shouldReplace) {
+          groupedByNpa[npa] = item;
+        }
+      }
+    });
+
+    // Kembalikan hasil sebagai array, dengan menambahkan info tentang pemrosesan
+    const result = Object.values(groupedByNpa);
+    return result;
+  };
+
   const handleUnitKerjaChange = (e) => {
     const input = e.target.value;
     setUnitKerjaInput(input);
@@ -379,9 +426,14 @@ function RekapAnggota() {
     setNamaAnggotaInput("");
 
     try {
-      const response = await GlobalApi.getNominalAggregatedData(
+      let response = await GlobalApi.getNominalAggregatedData(
         cabang.kecamatan || ""
       );
+
+      // 📌 Proses data untuk mengambil yang terbaru per npaPgri
+      // Opsional: ganti null dengan npaPgri spesifik contoh "33200806435"
+      // Ganti true dengan false jika ingin berdasarkan idByNominal terbesar
+      response = processApiResponse(response, null, true);
 
       const totalRow = response.find(
         (item) => item.cabang === "Total" && !item.unitKerja
@@ -563,6 +615,12 @@ function RekapAnggota() {
           tahun
         );
       }
+
+      // 📌 Proses data untuk mengambil yang terbaru per npaPgri
+      // Opsional: ganti null dengan npaPgri spesifik contoh "33200806435"
+      // Ganti true dengan false jika ingin berdasarkan idByNominal terbesar
+      response = processApiResponse(response, null, true);
+
       const totalRow = response.find(
         (item) => item.cabang === "Total" && !item.unitKerja
       );
@@ -1406,6 +1464,7 @@ function RekapAnggota() {
         cabang: dataNpa.cabang,
         unitKerja: dataNpa.unitKerja,
         statusPegawai: dataNpa.statusPegawai,
+        statusPegawai: member.statusPegawai,
 
         iuranAnggota: 0,
         manualIuranAnggota: 0,
@@ -1602,7 +1661,8 @@ function RekapAnggota() {
       payload.iuranSumbanganList = updatedSumbanganList.filter(
         (item) => item.jumlah > 0
       );
-
+console.log("status pegawai:", dataNpa.statusPegawai);
+console.log("status pegawai:", member.statusPegawai);
       if (idIuran) {
         await GlobalApi.updateByNominalByBulan(
           dataNpa.nip,
@@ -2279,13 +2339,18 @@ function RekapAnggota() {
       const bulanParam = selectedBulan || null;
       const tahunParam = selectedTahun || null;
 
-      const allData = await GlobalApi.getNominalAggregatedData(
+      let allData = await GlobalApi.getNominalAggregatedData(
         cabangParam,
         unitKerjaParam,
         null,
         bulanParam,
         tahunParam
       );
+
+      // 📌 Proses data untuk mengambil yang terbaru per npaPgri
+      // Opsional: ganti null dengan npaPgri spesifik contoh "33200806435"
+      // Ganti true dengan false jika ingin berdasarkan idByNominal terbesar
+      allData = processApiResponse(allData, null, true);
 
       console.log(`📊 Jumlah data yang didapat: ${allData?.length || 0} data`);
 
