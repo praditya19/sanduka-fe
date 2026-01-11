@@ -111,6 +111,7 @@ const Page = () => {
   const [isPopupVisible, setPopupVisible] = useState(false);
   const [notification, setNotification] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchText, setSearchText] = useState("");
 
   // Kwitansi
   const [showPopup, setShowPopup] = useState(false);
@@ -121,6 +122,46 @@ const Page = () => {
 
   const handleClosePopup = () => {
     setShowPopup(false);
+  };
+
+  const parseDateFromString = (dateString) => {
+    if (!dateString) return new Date(0);
+
+    const lines = dateString.split('\n');
+    const dateLine = lines.find(line => line.match(/\d{2}-\d{2}-\d{4}/));
+
+    if (dateLine) {
+      const match = dateLine.match(/(\d{2})-(\d{2})-(\d{4})/);
+      if (match) {
+        const [, day, month, year] = match;
+        return new Date(year, month - 1, day);
+      }
+    }
+
+    return new Date(0);
+  };
+
+  const sortByDateDescending = (data) => {
+    if (!Array.isArray(data)) return [];
+
+    return [...data].sort((a, b) => {
+      const dateA = parseDateFromString(a.Date_lapor);
+      const dateB = parseDateFromString(b.Date_lapor);
+      return dateB - dateA;
+    });
+  };
+
+  const sortAndFilterData = (data, status, search) => {
+    if (!data) return [];
+
+    const filteredBySearch = data.filter(item => {
+      if (!search) return true;
+
+      const dataMeninggal = item.Data_Meninggal ? item.Data_Meninggal.toLowerCase() : '';
+      return dataMeninggal.includes(search.toLowerCase());
+    });
+
+    return sortByDateDescending(filteredBySearch);
   };
 
   useEffect(() => {
@@ -137,8 +178,11 @@ const Page = () => {
             selectedCabang
           );
         }
-        setDataLaporDiterima(response || []);
-        setDisplayedDataLapor(response || []);
+
+        const sortedData = sortByDateDescending(response || []);
+
+        setDataLaporDiterima(sortedData);
+        setDisplayedDataLapor(sortedData);
       } catch (error) {
         console.error("Error fetching data lapor diterima:", error);
       } finally {
@@ -154,8 +198,10 @@ const Page = () => {
       setIsLoading(true);
       try {
         const response = await GlobalApi.getRekapLaporBelom();
-        const fetchedDataBelum = response || [];
-        setDataLaporBelum(fetchedDataBelum);
+
+        const sortedData = sortByDateDescending(response || []);
+
+        setDataLaporBelum(sortedData);
       } catch (error) {
         console.error("Error fetching data lapor belum:", error);
       } finally {
@@ -242,14 +288,17 @@ const Page = () => {
   };
 
   useEffect(() => {
+    let dataToDisplay = [];
     if (filterStatus === "Terima") {
-      setDisplayedDataLapor(dataLaporDiterima);
+      dataToDisplay = dataLaporDiterima;
     } else if (filterStatus === "Belum") {
-      setDisplayedDataLapor(dataLaporBelum);
-    } else {
-      setDisplayedDataLapor([]);
+      dataToDisplay = dataLaporBelum;
     }
-  }, [filterStatus, dataLaporDiterima, dataLaporBelum]);
+
+    const processedData = sortAndFilterData(dataToDisplay, filterStatus, searchText);
+    setDisplayedDataLapor(processedData);
+
+  }, [filterStatus, dataLaporDiterima, dataLaporBelum, searchText]);
 
   const handlePrint = () => {
     const tableContent = document.getElementById("table-to-print").innerHTML;
@@ -355,15 +404,30 @@ const Page = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="min-h-screen bg-gray-50 p-4 md:p-6">
             <div className="p-4 mt-5">
               <h1 className="text-teal-700 font-bold text-xl mb-4">
                 REKAP LAPOR SANDUKA
               </h1>
+
+              <div className="mb-4">
+                <label
+                  className="block text-gray-700 text-sm font-semibold mb-2"
+                  htmlFor="search"
+                >
+                  Cari Data Meninggal (Nama)
+                </label>
+                <Input
+                  className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  type="text"
+                  placeholder="Masukkan nama..."
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                />
+              </div>
 
               <div className="flex flex-wrap sm:flex-nowrap sm:space-x-4 items-center justify-between">
                 <div className="relative w-full sm:w-64">
@@ -573,9 +637,9 @@ const Page = () => {
                         <td className="py-3 px-4 text-center">
                           {filterStatus === "Terima"
                             ? new Intl.NumberFormat("id-ID", {
-                                style: "currency",
-                                currency: "IDR",
-                              }).format(item.Nominal)
+                              style: "currency",
+                              currency: "IDR",
+                            }).format(item.Nominal)
                             : "-"}
                         </td>
                         <td className="py-3 px-4 space-x-2 text-center">
