@@ -139,8 +139,11 @@ const Page = () => {
             selectedCabang
           );
         }
-        setDataLaporDiterima(response || []);
-        setDisplayedDataLapor(response || []);
+
+        const sortedData = sortByDateDescending(response || []);
+
+        setDataLaporDiterima(sortedData);
+        setDisplayedDataLapor(sortedData);
       } catch (error) {
         console.error("Error fetching data lapor diterima:", error);
       } finally {
@@ -156,8 +159,10 @@ const Page = () => {
       setIsLoading(true);
       try {
         const response = await GlobalApi.getRekapLaporBelom();
-        const fetchedDataBelum = response || [];
-        setDataLaporBelum(fetchedDataBelum);
+
+        const sortedData = sortByDateDescending(response || []);
+
+        setDataLaporBelum(sortedData);
       } catch (error) {
         console.error("Error fetching data lapor belum:", error);
       } finally {
@@ -194,6 +199,33 @@ const Page = () => {
     fetchBulan();
   }, []);
 
+  const parseDateFromString = (dateString) => {
+    if (!dateString) return new Date(0);
+
+    const lines = dateString.split('\n');
+    const dateLine = lines.find(line => line.match(/\d{2}-\d{2}-\d{4}/));
+
+    if (dateLine) {
+      const match = dateLine.match(/(\d{2})-(\d{2})-(\d{4})/);
+      if (match) {
+        const [, day, month, year] = match;
+        return new Date(year, month - 1, day);
+      }
+    }
+
+    return new Date(0);
+  };
+
+  const sortByDateDescending = (data) => {
+    if (!Array.isArray(data)) return [];
+
+    return [...data].sort((a, b) => {
+      const dateA = parseDateFromString(a.Date_lapor);
+      const dateB = parseDateFromString(b.Date_lapor);
+      return dateB - dateA;
+    });
+  };
+
   const sortAndFilterData = (data, status, search) => {
     if (!data) return [];
 
@@ -204,7 +236,7 @@ const Page = () => {
       return dataMeninggal.includes(search.toLowerCase());
     });
 
-    return filteredBySearch;
+    return sortByDateDescending(filteredBySearch);
   };
 
   useEffect(() => {
