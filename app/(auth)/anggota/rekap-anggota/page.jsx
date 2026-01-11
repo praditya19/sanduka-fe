@@ -3330,7 +3330,7 @@ function RekapAnggota() {
                     Daftar iuran anggota per unit kerja
                   </p>
                 </div>
-                <div className="flex gap-2 items-center">
+                {/* <div className="flex gap-2 items-center">
                   <select
                     value={selectedBulan}
                     onChange={(e) => setSelectedBulan(Number(e.target.value))}
@@ -3360,7 +3360,7 @@ function RekapAnggota() {
                       </option>
                     ))}
                   </select>
-                </div>
+                </div> */}
               </div>
             </div>
             {popupBackup && (
