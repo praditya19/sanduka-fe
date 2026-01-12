@@ -20,6 +20,14 @@ import {
 import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { ClipLoader } from "react-spinners";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const NotificationPopup = ({ type, message, onClose }) => {
   useEffect(() => {
@@ -679,73 +687,30 @@ const Page = () => {
                       </div>
                     </div>
 
-                    {/* Tambah Nama Ranting */}
+                    {/* Nama Ranting */}
                     <div className="w-full">
                       <label className="block text-gray-700 text-sm font-bold mb-1">
                         Nama Ranting
                       </label>
                       <div className="relative w-full">
-                        <Input
-                          type="text"
+                        <Select
                           value={selectedRanting}
-                          readOnly
-                          onClick={() => setShowRantingDropdown(true)}
-                          className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none ${!selectedCabang
-                              ? "cursor-not-allowed opacity-50"
-                              : ""
-                            }`}
-                          placeholder="Pilih Nama Ranting"
-                        />
-                        {showRantingDropdown && selectedCabang && (
-                          <div
-                            ref={dropdownRef}
-                            className="absolute z-50 w-full border rounded-lg bg-white shadow-sm mt-1"
-                          >
-                            <ul className="max-h-44 overflow-y-auto">
-                              <li className="py-2 px-2">
-                                <Input
-                                  type="text"
-                                  onChange={(e) =>
-                                    handleRantingSearch(e.target.value)
-                                  }
-                                  className="w-full px-4 py-2 border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none"
-                                  placeholder="Cari atau ketik Nama Ranting..."
-                                  autoFocus
-                                />
-                              </li>
-
-                              <li
-                                onClick={() =>
-                                  handleSelectRanting({ namaRanting: "" })
-                                }
-                                className="px-4 py-2 cursor-pointer hover:bg-gray-200 flex justify-between items-center"
-                              >
-                                Pilih Nama Ranting
-                              </li>
-
+                          onValueChange={(value) => setSelectedRanting(value)}
+                          disabled={!selectedCabang}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Pilih Nama Ranting" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectGroup>
                               {allRantingList.map((ranting) => (
-                                <li
-                                  key={ranting.id}
-                                  className="px-4 py-2 cursor-pointer hover:bg-gray-200 flex justify-between items-center"
-                                >
-                                  <span
-                                    onClick={() => handleSelectRanting(ranting)}
-                                  >
-                                    {ranting.namaRanting}
-                                  </span>
-                                  <Button
-                                    className="bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600"
-                                    onClick={() =>
-                                      handleRemoveRanting(ranting.id)
-                                    }
-                                  >
-                                    <FontAwesomeIcon icon={faTrash} />
-                                  </Button>
-                                </li>
+                                <SelectItem key={ranting.id} value={ranting.namaRanting}>
+                                  {ranting.namaRanting}
+                                </SelectItem>
                               ))}
-                            </ul>
-                          </div>
-                        )}
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
 
@@ -781,68 +746,28 @@ const Page = () => {
                       <label className="block text-gray-700 text-sm font-bold mb-1">
                         Nama Unit Kerja
                       </label>
-                      <div ref={unitKerjaRef} className="relative w-full">
-                        <Input
-                          type="text"
-                          placeholder="Pilih Unit Kerja"
+                      <div className="relative w-full">
+                        <Select
                           value={selectedUnitKerja}
-                          readOnly
-                          onFocus={() => {
-                            if (
-                              selectedRanting &&
-                              selectedCabang !== "Pilih Cabang"
-                            ) {
-                              setShowDropdownUnitKerja(true);
-                              setFilteredUnitKerjaOptions(
-                                selectedCabang === "Pilih Cabang"
-                                  ? allUnitKerja
-                                  : allUnitKerja.filter(
-                                    (uk) => uk.cabang === selectedCabang
-                                  )
-                              );
-                            }
-                          }}
-                          className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none ${!selectedRanting
-                              ? "cursor-not-allowed opacity-50"
-                              : ""
-                            }`}
-                          disabled={!selectedRanting}
-                        />
-
-                        {showDropdownUnitKerja &&
-                          selectedCabang !== "Pilih Cabang" && (
-                            <div
-                              ref={dropdownRef}
-                              className="absolute z-10 w-full border rounded bg-white shadow-lg mt-1"
-                            >
-                              <div className="p-2">
-                                <Input
-                                  type="text"
-                                  value={searchUnitKerja}
-                                  onChange={handleUnitKerjaChange}
-                                  placeholder="Cari Unit Kerja..."
-                                  className="w-full border rounded py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-300"
-                                />
-                              </div>
-                              <ul className="max-h-56 overflow-y-auto mt-1 rounded-md">
-                                <li
-                                  className="p-3 cursor-pointer hover:bg-gray-100"
-                                  onClick={() => handleUnitKerjaSelect({})}
-                                >
-                                  Semua Unit Kerja
-                                </li>
-                                {filteredUnitKerjaOptions.map((item) => (
-                                  <li
-                                    key={item.id}
-                                    className="p-3 cursor-pointer hover:bg-gray-100"
-                                    onClick={() => handleUnitKerjaSelect(item)}
-                                  >
+                          onValueChange={(value) => setSelectedUnitKerja(value === "ALL" ? "" : value)}
+                          disabled={!selectedCabang}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Pilih Unit Kerja" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectGroup>
+                              <SelectItem value="ALL">Semua Unit Kerja</SelectItem>
+                              {allUnitKerja
+                                .filter((uk) => uk.cabang === selectedCabang)
+                                .map((item) => (
+                                  <SelectItem key={item.id} value={item.unitKerja}>
                                     {item.unitKerja}
-                                  </li>
+                                  </SelectItem>
                                 ))}
-                              </ul>
-                            </div>
-                          )}
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
 
