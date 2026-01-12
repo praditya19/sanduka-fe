@@ -2315,7 +2315,7 @@ const createNamaRanting = async (namaRanting) => {
 
 const getNamaRantingCabang = () => axiosClient.get("/api/nama-ranting");
 const getNamaRantingByCabang = (cabang) => {
-  return axiosClient.get(`/api/nama-ranting/cabang`, { params: { cabang } });
+  return axiosClient.get(`/api/ranting/by-cabang/${cabang}`);
 };
 
 const uploadFileRegister = async (formData) => {
