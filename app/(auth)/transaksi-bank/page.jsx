@@ -65,7 +65,7 @@ const NotificationPopup = ({ type, message, onClose }) => {
       case "error":
         return "text-red-800";
       default:
-        return "text-blue-800";
+        return "text-[#0B131E]";
     }
   };
 
@@ -1209,8 +1209,9 @@ export default function BankTransactionPage() {
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
         <div
-          className={`pt-20 pb-8 px-4 md:px-8 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`pt-20 pb-8 px-4 md:px-8 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           {notification && (
             <NotificationPopup
@@ -1231,8 +1232,9 @@ export default function BankTransactionPage() {
           </div>
 
           <div
-            className={`bg-white rounded-xl shadow-sm mb-8 ${activeTab === "potongan" ? "w-full" : "w-[1900px]"
-              }`}
+            className={`bg-white rounded-xl shadow-sm mb-8 ${
+              activeTab === "potongan" ? "w-full" : "w-[1900px]"
+            }`}
           >
             <div className="p-1 border-b border-gray-100">
               <div className="flex items-start justify-between">
@@ -1271,7 +1273,7 @@ export default function BankTransactionPage() {
                   <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
                     <FontAwesomeIcon
                       icon={faMoneyBillWave}
-                      className="text-blue-600"
+                      className="text-[#0B131E]"
                     />
                   </div>
                   <h3 className="font-medium text-gray-700">
@@ -1518,24 +1520,26 @@ export default function BankTransactionPage() {
           )}
 
           <div
-            className={`flex mb-6 border-b border-gray-200 ${activeTab === "potongan" ? "w-full" : "w-[1900px]"
-              }`}
+            className={`flex mb-6 border-b border-gray-200 ${
+              activeTab === "potongan" ? "w-full" : "w-[1900px]"
+            }`}
           >
             {["potongan", "balancing", "rekapitulasi"].map((tab) => (
               <button
                 key={tab}
                 className={`w-full text-center py-3 px-5 font-medium transition-colors duration-200 
-        ${activeTab === tab
-                    ? "bg-teal-100 text-teal-700 border-b-2 border-teal-600"
-                    : "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
-                  }`}
+        ${
+          activeTab === tab
+            ? "bg-teal-100 text-teal-700 border-b-2 border-teal-600"
+            : "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+        }`}
                 onClick={() => setActiveTab(tab)}
               >
                 {tab === "potongan"
                   ? "Potongan Bank"
                   : tab === "balancing"
-                    ? "Balancing Potongan"
-                    : "Rekap Data Keuangan"}
+                  ? "Balancing Potongan"
+                  : "Rekap Data Keuangan"}
               </button>
             ))}
           </div>
@@ -1548,8 +1552,9 @@ export default function BankTransactionPage() {
                 </h2>
                 <div className="flex gap-3">
                   <button
-                    className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${isLoading ? "opacity-60 cursor-not-allowed" : ""
-                      }`}
+                    className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${
+                      isLoading ? "opacity-60 cursor-not-allowed" : ""
+                    }`}
                     onClick={exportAllToExcel}
                     disabled={isLoading}
                   >
@@ -1594,8 +1599,9 @@ export default function BankTransactionPage() {
                     )}
                   </button>
                   <button
-                    className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${isLoading ? "opacity-60 cursor-not-allowed" : ""
-                      }`}
+                    className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${
+                      isLoading ? "opacity-60 cursor-not-allowed" : ""
+                    }`}
                     onClick={exportToExcel}
                     disabled={isLoading}
                   >
@@ -1738,40 +1744,72 @@ export default function BankTransactionPage() {
               <div className="overflow-x-auto">
                 <table className="min-w-full">
                   <thead className="sticky top-0 z-10">
-  <tr className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 shadow-md">
-    <th className="px-6 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-blue-700">
-      No
-    </th>
-    <th className="px-6 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-blue-700">
-      Rekening
-    </th>
-    <th className="px-6 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-blue-700">
-      Nama Anggota
-    </th>
-    <th className="px-6 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-blue-700">
-      Rekening Kabupaten
-    </th>
-    <th className="px-6 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-blue-700">
-      Potongan
-    </th>
-    <th className="px-6 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-blue-700">
-      Tgl. Potongan
-    </th>
-    <th className="px-6 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-blue-700">
-      Transaksi
-    </th>
-  </tr>
-</thead>
+                    <tr className="bg-gradient-to-r from-[#0B131E] via-[#0B131E] to-[#0B131E] shadow-md">
+                      <th className="px-6 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-[#0B131E]">
+                        No
+                      </th>
+                      <th className="px-6 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-[#0B131E]">
+                        Rekening
+                      </th>
+                      <th className="px-6 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-[#0B131E]">
+                        Nama Anggota
+                      </th>
+                      <th className="px-6 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-[#0B131E]">
+                        Rekening Kabupaten
+                      </th>
+                      <th className="px-6 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-[#0B131E]">
+                        Potongan
+                      </th>
+                      <th className="px-6 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-[#0B131E]">
+                        Tgl. Potongan
+                      </th>
+                      <th className="px-6 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-[#0B131E]">
+                        Transaksi
+                      </th>
+                    </tr>
+                  </thead>
 
                   <tbody>
                     {loadingFilter ? (
-                      <tr>
-                        <td colSpan={8} className="py-8 text-center">
-                          <div className="flex justify-center items-center h-16">
-                            <ClipLoader color="#3498db" size={40} />
+                  <>
+                    {/* Loading message */}
+                    <tr>
+                      <td colSpan="12" className="p-6 text-center">
+                        <div className="flex flex-col items-center justify-center space-y-3">
+                          <div className="flex items-center space-x-2">
+                            <div
+                              className="h-3 w-3 bg-teal-500 rounded-full animate-bounce"
+                              style={{ animationDelay: "0s" }}
+                            ></div>
+                            <div
+                              className="h-3 w-3 bg-teal-500 rounded-full animate-bounce"
+                              style={{ animationDelay: "0.2s" }}
+                            ></div>
+                            <div
+                              className="h-3 w-3 bg-teal-500 rounded-full animate-bounce"
+                              style={{ animationDelay: "0.4s" }}
+                            ></div>
                           </div>
-                        </td>
+                          <p className="text-gray-600 font-medium text-sm">
+                            Data sedang diproses...
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                    {/* Loading skeleton rows */}
+                    {Array.from({ length: 4 }).map((_, idx) => (
+                      <tr key={`skeleton-${idx}`} className="bg-white">
+                        {Array.from({ length: 12 }).map((_, cellIdx) => (
+                          <td
+                            key={`skeleton-cell-${cellIdx}`}
+                            className="p-3 border-b"
+                          >
+                            <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                          </td>
+                        ))}
                       </tr>
+                    ))}
+                  </>
                     ) : data.length > 0 ? (
                       data.map((item, index) => (
                         <tr
@@ -1824,20 +1862,19 @@ export default function BankTransactionPage() {
                     )}
                   </tbody>
                   <tfoot>
-  <tr className="bg-blue-700 text-white font-semibold border-t border-blue-800">
-    <td colSpan={4} className="px-6 py-4 text-center">
-      Total
-    </td>
-    <td className="px-6 py-4 text-center">
-      {formatRupiah(
-        data.reduce((sum, item) => sum + item.potongan, 0)
-      )}
-    </td>
-    <td></td>
-    <td></td>
-  </tr>
-</tfoot>
-
+                    <tr className="bg-[#0B131E] text-white font-semibold border-t border-[#0B131E]">
+                      <td colSpan={4} className="px-6 py-4 text-center">
+                        Total
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {formatRupiah(
+                          data.reduce((sum, item) => sum + item.potongan, 0)
+                        )}
+                      </td>
+                      <td></td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
                 </table>
                 <div className="p-4 border-t">
                   <div className="flex flex-wrap justify-center gap-2">
@@ -1888,10 +1925,11 @@ export default function BankTransactionPage() {
                       <button
                         key={page}
                         onClick={() => handlePageClick(page)}
-                        className={`px-3 py-1 border rounded-md text-sm ${page === currentPage
+                        className={`px-3 py-1 border rounded-md text-sm ${
+                          page === currentPage
                             ? "bg-teal-600 text-white border-teal-600"
                             : "bg-white hover:bg-gray-50"
-                          }`}
+                        }`}
                       >
                         {page}
                       </button>
@@ -1963,8 +2001,9 @@ export default function BankTransactionPage() {
                   </div>
                   <div className="flex gap-3">
                     <button
-                      className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${isLoading ? "opacity-60 cursor-not-allowed" : ""
-                        }`}
+                      className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${
+                        isLoading ? "opacity-60 cursor-not-allowed" : ""
+                      }`}
                       onClick={exportAllBalancingToExcel}
                       disabled={isLoading}
                     >
@@ -2009,8 +2048,9 @@ export default function BankTransactionPage() {
                       )}
                     </button>
                     <button
-                      className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${isLoading ? "opacity-60 cursor-not-allowed" : ""
-                        }`}
+                      className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${
+                        isLoading ? "opacity-60 cursor-not-allowed" : ""
+                      }`}
                       onClick={exportBalancingToExcel}
                       disabled={isLoading}
                     >
@@ -2262,172 +2302,212 @@ export default function BankTransactionPage() {
 
               <div className="w-full">
                 <table className="w-full table-auto">
-                 <thead className="sticky top-0 z-10">
-  <tr className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 shadow-md">
-    {/* NO */}
-    <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-blue-700">
-      No
-    </th>
+                  <thead>
+                    <tr className="bg-gradient-to-r from-[#0B131E] via-[#0B131E] to-[#0B131E] shadow-md">
+                      {/* NO */}
+                      <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-[#0B131E]">
+                        No
+                      </th>
 
-    {/* CABANG */}
-    <th
-      onClick={() => handleSort("cabang")}
-      className="group cursor-pointer px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider
-                 text-white border-b border-blue-700 hover:bg-blue-700 transition-colors"
-    >
-      <div className="flex items-center justify-center gap-1">
-        <span>Cabang</span>
-        <span
-          className={`text-xs transition-all ${
-            sortConfig.key === "cabang"
-              ? "opacity-100"
-              : "opacity-50 group-hover:opacity-80"
-          }`}
-        >
-          {sortConfig.key === "cabang" && sortConfig.direction === "desc"
-            ? "▼"
-            : "▲"}
-        </span>
-      </div>
-    </th>
+                      {/* CABANG */}
+                      <th
+                        onClick={() => handleSort("cabang")}
+                        className="group cursor-pointer px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider
+                 text-white border-b border-[#0B131E] hover:bg-[#101c2c] transition-colors"
+                      >
+                        <div className="flex items-center justify-center gap-1">
+                          <span>Cabang</span>
+                          <span
+                            className={`text-xs transition-all ${
+                              sortConfig.key === "cabang"
+                                ? "opacity-100"
+                                : "opacity-50 group-hover:opacity-80"
+                            }`}
+                          >
+                            {sortConfig.key === "cabang" &&
+                            sortConfig.direction === "desc"
+                              ? "▼"
+                              : "▲"}
+                          </span>
+                        </div>
+                      </th>
 
-    {/* UNIT KERJA */}
-    <th
-      onClick={() => handleSort("unitKerja")}
-      className="group cursor-pointer px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider
-                 text-white border-b border-blue-700 hover:bg-blue-700 transition-colors"
-    >
-      <div className="flex items-center justify-center gap-1">
-        <span>Unit Kerja</span>
-        <span
-          className={`text-xs ${
-            sortConfig.key === "unitKerja"
-              ? "opacity-100"
-              : "opacity-50 group-hover:opacity-80"
-          }`}
-        >
-          {sortConfig.key === "unitKerja" && sortConfig.direction === "desc"
-            ? "▼"
-            : "▲"}
-        </span>
-      </div>
-    </th>
+                      {/* UNIT KERJA */}
+                      <th
+                        onClick={() => handleSort("unitKerja")}
+                        className="group cursor-pointer px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider
+                 text-white border-b border-[#0B131E] hover:bg-[#101c2c] transition-colors"
+                      >
+                        <div className="flex items-center justify-center gap-1">
+                          <span>Unit Kerja</span>
+                          <span
+                            className={`text-xs ${
+                              sortConfig.key === "unitKerja"
+                                ? "opacity-100"
+                                : "opacity-50 group-hover:opacity-80"
+                            }`}
+                          >
+                            {sortConfig.key === "unitKerja" &&
+                            sortConfig.direction === "desc"
+                              ? "▼"
+                              : "▲"}
+                          </span>
+                        </div>
+                      </th>
 
-    {/* NAMA */}
-    <th
-      onClick={() => handleSort("nama")}
-      className="group cursor-pointer px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider
-                 text-white border-b border-blue-700 hover:bg-blue-700 transition-colors"
-    >
-      <div className="flex items-center justify-center gap-1">
-        <span>Nama</span>
-        <span
-          className={`text-xs ${
-            sortConfig.key === "nama"
-              ? "opacity-100"
-              : "opacity-50 group-hover:opacity-80"
-          }`}
-        >
-          {sortConfig.key === "nama" && sortConfig.direction === "desc"
-            ? "▼"
-            : "▲"}
-        </span>
-      </div>
-    </th>
+                      {/* NAMA */}
+                      <th
+                        onClick={() => handleSort("nama")}
+                        className="group cursor-pointer px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider
+                 text-white border-b border-[#0B131E] hover:bg-[#101c2c] transition-colors"
+                      >
+                        <div className="flex items-center justify-center gap-1">
+                          <span>Nama</span>
+                          <span
+                            className={`text-xs ${
+                              sortConfig.key === "nama"
+                                ? "opacity-100"
+                                : "opacity-50 group-hover:opacity-80"
+                            }`}
+                          >
+                            {sortConfig.key === "nama" &&
+                            sortConfig.direction === "desc"
+                              ? "▼"
+                              : "▲"}
+                          </span>
+                        </div>
+                      </th>
 
-    {/* STATUS PEGAWAI (NON SORT) */}
-    <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-blue-700">
-      Status Pegawai
-    </th>
+                      {/* STATUS PEGAWAI (NON SORT) */}
+                      <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-[#0B131E]">
+                        Status Pegawai
+                      </th>
 
-    {/* REKENING */}
-    <th
-      onClick={() => handleSort("rekening")}
-      className="group cursor-pointer px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider
-                 text-white border-b border-blue-700 hover:bg-blue-700 transition-colors"
-    >
-      <div className="flex items-center justify-center gap-1">
-        <span>Rekening</span>
-        <span
-          className={`text-xs ${
-            sortConfig.key === "rekening"
-              ? "opacity-100"
-              : "opacity-50 group-hover:opacity-80"
-          }`}
-        >
-          {sortConfig.key === "rekening" && sortConfig.direction === "desc"
-            ? "▼"
-            : "▲"}
-        </span>
-      </div>
-    </th>
+                      {/* REKENING */}
+                      <th
+                        onClick={() => handleSort("rekening")}
+                        className="group cursor-pointer px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider
+                 text-white border-b border-[#0B131E] hover:bg-[#101c2c] transition-colors"
+                      >
+                        <div className="flex items-center justify-center gap-1">
+                          <span>Rekening</span>
+                          <span
+                            className={`text-xs ${
+                              sortConfig.key === "rekening"
+                                ? "opacity-100"
+                                : "opacity-50 group-hover:opacity-80"
+                            }`}
+                          >
+                            {sortConfig.key === "rekening" &&
+                            sortConfig.direction === "desc"
+                              ? "▼"
+                              : "▲"}
+                          </span>
+                        </div>
+                      </th>
 
-    {/* IURAN */}
-    {[
-      { key: "totalIuranAnggota", label: "Iuran" },
-      { key: "totalIuranSanduka", label: "Sanduka" },
-      { key: "totalIuranDaspen", label: "Daspen" },
-      { key: "totalIuranDerap", label: "Derap" },
-      { key: "totalIuranKalender", label: "Kalender" },
-      { key: "totalIuranSumbangan", label: "Lain-lain" },
-      { key: "totalIuran", label: "Total Iuran" },
-      { key: "potongan", label: "Potongan Bank" },
-      { key: "selisih", label: "Selisih" },
-      { key: "keterangan", label: "Keterangan" },
-    ].map(({ key, label }) => (
-      <th
-        key={key}
-        onClick={() => handleSort(key)}
-        className="group cursor-pointer px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider
-                   text-white border-b border-blue-700 hover:bg-blue-700 transition-colors"
-      >
-        <div className="flex items-center justify-center gap-1">
-          <span>{label}</span>
-          <span
-            className={`text-xs ${
-              sortConfig.key === key
-                ? "opacity-100"
-                : "opacity-50 group-hover:opacity-80"
-            }`}
-          >
-            {sortConfig.key === key && sortConfig.direction === "desc"
-              ? "▼"
-              : "▲"}
-          </span>
-        </div>
-      </th>
-    ))}
+                      {/* IURAN */}
+                      {[
+                        { key: "totalIuranAnggota", label: "Iuran" },
+                        { key: "totalIuranSanduka", label: "Sanduka" },
+                        { key: "totalIuranDaspen", label: "Daspen" },
+                        { key: "totalIuranDerap", label: "Derap" },
+                        { key: "totalIuranKalender", label: "Kalender" },
+                        { key: "totalIuranSumbangan", label: "Lain-lain" },
+                        { key: "totalIuran", label: "Total Iuran" },
+                        { key: "potongan", label: "Potongan Bank" },
+                        { key: "selisih", label: "Selisih" },
+                        { key: "keterangan", label: "Keterangan" },
+                      ].map(({ key, label }) => (
+                        <th
+                          key={key}
+                          onClick={() => handleSort(key)}
+                          className="group cursor-pointer px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider
+                   text-white border-b border-[#0B131E] hover:bg-[#101c2c] transition-colors"
+                        >
+                          <div className="flex items-center justify-center gap-1">
+                            <span>{label}</span>
+                            <span
+                              className={`text-xs ${
+                                sortConfig.key === key
+                                  ? "opacity-100"
+                                  : "opacity-50 group-hover:opacity-80"
+                              }`}
+                            >
+                              {sortConfig.key === key &&
+                              sortConfig.direction === "desc"
+                                ? "▼"
+                                : "▲"}
+                            </span>
+                          </div>
+                        </th>
+                      ))}
 
-    {/* ACTION */}
-    {cekRole === "SUPER ADMIN" && (
-      <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-blue-700">
-        Action
-      </th>
-    )}
-  </tr>
-</thead>
+                      {/* ACTION */}
+                      {cekRole === "SUPER ADMIN" && (
+                        <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-[#0B131E]">
+                          Action
+                        </th>
+                      )}
+                    </tr>
+                  </thead>
 
                   <tbody>
-                    {loadingBalancing ? (
-                      <tr>
-                        <td colSpan={8} className="text-center py-8">
-                          <ClipLoader color="#3498db" size={40} />
-                        </td>
+                     {loadingBalancing ? (
+                  <>
+                    {/* Loading message */}
+                    <tr>
+                      <td colSpan="12" className="p-6 text-center">
+                        <div className="flex flex-col items-center justify-center space-y-3">
+                          <div className="flex items-center space-x-2">
+                            <div
+                              className="h-3 w-3 bg-teal-500 rounded-full animate-bounce"
+                              style={{ animationDelay: "0s" }}
+                            ></div>
+                            <div
+                              className="h-3 w-3 bg-teal-500 rounded-full animate-bounce"
+                              style={{ animationDelay: "0.2s" }}
+                            ></div>
+                            <div
+                              className="h-3 w-3 bg-teal-500 rounded-full animate-bounce"
+                              style={{ animationDelay: "0.4s" }}
+                            ></div>
+                          </div>
+                          <p className="text-gray-600 font-medium text-sm">
+                            Data sedang diproses...
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                    {/* Loading skeleton rows */}
+                    {Array.from({ length: 4 }).map((_, idx) => (
+                      <tr key={`skeleton-${idx}`} className="bg-white">
+                        {Array.from({ length: 12 }).map((_, cellIdx) => (
+                          <td
+                            key={`skeleton-cell-${cellIdx}`}
+                            className="p-3 border-b"
+                          >
+                            <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                          </td>
+                        ))}
                       </tr>
+                    ))}
+                  </>
                     ) : dataBalancing.length > 0 ? (
                       sortedData.map((item, index) => (
                         <tr
                           key={item.id}
                           ref={item.id === updatedId ? updatedRowRef : null}
-                          className={`${index % 2 === 0 ? "bg-white" : "bg-gray-100"
-                            }`}
+                          className={`${
+                            index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                          }`}
                         >
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                             {displayCount === "all"
                               ? index + 1
                               : (currentPageBalancing - 1) * displayCount +
-                              index +
-                              1}
+                                index +
+                                1}
                           </td>
                           <td className="text-center text-sm text-gray-900 whitespace-normal break-words max-w-[90px]">
                             {item.cabang}
@@ -2435,15 +2515,33 @@ export default function BankTransactionPage() {
                           <td className="text-sm text-gray-900 whitespace-normal break-words max-w-[90px]">
                             {item.unitKerja}
                           </td>
-                          <td className=" text-sm text-gray-900 whitespace-normal">
-                            <div>{item.nama}</div>
-                            <div>NPA : {item.npa}</div>
-                            <div>NIP : {item.nip}</div>
-                            <div>REKENING : {item.rekening}</div>
+                          <td className="px-6 py-4 text-sm whitespace-normal">
+                            <div className="font-semibold text-gray-900 leading-tight">
+                              {item.nama}
+                            </div>
+
+                            <div className="mt-1 text-xs text-gray-500">
+                              NPA :{" "}
+                              <span className="text-gray-600">
+                                {item.npa || "-"}
+                              </span>
+                            </div>
+
+                            <div className="text-xs text-gray-500">
+                              NIP :{" "}
+                              <span className="text-gray-600">
+                                {item.nip || "-"}
+                              </span>
+                            </div>
                           </td>
+
                           <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
-                            {item.statusPegawai}
+                            {item.statusPegawai &&
+                            item.statusPegawai.trim() !== ""
+                              ? item.statusPegawai
+                              : "-"}
                           </td>
+
                           <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
                             {item.rekening}
                           </td>
@@ -2477,12 +2575,13 @@ export default function BankTransactionPage() {
                           <td className=" whitespace-nowrap text-sm text-center">
                             <span
                               className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-      ${item.keterangan === "Sukses"
-                                  ? "bg-green-200 text-green-800"
-                                  : item.keterangan === "Tunai"
-                                    ? "bg-yellow-200 text-yellow-800"
-                                    : "bg-red-200 text-red-800"
-                                }`}
+      ${
+        item.keterangan === "Sukses"
+          ? "bg-green-200 text-green-800"
+          : item.keterangan === "Tunai"
+          ? "bg-yellow-200 text-yellow-800"
+          : "bg-red-200 text-red-800"
+      }`}
                             >
                               {item.keterangan}
                             </span>
@@ -2491,7 +2590,7 @@ export default function BankTransactionPage() {
                             {cekRole === "SUPER ADMIN" && (
                               <div className="flex space-x-2 justify-center text-base">
                                 <button
-                                  className="text-blue-500 hover:text-blue-700"
+                                  className="text-blue-500 hover:text-[#0B131E]"
                                   onClick={() => handleEditClick(item.id)}
                                 >
                                   <FaEdit />
@@ -2531,7 +2630,7 @@ export default function BankTransactionPage() {
                     )}
                   </tbody>
                   <tfoot>
-                    <tr className="bg-blue-600 text-white font-semibold">
+                    <tr className="bg-[#0B131E] text-white font-semibold">
                       <td colSpan={6} className=" text-center">
                         Total
                       </td>
@@ -2662,10 +2761,11 @@ export default function BankTransactionPage() {
                       <button
                         key={page}
                         onClick={() => handlePageClickBalancing(page)}
-                        className={`px-3 py-1 border rounded-md text-sm ${page === currentPageBalancing
+                        className={`px-3 py-1 border rounded-md text-sm ${
+                          page === currentPageBalancing
                             ? "bg-teal-600 text-white border-teal-600"
                             : "bg-white hover:bg-gray-50"
-                          }`}
+                        }`}
                       >
                         {page}
                       </button>
@@ -2740,8 +2840,9 @@ export default function BankTransactionPage() {
                     </p>
                   </div>
                   <button
-                    className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${isLoading ? "opacity-60 cursor-not-allowed" : ""
-                      }`}
+                    className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${
+                      isLoading ? "opacity-60 cursor-not-allowed" : ""
+                    }`}
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -2926,8 +3027,9 @@ export default function BankTransactionPage() {
                         </p>
                       </div>
                       <button
-                        className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${isLoading ? "opacity-60 cursor-not-allowed" : ""
-                          }`}
+                        className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${
+                          isLoading ? "opacity-60 cursor-not-allowed" : ""
+                        }`}
                         disabled={isLoading}
                       >
                         {isLoading ? (
@@ -3256,10 +3358,11 @@ export default function BankTransactionPage() {
                             <button
                               key={page}
                               onClick={() => handlePageClickBalancing(page)}
-                              className={`px-3 py-1 border rounded-md text-sm ${page === currentPageBalancing
+                              className={`px-3 py-1 border rounded-md text-sm ${
+                                page === currentPageBalancing
                                   ? "bg-teal-600 text-white border-teal-600"
                                   : "bg-white hover:bg-gray-50"
-                                }`}
+                              }`}
                             >
                               {page}
                             </button>
@@ -3605,7 +3708,7 @@ export default function BankTransactionPage() {
               </button>
 
               <button
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center"
+                className="px-4 py-2 bg-[#0B131E] text-white rounded hover:bg-[#101c2c] flex items-center"
                 onClick={handleSaveEdit}
               >
                 <FaSave className="mr-2" />
