@@ -1191,7 +1191,7 @@ export default function BankTransactionPage() {
   }, [dataBalancing, sortConfig]);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-2 md:p-4">
+    <div className="min-h-screen bg-gray-50 p-2 md:p-1">
       <header className="bg-gradient-to-r from-teal-600 to-teal-700 text-white py-4 px-4 md:px-8 shadow-lg fixed top-0 left-0 w-full z-50 flex items-center">
         <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center">
@@ -1234,7 +1234,7 @@ export default function BankTransactionPage() {
             className={`bg-white rounded-xl shadow-sm mb-8 ${activeTab === "potongan" ? "w-full" : "w-[1900px]"
               }`}
           >
-            <div className="p-6 border-b border-gray-100">
+            <div className="p-1 border-b border-gray-100">
               <div className="flex items-start justify-between">
                 <div>
                   <h2 className="text-lg font-semibold text-gray-800">
@@ -1247,7 +1247,7 @@ export default function BankTransactionPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-1 mt-4">
               <div className="p-4 rounded-lg bg-gradient-to-br from-teal-50 to-white border border-teal-100">
                 <div className="flex items-center mb-2">
                   <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center mr-3">
@@ -1737,31 +1737,32 @@ export default function BankTransactionPage() {
 
               <div className="overflow-x-auto">
                 <table className="min-w-full">
-                  <thead>
-                    <tr className="bg-gray-50">
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        No
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Rekening
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Nama Anggota
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Rekening Kabupaten
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Potongan
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Tgl. Potongan
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Transaksi
-                      </th>
-                    </tr>
-                  </thead>
+                  <thead className="sticky top-0 z-10">
+  <tr className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 shadow-md">
+    <th className="px-6 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-blue-700">
+      No
+    </th>
+    <th className="px-6 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-blue-700">
+      Rekening
+    </th>
+    <th className="px-6 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-blue-700">
+      Nama Anggota
+    </th>
+    <th className="px-6 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-blue-700">
+      Rekening Kabupaten
+    </th>
+    <th className="px-6 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-blue-700">
+      Potongan
+    </th>
+    <th className="px-6 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-blue-700">
+      Tgl. Potongan
+    </th>
+    <th className="px-6 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-blue-700">
+      Transaksi
+    </th>
+  </tr>
+</thead>
+
                   <tbody>
                     {loadingFilter ? (
                       <tr>
@@ -1823,19 +1824,20 @@ export default function BankTransactionPage() {
                     )}
                   </tbody>
                   <tfoot>
-                    <tr className="bg-gray-200">
-                      <td colSpan={4} className="px-6 py-4 text-center">
-                        Total
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        {formatRupiah(
-                          data.reduce((sum, item) => sum + item.potongan, 0)
-                        )}
-                      </td>
-                      <td></td>
-                      <td></td>
-                    </tr>
-                  </tfoot>
+  <tr className="bg-blue-700 text-white font-semibold border-t border-blue-800">
+    <td colSpan={4} className="px-6 py-4 text-center">
+      Total
+    </td>
+    <td className="px-6 py-4 text-center">
+      {formatRupiah(
+        data.reduce((sum, item) => sum + item.potongan, 0)
+      )}
+    </td>
+    <td></td>
+    <td></td>
+  </tr>
+</tfoot>
+
                 </table>
                 <div className="p-4 border-t">
                   <div className="flex flex-wrap justify-center gap-2">
@@ -2260,259 +2262,151 @@ export default function BankTransactionPage() {
 
               <div className="w-full">
                 <table className="w-full table-auto">
-                  <thead>
-                    <tr className="bg-gray-50">
-                      <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        No
-                      </th>
-                      <th
-                        onClick={() => handleSort("cabang")}
-                        className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
-                      >
-                        Cabang{" "}
-                        <span
-                          className={`text-xs ${sortConfig.key === "cabang"
-                              ? "text-black"
-                              : "text-gray-300"
-                            }`}
-                        >
-                          {sortConfig.direction === "desc" &&
-                            sortConfig.key === "cabang"
-                            ? "▼"
-                            : "▲"}
-                        </span>
-                      </th>
-                      <th
-                        onClick={() => handleSort("unitKerja")}
-                        className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
-                      >
-                        Unit Kerja{" "}
-                        <span
-                          className={`text-xs ${sortConfig.key === "unitKerja"
-                              ? "text-black"
-                              : "text-gray-300"
-                            }`}
-                        >
-                          {sortConfig.direction === "desc" &&
-                            sortConfig.key === "unitKerja"
-                            ? "▼"
-                            : "▲"}
-                        </span>
-                      </th>
-                      <th
-                        onClick={() => handleSort("nama")}
-                        className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
-                      >
-                        Nama{" "}
-                        <span
-                          className={`text-xs ${sortConfig.key === "nama"
-                              ? "text-black"
-                              : "text-gray-300"
-                            }`}
-                        >
-                          {sortConfig.direction === "desc" &&
-                            sortConfig.key === "nama"
-                            ? "▼"
-                            : "▲"}
-                        </span>
-                      </th>
-                      <th className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Status Pegawai <span className={`text-xs`}></span>
-                      </th>
-                      <th
-                        onClick={() => handleSort("rekening")}
-                        className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
-                      >
-                        Rekening
-                        <span
-                          className={`text-xs ${sortConfig.key === "rekening"
-                              ? "text-black"
-                              : "text-gray-300"
-                            }`}
-                        >
-                          {sortConfig.direction === "desc" &&
-                            sortConfig.key === "rekening"
-                            ? "▼"
-                            : "▲"}
-                        </span>
-                      </th>
-                      <th
-                        onClick={() => handleSort("totalIuranAnggota")}
-                        className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
-                      >
-                        Iuran{" "}
-                        <span
-                          className={`text-xs ${sortConfig.key === "totalIuranAnggota"
-                              ? "text-black"
-                              : "text-gray-300"
-                            }`}
-                        >
-                          {sortConfig.direction === "desc" &&
-                            sortConfig.key === "totalIuranAnggota"
-                            ? "▼"
-                            : "▲"}
-                        </span>
-                      </th>
-                      <th
-                        onClick={() => handleSort("totalIuranSanduka")}
-                        className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
-                      >
-                        Sanduka
-                        <span
-                          className={`text-xs ${sortConfig.key === "totalIuranSanduka"
-                              ? "text-black"
-                              : "text-gray-300"
-                            }`}
-                        >
-                          {sortConfig.direction === "desc" &&
-                            sortConfig.key === "totalIuranSanduka"
-                            ? "▼"
-                            : "▲"}
-                        </span>
-                      </th>
-                      <th
-                        onClick={() => handleSort("totalIuranDaspen")}
-                        className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
-                      >
-                        Daspen{" "}
-                        <span
-                          className={`text-xs ${sortConfig.key === "totalIuranDaspen"
-                              ? "text-black"
-                              : "text-gray-300"
-                            }`}
-                        >
-                          {sortConfig.direction === "desc" &&
-                            sortConfig.key === "totalIuranDaspen"
-                            ? "▼"
-                            : "▲"}
-                        </span>
-                      </th>
-                      <th
-                        onClick={() => handleSort("totalIuranDerap")}
-                        className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
-                      >
-                        Derap
-                        <span
-                          className={`text-xs ${sortConfig.key === "totalIuranDerap"
-                              ? "text-black"
-                              : "text-gray-300"
-                            }`}
-                        >
-                          {sortConfig.direction === "desc" &&
-                            sortConfig.key === "totalIuranDerap"
-                            ? "▼"
-                            : "▲"}
-                        </span>
-                      </th>
-                      <th
-                        onClick={() => handleSort("totalIuranKalender")}
-                        className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
-                      >
-                        Kalender
-                        <span
-                          className={`text-xs ${sortConfig.key === "totalIuranKalender"
-                              ? "text-black"
-                              : "text-gray-300"
-                            }`}
-                        >
-                          {sortConfig.direction === "desc" &&
-                            sortConfig.key === "totalIuranKalender"
-                            ? "▼"
-                            : "▲"}
-                        </span>
-                      </th>
-                      <th
-                        onClick={() => handleSort("Lain-lain")}
-                        className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
-                      >
-                        Lain-lain
-                        <span
-                          className={`text-xs ${sortConfig.key === "Lain-lain"
-                              ? "text-black"
-                              : "text-gray-300"
-                            }`}
-                        >
-                          {sortConfig.direction === "desc" &&
-                            sortConfig.key === "Lain-lain"
-                            ? "▼"
-                            : "▲"}
-                        </span>
-                      </th>
-                      <th
-                        onClick={() => handleSort("totalIuran")}
-                        className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
-                      >
-                        Total Iuran
-                        <span
-                          className={`text-xs ${sortConfig.key === "totalIuran"
-                              ? "text-black"
-                              : "text-gray-300"
-                            }`}
-                        >
-                          {sortConfig.direction === "desc" &&
-                            sortConfig.key === "totalIuran"
-                            ? "▼"
-                            : "▲"}
-                        </span>
-                      </th>
-                      <th
-                        onClick={() => handleSort("potongan")}
-                        className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
-                      >
-                        Potongan Bank
-                        <span
-                          className={`text-xs ${sortConfig.key === "potongan"
-                              ? "text-black"
-                              : "text-gray-300"
-                            }`}
-                        >
-                          {sortConfig.direction === "desc" &&
-                            sortConfig.key === "potongan"
-                            ? "▼"
-                            : "▲"}
-                        </span>
-                      </th>
-                      <th
-                        onClick={() => handleSort("selisih")}
-                        className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
-                      >
-                        Selisih
-                        <span
-                          className={`text-xs ${sortConfig.key === "selisih"
-                              ? "text-black"
-                              : "text-gray-300"
-                            }`}
-                        >
-                          {sortConfig.direction === "desc" &&
-                            sortConfig.key === "selisih"
-                            ? "▼"
-                            : "▲"}
-                        </span>
-                      </th>
-                      <th
-                        onClick={() => handleSort("keterangan")}
-                        className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
-                      >
-                        Keterangan
-                        <span
-                          className={`text-xs ${sortConfig.key === "keterangan"
-                              ? "text-black"
-                              : "text-gray-300"
-                            }`}
-                        >
-                          {sortConfig.direction === "desc" &&
-                            sortConfig.key === "keterangan"
-                            ? "▼"
-                            : "▲"}
-                        </span>
-                      </th>
-                      {cekRole === "SUPER ADMIN" && (
-                        <th className="cursor-pointer  text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                          Action
-                        </th>
-                      )}
-                    </tr>
-                  </thead>
+                 <thead className="sticky top-0 z-10">
+  <tr className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 shadow-md">
+    {/* NO */}
+    <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-blue-700">
+      No
+    </th>
+
+    {/* CABANG */}
+    <th
+      onClick={() => handleSort("cabang")}
+      className="group cursor-pointer px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider
+                 text-white border-b border-blue-700 hover:bg-blue-700 transition-colors"
+    >
+      <div className="flex items-center justify-center gap-1">
+        <span>Cabang</span>
+        <span
+          className={`text-xs transition-all ${
+            sortConfig.key === "cabang"
+              ? "opacity-100"
+              : "opacity-50 group-hover:opacity-80"
+          }`}
+        >
+          {sortConfig.key === "cabang" && sortConfig.direction === "desc"
+            ? "▼"
+            : "▲"}
+        </span>
+      </div>
+    </th>
+
+    {/* UNIT KERJA */}
+    <th
+      onClick={() => handleSort("unitKerja")}
+      className="group cursor-pointer px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider
+                 text-white border-b border-blue-700 hover:bg-blue-700 transition-colors"
+    >
+      <div className="flex items-center justify-center gap-1">
+        <span>Unit Kerja</span>
+        <span
+          className={`text-xs ${
+            sortConfig.key === "unitKerja"
+              ? "opacity-100"
+              : "opacity-50 group-hover:opacity-80"
+          }`}
+        >
+          {sortConfig.key === "unitKerja" && sortConfig.direction === "desc"
+            ? "▼"
+            : "▲"}
+        </span>
+      </div>
+    </th>
+
+    {/* NAMA */}
+    <th
+      onClick={() => handleSort("nama")}
+      className="group cursor-pointer px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider
+                 text-white border-b border-blue-700 hover:bg-blue-700 transition-colors"
+    >
+      <div className="flex items-center justify-center gap-1">
+        <span>Nama</span>
+        <span
+          className={`text-xs ${
+            sortConfig.key === "nama"
+              ? "opacity-100"
+              : "opacity-50 group-hover:opacity-80"
+          }`}
+        >
+          {sortConfig.key === "nama" && sortConfig.direction === "desc"
+            ? "▼"
+            : "▲"}
+        </span>
+      </div>
+    </th>
+
+    {/* STATUS PEGAWAI (NON SORT) */}
+    <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-blue-700">
+      Status Pegawai
+    </th>
+
+    {/* REKENING */}
+    <th
+      onClick={() => handleSort("rekening")}
+      className="group cursor-pointer px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider
+                 text-white border-b border-blue-700 hover:bg-blue-700 transition-colors"
+    >
+      <div className="flex items-center justify-center gap-1">
+        <span>Rekening</span>
+        <span
+          className={`text-xs ${
+            sortConfig.key === "rekening"
+              ? "opacity-100"
+              : "opacity-50 group-hover:opacity-80"
+          }`}
+        >
+          {sortConfig.key === "rekening" && sortConfig.direction === "desc"
+            ? "▼"
+            : "▲"}
+        </span>
+      </div>
+    </th>
+
+    {/* IURAN */}
+    {[
+      { key: "totalIuranAnggota", label: "Iuran" },
+      { key: "totalIuranSanduka", label: "Sanduka" },
+      { key: "totalIuranDaspen", label: "Daspen" },
+      { key: "totalIuranDerap", label: "Derap" },
+      { key: "totalIuranKalender", label: "Kalender" },
+      { key: "totalIuranSumbangan", label: "Lain-lain" },
+      { key: "totalIuran", label: "Total Iuran" },
+      { key: "potongan", label: "Potongan Bank" },
+      { key: "selisih", label: "Selisih" },
+      { key: "keterangan", label: "Keterangan" },
+    ].map(({ key, label }) => (
+      <th
+        key={key}
+        onClick={() => handleSort(key)}
+        className="group cursor-pointer px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider
+                   text-white border-b border-blue-700 hover:bg-blue-700 transition-colors"
+      >
+        <div className="flex items-center justify-center gap-1">
+          <span>{label}</span>
+          <span
+            className={`text-xs ${
+              sortConfig.key === key
+                ? "opacity-100"
+                : "opacity-50 group-hover:opacity-80"
+            }`}
+          >
+            {sortConfig.key === key && sortConfig.direction === "desc"
+              ? "▼"
+              : "▲"}
+          </span>
+        </div>
+      </th>
+    ))}
+
+    {/* ACTION */}
+    {cekRole === "SUPER ADMIN" && (
+      <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-blue-700">
+        Action
+      </th>
+    )}
+  </tr>
+</thead>
+
                   <tbody>
                     {loadingBalancing ? (
                       <tr>
@@ -2542,7 +2436,10 @@ export default function BankTransactionPage() {
                             {item.unitKerja}
                           </td>
                           <td className=" text-sm text-gray-900 whitespace-normal">
-                            {item.nama}
+                            <div>{item.nama}</div>
+                            <div>NPA : {item.npa}</div>
+                            <div>NIP : {item.nip}</div>
+                            <div>REKENING : {item.rekening}</div>
                           </td>
                           <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
                             {item.statusPegawai}
@@ -2634,8 +2531,8 @@ export default function BankTransactionPage() {
                     )}
                   </tbody>
                   <tfoot>
-                    <tr className="bg-gray-200">
-                      <td colSpan={5} className=" text-center">
+                    <tr className="bg-blue-600 text-white font-semibold">
+                      <td colSpan={6} className=" text-center">
                         Total
                       </td>
                       <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
@@ -2710,6 +2607,7 @@ export default function BankTransactionPage() {
                           )
                         )}
                       </td>
+                      <td></td>
                       <td></td>
                     </tr>
                   </tfoot>
