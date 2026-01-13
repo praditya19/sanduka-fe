@@ -996,7 +996,7 @@ function RekapAnggota() {
     setAddedCategories([]);
     setManualInputs({});
     setStatusPegawai(member.statusPegawai || null);
-
+// console.log("📌 Member clicked:", member.statusPegawai);
     try {
       const fileResponse = await GlobalApi.getFileByNip(member.nip);
       if (fileResponse?.sumbangan) {
@@ -1597,6 +1597,8 @@ function RekapAnggota() {
             updatedSumbanganList.push({
               jenis: jenis,
               jumlah: totalValue,
+               cabang: payload.cabang,
+              tagihanUntukBulan: tagihanUntukBulan,
             });
           } else {
             updatedSumbanganList[existingIndex].jumlah = totalValue;
@@ -1646,6 +1648,8 @@ function RekapAnggota() {
                 updatedSumbanganList.push({
                   jenis: jenis,
                   jumlah: nominalValue,
+                   cabang: payload.cabang,
+                  tagihanUntukBulan: tagihanUntukBulan,
                 });
               } else {
                 updatedSumbanganList[existingIndex].jumlah = nominalValue;
@@ -1663,6 +1667,9 @@ function RekapAnggota() {
         (item) => item.jumlah > 0
       );
 
+      // console.log(statusPegawai);
+      // console.log("Payload Lengkap:", JSON.parse(JSON.stringify(payload)));
+      
       if (idIuran) {
         await GlobalApi.updateByNominalByBulan(
           dataNpa.nip,
