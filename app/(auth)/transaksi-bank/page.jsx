@@ -185,6 +185,10 @@ export default function BankTransactionPage() {
   const cekRole = sessionStorage.getItem("role");
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
+  const [listCabang, setListCabang] = useState([]);
+const [listUnitKerja, setListUnitKerja] = useState([]);
+const [loadingUnitKerja, setLoadingUnitKerja] = useState(false);
+
 
   const handleFilter = async () => {
     setLoadingFilter(true);
@@ -298,6 +302,48 @@ export default function BankTransactionPage() {
     currentPage,
     currentPageBalancing,
   ]);
+
+  useEffect(() => {
+  if (showEditModal) {
+    const fetchCabang = async () => {
+      try {
+        const res = await GlobalApi.getCabang();
+
+        // 🔐 PAKSA array
+        setListCabang(Array.isArray(res) ? res : res?.data || []);
+      } catch (error) {
+        console.error(error);
+        setListCabang([]);
+      }
+    };
+
+    fetchCabang();
+  }
+}, [showEditModal]);
+
+  useEffect(() => {
+  if (editData?.cabang) {
+    fetchUnitKerja(editData.cabang);
+  }
+}, [editData?.cabang]);
+
+const fetchUnitKerja = async (cabang) => {
+  console.log("REQUEST UNIT KERJA CABANG:", cabang);
+
+  try {
+    setLoadingUnitKerja(true);
+    const res = await GlobalApi.getUnitKerjaByCabang(cabang);
+
+    console.log("RESPONSE UNIT KERJA:", res);
+
+    setListUnitKerja(Array.isArray(res) ? res : res?.data || []);
+  } catch (error) {
+    console.error("ERROR UNIT KERJA:", error);
+    setListUnitKerja([]);
+  } finally {
+    setLoadingUnitKerja(false);
+  }
+};
 
   const getPotonganBank = async () => {
     try {
@@ -3435,7 +3481,6 @@ export default function BankTransactionPage() {
       {showEditModal && editData && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="relative bg-white rounded-lg shadow-xl w-[600px] max-w-full p-6 overflow-y-auto max-h-[90vh] mt-16">
-            {/* Tombol X */}
             <button
               onClick={() => setShowEditModal(false)}
               className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
@@ -3445,9 +3490,6 @@ export default function BankTransactionPage() {
 
             <h2 className="text-lg font-semibold mb-4">Edit Data Balancing</h2>
 
-            {/* ==========================
-          DATA DIRI ANGGOTA (Tampilan Simple)
-      ========================== */}
             <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg mb-6 border">
               <div>
                 <p className="text-xs text-gray-500">Nama Anggota</p>
@@ -3470,21 +3512,67 @@ export default function BankTransactionPage() {
               </div>
 
               <div>
-                <p className="text-xs text-gray-500">Cabang</p>
-                <p>{editData.cabang}</p>
-              </div>
+  <label className="block text-xs text-gray-500 mb-1">Cabang</label>
+  <select
+    className="w-full border px-3 py-2 rounded"
+    value={editData.cabang || ""}
+    onChange={(e) => {
+      const cabang = e.target.value;
+      setEditData({
+        ...editData,
+        cabang,
+        unitKerja: "", // reset unit kerja
+      });
+
+      if (cabang) {
+        fetchUnitKerja(cabang);
+      } else {
+        setListUnitKerja([]);
+      }
+    }}
+  >
+    <option value="">-- Pilih Cabang --</option>
+    {Array.isArray(listCabang) &&
+  listCabang.map((item, index) => (
+    <option key={index} value={item.kecamatan}>
+      {item.kecamatan}
+    </option>
+))}
+  </select>
+</div>
 
               <div>
-                <p className="text-xs text-gray-500">Unit Kerja</p>
-                <p>{editData.unitKerja}</p>
-              </div>
+  <label className="block text-xs text-gray-500 mb-1">
+    Unit Kerja
+  </label>
+  <select
+    className="w-full border px-3 py-2 rounded disabled:bg-gray-100"
+    value={editData.unitKerja || ""}
+    disabled={!editData.cabang || loadingUnitKerja}
+    onChange={(e) =>
+      setEditData({
+        ...editData,
+        unitKerja: e.target.value,
+      })
+    }
+  >
+    <option value="">
+      {loadingUnitKerja
+        ? "Memuat Unit Kerja..."
+        : "-- Pilih Unit Kerja --"}
+    </option>
+
+    {listUnitKerja.map((item, index) => (
+      <option key={index} value={item.unitKerja}>
+        {item.unitKerja}
+      </option>
+    ))}
+  </select>
+</div>
+
             </div>
 
-            {/* ==========================
-          INPUT NOMINAL MASIH FORM
-      ========================== */}
             <div className="grid grid-cols-2 gap-4 mt-4">
-              {/* Iuran Anggota */}
               <div>
                 <label className="block text-sm font-medium">
                   Iuran Anggota
@@ -3502,7 +3590,6 @@ export default function BankTransactionPage() {
                 />
               </div>
 
-              {/* Manual Iuran Anggota */}
               <div>
                 <label className="block text-sm font-medium">
                   Manual Iuran Anggota
@@ -3520,7 +3607,6 @@ export default function BankTransactionPage() {
                 />
               </div>
 
-              {/* Iuran Sanduka */}
               <div>
                 <label className="block text-sm font-medium">
                   Iuran Sanduka
@@ -3538,7 +3624,6 @@ export default function BankTransactionPage() {
                 />
               </div>
 
-              {/* Manual Iuran Sanduka */}
               <div>
                 <label className="block text-sm font-medium">
                   Manual Iuran Sanduka
@@ -3556,7 +3641,6 @@ export default function BankTransactionPage() {
                 />
               </div>
 
-              {/* Iuran Daspen */}
               <div>
                 <label className="block text-sm font-medium">
                   Iuran Daspen
@@ -3574,7 +3658,6 @@ export default function BankTransactionPage() {
                 />
               </div>
 
-              {/* Manual Iuran Daspen */}
               <div>
                 <label className="block text-sm font-medium">
                   Manual Iuran Daspen
@@ -3592,7 +3675,6 @@ export default function BankTransactionPage() {
                 />
               </div>
 
-              {/* Iuran Derap */}
               <div>
                 <label className="block text-sm font-medium">Iuran Derap</label>
                 <input
@@ -3608,7 +3690,6 @@ export default function BankTransactionPage() {
                 />
               </div>
 
-              {/* Manual Iuran Derap */}
               <div>
                 <label className="block text-sm font-medium">
                   Manual Iuran Derap
@@ -3626,7 +3707,6 @@ export default function BankTransactionPage() {
                 />
               </div>
 
-              {/* Iuran Kalender */}
               <div>
                 <label className="block text-sm font-medium">
                   Iuran Kalender
@@ -3644,7 +3724,6 @@ export default function BankTransactionPage() {
                 />
               </div>
 
-              {/* Manual Iuran Kalender */}
               <div>
                 <label className="block text-sm font-medium">
                   Manual Iuran Kalender
@@ -3662,7 +3741,6 @@ export default function BankTransactionPage() {
                 />
               </div>
 
-              {/* Iuran Sumbangan */}
               <div>
                 <label className="block text-sm font-medium">
                   Iuran Sumbangan
@@ -3680,7 +3758,6 @@ export default function BankTransactionPage() {
                 />
               </div>
 
-              {/* Manual Iuran Sumbangan */}
               <div>
                 <label className="block text-sm font-medium">
                   Manual Iuran Sumbangan

@@ -95,6 +95,14 @@ const getCabang = () => axiosClient.get("/api/daftarCabang");
 const getJabatan = () => axiosClient.get("/api/daftarJabatan");
 const getGolonganJabatan = () => axiosClient.get("/api/daftarGolongan");
 const getUnitKerja = () => axiosClient.get("/api/unit-kerja");
+const getUnitKerjaByCabang= async (cabang) => {
+  try {
+    const response = await axiosClient.get(`/api/unit-kerja/${cabang}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 const getBulan = () => axiosClient.get("/api/bulan");
 const getJumlahSantunan = async () => {
   try {
@@ -3107,7 +3115,7 @@ const importByNominal = async (file, tagihanUntukBulan) => {
   try {
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("tagihanUntukBulan", tagihanUntukBulan); // format: YYYY-MM-DD
+    formData.append("tagihanUntukBulan", tagihanUntukBulan);
 
     const response = await axiosClient.post(
       `/api/by-nominal-new/import`,
@@ -3399,4 +3407,5 @@ export default {
   getByIdByNominal,
   postToBackupNew,
   deleteBalancingById,
+  getUnitKerjaByCabang,
 };
