@@ -412,7 +412,7 @@ function RekapAnggota() {
       // 📌 Proses data untuk mengambil yang terbaru per npaPgri
       // Opsional: ganti null dengan npaPgri spesifik contoh "33200806435"
       // Ganti true dengan false jika ingin berdasarkan idByNominal terbesar
-      response = processApiResponse(response, null, true);
+      response = processApiResponse(response, null, false);
 
       const totalRow = response.find(
         (item) => item.cabang === "Total" && !item.unitKerja,
@@ -598,7 +598,7 @@ function RekapAnggota() {
       // 📌 Proses data untuk mengambil yang terbaru per npaPgri
       // Opsional: ganti null dengan npaPgri spesifik contoh "33200806435"
       // Ganti true dengan false jika ingin berdasarkan idByNominal terbesar
-      response = processApiResponse(response, null, true);
+      response = processApiResponse(response, null, false);
 
       const totalRow = response.find(
         (item) => item.cabang === "Total" && !item.unitKerja,
