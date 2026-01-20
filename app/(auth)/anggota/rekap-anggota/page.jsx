@@ -983,7 +983,7 @@ function RekapAnggota() {
     setAddedCategories([]);
     setManualInputs({});
     setStatusPegawai(member.statusPegawai || null);
-    console.log("📌 Member clicked:", member);
+    // console.log("📌 Member clicked:", member);
     try {
       const fileResponse = await GlobalApi.getFileByNip(member.nip);
       if (fileResponse?.sumbangan) {
@@ -1010,7 +1010,7 @@ function RekapAnggota() {
       }
 
       const dataIuran = await GlobalApi.getByIdByNominal(member.idByNominal);
-      console.log("📦 Data Iuran by NPA:", dataIuran);
+      // console.log("📦 Data Iuran by NPA:", dataIuran);
 
       setDataIuran(dataIuran);
       setIdIuran(dataIuran.id || null);
