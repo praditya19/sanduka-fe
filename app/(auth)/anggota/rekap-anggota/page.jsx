@@ -186,7 +186,7 @@ function RekapAnggota() {
   const currentYear = new Date().getFullYear();
   const years = Array.from(
     { length: currentYear - 2025 + 6 },
-    (_, i) => 2025 + i
+    (_, i) => 2025 + i,
   );
 
   const months = [
@@ -232,10 +232,10 @@ function RekapAnggota() {
   };
 
   const [selectedMonth, setSelectedMonth] = useState(
-    () => getNextMonthYear().month
+    () => getNextMonthYear().month,
   );
   const [selectedYear, setSelectedYear] = useState(
-    () => getNextMonthYear().year
+    () => getNextMonthYear().year,
   );
 
   useEffect(() => {
@@ -292,7 +292,7 @@ function RekapAnggota() {
     if (!selectedCabang) return;
     const filteredList = unitKerjaList.filter(
       (unitKerja) =>
-        unitKerja.cabang?.toLowerCase() === selectedCabang.toLowerCase()
+        unitKerja.cabang?.toLowerCase() === selectedCabang.toLowerCase(),
     );
 
     setFilteredUnitKerja(filteredList);
@@ -312,19 +312,17 @@ function RekapAnggota() {
   const processApiResponse = (
     apiData,
     filterByNpa = null,
-    useLatestDate = true
+    useLatestDate = true,
   ) => {
     if (!apiData || !Array.isArray(apiData)) {
       return apiData;
     }
 
-    // Filter berdasarkan npaPgri jika diperlukan
     let filteredData = apiData;
     if (filterByNpa) {
       filteredData = apiData.filter((item) => item.npaPgri === filterByNpa);
     }
 
-    // Kelompokkan berdasarkan npaPgri untuk mengambil data terbaru per anggota
     const groupedByNpa = {};
 
     filteredData.forEach((item) => {
@@ -333,12 +331,12 @@ function RekapAnggota() {
       if (!groupedByNpa[npa]) {
         groupedByNpa[npa] = item;
       } else {
-        const shouldReplace = useLatestDate
-          ? // Bandingkan berdasarkan lastUpdatedAtIuran (data terbaru)
-            new Date(item.lastUpdatedAtIuran || 0) >
-            new Date(groupedByNpa[npa].lastUpdatedAtIuran || 0)
-          : // Atau bandingkan berdasarkan idByNominal (ID terbesar)
-            (item.idByNominal || 0) > (groupedByNpa[npa].idByNominal || 0);
+        const shouldReplace = useLatestDate;
+        new Date(item.lastUpdatedAtIuran || 0) >
+          new Date(groupedByNpa[npa].lastUpdatedAtIuran || 0)(
+            item.idByNominal || 0,
+          ) >
+          (groupedByNpa[npa].idByNominal || 0);
 
         if (shouldReplace) {
           groupedByNpa[npa] = item;
@@ -346,7 +344,6 @@ function RekapAnggota() {
       }
     });
 
-    // Kembalikan hasil sebagai array, dengan menambahkan info tentang pemrosesan
     const result = Object.values(groupedByNpa);
     return result;
   };
@@ -361,7 +358,7 @@ function RekapAnggota() {
     const filteredList = unitKerjaList.filter(
       (unitKerja) =>
         unitKerja.cabang?.toLowerCase() === selectedCabang.toLowerCase() &&
-        unitKerja.unitKerja.toLowerCase().includes(input.toLowerCase())
+        unitKerja.unitKerja.toLowerCase().includes(input.toLowerCase()),
     );
 
     setShowUnitKerjaDropdown(true);
@@ -371,7 +368,7 @@ function RekapAnggota() {
       const cabangData = originalRekapData.filter((item) =>
         selectedCabang
           ? item.cabang?.toLowerCase() === selectedCabang.toLowerCase()
-          : true
+          : true,
       );
       const processed = processData(cabangData);
       setGroupedData(processed);
@@ -382,7 +379,7 @@ function RekapAnggota() {
         (item) =>
           (!selectedCabang ||
             item.cabang?.toLowerCase() === selectedCabang.toLowerCase()) &&
-          item.unitKerja?.toLowerCase().includes(input.toLowerCase())
+          item.unitKerja?.toLowerCase().includes(input.toLowerCase()),
       );
       const processed = processData(filteredData);
       setGroupedData(processed);
@@ -393,7 +390,7 @@ function RekapAnggota() {
 
   const handleCabangSearch = (query) => {
     const filtered = originalCabangList.filter((cabang) =>
-      cabang.kecamatan.toLowerCase().includes(query.toLowerCase())
+      cabang.kecamatan.toLowerCase().includes(query.toLowerCase()),
     );
     setFilteredCabangList(filtered);
     setSearchCabang(query);
@@ -403,7 +400,7 @@ function RekapAnggota() {
     setSearchUnitKerja(searchTerm);
     if (searchTerm === "") {
       const allFiltered = unitKerjaList.filter(
-        (unitKerja) => unitKerja.cabang === selectedCabang
+        (unitKerja) => unitKerja.cabang === selectedCabang,
       );
       setFilteredUnitKerja(allFiltered);
     } else {
@@ -412,7 +409,7 @@ function RekapAnggota() {
           unitKerja.unitKerja
             .toLowerCase()
             .includes(searchTerm.toLowerCase()) &&
-          unitKerja.cabang === selectedCabang
+          unitKerja.cabang === selectedCabang,
       );
       setFilteredUnitKerja(filtered);
     }
@@ -428,7 +425,7 @@ function RekapAnggota() {
 
     try {
       let response = await GlobalApi.getNominalAggregatedData(
-        cabang.kecamatan || ""
+        cabang.kecamatan || "",
       );
 
       // 📌 Proses data untuk mengambil yang terbaru per npaPgri
@@ -437,10 +434,10 @@ function RekapAnggota() {
       response = processApiResponse(response, null, true);
 
       const totalRow = response.find(
-        (item) => item.cabang === "Total" && !item.unitKerja
+        (item) => item.cabang === "Total" && !item.unitKerja,
       );
       const regularData = response.filter(
-        (item) => !(item.cabang === "Total" && !item.unitKerja)
+        (item) => !(item.cabang === "Total" && !item.unitKerja),
       );
 
       if (totalRow) {
@@ -466,7 +463,7 @@ function RekapAnggota() {
         (unitKerja) =>
           unitKerja.cabang &&
           unitKerja.cabang.toLowerCase() ===
-            (cabang.kecamatan || "").toLowerCase()
+            (cabang.kecamatan || "").toLowerCase(),
       );
       setFilteredUnitKerja(filtered);
     } catch (error) {
@@ -486,7 +483,7 @@ function RekapAnggota() {
       const cabangData = originalRekapData.filter((item) =>
         selectedCabang
           ? item.cabang?.toLowerCase() === selectedCabang.toLowerCase()
-          : true
+          : true,
       );
       const processed = processData(cabangData);
       setGroupedData(processed);
@@ -497,7 +494,7 @@ function RekapAnggota() {
         (item) =>
           (!selectedCabang ||
             item.cabang?.toLowerCase() === selectedCabang.toLowerCase()) &&
-          item.unitKerja?.toLowerCase() === selectedValue.toLowerCase()
+          item.unitKerja?.toLowerCase() === selectedValue.toLowerCase(),
       );
       const processed = processData(filteredData);
       setGroupedData(processed);
@@ -536,7 +533,7 @@ function RekapAnggota() {
           sumbangan: 0,
           totalIuran: 0,
           nomorRekening: 0,
-          lastUpdatedAtIuranAnggota: "",
+          lastUpdatedAtIuran: "",
           sumbanganDetail: {
             "Cetak Kartu Biasa": 25000,
             "IURAN HUT 80 PGRI": 30000,
@@ -560,7 +557,7 @@ function RekapAnggota() {
         kalender: parseFloat(item.kalender) || 0,
         sumbangan: parseFloat(item.lainLain) || 0,
         totalIuran: parseFloat(item.totalIuran) || 0,
-        lastUpdatedAtIuranAnggota: item.lastUpdatedAtIuranAnggota,
+        lastUpdatedAtIuran: item.lastUpdatedAtIuran,
       });
 
       acc[unitKey].jumlah += 1;
@@ -605,7 +602,7 @@ function RekapAnggota() {
           null,
           null,
           bulan,
-          tahun
+          tahun,
         );
       } else {
         response = await GlobalApi.getNominalAggregatedData(
@@ -613,7 +610,7 @@ function RekapAnggota() {
           null,
           null,
           bulan,
-          tahun
+          tahun,
         );
       }
 
@@ -623,10 +620,10 @@ function RekapAnggota() {
       response = processApiResponse(response, null, true);
 
       const totalRow = response.find(
-        (item) => item.cabang === "Total" && !item.unitKerja
+        (item) => item.cabang === "Total" && !item.unitKerja,
       );
       const regularData = response.filter(
-        (item) => !(item.cabang === "Total" && !item.unitKerja)
+        (item) => !(item.cabang === "Total" && !item.unitKerja),
       );
 
       if (totalRow) {
@@ -695,14 +692,14 @@ function RekapAnggota() {
 
       if (selectedCabang) {
         filteredData = filteredData.filter(
-          (item) => item.cabang?.toLowerCase() === selectedCabang.toLowerCase()
+          (item) => item.cabang?.toLowerCase() === selectedCabang.toLowerCase(),
         );
       }
 
       if (selectedUnitKerja) {
         filteredData = filteredData.filter(
           (item) =>
-            item.unitKerja?.toLowerCase() === selectedUnitKerja.toLowerCase()
+            item.unitKerja?.toLowerCase() === selectedUnitKerja.toLowerCase(),
         );
       }
 
@@ -723,7 +720,7 @@ function RekapAnggota() {
           (!selectedUnitKerja ||
             item.unitKerja?.toLowerCase() ===
               selectedUnitKerja.toLowerCase()) &&
-          item.namaAnggota?.toLowerCase().includes(query.toLowerCase())
+          item.namaAnggota?.toLowerCase().includes(query.toLowerCase()),
       );
 
       const processed = processData(filteredData);
@@ -732,7 +729,7 @@ function RekapAnggota() {
       calculateTotals(filteredData);
 
       const unitsWithMatches = new Set(
-        filteredData.map((item) => item.unitKerja || "Tidak Ada Unit Kerja")
+        filteredData.map((item) => item.unitKerja || "Tidak Ada Unit Kerja"),
       );
       setExpandedRows(unitsWithMatches);
     }
@@ -805,7 +802,7 @@ function RekapAnggota() {
         sanduka: 0,
         daspen: 0,
         iuran: 0,
-      }
+      },
     );
     setTotals(newTotals);
   };
@@ -913,7 +910,7 @@ function RekapAnggota() {
 
         if (error.response?.status === 500) {
           console.warn(
-            "Server error 500: menggunakan nilai default dari sessionStorage"
+            "Server error 500: menggunakan nilai default dari sessionStorage",
           );
 
           const pgriData = JSON.parse(sessionStorage.getItem("PGRIData"));
@@ -996,7 +993,7 @@ function RekapAnggota() {
     setAddedCategories([]);
     setManualInputs({});
     setStatusPegawai(member.statusPegawai || null);
-console.log("📌 Member clicked:", member);
+    console.log("📌 Member clicked:", member);
     try {
       const fileResponse = await GlobalApi.getFileByNip(member.nip);
       if (fileResponse?.sumbangan) {
@@ -1109,7 +1106,7 @@ console.log("📌 Member clicked:", member);
       })
       .filter(
         (item) =>
-          item.iuran !== undefined && (item.iuran > 0 || item.manual > 0)
+          item.iuran !== undefined && (item.iuran > 0 || item.manual > 0),
       );
 
     if (Array.isArray(dataIuran.iuranSumbanganList)) {
@@ -1157,8 +1154,8 @@ console.log("📌 Member clicked:", member);
         selectedKategori === "lainlain" && selectedKeterangan
           ? `${selectedKeterangan}`
           : selectedKategori === "pgri"
-          ? "anggota"
-          : selectedKategori;
+            ? "anggota"
+            : selectedKategori;
 
       if (!addedCategories.find((cat) => cat.key === uniqueKey)) {
         const labelMap = {
@@ -1210,7 +1207,7 @@ console.log("📌 Member clicked:", member);
             const matchingItem = response.find(
               (item) =>
                 item.keterangan.toLowerCase() ===
-                selectedKeterangan.toLowerCase()
+                selectedKeterangan.toLowerCase(),
             );
 
             if (matchingItem) {
@@ -1219,7 +1216,7 @@ console.log("📌 Member clicked:", member);
             } else {
               console.warn(
                 "Tidak ditemukan data dengan keterangan:",
-                selectedKeterangan
+                selectedKeterangan,
               );
             }
           } catch (error) {
@@ -1268,8 +1265,8 @@ console.log("📌 Member clicked:", member);
   const handleDeleteSumbangan = (sumbanganJenis) => {
     setSumbanganList((prev) =>
       prev.map((item) =>
-        item.jenis === sumbanganJenis ? { ...item, jumlah: 0 } : item
-      )
+        item.jenis === sumbanganJenis ? { ...item, jumlah: 0 } : item,
+      ),
     );
   };
 
@@ -1498,7 +1495,7 @@ console.log("📌 Member clicked:", member);
         const manual = isReset
           ? 0
           : parseInt(
-              nominalBaruList[`manual${key}`] || nominalBaruList[key] || 0
+              nominalBaruList[`manual${key}`] || nominalBaruList[key] || 0,
             );
         const total = iuran + manual;
 
@@ -1563,7 +1560,6 @@ console.log("📌 Member clicked:", member);
           "kalender",
         ].includes(category.key);
 
-        // ✅ PERBAIKAN: Proses iuran reguler (derap, kalender, dll)
         if (isRegularIuran) {
           if (category.key === "pgri" || category.key === "anggota") {
             payload.iuranAnggota = oldValue;
@@ -1586,18 +1582,16 @@ console.log("📌 Member clicked:", member);
             payload.manualIuranKalender = manualValue;
             payload.totalIuranKalender = totalValue;
           }
-        }
-        // ✅ Proses yang bukan iuran reguler (sumbangan)
-        else if (jenis) {
+        } else if (jenis) {
           const existingIndex = updatedSumbanganList.findIndex(
-            (item) => item.jenis === jenis
+            (item) => item.jenis === jenis,
           );
 
           if (existingIndex === -1) {
             updatedSumbanganList.push({
               jenis: jenis,
               jumlah: totalValue,
-               cabang: payload.cabang,
+              cabang: payload.cabang,
               tagihanUntukBulan: tagihanUntukBulan,
             });
           } else {
@@ -1641,14 +1635,14 @@ console.log("📌 Member clicked:", member);
 
             if (jenis) {
               const existingIndex = updatedSumbanganList.findIndex(
-                (item) => item.jenis === jenis
+                (item) => item.jenis === jenis,
               );
 
               if (existingIndex === -1) {
                 updatedSumbanganList.push({
                   jenis: jenis,
                   jumlah: nominalValue,
-                   cabang: payload.cabang,
+                  cabang: payload.cabang,
                   tagihanUntukBulan: tagihanUntukBulan,
                 });
               } else {
@@ -1664,23 +1658,22 @@ console.log("📌 Member clicked:", member);
       payload.manualIuranSumbangan = manualSumbanganTotal;
 
       payload.iuranSumbanganList = updatedSumbanganList.filter(
-        (item) => item.jumlah > 0
+        (item) => item.jumlah > 0,
       );
 
       // console.log(statusPegawai);
-      console.log("Payload Lengkap:", JSON.parse(JSON.stringify(payload)));
-      
+      // console.log("Payload Lengkap:", JSON.parse(JSON.stringify(payload)));
+
       if (idIuran) {
         await GlobalApi.updateByNominalByBulan(
           dataNpa.nip,
           tagihanUntukBulan,
-          payload
+          payload,
         );
       } else {
         await GlobalApi.createByNominal(payload);
       }
 
-      // Optimistic update - update state lokal tanpa fetch ulang semua data
       const updatedMemberData = {
         namaAnggota: payload.namaAnggota,
         nip: payload.nip,
@@ -1706,27 +1699,25 @@ console.log("📌 Member clicked:", member);
         lastUpdatedAtIuranAnggota: new Date().toISOString(),
       };
 
-      // Update originalRekapData
       setOriginalRekapData((prevData) => {
         const newData = prevData.map((item) =>
-          item.nip === dataNpa.nip ? { ...item, ...updatedMemberData } : item
+          item.nip === dataNpa.nip ? { ...item, ...updatedMemberData } : item,
         );
-        // Jika data baru (create), tambahkan ke array
+
         if (!idIuran && !prevData.find((item) => item.nip === dataNpa.nip)) {
           newData.push(updatedMemberData);
         }
         return newData;
       });
 
-      // Update data dan groupedData
       setData((prevData) => {
         const newData = prevData.map((item) =>
-          item.nip === dataNpa.nip ? { ...item, ...updatedMemberData } : item
+          item.nip === dataNpa.nip ? { ...item, ...updatedMemberData } : item,
         );
         if (!idIuran && !prevData.find((item) => item.nip === dataNpa.nip)) {
           newData.push(updatedMemberData);
         }
-        // Update groupedData berdasarkan data baru
+
         const processed = processData(newData);
         setGroupedData(processed);
         return newData;
@@ -1926,6 +1917,22 @@ console.log("📌 Member clicked:", member);
     setExpandedIndex(expandedIndex === index ? null : index);
   };
 
+  const formatTanggal = (timestamp, format = "DMY") => {
+    if (!timestamp) return "-";
+
+    const date = new Date(timestamp);
+
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+
+    if (format === "YMD") {
+      return `${year}-${month}-${day}`; // 2026-01-20
+    }
+
+    return `${day}-${month}-${year}`; // 20-01-2026
+  };
+
   const handlePrint = async () => {
     try {
       if (!groupedData || groupedData.length === 0) {
@@ -1952,7 +1959,7 @@ console.log("📌 Member clicked:", member);
               }
             }
             return acc;
-          }, {})
+          }, {}),
         );
 
         anggotaAll = latestPerNpa;
@@ -2031,11 +2038,11 @@ console.log("📌 Member clicked:", member);
                                 ? `
                               <td rowspan="${members.length}">${index + 1}</td>
                               <td rowspan="${members.length}">${
-                                    group.cabang
-                                  }</td>
+                                group.cabang
+                              }</td>
                               <td rowspan="${members.length}">${
-                                    group.unitKerja
-                                  }</td>
+                                group.unitKerja
+                              }</td>
                             `
                                 : ""
                             }
@@ -2052,25 +2059,25 @@ console.log("📌 Member clicked:", member);
                                 : ""
                             }
                             <td>Rp. ${parseInt(member.pgri || 0).toLocaleString(
-                              "id-ID"
+                              "id-ID",
                             )}</td>
                             <td>Rp. ${parseInt(
-                              member.sanduka || 0
+                              member.sanduka || 0,
                             ).toLocaleString("id-ID")}</td>
                             <td>Rp. ${parseInt(
-                              member.daspen || 0
+                              member.daspen || 0,
                             ).toLocaleString("id-ID")}</td>
                             <td>Rp. ${parseInt(
-                              member.derap || 0
+                              member.derap || 0,
                             ).toLocaleString("id-ID")}</td>
                             <td>Rp. ${parseInt(
-                              member.kalender || 0
+                              member.kalender || 0,
                             ).toLocaleString("id-ID")}</td>
                             <td>Rp. ${parseInt(
-                              member.lainLain || 0
+                              member.lainLain || 0,
                             ).toLocaleString("id-ID")}</td>
                             <td>Rp. ${parseInt(
-                              member.total || 0
+                              member.total || 0,
                             ).toLocaleString("id-ID")}</td>
                           </tr>
                         `;
@@ -2083,7 +2090,7 @@ console.log("📌 Member clicked:", member);
                 <td>
                   ${groupedData.reduce(
                     (sum, group) => sum + parseInt(group.jumlah || 0),
-                    0
+                    0,
                   )}
                 </td>
                 <td>
@@ -2351,7 +2358,7 @@ console.log("📌 Member clicked:", member);
         unitKerjaParam,
         null,
         bulanParam,
-        tahunParam
+        tahunParam,
       );
 
       // 📌 Proses data untuk mengambil yang terbaru per npaPgri
@@ -2373,7 +2380,7 @@ console.log("📌 Member clicked:", member);
         filteredData = filteredData.filter(
           (item) =>
             item.cabang &&
-            item.cabang.toLowerCase().includes(selectedCabang.toLowerCase())
+            item.cabang.toLowerCase().includes(selectedCabang.toLowerCase()),
         );
       }
 
@@ -2383,7 +2390,7 @@ console.log("📌 Member clicked:", member);
             item.unitKerja &&
             item.unitKerja
               .toLowerCase()
-              .includes(selectedUnitKerja.toLowerCase())
+              .includes(selectedUnitKerja.toLowerCase()),
         );
       }
 
@@ -2393,7 +2400,7 @@ console.log("📌 Member clicked:", member);
             item.namaAnggota &&
             item.namaAnggota
               .toLowerCase()
-              .includes(namaAnggotaInput.toLowerCase())
+              .includes(namaAnggotaInput.toLowerCase()),
         );
       }
 
@@ -2427,18 +2434,17 @@ console.log("📌 Member clicked:", member);
             }
           }
           return acc;
-        }, {})
+        }, {}),
       );
 
       // console.log(
       //   `✅ Jumlah data unik setelah ambil terbaru: ${latestPerNpa.length} data`
       // );
 
-
       const bulanSekarang = new Date();
       const bulanBerikutnya = new Date(
         bulanSekarang.getFullYear(),
-        bulanSekarang.getMonth() + 1
+        bulanSekarang.getMonth() + 1,
       );
       const namaBulan = bulanBerikutnya.toLocaleString("id-ID", {
         month: "long",
@@ -2496,31 +2502,31 @@ console.log("📌 Member clicked:", member);
 
       const totalPgri = latestPerNpa.reduce(
         (sum, g) => sum + parseInt(g.pgri || 0),
-        0
+        0,
       );
       const totalSanduka = latestPerNpa.reduce(
         (sum, g) => sum + parseInt(g.sanduka || 0),
-        0
+        0,
       );
       const totalDaspen = latestPerNpa.reduce(
         (sum, g) => sum + parseInt(g.daspen || 0),
-        0
+        0,
       );
       const totalDerap = latestPerNpa.reduce(
         (sum, g) => sum + parseInt(g.derap || 0),
-        0
+        0,
       );
       const totalKalender = latestPerNpa.reduce(
         (sum, g) => sum + parseInt(g.kalender || 0),
-        0
+        0,
       );
       const totalLainLain = latestPerNpa.reduce(
         (sum, g) => sum + parseInt(g.lainLain || 0),
-        0
+        0,
       );
       const totalIuran = latestPerNpa.reduce(
         (sum, g) => sum + parseInt(g.totalIuran || 0),
-        0
+        0,
       );
 
       excelData.push([]);
@@ -2541,7 +2547,6 @@ console.log("📌 Member clicked:", member);
         totalIuran,
       ]);
 
-
       const ws = XLSX.utils.aoa_to_sheet(excelData);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "RekapData");
@@ -2560,8 +2565,6 @@ console.log("📌 Member clicked:", member);
       }${selectedUnitKerja ? `_Unit_Kerja_${selectedUnitKerja}` : ""}.xlsx`;
 
       XLSX.writeFile(wb, fileName);
-
-      
     } catch (error) {
       console.error("❌ Gagal ekspor data:", error);
       alert("Terjadi kesalahan saat mengekspor data ke Excel.");
@@ -2910,7 +2913,7 @@ console.log("📌 Member clicked:", member);
             }
           }
           return acc;
-        }, {})
+        }, {}),
       );
 
       anggotaAll = latestPerNpa;
@@ -3570,7 +3573,7 @@ console.log("📌 Member clicked:", member);
                         </div>
                       </td>
                     </tr>
-                    {/* Loading skeleton rows */}
+
                     {Array.from({ length: 4 }).map((_, idx) => (
                       <tr key={`skeleton-${idx}`} className="bg-white">
                         {Array.from({ length: 12 }).map((_, cellIdx) => (
@@ -3592,7 +3595,7 @@ console.log("📌 Member clicked:", member);
                         ...member,
                         cabang: group.cabang,
                         unitKerja: group.unitKerja,
-                      }))
+                      })),
                     )
                     .map((member, rowIndex) => (
                       <tr
@@ -3625,6 +3628,10 @@ console.log("📌 Member clicked:", member);
                           <div className="text-xs text-gray-600">
                             {member.nomorRekening}
                           </div>
+                          <div className="text-xs text-gray-600">
+                            Update iuran:{" "}
+                            {formatTanggal(member.lastUpdatedAtIuran, "DMY")}
+                          </div>
                         </td>
                         <td className="p-3 border-b text-right text-sm">
                           Rp.{" "}
@@ -3633,7 +3640,7 @@ console.log("📌 Member clicked:", member);
                         <td className="p-3 border-b text-right text-sm">
                           Rp.{" "}
                           {parseInt(member.sanduka || 0).toLocaleString(
-                            "id-ID"
+                            "id-ID",
                           )}
                         </td>
                         <td className="p-3 border-b text-right text-sm">
@@ -3643,7 +3650,7 @@ console.log("📌 Member clicked:", member);
                             </span>
                           ) : (
                             `Rp. ${parseInt(member.daspen || 0).toLocaleString(
-                              "id-ID"
+                              "id-ID",
                             )}`
                           )}
                         </td>
@@ -3654,19 +3661,19 @@ console.log("📌 Member clicked:", member);
                         <td className="p-3 border-b text-right text-sm">
                           Rp.{" "}
                           {parseInt(member.kalender || 0).toLocaleString(
-                            "id-ID"
+                            "id-ID",
                           )}
                         </td>
                         <td className="p-3 border-b text-right text-sm">
                           Rp.{" "}
                           {parseInt(member.sumbangan || 0).toLocaleString(
-                            "id-ID"
+                            "id-ID",
                           )}
                         </td>
                         <td className="p-3 border-b text-right text-sm text-teal-800 font-semibold">
                           Rp.{" "}
                           {parseInt(member.totalIuran || 0).toLocaleString(
-                            "id-ID"
+                            "id-ID",
                           )}
                         </td>
                         <td className="p-3 border-b text-center">
@@ -3857,7 +3864,7 @@ console.log("📌 Member clicked:", member);
                             (item) =>
                               parseInt(item.iuran || 0) +
                                 parseInt(item.manual || 0) >
-                                0 && !item.isSumbanganDetail
+                                0 && !item.isSumbanganDetail,
                           )
                           .map((item, idx) => {
                             const isReset = resetKeys.includes(item.key);
@@ -3905,7 +3912,7 @@ console.log("📌 Member clicked:", member);
                                       type="text"
                                       readOnly
                                       value={`Rp. ${oldValue.toLocaleString(
-                                        "id-ID"
+                                        "id-ID",
                                       )}`}
                                       className="w-full border border-gray-300 px-3 py-2 rounded text-center bg-gray-50 text-gray-700 font-medium"
                                     />
@@ -3922,13 +3929,16 @@ console.log("📌 Member clicked:", member);
                                         inputValue === 0
                                           ? ""
                                           : `Rp. ${inputValue.toLocaleString(
-                                              "id-ID"
+                                              "id-ID",
                                             )}`
                                       }
                                       onChange={(e) => {
                                         const angka =
                                           parseInt(
-                                            e.target.value.replace(/[^\d]/g, "")
+                                            e.target.value.replace(
+                                              /[^\d]/g,
+                                              "",
+                                            ),
                                           ) || 0;
                                         setNominalBaruList((prev) => ({
                                           ...prev,
@@ -3947,7 +3957,7 @@ console.log("📌 Member clicked:", member);
                                       type="text"
                                       readOnly
                                       value={`Rp. ${totalValue.toLocaleString(
-                                        "id-ID"
+                                        "id-ID",
                                       )}`}
                                       className="w-full border border-green-300 px-3 py-2 rounded text-center bg-green-50 text-green-700 font-medium"
                                     />
@@ -3965,7 +3975,7 @@ console.log("📌 Member clicked:", member);
                             </h4>
                             {sumbanganList.map((sumbangan, index) => {
                               const jumlahValue = parseInt(
-                                sumbangan.jumlah || 0
+                                sumbangan.jumlah || 0,
                               );
                               const isDeleted = jumlahValue === 0;
 
@@ -4026,7 +4036,7 @@ console.log("📌 Member clicked:", member);
                                         type="text"
                                         readOnly
                                         value={`Rp. ${jumlahValue.toLocaleString(
-                                          "id-ID"
+                                          "id-ID",
                                         )}`}
                                         className={`w-full border px-2 py-1 rounded text-center font-medium ${
                                           isDeleted
@@ -4064,7 +4074,7 @@ console.log("📌 Member clicked:", member);
                                         type="text"
                                         readOnly
                                         value={`Rp. ${jumlahValue.toLocaleString(
-                                          "id-ID"
+                                          "id-ID",
                                         )}`}
                                         className={`w-full border px-2 py-1 rounded text-center font-medium ${
                                           isDeleted
@@ -4117,7 +4127,7 @@ console.log("📌 Member clicked:", member);
                                   onClick={() => {
                                     const updatedCategories =
                                       addedCategories.filter(
-                                        (_, i) => i !== idx
+                                        (_, i) => i !== idx,
                                       );
                                     setAddedCategories(updatedCategories);
                                     setManualInputs((prev) => {
@@ -4146,7 +4156,7 @@ console.log("📌 Member clicked:", member);
                                     type="text"
                                     readOnly
                                     value={`Rp. ${oldValue.toLocaleString(
-                                      "id-ID"
+                                      "id-ID",
                                     )}`}
                                     className="w-full border border-yellow-300 px-3 py-2 rounded text-center bg-yellow-100 text-yellow-700 font-medium"
                                   />
@@ -4163,13 +4173,13 @@ console.log("📌 Member clicked:", member);
                                       inputValue === 0
                                         ? ""
                                         : `Rp. ${inputValue.toLocaleString(
-                                            "id-ID"
+                                            "id-ID",
                                           )}`
                                     }
                                     onChange={(e) => {
                                       const angka =
                                         parseInt(
-                                          e.target.value.replace(/[^\d]/g, "")
+                                          e.target.value.replace(/[^\d]/g, ""),
                                         ) || 0;
                                       setManualInputs((prev) => ({
                                         ...prev,
@@ -4188,7 +4198,7 @@ console.log("📌 Member clicked:", member);
                                     type="text"
                                     readOnly
                                     value={`Rp. ${totalValue.toLocaleString(
-                                      "id-ID"
+                                      "id-ID",
                                     )}`}
                                     className="w-full border border-yellow-300 px-3 py-2 rounded text-center bg-yellow-100 text-yellow-700 font-medium"
                                   />
@@ -4246,8 +4256,8 @@ console.log("📌 Member clicked:", member);
                                     {notifDaspen === true
                                       ? " (✓ Sinkron)"
                                       : notifDaspen === false
-                                      ? " (× Tidak Sinkron)"
-                                      : " (× Tidak Sinkron)"}
+                                        ? " (× Tidak Sinkron)"
+                                        : " (× Tidak Sinkron)"}
                                   </option>
                                   <option value="kalender">Kalender</option>
                                   <option value="derap">Derap</option>
@@ -4431,7 +4441,7 @@ console.log("📌 Member clicked:", member);
                           </span>
                           : Rp.{" "}
                           {(dataIuran.totalIuranAnggota || 0).toLocaleString(
-                            "id-ID"
+                            "id-ID",
                           )}
                         </p>
                         <p>
@@ -4440,7 +4450,7 @@ console.log("📌 Member clicked:", member);
                           </span>
                           : Rp.{" "}
                           {(dataIuran.totalIuranSanduka || 0).toLocaleString(
-                            "id-ID"
+                            "id-ID",
                           )}
                         </p>
                         <p>
@@ -4449,7 +4459,7 @@ console.log("📌 Member clicked:", member);
                           </span>
                           : Rp.{" "}
                           {(dataIuran.totalIuranDaspen || 0).toLocaleString(
-                            "id-ID"
+                            "id-ID",
                           )}
                         </p>
                         <p>
@@ -4458,7 +4468,7 @@ console.log("📌 Member clicked:", member);
                           </span>
                           : Rp.{" "}
                           {(dataIuran.totalIuranDerap || 0).toLocaleString(
-                            "id-ID"
+                            "id-ID",
                           )}
                         </p>
                         <p>
@@ -4467,7 +4477,7 @@ console.log("📌 Member clicked:", member);
                           </span>
                           : Rp.{" "}
                           {(dataIuran.totalIuranKalender || 0).toLocaleString(
-                            "id-ID"
+                            "id-ID",
                           )}
                         </p>
                         <p>
