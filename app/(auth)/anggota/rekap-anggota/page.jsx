@@ -2082,7 +2082,7 @@ function RekapAnggota() {
         tahunParam,
       );
 
-      allData = processApiResponse(allData, null, true);
+      allData = processApiResponse(allData, null, false);
 
       // console.log(`📊 Jumlah data yang didapat: ${allData?.length || 0} data`);
 
