@@ -206,21 +206,8 @@ function RekapAnggota() {
 
   const [selectedBulan, setSelectedBulan] = useState("");
   const [selectedTahun, setSelectedTahun] = useState("");
-  // const [selectedTahun, setSelectedTahun] = useState(new Date().getFullYear());
   const filteredMonths = selectedTahun === 2025 ? months.slice(4) : months;
-  // otomatis bulan
-  // useEffect(() => {
-  // const now = new Date();
-  // const currentMonth = now.getMonth() + 1;
 
-  // if (selectedTahun === 2025) {
-  //   setSelectedBulan(currentMonth < 5 ? 5 : currentMonth);
-  // } else {
-  //   setSelectedBulan(currentMonth);
-  // }
-  // }, [selectedTahun]);
-  //
-  // State untuk tagihan bulan
   const getNextMonthYear = () => {
     const now = new Date();
     const nextMonthDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
@@ -304,11 +291,6 @@ function RekapAnggota() {
     setShowCabangDropdown(true);
   };
 
-  /**
-   * Helper function untuk memproses API response dan mengambil data terbaru
-   * Bisa berdasarkan lastUpdatedAtIuran atau idByNominal terbesar
-   * Optional: filter berdasarkan npaPgri tertentu
-   */
   const processApiResponse = (
     apiData,
     filterByNpa = null,
@@ -318,13 +300,11 @@ function RekapAnggota() {
       return apiData;
     }
 
-    // Filter berdasarkan npaPgri jika diperlukan
     let filteredData = apiData;
     if (filterByNpa) {
       filteredData = apiData.filter((item) => item.npaPgri === filterByNpa);
     }
 
-    // Kelompokkan berdasarkan npaPgri untuk mengambil data terbaru per anggota
     const groupedByNpa = {};
 
     filteredData.forEach((item) => {
@@ -334,11 +314,9 @@ function RekapAnggota() {
         groupedByNpa[npa] = item;
       } else {
         const shouldReplace = useLatestDate
-          ? // Bandingkan berdasarkan lastUpdatedAtIuran (data terbaru)
-            new Date(item.lastUpdatedAtIuran || 0) >
+          ? new Date(item.lastUpdatedAtIuran || 0) >
             new Date(groupedByNpa[npa].lastUpdatedAtIuran || 0)
-          : // Atau bandingkan berdasarkan idByNominal (ID terbesar)
-            (item.idByNominal || 0) > (groupedByNpa[npa].idByNominal || 0);
+          : (item.idByNominal || 0) > (groupedByNpa[npa].idByNominal || 0);
 
         if (shouldReplace) {
           groupedByNpa[npa] = item;
@@ -645,10 +623,7 @@ function RekapAnggota() {
       setGroupedData(processed);
       setData(regularData);
       setOriginalRekapData(regularData);
-      // const allUnits = new Set(
-      //   processed.map((group) => group.unitKerja || "Tidak Ada Unit Kerja")
-      // );
-      // setExpandedRows(allUnits);
+
       setLoading(false);
     } catch (error) {
       console.error("Error fetching initial data:", error);
@@ -710,10 +685,6 @@ function RekapAnggota() {
       setData(filteredData);
       calculateTotals(filteredData);
       setExpandedRows(new Set());
-      // const allUnits = new Set(
-      //   processed.map((group) => group.unitKerja || "Tidak Ada Unit Kerja")
-      // );
-      // setExpandedRows(allUnits);
     } else {
       const filteredData = originalRekapData.filter(
         (item) =>
@@ -1751,82 +1722,6 @@ function RekapAnggota() {
     }
   };
 
-  // const handleUpdateClick = async () => {
-  //   if (!dataNpa || !idIuran) return;
-
-  //   try {
-  //     const rekeningSudahTerdaftar =
-  //       listNoRekening.includes(nomorRekening.trim()) &&
-  //       nomorRekening.trim() !== (dataIuran?.nomorRekening?.trim() || "");
-
-  //     if (rekeningSudahTerdaftar) {
-  //       setNotification({
-  //         type: "error",
-  //         message: "Nomor rekening sudah digunakan oleh anggota lain.",
-  //       });
-  //       return;
-  //     }
-
-  //     const payload = {
-  //       namaAnggota: dataNpa.namaLengkap,
-  //       tempatTanggalLahir: `${dataNpa.tempatLahir}, ${dataNpa.tanggalLahir?.[2]}-${dataNpa.tanggalLahir?.[1]}-${dataNpa.tanggalLahir?.[0]}`,
-  //       npa: dataNpa.npaPgri,
-  //       nip: dataNpa.nip,
-  //       nik: dataNpa.nik,
-  //       cabang: dataNpa.cabang,
-  //       unitKerja: dataNpa.unitKerja,
-  //       jabatan: dataNpa.jabatan,
-  //       nomorRekening: nomorRekening || "",
-  //     };
-
-  //     const capitalizeFirstLetter = (string) =>
-  //       string.charAt(0).toUpperCase() + string.slice(1);
-
-  //     groupedIuran.forEach((item) => {
-  //       const key = item.key;
-  //       const isReset = resetKeys.includes(key);
-  //       const iuran = isReset ? 0 : parseInt(item.iuran || 0);
-  //       const manual = isReset ? 0 : parseInt(nominalBaruList[key] || 0);
-  //       const total = iuran + manual;
-
-  //       payload[`iuran${capitalizeFirstLetter(key)}`] = iuran || 0;
-  //       payload[`manualIuran${capitalizeFirstLetter(key)}`] = manual || 0;
-  //       payload[`totalIuran${capitalizeFirstLetter(key)}`] = total || 0;
-  //     });
-
-  //     addedCategories.forEach((item) => {
-  //       const key = item.key.toLowerCase();
-  //       const oldVal = parseInt(newValues?.[key] || 0);
-  //       const manual = parseInt(manualInputs?.[key] || 0);
-  //       const total = oldVal + manual;
-
-  //       payload[`iuran${capitalizeFirstLetter(key)}`] = oldVal;
-  //       payload[`manualIuran${capitalizeFirstLetter(key)}`] = manual;
-  //       payload[`totalIuran${capitalizeFirstLetter(key)}`] = total;
-  //     });
-
-  //     await GlobalApi.putIuranAnggota(idIuran, payload);
-  //     await fetchInitialData();
-
-  //     setNotification({
-  //       type: "success",
-  //       message: "Data berhasil diupdate!",
-  //     });
-  //     setIsPopupVisible(false);
-  //     setResetKeys([]);
-  //     setAddedCategories([]);
-  //     setManualInputs([]);
-  //     setSelectedKategori("");
-  //     setLastUpdatedMemberNip(dataNpa.nip);
-  //   } catch (error) {
-  //     console.error("Gagal update data:", error);
-  //     setNotification({
-  //       type: "error",
-  //       message: "Gagal update data.",
-  //     });
-  //   }
-  // };
-
   const calculateGrandTotal = () => {
     let total = 0;
 
@@ -1929,10 +1824,10 @@ function RekapAnggota() {
     const year = date.getFullYear();
 
     if (format === "YMD") {
-      return `${year}-${month}-${day}`; // 2026-01-20
+      return `${year}-${month}-${day}`;
     }
 
-    return `${day}-${month}-${year}`; // 20-01-2026
+    return `${day}-${month}-${year}`;
   };
 
   const handlePrint = async () => {
@@ -2160,193 +2055,6 @@ function RekapAnggota() {
     }
   };
 
-  //   const exportToExcel = async () => {
-  //   if (!groupedData || groupedData.length === 0) {
-  //     console.error("Data kosong, tidak dapat export ke Excel");
-  //     return;
-  //   }
-
-  //   const bulan = selectedBulan || new Date().getMonth() + 1;
-  //   const tahun = selectedTahun || new Date().getFullYear();
-
-  //   let anggotaAll = [];
-  //   try {
-  //     const allData = await GlobalApi.getIuranAnggotaAll(bulan, tahun);
-
-  //     // ambil data terbaru per NPA + hitung totalSumbangan
-  //     const latestPerNpa = Object.values(
-  //       allData.reduce((acc, item) => {
-  //         if (!acc[item.npa]) {
-  //           acc[item.npa] = item;
-  //         } else {
-  //           const existingDate = new Date(...acc[item.npa].createdAt);
-  //           const currentDate = new Date(...item.createdAt);
-  //           if (currentDate > existingDate) {
-  //             acc[item.npa] = item;
-  //           }
-  //         }
-
-  //         // tambahkan field totalSumbangan
-  //         acc[item.npa].totalSumbangan = (item.iuranSumbanganList || []).reduce(
-  //           (sum, s) => sum + (s.jumlah || 0),
-  //           0
-  //         );
-
-  //         return acc;
-  //       }, {})
-  //     );
-
-  //     anggotaAll = latestPerNpa;
-  //   } catch (err) {
-  //     console.error("Gagal ambil data anggota untuk nomor rekening:", err);
-  //   }
-
-  //   const npaToRekeningMap = {};
-  //   const npaToSumbanganMap = {};
-  //   anggotaAll.forEach((item) => {
-  //     npaToRekeningMap[item.npa] = item.nomorRekening;
-  //     npaToSumbanganMap[item.npa] = item.totalSumbangan || 0;
-  //   });
-
-  //   const bulanSekarang = new Date();
-  //   const bulanBerikutnya = new Date(
-  //     bulanSekarang.getFullYear(),
-  //     bulanSekarang.getMonth() + 1
-  //   );
-  //   const namaBulan = bulanBerikutnya.toLocaleString("id-ID", {
-  //     month: "long",
-  //     year: "numeric",
-  //   });
-
-  //   const excelData = [];
-
-  //   excelData.push([`Tagihan Untuk Bulan ${namaBulan}`]);
-  //   excelData.push([]);
-
-  //   excelData.push([
-  //     "No",
-  //     "Cabang",
-  //     "Unit Kerja",
-  //     "Nama Anggota",
-  //     "NIP",
-  //     "Nomor Rekening",
-  //     "PGRI",
-  //     "Sanduka",
-  //     "Daspen",
-  //     "Derap",
-  //     "Kalender",
-  //     "Lain-Lain",
-  //     "Total",
-  //   ]);
-
-  //   groupedData.forEach((group, index) => {
-  //     if (group.members && group.members.length > 0) {
-  //       group.members.forEach((member, memberIndex) => {
-  //         const nomorRekeningFinal =
-  //           npaToRekeningMap[member.npaPgri] || member.nomorRekening || "-";
-
-  //         const lainLain =
-  //           npaToSumbanganMap[member.npaPgri] ||
-  //           (member.iuranSumbanganList
-  //             ? member.iuranSumbanganList.reduce(
-  //                 (sum, s) => sum + (s.jumlah || 0),
-  //                 0
-  //               )
-  //             : 0);
-
-  //         const total = parseInt(member.totalIuran || 0);
-
-  //         excelData.push([
-  //           memberIndex === 0 ? index + 1 : "",
-  //           memberIndex === 0 ? group.cabang : "",
-  //           memberIndex === 0 ? group.unitKerja : "",
-  //           member.namaAnggota,
-  //           member.nip || "-",
-  //           nomorRekeningFinal,
-  //           parseInt(member.pgri || 0),
-  //           parseInt(member.sanduka || 0),
-  //           parseInt(member.daspen || 0),
-  //           parseInt(member.derap || 0),
-  //           parseInt(member.kalender || 0),
-  //           lainLain,
-  //           total,
-  //         ]);
-  //       });
-  //     }
-  //   });
-
-  //   const totalPgri = groupedData.reduce(
-  //     (sum, g) => sum + parseInt(g.pgri || 0),
-  //     0
-  //   );
-  //   const totalSanduka = groupedData.reduce(
-  //     (sum, g) => sum + parseInt(g.sanduka || 0),
-  //     0
-  //   );
-  //   const totalDaspen = groupedData.reduce(
-  //     (sum, g) => sum + parseInt(g.daspen || 0),
-  //     0
-  //   );
-  //   const totalDerap = groupedData.reduce(
-  //     (sum, g) => sum + parseInt(g.derap || 0),
-  //     0
-  //   );
-  //   const totalKalender = groupedData.reduce(
-  //     (sum, g) => sum + parseInt(g.kalender || 0),
-  //     0
-  //   );
-
-  //   // total lain-lain dari semua anggota (pakai map yang sudah dibuat)
-  //   const totalLainlain = Object.values(npaToSumbanganMap).reduce(
-  //     (sum, val) => sum + val,
-  //     0
-  //   );
-
-  //   const totalIuran = groupedData.reduce(
-  //     (sum, g) => sum + parseInt(g.totalIuran || 0),
-  //     0
-  //   );
-
-  //   excelData.push([
-  //     "",
-  //     "",
-  //     "",
-  //     "Total Keseluruhan:",
-  //     "",
-  //     "",
-  //     totalPgri,
-  //     totalSanduka,
-  //     totalDaspen,
-  //     totalDerap,
-  //     totalKalender,
-  //     totalLainlain,
-  //     totalIuran,
-  //     "",
-  //     "",
-  //     "",
-  //   ]);
-
-  //   const ws = XLSX.utils.aoa_to_sheet(excelData);
-  //   const wb = XLSX.utils.book_new();
-  //   XLSX.utils.book_append_sheet(wb, ws, "RekapData");
-
-  //   const waktuDownload = new Date().toLocaleString("id-ID", {
-  //     dateStyle: "short",
-  //     timeStyle: "medium",
-  //   });
-
-  //   const safeWaktuDownload = waktuDownload
-  //     .replace(/[/:]/g, "-")
-  //     .replace(/[ ]/g, "_");
-
-  //   const fileName = `Backupbynominal_${namaBulan}_${safeWaktuDownload}${
-  //     selectedCabang ? `_Cabang_${selectedCabang}` : ""
-  //   }${selectedUnitKerja ? `_Unit_Kerja_${selectedUnitKerja}` : ""}.xlsx`;
-
-  //   XLSX.writeFile(wb, fileName);
-  // };
-
-  // berantakan tapi benar
   const exportToExcel = async () => {
     try {
       setIsExporting(true);
@@ -2363,9 +2071,6 @@ function RekapAnggota() {
         tahunParam,
       );
 
-      // 📌 Proses data untuk mengambil yang terbaru per npaPgri
-      // Opsional: ganti null dengan npaPgri spesifik contoh "33200806435"
-      // Ganti true dengan false jika ingin berdasarkan idByNominal terbesar
       allData = processApiResponse(allData, null, true);
 
       // console.log(`📊 Jumlah data yang didapat: ${allData?.length || 0} data`);
@@ -2375,7 +2080,6 @@ function RekapAnggota() {
         return;
       }
 
-      // --- FILTER DATA BERDASARKAN INPUT ---
       let filteredData = allData;
 
       if (selectedCabang && selectedCabang.trim() !== "") {
@@ -2413,17 +2117,14 @@ function RekapAnggota() {
 
       // console.log(`🔍 Jumlah data setelah filter: ${filteredData.length} data`);
 
-      // --- Ambil data terbaru per NPA berdasarkan lastUpdatedAtIuran ---
       const latestPerNpa = Object.values(
         filteredData.reduce((acc, item) => {
-          const npa = item.npaPgri; // Menggunakan npaPgri dari response baru
+          const npa = item.npaPgri;
           if (!npa) return acc;
 
-          // Jika belum ada data untuk NPA ini, langsung simpan
           if (!acc[npa]) {
             acc[npa] = item;
           } else {
-            // Bandingkan lastUpdatedAtIuran untuk mengambil yang terbaru
             const currentDate = item.lastUpdatedAtIuran
               ? new Date(item.lastUpdatedAtIuran)
               : new Date(0);
@@ -2575,240 +2276,6 @@ function RekapAnggota() {
     }
   };
 
-  // rapi tapi salah
-  // const exportToExcel = async () => {
-  //   if (!groupedData || groupedData.length === 0) {
-  //     console.error("❌ Data tabel kosong, tidak dapat export ke Excel");
-  //     return;
-  //   }
-
-  //   const bulan = selectedBulan || new Date().getMonth() + 1;
-  //   const tahun = selectedTahun || new Date().getFullYear();
-
-  //   let anggotaAll = [];
-  //   try {
-  //     const allData = await GlobalApi.getIuranAnggotaAll(bulan, tahun);
-
-  //     // filter hanya data sesuai bulan & tahun
-  //     const filteredData = allData.filter((item) => {
-  //       const d = new Date(item.createdAt);
-  //       return d.getMonth() + 1 === bulan && d.getFullYear() === tahun;
-  //     });
-
-  //     // ambil data terbaru per NPA (berdasarkan createdAt)
-  //     const latestPerNpa = Object.values(
-  //       filteredData.reduce((acc, item) => {
-  //         if (!acc[item.npa]) {
-  //           acc[item.npa] = item;
-  //         } else {
-  //           const existingDate = new Date(acc[item.npa].createdAt);
-  //           const currentDate = new Date(item.createdAt);
-  //           if (currentDate > existingDate) {
-  //             acc[item.npa] = item;
-  //           }
-  //         }
-
-  //         // hitung total sumbangan
-  //         acc[item.npa].totalSumbangan = (item.iuranSumbanganList || []).reduce(
-  //           (sum, s) => sum + (s.jumlah || 0),
-  //           0
-  //         );
-
-  //         return acc;
-  //       }, {})
-  //     );
-
-  //     anggotaAll = latestPerNpa;
-  //     // console.log("📌 Data dari API (anggotaAll):", anggotaAll);
-  //   } catch (err) {
-  //     console.error("❌ Gagal ambil data anggota dari API:", err);
-  //   }
-
-  //   // 👉 loop masuk ke group.members lalu match berdasarkan npaPgri
-  //   let hasilFinal = [];
-  //   groupedData.forEach((group) => {
-  //     if (group.members && group.members.length > 0) {
-  //       group.members.forEach((member) => {
-  //         const match = anggotaAll.find((d) => d.npa === member.npaPgri);
-  //         if (match) {
-  //           // console.log(
-  //           //   `✅ Match ditemukan untuk NPA ${member.npaPgri}:`,
-  //           //   match
-  //           // );
-  //           hasilFinal.push({
-  //             ...member,
-  //             cabang: group.cabang,
-  //             unitKerja: group.unitKerja,
-  //             ...match,
-  //           });
-  //         } else {
-  //           console.warn(
-  //             `⚠️ Tidak ada match di API untuk NPA ${member.npaPgri}`
-  //           );
-  //           hasilFinal.push({
-  //             ...member,
-  //             cabang: group.cabang,
-  //             unitKerja: group.unitKerja,
-  //           });
-  //         }
-  //       });
-  //     }
-  //   });
-
-  //   // console.log("📌 Hasil gabungan (hasilFinal):", hasilFinal);
-
-  //   if (hasilFinal.length === 0) {
-  //     alert(
-  //       "Tidak ada data yang cocok antara tabel dan API (NPA tidak match)."
-  //     );
-  //     return;
-  //   }
-
-  //   // judul bulan depan
-  //   const bulanSekarang = new Date();
-  //   const bulanBerikutnya = new Date(
-  //     bulanSekarang.getFullYear(),
-  //     bulanSekarang.getMonth() + 1
-  //   );
-  //   const namaBulan = bulanBerikutnya.toLocaleString("id-ID", {
-  //     month: "long",
-  //     year: "numeric",
-  //   });
-
-  //   const excelData = [];
-  //   excelData.push([`Tagihan Untuk Bulan ${namaBulan}`]);
-  //   excelData.push([]);
-
-  //   excelData.push([
-  //     "No",
-  //     "Cabang",
-  //     "Unit Kerja",
-  //     "Nama Anggota",
-  //     "NIP",
-  //     "Nomor Rekening",
-  //     "PGRI",
-  //     "Sanduka",
-  //     "Daspen",
-  //     "Derap",
-  //     "Kalender",
-  //     "Lain-Lain",
-  //     "Total",
-  //   ]);
-
-  //   let no = 1;
-  //   hasilFinal.forEach((item) => {
-  //     const pgri = parseInt(
-  //       item.pgri || item.totalIuranAnggota || item.iuranAnggota || 0
-  //     );
-  //     const sanduka = parseInt(
-  //       item.sanduka || item.totalIuranSanduka || item.iuranSanduka || 0
-  //     );
-  //     const daspen = parseInt(
-  //       item.daspen || item.totalIuranDaspen || item.iuranDaspen || 0
-  //     );
-  //     const derap = parseInt(
-  //       item.derap || item.totalIuranDerap || item.iuranDerap || 0
-  //     );
-  //     const kalender = parseInt(
-  //       item.kalender || item.totalIuranKalender || item.iuranKalender || 0
-  //     );
-  //     const lain = parseInt(item.sumbangan || item.totalSumbangan || 0);
-  //     const total = pgri + sanduka + daspen + derap + kalender + lain;
-
-  //     excelData.push([
-  //       no++,
-  //       item.cabang,
-  //       item.unitKerja,
-  //       item.namaAnggota,
-  //       item.nip,
-  //       item.nomorRekening || "-",
-  //       pgri,
-  //       sanduka,
-  //       daspen,
-  //       derap,
-  //       kalender,
-  //       lain,
-  //       total,
-  //     ]);
-  //   });
-
-  //   // total keseluruhan
-  //   const totalPgri = hasilFinal.reduce(
-  //     (sum, g) =>
-  //       sum + parseInt(g.pgri || g.totalIuranAnggota || g.iuranAnggota || 0),
-  //     0
-  //   );
-  //   const totalSanduka = hasilFinal.reduce(
-  //     (sum, g) =>
-  //       sum + parseInt(g.sanduka || g.totalIuranSanduka || g.iuranSanduka || 0),
-  //     0
-  //   );
-  //   const totalDaspen = hasilFinal.reduce(
-  //     (sum, g) =>
-  //       sum + parseInt(g.daspen || g.totalIuranDaspen || g.iuranDaspen || 0),
-  //     0
-  //   );
-  //   const totalDerap = hasilFinal.reduce(
-  //     (sum, g) =>
-  //       sum + parseInt(g.derap || g.totalIuranDerap || g.iuranDerap || 0),
-  //     0
-  //   );
-  //   const totalKalender = hasilFinal.reduce(
-  //     (sum, g) =>
-  //       sum +
-  //       parseInt(g.kalender || g.totalIuranKalender || g.iuranKalender || 0),
-  //     0
-  //   );
-  //   const totalLainlain = hasilFinal.reduce(
-  //     (sum, g) => sum + parseInt(g.sumbangan || g.totalSumbangan || 0),
-  //     0
-  //   );
-  //   const totalIuran =
-  //     totalPgri +
-  //     totalSanduka +
-  //     totalDaspen +
-  //     totalDerap +
-  //     totalKalender +
-  //     totalLainlain;
-
-  //   excelData.push([]);
-  //   excelData.push([
-  //     "",
-  //     "",
-  //     "",
-  //     "Total Keseluruhan:",
-  //     "",
-  //     "",
-  //     totalPgri,
-  //     totalSanduka,
-  //     totalDaspen,
-  //     totalDerap,
-  //     totalKalender,
-  //     totalLainlain,
-  //     totalIuran,
-  //   ]);
-
-  //   // buat file Excel
-  //   const ws = XLSX.utils.aoa_to_sheet(excelData);
-  //   const wb = XLSX.utils.book_new();
-  //   XLSX.utils.book_append_sheet(wb, ws, "RekapData");
-
-  //   const waktuDownload = new Date().toLocaleString("id-ID", {
-  //     dateStyle: "short",
-  //     timeStyle: "medium",
-  //   });
-
-  //   const safeWaktuDownload = waktuDownload
-  //     .replace(/[/:]/g, "-")
-  //     .replace(/[ ]/g, "_");
-
-  //   const fileName = `Backupbynominal_${namaBulan}_${safeWaktuDownload}${
-  //     selectedCabang ? `_Cabang_${selectedCabang}` : ""
-  //   }${selectedUnitKerja ? `_Unit_Kerja_${selectedUnitKerja}` : ""}.xlsx`;
-
-  //   XLSX.writeFile(wb, fileName);
-  // };
-
   const handleBackupData = async () => {
     if (!selectedDate) {
       alert("Silakan pilih bulan tagihan terlebih dahulu.");
@@ -2843,7 +2310,6 @@ function RekapAnggota() {
     }
 
     try {
-      // Format date: 2025-12 → 2025-12-01
       const formattedDate = `${selectedDate}-01`;
 
       await GlobalApi.postToBackupNew(formattedDate);
@@ -3086,8 +2552,6 @@ function RekapAnggota() {
     XLSX.writeFile(wb, "Rekap_Laporan_Mandiri.xlsx");
   };
 
-  // Loading state dipindahkan ke dalam tabel, bukan di layar penuh
-
   const getNextPotonganBulan = () => {
     const today = new Date();
     let bulan = today.getMonth() + 1;
@@ -3170,7 +2634,6 @@ function RekapAnggota() {
                       }
                     >
                       {isExporting ? (
-                        // Loading spinner
                         <svg
                           className="animate-spin h-4 w-4 text-white"
                           xmlns="http://www.w3.org/2000/svg"
@@ -3192,7 +2655,6 @@ function RekapAnggota() {
                           ></path>
                         </svg>
                       ) : (
-                        // Excel icon
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           width="16"
@@ -3485,27 +2947,6 @@ function RekapAnggota() {
                   </div>
                 </div>
               </div>
-              // <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-              //   <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-              //     <h2 className="text-lg font-semibold mb-4 text-center">
-              //       Apakah anda ingin membackup data di bulan sebelumnya?
-              //     </h2>
-              //     <div className="flex justify-center gap-4 mt-6">
-              //       <button
-              //         className="px-4 py-2 bg-red-400 hover:bg-red-500 text-white rounded"
-              //         onClick={() => setPopupRekapByNominal(false)}
-              //       >
-              //         Tidak
-              //       </button>
-              //       <button
-              //         className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded"
-              //         onClick={handleBackupByNominal}
-              //       >
-              //         Ya
-              //       </button>
-              //     </div>
-              //   </div>
-              // </div>
             )}
             <table className="w-full table-auto bg-white">
               <thead>
@@ -4105,13 +3546,11 @@ function RekapAnggota() {
                           </div>
                         )}
 
-                        {/* 🔹 Tambahan kategori manual */}
                         {addedCategories.map((item, idx) => {
                           const oldValue = newValues[item.key] ?? 0;
                           const inputValue = manualInputs[item.key] ?? 0;
                           const totalValue = oldValue + inputValue;
 
-                          // Tentukan display name
                           const displayName =
                             item.keterangan || item.label || item.key;
 
@@ -4671,31 +4110,3 @@ function RekapAnggota() {
 }
 
 export default RekapAnggota;
-
-// "use client";
-// import React from "react";
-// import Image from "next/image";
-// import { FaTools } from "react-icons/fa";
-
-// export default function MaintenancePage() {
-//   return (
-//     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 text-center p-6">
-//       <div className="bg-white shadow-lg rounded-2xl p-10 max-w-md w-full">
-//         <div className="flex justify-center mb-6 animate-bounce">
-//           <FaTools className="text-6xl text-yellow-500" />
-//         </div>
-//         <h1 className="text-2xl font-bold text-gray-800 mb-4">
-//           Situs Sedang Dalam Perbaikan
-//         </h1>
-//         <p className="text-gray-600 mb-6">
-//           Kami sedang melakukan perawatan sistem untuk meningkatkan layanan.
-//           <br />
-//           Silakan kembali lagi nanti.
-//         </p>
-//       </div>
-//       <p className="mt-8 text-gray-500 text-sm">
-//         &copy; {new Date().getFullYear()} Sanduka. Semua Hak Dilindungi.
-//       </p>
-//     </div>
-//   );
-// }
