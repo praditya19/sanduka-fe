@@ -318,11 +318,13 @@ function RekapAnggota() {
       return apiData;
     }
 
+    // Filter berdasarkan npaPgri jika diperlukan
     let filteredData = apiData;
     if (filterByNpa) {
       filteredData = apiData.filter((item) => item.npaPgri === filterByNpa);
     }
 
+    // Kelompokkan berdasarkan npaPgri untuk mengambil data terbaru per anggota
     const groupedByNpa = {};
 
     filteredData.forEach((item) => {
@@ -331,12 +333,12 @@ function RekapAnggota() {
       if (!groupedByNpa[npa]) {
         groupedByNpa[npa] = item;
       } else {
-        const shouldReplace = useLatestDate;
-        new Date(item.lastUpdatedAtIuran || 0) >
-          new Date(groupedByNpa[npa].lastUpdatedAtIuran || 0)(
-            item.idByNominal || 0,
-          ) >
-          (groupedByNpa[npa].idByNominal || 0);
+        const shouldReplace = useLatestDate
+          ? // Bandingkan berdasarkan lastUpdatedAtIuran (data terbaru)
+            new Date(item.lastUpdatedAtIuran || 0) >
+            new Date(groupedByNpa[npa].lastUpdatedAtIuran || 0)
+          : // Atau bandingkan berdasarkan idByNominal (ID terbesar)
+            (item.idByNominal || 0) > (groupedByNpa[npa].idByNominal || 0);
 
         if (shouldReplace) {
           groupedByNpa[npa] = item;
