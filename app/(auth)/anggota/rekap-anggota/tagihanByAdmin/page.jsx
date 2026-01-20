@@ -47,7 +47,7 @@ export default function Tagihan() {
 
   const getIuranAnggotaById = async () => {
     try {
-      const userId = sessionStorage.getItem("userId");
+      const userId = sessionStorage.getItem("idTagihan");
       if (!userId) {
         return;
       }
