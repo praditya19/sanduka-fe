@@ -3163,10 +3163,10 @@ const updateByNominal = async (id, data) => {
   }
 };
 
-const updateByNominalByBulan = async (nip, tagihanUntukBulan, payload) => {
+const updateByNominalByBulan = async (npa, tagihanUntukBulan, payload) => {
   try {
     const response = await axiosClient.put(
-      `/api/by-nominal-new/update-by-bulan?nip=${nip}&tagihanUntukBulan=${tagihanUntukBulan}`,
+      `/api/by-nominal-new/update-by-bulan?npa=${npa}&tagihanUntukBulan=${tagihanUntukBulan}`,
       payload,
       {
         headers: {

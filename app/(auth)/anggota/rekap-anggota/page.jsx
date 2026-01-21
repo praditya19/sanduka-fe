@@ -1656,7 +1656,7 @@ function RekapAnggota() {
 
       if (idIuran) {
         await GlobalApi.updateByNominalByBulan(
-          dataNpa.nip,
+          dataNpa.npaPgri,
           tagihanUntukBulan,
           payload,
         );
