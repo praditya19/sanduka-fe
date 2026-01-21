@@ -316,7 +316,7 @@ function RekapAnggota() {
       } else {
         const shouldReplace = useLatestDate
           ? new Date(item.lastUpdatedAtIuran || 0) >
-          new Date(groupedByNpa[npa].lastUpdatedAtIuran || 0)
+            new Date(groupedByNpa[npa].lastUpdatedAtIuran || 0)
           : (item.idByNominal || 0) > (groupedByNpa[npa].idByNominal || 0);
 
         if (shouldReplace) {
@@ -444,7 +444,7 @@ function RekapAnggota() {
         (unitKerja) =>
           unitKerja.cabang &&
           unitKerja.cabang.toLowerCase() ===
-          (cabang.kecamatan || "").toLowerCase(),
+            (cabang.kecamatan || "").toLowerCase(),
       );
       setFilteredUnitKerja(filtered);
     } catch (error) {
@@ -625,7 +625,6 @@ function RekapAnggota() {
       setData(regularData);
       setOriginalRekapData(regularData);
 
-      // Fetch files data for sumbangan (nominal daspen)
       try {
         const filesResponse = await GlobalApi.getAllFiles();
         if (filesResponse && Array.isArray(filesResponse)) {
@@ -709,7 +708,7 @@ function RekapAnggota() {
             item.cabang?.toLowerCase() === selectedCabang.toLowerCase()) &&
           (!selectedUnitKerja ||
             item.unitKerja?.toLowerCase() ===
-            selectedUnitKerja.toLowerCase()) &&
+              selectedUnitKerja.toLowerCase()) &&
           item.namaAnggota?.toLowerCase().includes(query.toLowerCase()),
       );
 
@@ -1485,8 +1484,8 @@ function RekapAnggota() {
         const manual = isReset
           ? 0
           : parseInt(
-            nominalBaruList[`manual${key}`] || nominalBaruList[key] || 0,
-          );
+              nominalBaruList[`manual${key}`] || nominalBaruList[key] || 0,
+            );
         const total = iuran + manual;
 
         if (key === "pgri" || key === "anggota") {
@@ -1691,10 +1690,15 @@ function RekapAnggota() {
 
       setOriginalRekapData((prevData) => {
         const newData = prevData.map((item) =>
-          item.nip === dataNpa.nip ? { ...item, ...updatedMemberData } : item,
+          item.npaPgri === dataNpa.npaPgri
+            ? { ...item, ...updatedMemberData }
+            : item,
         );
 
-        if (!idIuran && !prevData.find((item) => item.nip === dataNpa.nip)) {
+        if (
+          !idIuran &&
+          !prevData.find((item) => item.npaPgri === dataNpa.npaPgri)
+        ) {
           newData.push(updatedMemberData);
         }
         return newData;
@@ -1702,9 +1706,14 @@ function RekapAnggota() {
 
       setData((prevData) => {
         const newData = prevData.map((item) =>
-          item.nip === dataNpa.nip ? { ...item, ...updatedMemberData } : item,
+          item.npaPgri === dataNpa.npaPgri
+            ? { ...item, ...updatedMemberData }
+            : item,
         );
-        if (!idIuran && !prevData.find((item) => item.nip === dataNpa.nip)) {
+        if (
+          !idIuran &&
+          !prevData.find((item) => item.npaPgri === dataNpa.npaPgri)
+        ) {
           newData.push(updatedMemberData);
         }
 
@@ -1886,8 +1895,9 @@ function RekapAnggota() {
         npaToRekeningMap[item.npa] = item.nomorRekening;
       });
 
-      const titleText = `Rekap By Nominal${selectedCabang ? ` Cabang ${selectedCabang}` : ""
-        }${selectedUnitKerja ? ` Unit Kerja ${selectedUnitKerja}` : ""}`;
+      const titleText = `Rekap By Nominal${
+        selectedCabang ? ` Cabang ${selectedCabang}` : ""
+      }${selectedUnitKerja ? ` Unit Kerja ${selectedUnitKerja}` : ""}`;
 
       const htmlContent = `
       <html>
@@ -1936,112 +1946,117 @@ function RekapAnggota() {
             </thead>
             <tbody>
               ${groupedData
-          ?.map((group, index) => {
-            const members = group.members || [];
-            return members
-              ?.map((member, memberIndex) => {
-                const nomorRekeningFinal =
-                  npaToRekeningMap[member.npa] ||
-                  member.nomorRekening ||
-                  "-";
-                return `
+                ?.map((group, index) => {
+                  const members = group.members || [];
+                  return members
+                    ?.map((member, memberIndex) => {
+                      const nomorRekeningFinal =
+                        npaToRekeningMap[member.npa] ||
+                        member.nomorRekening ||
+                        "-";
+                      return `
                           <tr>
-                            ${memberIndex === 0
-                    ? `
+                            ${
+                              memberIndex === 0
+                                ? `
                               <td rowspan="${members.length}">${index + 1}</td>
-                              <td rowspan="${members.length}">${group.cabang
-                    }</td>
-                              <td rowspan="${members.length}">${group.unitKerja
-                    }</td>
+                              <td rowspan="${members.length}">${
+                                group.cabang
+                              }</td>
+                              <td rowspan="${members.length}">${
+                                group.unitKerja
+                              }</td>
                             `
-                    : ""
-                  }
+                                : ""
+                            }
                             <td class="member-list">
                               <div>${member.namaAnggota}</div>
                               <div>${member.nip || "-"}</div>
                               <div>${nomorRekeningFinal}</div>
                             </td>
-                            ${memberIndex === 0
-                    ? `<td rowspan="${members.length}">${group.jumlah || 0
-                    }</td>`
-                    : ""
-                  }
+                            ${
+                              memberIndex === 0
+                                ? `<td rowspan="${members.length}">${
+                                    group.jumlah || 0
+                                  }</td>`
+                                : ""
+                            }
                             <td>Rp. ${parseInt(member.pgri || 0).toLocaleString(
-                    "id-ID",
-                  )}</td>
+                              "id-ID",
+                            )}</td>
                             <td>Rp. ${parseInt(
-                    member.sanduka || 0,
-                  ).toLocaleString("id-ID")}</td>
+                              member.sanduka || 0,
+                            ).toLocaleString("id-ID")}</td>
                             <td>Rp. ${parseInt(
-                    member.daspen || 0,
-                  ).toLocaleString("id-ID")}</td>
+                              member.daspen || 0,
+                            ).toLocaleString("id-ID")}</td>
                             <td>Rp. ${parseInt(
-                    member.derap || 0,
-                  ).toLocaleString("id-ID")}</td>
+                              member.derap || 0,
+                            ).toLocaleString("id-ID")}</td>
                             <td>Rp. ${parseInt(
-                    member.kalender || 0,
-                  ).toLocaleString("id-ID")}</td>
+                              member.kalender || 0,
+                            ).toLocaleString("id-ID")}</td>
                             <td>Rp. ${parseInt(
-                    member.lainLain || 0,
-                  ).toLocaleString("id-ID")}</td>
+                              member.lainLain || 0,
+                            ).toLocaleString("id-ID")}</td>
                             <td>Rp. ${parseInt(
-                    member.total || 0,
-                  ).toLocaleString("id-ID")}</td>
+                              member.total || 0,
+                            ).toLocaleString("id-ID")}</td>
                           </tr>
                         `;
-              })
-              .join("");
-          })
-          .join("")}
+                    })
+                    .join("");
+                })
+                .join("")}
               <tr class="total-row">
                 <td colspan="4" style="text-align: center">Total Keseluruhan :</td>
                 <td>
                   ${groupedData.reduce(
-            (sum, group) => sum + parseInt(group.jumlah || 0),
-            0,
-          )}
+                    (sum, group) => sum + parseInt(group.jumlah || 0),
+                    0,
+                  )}
                 </td>
                 <td>
                   Rp. ${groupedData
-          .flatMap((g) => g.members || [])
-          .reduce((sum, m) => sum + parseInt(m.pgri || 0), 0)
-          .toLocaleString("id-ID")}
+                    .flatMap((g) => g.members || [])
+                    .reduce((sum, m) => sum + parseInt(m.pgri || 0), 0)
+                    .toLocaleString("id-ID")}
                 </td>
                 <td>
                   Rp. ${groupedData
-          .flatMap((g) => g.members || [])
-          .reduce((sum, m) => sum + parseInt(m.sanduka || 0), 0)
-          .toLocaleString("id-ID")}
+                    .flatMap((g) => g.members || [])
+                    .reduce((sum, m) => sum + parseInt(m.sanduka || 0), 0)
+                    .toLocaleString("id-ID")}
                 </td>
                 <td>
                   Rp. ${groupedData
-          .flatMap((g) => g.members || [])
-          .reduce((sum, m) => sum + parseInt(m.daspen || 0), 0)
-          .toLocaleString("id-ID")}
+                    .flatMap((g) => g.members || [])
+                    .reduce((sum, m) => sum + parseInt(m.daspen || 0), 0)
+                    .toLocaleString("id-ID")}
                 </td>
                 <td>
                   Rp. ${groupedData
-          .flatMap((g) => g.members || [])
-          .reduce((sum, m) => sum + parseInt(m.derap || 0), 0)
-          .toLocaleString("id-ID")}
+                    .flatMap((g) => g.members || [])
+                    .reduce((sum, m) => sum + parseInt(m.derap || 0), 0)
+                    .toLocaleString("id-ID")}
                 </td>
                 <td>
                   Rp. ${groupedData
-          .flatMap((g) => g.members || [])
-          .reduce((sum, m) => sum + parseInt(m.kalender || 0), 0)
-          .toLocaleString("id-ID")}
+                    .flatMap((g) => g.members || [])
+                    .reduce((sum, m) => sum + parseInt(m.kalender || 0), 0)
+                    .toLocaleString("id-ID")}
                 </td>
                 <td>
                   Rp. ${groupedData
-          .flatMap((g) => g.members || [])
-          .reduce((sum, m) => sum + parseInt(m.lainLain || 0), 0)
-          .toLocaleString("id-ID")}
+                    .flatMap((g) => g.members || [])
+                    .reduce((sum, m) => sum + parseInt(m.lainLain || 0), 0)
+                    .toLocaleString("id-ID")}
                 </td>
                 <td>
                   Rp. ${groupedData
-          .flatMap((g) => g.members || [])
-          .reduce((sum, m) => sum + parseInt(m.total || 0), 0)
-          .toLocaleString("id-ID")}
+                    .flatMap((g) => g.members || [])
+                    .reduce((sum, m) => sum + parseInt(m.total || 0), 0)
+                    .toLocaleString("id-ID")}
                 </td>
               </tr>
             </tbody>
@@ -2274,8 +2289,9 @@ function RekapAnggota() {
         .replace(/[/:]/g, "-")
         .replace(/[ ]/g, "_");
 
-      const fileName = `Backupbynominal_${namaBulan}_${safeWaktuDownload}${selectedCabang ? `_Cabang_${selectedCabang}` : ""
-        }${selectedUnitKerja ? `_Unit_Kerja_${selectedUnitKerja}` : ""}.xlsx`;
+      const fileName = `Backupbynominal_${namaBulan}_${safeWaktuDownload}${
+        selectedCabang ? `_Cabang_${selectedCabang}` : ""
+      }${selectedUnitKerja ? `_Unit_Kerja_${selectedUnitKerja}` : ""}.xlsx`;
 
       XLSX.writeFile(wb, fileName);
     } catch (error) {
@@ -2604,8 +2620,9 @@ function RekapAnggota() {
         )}
         <div className="mt-8"></div>
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <div className="mb-6 mx-4 md:mx-4">
             <div className="flex flex-wrap items-start mt-8 justify-between">
@@ -2749,8 +2766,9 @@ function RekapAnggota() {
                   value={selectedCabang}
                   readOnly
                   onClick={!isAdmin ? handleCabangClick : undefined}
-                  className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${isAdmin ? "bg-gray-100" : ""
-                    }`}
+                  className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${
+                    isAdmin ? "bg-gray-100" : ""
+                  }`}
                   placeholder="Pilih Cabang"
                   disabled={isAdmin}
                 />
@@ -3101,9 +3119,9 @@ function RekapAnggota() {
                                 Belum Input
                               </span>
                             ) : (
-                              `Rp. ${parseInt(member.daspen || 0).toLocaleString(
-                                "id-ID",
-                              )}`
+                              `Rp. ${parseInt(
+                                member.daspen || 0,
+                              ).toLocaleString("id-ID")}`
                             )}
                           </div>
                           <div className="text-xs text-blue-500 mt-1">
@@ -3323,8 +3341,8 @@ function RekapAnggota() {
                           .filter(
                             (item) =>
                               parseInt(item.iuran || 0) +
-                              parseInt(item.manual || 0) >
-                              0 && !item.isSumbanganDetail,
+                                parseInt(item.manual || 0) >
+                                0 && !item.isSumbanganDetail,
                           )
                           .map((item, idx) => {
                             const isReset = resetKeys.includes(item.key);
@@ -3389,8 +3407,8 @@ function RekapAnggota() {
                                         inputValue === 0
                                           ? ""
                                           : `Rp. ${inputValue.toLocaleString(
-                                            "id-ID",
-                                          )}`
+                                              "id-ID",
+                                            )}`
                                       }
                                       onChange={(e) => {
                                         const angka =
@@ -3442,17 +3460,19 @@ function RekapAnggota() {
                               return (
                                 <div
                                   key={index}
-                                  className={`space-y-1 px-3 py-2 rounded-md border-l-4 mb-2 ${isDeleted
-                                    ? "bg-gray-100 border-gray-400 opacity-60"
-                                    : "bg-purple-50 border-purple-400"
-                                    }`}
+                                  className={`space-y-1 px-3 py-2 rounded-md border-l-4 mb-2 ${
+                                    isDeleted
+                                      ? "bg-gray-100 border-gray-400 opacity-60"
+                                      : "bg-purple-50 border-purple-400"
+                                  }`}
                                 >
                                   <div className="flex items-center justify-between">
                                     <span
-                                      className={`font-medium ${isDeleted
-                                        ? "text-gray-500"
-                                        : "text-purple-800"
-                                        }`}
+                                      className={`font-medium ${
+                                        isDeleted
+                                          ? "text-gray-500"
+                                          : "text-purple-800"
+                                      }`}
                                     >
                                       {sumbangan.jenis}
                                       {isDeleted && (
@@ -3465,10 +3485,11 @@ function RekapAnggota() {
                                     {/* Tombol Trash - selalu tampil, bahkan untuk yang sudah di-delete */}
                                     <button
                                       type="button"
-                                      className={`p-1 rounded-full transition-colors ${isDeleted
-                                        ? "text-gray-400 cursor-not-allowed"
-                                        : "text-red-500 hover:text-red-700 hover:bg-red-50"
-                                        }`}
+                                      className={`p-1 rounded-full transition-colors ${
+                                        isDeleted
+                                          ? "text-gray-400 cursor-not-allowed"
+                                          : "text-red-500 hover:text-red-700 hover:bg-red-50"
+                                      }`}
                                       onClick={() =>
                                         !isDeleted &&
                                         handleDeleteSumbangan(sumbangan.jenis)
@@ -3495,10 +3516,11 @@ function RekapAnggota() {
                                         value={`Rp. ${jumlahValue.toLocaleString(
                                           "id-ID",
                                         )}`}
-                                        className={`w-full border px-2 py-1 rounded text-center font-medium ${isDeleted
-                                          ? "bg-gray-200 text-gray-500"
-                                          : "bg-purple-100 text-purple-700"
-                                          }`}
+                                        className={`w-full border px-2 py-1 rounded text-center font-medium ${
+                                          isDeleted
+                                            ? "bg-gray-200 text-gray-500"
+                                            : "bg-purple-100 text-purple-700"
+                                        }`}
                                       />
                                     </div>
 
@@ -3514,10 +3536,11 @@ function RekapAnggota() {
                                             ? "Dihapus"
                                             : "Tidak bisa diubah"
                                         }
-                                        className={`w-full border px-2 py-1 rounded text-center ${isDeleted
-                                          ? "bg-gray-200 text-gray-500"
-                                          : "bg-gray-100 text-gray-500"
-                                          }`}
+                                        className={`w-full border px-2 py-1 rounded text-center ${
+                                          isDeleted
+                                            ? "bg-gray-200 text-gray-500"
+                                            : "bg-gray-100 text-gray-500"
+                                        }`}
                                       />
                                     </div>
 
@@ -3531,10 +3554,11 @@ function RekapAnggota() {
                                         value={`Rp. ${jumlahValue.toLocaleString(
                                           "id-ID",
                                         )}`}
-                                        className={`w-full border px-2 py-1 rounded text-center font-medium ${isDeleted
-                                          ? "bg-gray-200 text-gray-500"
-                                          : "bg-purple-100 text-purple-700"
-                                          }`}
+                                        className={`w-full border px-2 py-1 rounded text-center font-medium ${
+                                          isDeleted
+                                            ? "bg-gray-200 text-gray-500"
+                                            : "bg-purple-100 text-purple-700"
+                                        }`}
                                       />
                                     </div>
                                   </div>
@@ -3542,10 +3566,11 @@ function RekapAnggota() {
                                   {/* Informasi tambahan jika ada */}
                                   {sumbangan.keterangan && (
                                     <p
-                                      className={`text-xs mt-1 ${isDeleted
-                                        ? "text-gray-400"
-                                        : "text-gray-600"
-                                        }`}
+                                      className={`text-xs mt-1 ${
+                                        isDeleted
+                                          ? "text-gray-400"
+                                          : "text-gray-600"
+                                      }`}
                                     >
                                       Keterangan: {sumbangan.keterangan}
                                     </p>
@@ -3624,8 +3649,8 @@ function RekapAnggota() {
                                       inputValue === 0
                                         ? ""
                                         : `Rp. ${inputValue.toLocaleString(
-                                          "id-ID",
-                                        )}`
+                                            "id-ID",
+                                          )}`
                                     }
                                     onChange={(e) => {
                                       const angka =
@@ -3732,7 +3757,7 @@ function RekapAnggota() {
                                       -- Pilih Keterangan --
                                     </option>
                                     {Array.isArray(keteranganLainLain) &&
-                                      keteranganLainLain.length > 0 ? (
+                                    keteranganLainLain.length > 0 ? (
                                       keteranganLainLain.map((item, index) => (
                                         <option key={index} value={item}>
                                           {item}
@@ -3779,10 +3804,11 @@ function RekapAnggota() {
                       </button>
                       <button
                         type="button"
-                        className={`flex items-center justify-center bg-blue-600 text-white font-bold py-2 px-4 rounded ${loadButton
-                          ? "opacity-60 cursor-not-allowed"
-                          : "hover:bg-blue-700"
-                          }`}
+                        className={`flex items-center justify-center bg-blue-600 text-white font-bold py-2 px-4 rounded ${
+                          loadButton
+                            ? "opacity-60 cursor-not-allowed"
+                            : "hover:bg-blue-700"
+                        }`}
                         onClick={async () => {
                           if (loadButton) return;
                           setLoadButton(true);
