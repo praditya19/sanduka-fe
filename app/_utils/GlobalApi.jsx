@@ -95,14 +95,17 @@ const getCabang = () => axiosClient.get("/api/daftarCabang");
 const getJabatan = () => axiosClient.get("/api/daftarJabatan");
 const getGolonganJabatan = () => axiosClient.get("/api/daftarGolongan");
 const getUnitKerja = () => axiosClient.get("/api/unit-kerja");
-const getUnitKerjaByCabang= async (cabang) => {
+const getUnitKerjaByCabang = async (cabang) => {
   try {
-    const response = await axiosClient.get(`/api/unit-kerja/${cabang}`);
+    const response = await axiosClient.get(
+      `/api/unit-kerja?cabang=${encodeURIComponent(cabang)}`
+    );
     return response.data;
   } catch (error) {
     throw error;
   }
 };
+
 const getBulan = () => axiosClient.get("/api/bulan");
 const getJumlahSantunan = async () => {
   try {

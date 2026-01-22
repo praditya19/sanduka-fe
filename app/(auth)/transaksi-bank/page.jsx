@@ -129,6 +129,10 @@ export default function BankTransactionPage() {
   const [originalRekapData, setOriginalRekapData] = useState([]);
   const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
   const [role, setRole] = useState("");
+  const [openCabang, setOpenCabang] = useState(false);
+  const [openUnit, setOpenUnit] = useState(false);
+  const [searchDropCabang, setSearchDropCabang] = useState("");
+  const [searchDropUnit, setSearchDropUnit] = useState("");
   const today = new Date();
   const currentMonth = today.getMonth() + 1;
   const currentYear = today.getFullYear();
@@ -154,7 +158,7 @@ export default function BankTransactionPage() {
     { label: "Desember", value: "12" },
   ];
   const tahunList = Array.from({ length: 5 }, (_, i) =>
-    (currentYear - 2 + i).toString()
+    (currentYear - 2 + i).toString(),
   );
   const [isLoading, setIsLoading] = useState(false);
   const [onProses, setOnProses] = useState(true);
@@ -186,9 +190,8 @@ export default function BankTransactionPage() {
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [listCabang, setListCabang] = useState([]);
-const [listUnitKerja, setListUnitKerja] = useState([]);
-const [loadingUnitKerja, setLoadingUnitKerja] = useState(false);
-
+  const [listUnitKerja, setListUnitKerja] = useState([]);
+  const [loadingUnitKerja, setLoadingUnitKerja] = useState(false);
 
   const handleFilter = async () => {
     setLoadingFilter(true);
@@ -201,7 +204,7 @@ const [loadingUnitKerja, setLoadingUnitKerja] = useState(false);
           year,
           searchQuery,
           1,
-          0
+          0,
         );
 
         const totalElements = tempResult.totalElements;
@@ -211,7 +214,7 @@ const [loadingUnitKerja, setLoadingUnitKerja] = useState(false);
           year,
           searchQuery,
           totalElements,
-          0
+          0,
         );
       } else {
         result = await GlobalApi.getTransaksiBank(
@@ -219,7 +222,7 @@ const [loadingUnitKerja, setLoadingUnitKerja] = useState(false);
           year,
           searchQuery,
           displayCountPotongan,
-          currentPage - 1
+          currentPage - 1,
         );
       }
 
@@ -246,7 +249,7 @@ const [loadingUnitKerja, setLoadingUnitKerja] = useState(false);
           paymentNote,
           searchBalancing,
           1,
-          0
+          0,
         );
 
         const totalElements = tempResult.totalElements;
@@ -259,7 +262,7 @@ const [loadingUnitKerja, setLoadingUnitKerja] = useState(false);
           paymentNote,
           searchBalancing,
           totalElements,
-          0
+          0,
         );
       } else {
         result = await GlobalApi.getTransaksiBankBalancing(
@@ -270,7 +273,7 @@ const [loadingUnitKerja, setLoadingUnitKerja] = useState(false);
           paymentNote,
           searchBalancing,
           displayCount,
-          currentPageBalancing - 1
+          currentPageBalancing - 1,
         );
       }
 
@@ -304,46 +307,46 @@ const [loadingUnitKerja, setLoadingUnitKerja] = useState(false);
   ]);
 
   useEffect(() => {
-  if (showEditModal) {
-    const fetchCabang = async () => {
-      try {
-        const res = await GlobalApi.getCabang();
+    if (showEditModal) {
+      const fetchCabang = async () => {
+        try {
+          const res = await GlobalApi.getCabang();
 
-        // 🔐 PAKSA array
-        setListCabang(Array.isArray(res) ? res : res?.data || []);
-      } catch (error) {
-        console.error(error);
-        setListCabang([]);
-      }
-    };
+          // 🔐 PAKSA array
+          setListCabang(Array.isArray(res) ? res : res?.data || []);
+        } catch (error) {
+          console.error(error);
+          setListCabang([]);
+        }
+      };
 
-    fetchCabang();
-  }
-}, [showEditModal]);
+      fetchCabang();
+    }
+  }, [showEditModal]);
 
   useEffect(() => {
-  if (editData?.cabang) {
-    fetchUnitKerja(editData.cabang);
-  }
-}, [editData?.cabang]);
+    if (editData?.cabang) {
+      fetchUnitKerja(editData.cabang);
+    }
+  }, [editData?.cabang]);
 
-const fetchUnitKerja = async (cabang) => {
-  console.log("REQUEST UNIT KERJA CABANG:", cabang);
+  const fetchUnitKerja = async (cabang) => {
+    console.log("REQUEST UNIT KERJA CABANG:", cabang);
 
-  try {
-    setLoadingUnitKerja(true);
-    const res = await GlobalApi.getUnitKerjaByCabang(cabang);
+    try {
+      setLoadingUnitKerja(true);
+      const res = await GlobalApi.getUnitKerjaByCabang(cabang);
 
-    console.log("RESPONSE UNIT KERJA:", res);
+      console.log("RESPONSE UNIT KERJA:", res);
 
-    setListUnitKerja(Array.isArray(res) ? res : res?.data || []);
-  } catch (error) {
-    console.error("ERROR UNIT KERJA:", error);
-    setListUnitKerja([]);
-  } finally {
-    setLoadingUnitKerja(false);
-  }
-};
+      setListUnitKerja(Array.isArray(res) ? res : res?.data || []);
+    } catch (error) {
+      console.error("ERROR UNIT KERJA:", error);
+      setListUnitKerja([]);
+    } finally {
+      setLoadingUnitKerja(false);
+    }
+  };
 
   const getPotonganBank = async () => {
     try {
@@ -452,7 +455,7 @@ const fetchUnitKerja = async (cabang) => {
     if (!selectedCabang) return;
     const filteredList = unitKerjaList.filter(
       (unitKerja) =>
-        unitKerja.cabang?.toLowerCase() === selectedCabang.toLowerCase()
+        unitKerja.cabang?.toLowerCase() === selectedCabang.toLowerCase(),
     );
 
     setFilteredUnitKerja(filteredList);
@@ -466,7 +469,7 @@ const fetchUnitKerja = async (cabang) => {
 
   const handleCabangSearch = (query) => {
     const filtered = originalCabangList.filter((cabang) =>
-      cabang.kecamatan.toLowerCase().includes(query.toLowerCase())
+      cabang.kecamatan.toLowerCase().includes(query.toLowerCase()),
     );
     setFilteredCabangList(filtered);
   };
@@ -481,7 +484,7 @@ const fetchUnitKerja = async (cabang) => {
     const filteredList = unitKerjaList.filter(
       (unitKerja) =>
         unitKerja.cabang?.toLowerCase() === selectedCabang.toLowerCase() &&
-        unitKerja.unitKerja.toLowerCase().includes(input.toLowerCase())
+        unitKerja.unitKerja.toLowerCase().includes(input.toLowerCase()),
     );
 
     setShowUnitKerjaDropdown(true);
@@ -491,7 +494,7 @@ const fetchUnitKerja = async (cabang) => {
       const cabangData = originalRekapData.filter((item) =>
         selectedCabang
           ? item.cabang?.toLowerCase() === selectedCabang.toLowerCase()
-          : true
+          : true,
       );
 
       setData(cabangData);
@@ -500,7 +503,7 @@ const fetchUnitKerja = async (cabang) => {
         (item) =>
           (!selectedCabang ||
             item.cabang?.toLowerCase() === selectedCabang.toLowerCase()) &&
-          item.unitKerja?.toLowerCase().includes(input.toLowerCase())
+          item.unitKerja?.toLowerCase().includes(input.toLowerCase()),
       );
 
       setData(filteredData);
@@ -511,7 +514,7 @@ const fetchUnitKerja = async (cabang) => {
     setSearchUnitKerja(searchTerm);
     if (searchTerm === "") {
       const allFiltered = unitKerjaList.filter(
-        (unitKerja) => unitKerja.cabang === selectedCabang
+        (unitKerja) => unitKerja.cabang === selectedCabang,
       );
       setFilteredUnitKerja(allFiltered);
     } else {
@@ -520,7 +523,7 @@ const fetchUnitKerja = async (cabang) => {
           unitKerja.unitKerja
             .toLowerCase()
             .includes(searchTerm.toLowerCase()) &&
-          unitKerja.cabang === selectedCabang
+          unitKerja.cabang === selectedCabang,
       );
       setFilteredUnitKerja(filtered);
     }
@@ -537,7 +540,7 @@ const fetchUnitKerja = async (cabang) => {
       const cabangData = originalRekapData.filter((item) =>
         selectedCabang
           ? item.cabang?.toLowerCase() === selectedCabang.toLowerCase()
-          : true
+          : true,
       );
       setData(cabangData);
     } else {
@@ -545,7 +548,7 @@ const fetchUnitKerja = async (cabang) => {
         (item) =>
           (!selectedCabang ||
             item.cabang?.toLowerCase() === selectedCabang.toLowerCase()) &&
-          item.unitKerja?.toLowerCase() === selectedValue.toLowerCase()
+          item.unitKerja?.toLowerCase() === selectedValue.toLowerCase(),
       );
 
       setData(filteredData);
@@ -681,12 +684,12 @@ const fetchUnitKerja = async (cabang) => {
           onDownloadProgress: (progressEvent) => {
             if (progressEvent.total) {
               const percentCompleted = Math.round(
-                (progressEvent.loaded * 100) / progressEvent.total
+                (progressEvent.loaded * 100) / progressEvent.total,
               );
               setProgress(percentCompleted);
             }
           },
-        }
+        },
       );
 
       setNotification({
@@ -874,7 +877,7 @@ const fetchUnitKerja = async (cabang) => {
           null,
           null,
           pageSize,
-          currentPage
+          currentPage,
         );
 
         allData.push(...result.content);
@@ -926,7 +929,7 @@ const fetchUnitKerja = async (cabang) => {
           year,
           searchQuery,
           pageSize,
-          currentPage
+          currentPage,
         );
 
         allData.push(...result.content);
@@ -991,7 +994,7 @@ const fetchUnitKerja = async (cabang) => {
         null,
         null,
         pageSize,
-        currentPage
+        currentPage,
       );
 
       allData = [...allData, ...firstResult.content];
@@ -1007,7 +1010,7 @@ const fetchUnitKerja = async (cabang) => {
           null,
           null,
           pageSize,
-          currentPage
+          currentPage,
         );
 
         allData = [...allData, ...result.content];
@@ -1075,7 +1078,7 @@ const fetchUnitKerja = async (cabang) => {
         paymentNote,
         null,
         pageSize,
-        currentPage
+        currentPage,
       );
 
       allData = [...allData, ...firstResult.content];
@@ -1091,7 +1094,7 @@ const fetchUnitKerja = async (cabang) => {
           paymentNote,
           null,
           pageSize,
-          currentPage
+          currentPage,
         );
 
         allData = [...allData, ...result.content];
@@ -1235,6 +1238,14 @@ const fetchUnitKerja = async (cabang) => {
       return 0;
     });
   }, [dataBalancing, sortConfig]);
+
+  const filteredCabang = listCabang.filter((item) =>
+    item.kecamatan.toLowerCase().includes(searchDropCabang.toLowerCase()),
+  );
+
+  const filterUnitKerja = listUnitKerja.filter((item) =>
+    item.unitKerja.toLowerCase().includes(searchDropUnit.toLowerCase()),
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-1">
@@ -1584,8 +1595,8 @@ const fetchUnitKerja = async (cabang) => {
                 {tab === "potongan"
                   ? "Potongan Bank"
                   : tab === "balancing"
-                  ? "Balancing Potongan"
-                  : "Rekap Data Keuangan"}
+                    ? "Balancing Potongan"
+                    : "Rekap Data Keuangan"}
               </button>
             ))}
           </div>
@@ -1772,7 +1783,7 @@ const fetchUnitKerja = async (cabang) => {
                       onChange={(e) => {
                         const value = e.target.value;
                         setDisplayCountPotongan(
-                          value === "all" ? "all" : Number(value)
+                          value === "all" ? "all" : Number(value),
                         );
                         setCurrentPage(1);
                       }}
@@ -1817,45 +1828,45 @@ const fetchUnitKerja = async (cabang) => {
 
                   <tbody>
                     {loadingFilter ? (
-                  <>
-                    {/* Loading message */}
-                    <tr>
-                      <td colSpan="12" className="p-6 text-center">
-                        <div className="flex flex-col items-center justify-center space-y-3">
-                          <div className="flex items-center space-x-2">
-                            <div
-                              className="h-3 w-3 bg-teal-500 rounded-full animate-bounce"
-                              style={{ animationDelay: "0s" }}
-                            ></div>
-                            <div
-                              className="h-3 w-3 bg-teal-500 rounded-full animate-bounce"
-                              style={{ animationDelay: "0.2s" }}
-                            ></div>
-                            <div
-                              className="h-3 w-3 bg-teal-500 rounded-full animate-bounce"
-                              style={{ animationDelay: "0.4s" }}
-                            ></div>
-                          </div>
-                          <p className="text-gray-600 font-medium text-sm">
-                            Data sedang diproses...
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
-                    {/* Loading skeleton rows */}
-                    {Array.from({ length: 4 }).map((_, idx) => (
-                      <tr key={`skeleton-${idx}`} className="bg-white">
-                        {Array.from({ length: 12 }).map((_, cellIdx) => (
-                          <td
-                            key={`skeleton-cell-${cellIdx}`}
-                            className="p-3 border-b"
-                          >
-                            <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                      <>
+                        {/* Loading message */}
+                        <tr>
+                          <td colSpan="12" className="p-6 text-center">
+                            <div className="flex flex-col items-center justify-center space-y-3">
+                              <div className="flex items-center space-x-2">
+                                <div
+                                  className="h-3 w-3 bg-teal-500 rounded-full animate-bounce"
+                                  style={{ animationDelay: "0s" }}
+                                ></div>
+                                <div
+                                  className="h-3 w-3 bg-teal-500 rounded-full animate-bounce"
+                                  style={{ animationDelay: "0.2s" }}
+                                ></div>
+                                <div
+                                  className="h-3 w-3 bg-teal-500 rounded-full animate-bounce"
+                                  style={{ animationDelay: "0.4s" }}
+                                ></div>
+                              </div>
+                              <p className="text-gray-600 font-medium text-sm">
+                                Data sedang diproses...
+                              </p>
+                            </div>
                           </td>
+                        </tr>
+                        {/* Loading skeleton rows */}
+                        {Array.from({ length: 4 }).map((_, idx) => (
+                          <tr key={`skeleton-${idx}`} className="bg-white">
+                            {Array.from({ length: 12 }).map((_, cellIdx) => (
+                              <td
+                                key={`skeleton-cell-${cellIdx}`}
+                                className="p-3 border-b"
+                              >
+                                <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                              </td>
+                            ))}
+                          </tr>
                         ))}
-                      </tr>
-                    ))}
-                  </>
+                      </>
                     ) : data.length > 0 ? (
                       data.map((item, index) => (
                         <tr
@@ -1914,7 +1925,7 @@ const fetchUnitKerja = async (cabang) => {
                       </td>
                       <td className="px-6 py-4 text-center">
                         {formatRupiah(
-                          data.reduce((sum, item) => sum + item.potongan, 0)
+                          data.reduce((sum, item) => sum + item.potongan, 0),
                         )}
                       </td>
                       <td></td>
@@ -2316,7 +2327,7 @@ const fetchUnitKerja = async (cabang) => {
                       onChange={(e) => {
                         const value = e.target.value;
                         setDisplayCount(
-                          value === "all" ? "all" : Number(value)
+                          value === "all" ? "all" : Number(value),
                         );
                         setCurrentPageBalancing(1);
                       }}
@@ -2499,46 +2510,46 @@ const fetchUnitKerja = async (cabang) => {
                   </thead>
 
                   <tbody>
-                     {loadingBalancing ? (
-                  <>
-                    {/* Loading message */}
-                    <tr>
-                      <td colSpan="12" className="p-6 text-center">
-                        <div className="flex flex-col items-center justify-center space-y-3">
-                          <div className="flex items-center space-x-2">
-                            <div
-                              className="h-3 w-3 bg-teal-500 rounded-full animate-bounce"
-                              style={{ animationDelay: "0s" }}
-                            ></div>
-                            <div
-                              className="h-3 w-3 bg-teal-500 rounded-full animate-bounce"
-                              style={{ animationDelay: "0.2s" }}
-                            ></div>
-                            <div
-                              className="h-3 w-3 bg-teal-500 rounded-full animate-bounce"
-                              style={{ animationDelay: "0.4s" }}
-                            ></div>
-                          </div>
-                          <p className="text-gray-600 font-medium text-sm">
-                            Data sedang diproses...
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
-                    {/* Loading skeleton rows */}
-                    {Array.from({ length: 4 }).map((_, idx) => (
-                      <tr key={`skeleton-${idx}`} className="bg-white">
-                        {Array.from({ length: 12 }).map((_, cellIdx) => (
-                          <td
-                            key={`skeleton-cell-${cellIdx}`}
-                            className="p-3 border-b"
-                          >
-                            <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                    {loadingBalancing ? (
+                      <>
+                        {/* Loading message */}
+                        <tr>
+                          <td colSpan="12" className="p-6 text-center">
+                            <div className="flex flex-col items-center justify-center space-y-3">
+                              <div className="flex items-center space-x-2">
+                                <div
+                                  className="h-3 w-3 bg-teal-500 rounded-full animate-bounce"
+                                  style={{ animationDelay: "0s" }}
+                                ></div>
+                                <div
+                                  className="h-3 w-3 bg-teal-500 rounded-full animate-bounce"
+                                  style={{ animationDelay: "0.2s" }}
+                                ></div>
+                                <div
+                                  className="h-3 w-3 bg-teal-500 rounded-full animate-bounce"
+                                  style={{ animationDelay: "0.4s" }}
+                                ></div>
+                              </div>
+                              <p className="text-gray-600 font-medium text-sm">
+                                Data sedang diproses...
+                              </p>
+                            </div>
                           </td>
+                        </tr>
+                        {/* Loading skeleton rows */}
+                        {Array.from({ length: 4 }).map((_, idx) => (
+                          <tr key={`skeleton-${idx}`} className="bg-white">
+                            {Array.from({ length: 12 }).map((_, cellIdx) => (
+                              <td
+                                key={`skeleton-cell-${cellIdx}`}
+                                className="p-3 border-b"
+                              >
+                                <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                              </td>
+                            ))}
+                          </tr>
                         ))}
-                      </tr>
-                    ))}
-                  </>
+                      </>
                     ) : dataBalancing.length > 0 ? (
                       sortedData.map((item, index) => (
                         <tr
@@ -2625,8 +2636,8 @@ const fetchUnitKerja = async (cabang) => {
         item.keterangan === "Sukses"
           ? "bg-green-200 text-green-800"
           : item.keterangan === "Tunai"
-          ? "bg-yellow-200 text-yellow-800"
-          : "bg-red-200 text-red-800"
+            ? "bg-yellow-200 text-yellow-800"
+            : "bg-red-200 text-red-800"
       }`}
                             >
                               {item.keterangan}
@@ -2684,72 +2695,72 @@ const fetchUnitKerja = async (cabang) => {
                         {formatRupiah(
                           dataBalancing.reduce(
                             (sum, item) => sum + item.totalIuranAnggota,
-                            0
-                          )
+                            0,
+                          ),
                         )}
                       </td>
                       <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
                         {formatRupiah(
                           dataBalancing.reduce(
                             (sum, item) => sum + item.totalIuranSanduka,
-                            0
-                          )
+                            0,
+                          ),
                         )}
                       </td>
                       <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
                         {formatRupiah(
                           dataBalancing.reduce(
                             (sum, item) => sum + item.totalIuranDaspen,
-                            0
-                          )
+                            0,
+                          ),
                         )}
                       </td>
                       <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
                         {formatRupiah(
                           dataBalancing.reduce(
                             (sum, item) => sum + item.totalIuranDerap,
-                            0
-                          )
+                            0,
+                          ),
                         )}
                       </td>
                       <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
                         {formatRupiah(
                           dataBalancing.reduce(
                             (sum, item) => sum + item.totalIuranKalender,
-                            0
-                          )
+                            0,
+                          ),
                         )}
                       </td>
                       <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
                         {formatRupiah(
                           dataBalancing.reduce(
                             (sum, item) => sum + item.totalIuranSumbangan,
-                            0
-                          )
+                            0,
+                          ),
                         )}
                       </td>
                       <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
                         {formatRupiah(
                           dataBalancing.reduce(
                             (sum, item) => sum + item.totalIuran,
-                            0
-                          )
+                            0,
+                          ),
                         )}
                       </td>
                       <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
                         {formatRupiah(
                           dataBalancing.reduce(
                             (sum, item) => sum + item.potongan,
-                            0
-                          )
+                            0,
+                          ),
                         )}
                       </td>
                       <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
                         {formatRupiah(
                           dataBalancing.reduce(
                             (sum, item) => sum + item.selisih,
-                            0
-                          )
+                            0,
+                          ),
                         )}
                       </td>
                       <td></td>
@@ -3511,65 +3522,139 @@ const fetchUnitKerja = async (cabang) => {
                 <p>{editData.nomorRekening}</p>
               </div>
 
-              <div>
-  <label className="block text-xs text-gray-500 mb-1">Cabang</label>
-  <select
-    className="w-full border px-3 py-2 rounded"
-    value={editData.cabang || ""}
-    onChange={(e) => {
-      const cabang = e.target.value;
-      setEditData({
-        ...editData,
-        cabang,
-        unitKerja: "", // reset unit kerja
-      });
+              <div className="relative">
+                <label className="block text-xs text-gray-500 mb-1">
+                  Cabang
+                </label>
 
-      if (cabang) {
-        fetchUnitKerja(cabang);
-      } else {
-        setListUnitKerja([]);
-      }
-    }}
-  >
-    <option value="">-- Pilih Cabang --</option>
-    {Array.isArray(listCabang) &&
-  listCabang.map((item, index) => (
-    <option key={index} value={item.kecamatan}>
-      {item.kecamatan}
-    </option>
-))}
-  </select>
-</div>
+                {/* Trigger */}
+                <button
+                  type="button"
+                  className="w-full border px-3 py-2 rounded text-left bg-white"
+                  onClick={() => setOpenCabang(!openCabang)}
+                >
+                  {editData.cabang || "-- Pilih Cabang --"}
+                </button>
 
-              <div>
-  <label className="block text-xs text-gray-500 mb-1">
-    Unit Kerja
-  </label>
-  <select
-    className="w-full border px-3 py-2 rounded disabled:bg-gray-100"
-    value={editData.unitKerja || ""}
-    disabled={!editData.cabang || loadingUnitKerja}
-    onChange={(e) =>
-      setEditData({
-        ...editData,
-        unitKerja: e.target.value,
-      })
-    }
-  >
-    <option value="">
-      {loadingUnitKerja
-        ? "Memuat Unit Kerja..."
-        : "-- Pilih Unit Kerja --"}
-    </option>
+                {/* Dropdown */}
+                {openCabang && (
+                  <div className="absolute z-50 w-full bg-white border rounded mt-1 shadow-lg">
+                    {/* Search */}
+                    <div className="p-2 border-b">
+                      <input
+                        type="text"
+                        placeholder="Cari cabang..."
+                        className="w-full border px-2 py-1 rounded text-sm"
+                        value={searchDropCabang}
+                        onChange={(e) => setSearchDropCabang(e.target.value)}
+                      />
+                    </div>
 
-    {listUnitKerja.map((item, index) => (
-      <option key={index} value={item.unitKerja}>
-        {item.unitKerja}
-      </option>
-    ))}
-  </select>
-</div>
+                    {/* List */}
+                    <ul className="max-h-48 overflow-y-auto text-sm">
+                      <li
+                        className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-gray-500"
+                        onClick={() => {
+                          setEditData({
+                            ...editData,
+                            cabang: "",
+                            unitKerja: "",
+                          });
+                          setOpenCabang(false);
+                        }}
+                      >
+                        -- Pilih Cabang --
+                      </li>
 
+                      {filteredCabang.length === 0 && (
+                        <li className="px-3 py-2 text-gray-400">
+                          Cabang tidak ditemukan
+                        </li>
+                      )}
+
+                      {filteredCabang.map((item, index) => (
+                        <li
+                          key={index}
+                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                          onClick={() => {
+                            setEditData({
+                              ...editData,
+                              cabang: item.kecamatan,
+                              unitKerja: "",
+                            });
+
+                            fetchUnitKerja(item.kecamatan);
+                            setOpenCabang(false);
+                            setSearchDropCabang("");
+                          }}
+                        >
+                          {item.kecamatan}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
+              <div className="relative">
+                <label className="block text-xs text-gray-500 mb-1">
+                  Unit Kerja
+                </label>
+
+                <button
+                  type="button"
+                  disabled={!editData.cabang}
+                  className="w-full border px-3 py-2 rounded text-left bg-white disabled:bg-gray-100"
+                  onClick={() => setOpenUnit(!openUnit)}
+                >
+                  {editData.unitKerja || "-- Pilih Unit Kerja --"}
+                </button>
+
+                {openUnit && (
+                  <div className="absolute z-50 w-full bg-white border rounded mt-1 shadow-lg">
+                    <div className="p-2 border-b">
+                      <input
+                        type="text"
+                        placeholder="Cari unit kerja..."
+                        className="w-full border px-2 py-1 rounded text-sm"
+                        value={searchDropUnit}
+                        onChange={(e) => setSearchDropUnit(e.target.value)}
+                      />
+                    </div>
+
+                    <ul className="max-h-48 overflow-y-auto text-sm">
+                      {loadingUnitKerja && (
+                        <li className="px-3 py-2 text-gray-400">
+                          Memuat unit kerja...
+                        </li>
+                      )}
+
+                      {!loadingUnitKerja && filterUnitKerja.length === 0 && (
+                        <li className="px-3 py-2 text-gray-400">
+                          Unit kerja tidak ditemukan
+                        </li>
+                      )}
+
+                      {filterUnitKerja.map((item, index) => (
+                        <li
+                          key={index}
+                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                          onClick={() => {
+                            setEditData({
+                              ...editData,
+                              unitKerja: item.unitKerja,
+                            });
+                            setOpenUnit(false);
+                            setSearchDropUnit("");
+                          }}
+                        >
+                          {item.unitKerja}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4 mt-4">
