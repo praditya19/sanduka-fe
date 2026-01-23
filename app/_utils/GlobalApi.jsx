@@ -3184,6 +3184,25 @@ const updateByNominalByBulan = async (npa, tagihanUntukBulan, payload) => {
   }
 };
 // END
+// Eksport Foto
+const downloadFotoPerCabang = (cabang) => {
+  return axiosClient.get(
+    `/api/foto-anggota/download-per-cabang`,
+    {
+      params: { cabang },
+      responseType: "blob", // ⬅️ penting karena ini file download
+    }
+  );
+};
+const downloadFotoByNpa = (npa) => {
+  return axiosClient.get(
+    `/api/foto-anggota/${npa}`,
+    {
+      responseType: "blob", // ⬅️ wajib untuk file
+    }
+  );
+};
+
 
 // Export all functions
 export default {
@@ -3411,4 +3430,6 @@ export default {
   postToBackupNew,
   deleteBalancingById,
   getUnitKerjaByCabang,
+  downloadFotoPerCabang,
+  downloadFotoByNpa,
 };
