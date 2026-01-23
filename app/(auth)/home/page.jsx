@@ -33,6 +33,7 @@ import {
   faInfoCircle,
   faFileInvoiceDollar,
   faMoneyBillTransfer,
+  faImages,
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import {
@@ -277,6 +278,12 @@ export default function IconGrid() {
       icon: faMoneyBillTransfer,
       label: "Transaksi Bank",
       href: "/transaksi-bank",
+      color: "text-green-600",
+    },
+    {
+      icon: faImages,
+      label: "Eksport Foto",
+      href: "/eksport-foto",
       color: "text-green-600",
     },
   ];
@@ -854,7 +861,10 @@ export default function IconGrid() {
         })
       : role === "SUPER ADMIN"
         ? icons
-        : icons.filter((item) => item.label !== "Galeri");
+        : icons.filter((item) =>
+        item.label !== "Galeri" &&
+        item.label !== "Eksport Foto"
+    );
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
