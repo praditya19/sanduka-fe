@@ -2,15 +2,16 @@
 import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimesCircle } from "@fortawesome/free-solid-svg-icons";
-import Slider from "./_components/Slider";
-import LayananKami from "./_components/LayananKami";
-import Flowchart from "./_components/Flowchart";
 import GaleriKegiatan from "./_components/GaleriKegiatan";
 import Header from "./_components/Header";
+import RunningText from "./_components/RunningText";
 import Footer from "./_components/Footer";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import GlobalApi from "./_utils/GlobalApi";
+import News from "./_components/News";
+import LayananKami from "./_components/LayananKami";
+import BiroTravel from "./_components/BiroTravel";
 
 export default function Home() {
   const [isPopupVisible, setIsPopupVisible] = useState(false);
@@ -143,12 +144,13 @@ export default function Home() {
       )}
 
       <Header />
-      <Slider />
-      <div className="relative z-40 mt-0 md:-mt-24 -mt-16">
+      <RunningText />
+      <div className="pt-[120px] md:pt-[140px]">
+        <News />
+        <GaleriKegiatan />
         <LayananKami />
+        <BiroTravel />
       </div>
-      <GaleriKegiatan />
-      <Flowchart />
       <Footer />
     </div>
   );

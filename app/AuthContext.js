@@ -23,29 +23,27 @@ export const AuthProvider = ({ children }) => {
     const savedToken = sessionStorage.getItem("authToken");
     if (savedToken) {
       setTokenState(savedToken);
-    } else {
-      router.push("/sign-in");
     }
     setLoading(false);
   }, [router]);
 
-    if (loading) {
-      return (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            height: "100vh",
-          }}
-        >
-          <ClipLoader color="#3498db" size={50} />
-        </div>
-      );
-    }
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <ClipLoader color="#3498db" size={50} />
+      </div>
+    );
+  }
 
   return (
-    <AuthContext.Provider value={{ token, setToken }}>
+    <AuthContext.Provider value={{ token, setToken, loading }}>
       {children}
     </AuthContext.Provider>
   );
