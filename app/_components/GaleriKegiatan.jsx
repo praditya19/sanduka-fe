@@ -4,7 +4,11 @@ import Image from "next/image";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
-import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
+import {
+  FaTimesCircle,
+  FaCheckCircle,
+  FaExclamationCircle,
+} from "react-icons/fa";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -20,20 +24,20 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getBgColor = () => {
     switch (type) {
-      case 'success':
-        return 'bg-green-100';
-      case 'error':
-        return 'bg-red-100';
+      case "success":
+        return "bg-green-100";
+      case "error":
+        return "bg-red-100";
       default:
-        return 'bg-blue-100';
+        return "bg-blue-100";
     }
   };
 
   const getIcon = () => {
     switch (type) {
-      case 'success':
+      case "success":
         return <FaCheckCircle className="text-green-500 text-3xl" />;
-      case 'error':
+      case "error":
         return <FaExclamationCircle className="text-red-500 text-3xl" />;
       default:
         return null;
@@ -42,19 +46,24 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getTextColor = () => {
     switch (type) {
-      case 'success':
-        return 'text-green-800';
-      case 'error':
-        return 'text-red-800';
+      case "success":
+        return "text-green-800";
+      case "error":
+        return "text-red-800";
       default:
-        return 'text-blue-800';
+        return "text-blue-800";
     }
   };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
-      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-full max-w-xs sm:max-w-sm md:max-w-md mx-4 text-center transform transition-all duration-300 ease-in-out`}>
+      <div
+        className="absolute inset-0 bg-black opacity-50"
+        onClick={onClose}
+      ></div>
+      <div
+        className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-full max-w-xs sm:max-w-sm md:max-w-md mx-4 text-center transform transition-all duration-300 ease-in-out`}
+      >
         <button
           onClick={onClose}
           className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
@@ -64,17 +73,13 @@ const NotificationPopup = ({ type, message, onClose }) => {
         </button>
 
         <div className="flex flex-col items-center space-y-4">
-          <div className="animate-bounce">
-            {getIcon()}
-          </div>
+          <div className="animate-bounce">{getIcon()}</div>
 
           <h3 className={`text-xl font-bold ${getTextColor()}`}>
-            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+            {type === "success" ? "Berhasil!" : "Gagal!"}
           </h3>
 
-          <p className={`${getTextColor()} text-center`}>
-            {message}
-          </p>
+          <p className={`${getTextColor()} text-center`}>{message}</p>
         </div>
       </div>
     </div>
@@ -131,12 +136,16 @@ const GaleriKegiatan = () => {
       const userNpa = userData.npaPgri;
       const newRegistrationStatus = {};
 
-      galleries.forEach(event => {
-        if (event.category === 'EVENT') {
+      galleries.forEach((event) => {
+        if (event.category === "EVENT") {
           const isRegistered = eventParticipants.some(
-            participant => participant.npa === userNpa && participant.namaEvent === event.namaEvent
+            (participant) =>
+              participant.npa === userNpa &&
+              participant.namaEvent === event.namaEvent,
           );
-          newRegistrationStatus[event.id] = isRegistered ? "Sudah Terdaftar" : null;
+          newRegistrationStatus[event.id] = isRegistered
+            ? "Sudah Terdaftar"
+            : null;
         }
       });
 
@@ -149,11 +158,15 @@ const GaleriKegiatan = () => {
       const userNpa = userData.npaPgri;
       const newRegistrationStatus = {};
 
-      eventGalleries.forEach(event => {
+      eventGalleries.forEach((event) => {
         const isRegistered = eventParticipants.some(
-          participant => participant.npa === userNpa && participant.namaEvent === event.namaEvent
+          (participant) =>
+            participant.npa === userNpa &&
+            participant.namaEvent === event.namaEvent,
         );
-        newRegistrationStatus[event.id] = isRegistered ? "Sudah Terdaftar" : null;
+        newRegistrationStatus[event.id] = isRegistered
+          ? "Sudah Terdaftar"
+          : null;
       });
 
       setRegistrationStatus(newRegistrationStatus);
@@ -199,16 +212,16 @@ const GaleriKegiatan = () => {
   const fetchNonEventGalleries = async () => {
     try {
       setIsLoading(true);
-      const data = await GlobalApi.getSidebarGalleryByCategory('NON EVENT');
+      const data = await GlobalApi.getSidebarGalleryByCategory("NON EVENT");
 
       const processedGalleries = await Promise.all(
         data.map(async (item) => {
           const blob = await fetch(`data:image/jpeg;base64,${item.photo}`).then(
-            (r) => r.blob()
+            (r) => r.blob(),
           );
           const objectUrl = URL.createObjectURL(blob);
           return { ...item, imageUrl: objectUrl };
-        })
+        }),
       );
 
       setNonEventGalleries(processedGalleries);
@@ -222,16 +235,16 @@ const GaleriKegiatan = () => {
   const fetchEventGalleries = async () => {
     try {
       setIsLoading(true);
-      const data = await GlobalApi.getSidebarGalleryByCategory('EVENT');
+      const data = await GlobalApi.getSidebarGalleryByCategory("EVENT");
 
       const processedGalleries = await Promise.all(
         data.map(async (item) => {
           const blob = await fetch(`data:image/jpeg;base64,${item.photo}`).then(
-            (r) => r.blob()
+            (r) => r.blob(),
           );
           const objectUrl = URL.createObjectURL(blob);
           return { ...item, imageUrl: objectUrl };
-        })
+        }),
       );
 
       setEventGalleries(processedGalleries);
@@ -250,11 +263,11 @@ const GaleriKegiatan = () => {
       const processedGalleries = await Promise.all(
         data.map(async (item) => {
           const blob = await fetch(`data:image/jpeg;base64,${item.photo}`).then(
-            (r) => r.blob()
+            (r) => r.blob(),
           );
           const objectUrl = URL.createObjectURL(blob);
           return { ...item, imageUrl: objectUrl };
-        })
+        }),
       );
 
       setGalleries(processedGalleries);
@@ -276,7 +289,7 @@ const GaleriKegiatan = () => {
   }, [galleries]);
 
   const handleRegister = async (itemId) => {
-    const selectedEvent = eventGalleries.find(item => item.id === itemId);
+    const selectedEvent = eventGalleries.find((item) => item.id === itemId);
 
     if (!selectedEvent) {
       console.error("Event not found with ID:", itemId);
@@ -315,7 +328,7 @@ const GaleriKegiatan = () => {
       setShowPopup(true);
     }, 100);
   };
-  
+
   const handleEventClick = (event) => {
     setSelectedEventDetail(event);
     setCurrentEvent(event);
@@ -362,12 +375,12 @@ const GaleriKegiatan = () => {
   };
 
   const processHTML = (htmlContent) => {
-    if (!htmlContent) return '';
+    if (!htmlContent) return "";
 
     const urlRegex = /(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/g;
 
     const processedContent = htmlContent.replace(urlRegex, (url) => {
-      const href = url.startsWith('www.') ? `http://${url}` : url;
+      const href = url.startsWith("www.") ? `http://${url}` : url;
       return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">${url}</a>`;
     });
 
@@ -384,7 +397,9 @@ const GaleriKegiatan = () => {
       <>
         <div className="bg-gray-100 py-12">
           <div className="container mx-auto px-4 md:px-12 lg:px-24">
-            <h2 className="text-xl font-bold mb-6 text-center">Galeri Kegiatan</h2>
+            <h2 className="text-xl font-bold mb-6 text-center">
+              Galeri Kegiatan
+            </h2>
             <div className="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-4">
               {[1, 2, 3].map((i) => (
                 <div
@@ -419,7 +434,7 @@ const GaleriKegiatan = () => {
       if (title === "Galeri Kegiatan") {
         return {
           delay: 3000,
-          disableOnInteraction: false
+          disableOnInteraction: false,
         };
       }
       return false;
@@ -446,7 +461,7 @@ const GaleriKegiatan = () => {
             dangerouslySetInnerHTML={renderHTML(
               isExpanded
                 ? item.deskripsi
-                : truncateHtml(item.deskripsi, maxDescriptionLength)
+                : truncateHtml(item.deskripsi, maxDescriptionLength),
             )}
           ></div>
           <button
@@ -480,7 +495,11 @@ const GaleriKegiatan = () => {
           </div>
         ) : (
           <Swiper
-            modules={[Navigation, Pagination, ...(getAutoplayConfig() ? [Autoplay] : [])]}
+            modules={[
+              Navigation,
+              Pagination,
+              ...(getAutoplayConfig() ? [Autoplay] : []),
+            ]}
             spaceBetween={30}
             slidesPerView={1}
             navigation={true}
@@ -490,11 +509,14 @@ const GaleriKegiatan = () => {
             className="w-full"
           >
             {items.map((item) => (
-              <SwiperSlide key={item.id} className="flex flex-col items-center pb-12">
+              <SwiperSlide
+                key={item.id}
+                className="flex flex-col items-center pb-12"
+              >
                 <div
                   className="relative w-full max-w-md mx-auto rounded-lg shadow-md bg-white cursor-pointer hover:shadow-lg transition-shadow overflow-hidden"
                   onClick={() => title === "Event" && handleEventClick(item)}
-                  style={{ height: '400px' }}
+                  style={{ height: "400px" }}
                 >
                   <Image
                     src={item.imageUrl}
@@ -512,9 +534,7 @@ const GaleriKegiatan = () => {
                       <p className="text-lg font-medium">{item.namaEvent}</p>
                     </div>
                   ) : (
-                    <div>
-                      {renderDescription(item)}
-                    </div>
+                    <div>{renderDescription(item)}</div>
                   )}
                 </div>
               </SwiperSlide>
@@ -532,8 +552,14 @@ const GaleriKegiatan = () => {
 
     return (
       <div className="fixed inset-0 flex items-center justify-center z-[1000]">
-        <div className="absolute inset-0 bg-black opacity-50" onClick={() => setShowAllEventsPopup(false)}></div>
-        <div className="relative bg-white rounded-lg shadow-xl z-[1001] w-full max-w-6xl mx-4 transform transition-all duration-300 ease-in-out overflow-hidden" style={{ maxHeight: '90vh' }}>
+        <div
+          className="absolute inset-0 bg-black opacity-50"
+          onClick={() => setShowAllEventsPopup(false)}
+        ></div>
+        <div
+          className="relative bg-white rounded-lg shadow-xl z-[1001] w-full max-w-6xl mx-4 transform transition-all duration-300 ease-in-out overflow-hidden"
+          style={{ maxHeight: "90vh" }}
+        >
           <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center z-10">
             <h3 className="text-2xl font-bold">Semua Event</h3>
             <button
@@ -545,7 +571,10 @@ const GaleriKegiatan = () => {
             </button>
           </div>
 
-          <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 80px)' }}>
+          <div
+            className="p-6 overflow-y-auto"
+            style={{ maxHeight: "calc(90vh - 80px)" }}
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {eventGalleries.map((event) => (
                 <div
@@ -553,7 +582,10 @@ const GaleriKegiatan = () => {
                   className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow cursor-pointer transform hover:scale-105 duration-200"
                   onClick={() => handleEventClick(event)}
                 >
-                  <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                  <div
+                    className="relative w-full"
+                    style={{ paddingBottom: "56.25%" }}
+                  >
                     <Image
                       src={event.imageUrl}
                       alt={event.namaEvent || "Event image"}
@@ -563,7 +595,9 @@ const GaleriKegiatan = () => {
                     />
                   </div>
                   <div className="p-4">
-                    <h4 className="text-lg font-semibold mb-2 line-clamp-2">{event.namaEvent}</h4>
+                    <h4 className="text-lg font-semibold mb-2 line-clamp-2">
+                      {event.namaEvent}
+                    </h4>
                     <div
                       className="text-gray-600 text-sm line-clamp-3"
                       dangerouslySetInnerHTML={renderHTML(event.deskripsi)}
@@ -599,7 +633,7 @@ const GaleriKegiatan = () => {
     const truncateWords = (text, maxWords) => {
       const words = text.trim().split(/\s+/);
       if (words.length <= maxWords) return text;
-      return words.slice(0, maxWords).join(' ') + '...';
+      return words.slice(0, maxWords).join(" ") + "...";
     };
 
     const truncateHtmlByWords = (html, maxWords) => {
@@ -613,7 +647,7 @@ const GaleriKegiatan = () => {
       if (words.length <= maxWords) return html;
 
       // Jika perlu dipotong, kita ambil X kata pertama dari text
-      const truncatedText = words.slice(0, maxWords).join(' ');
+      const truncatedText = words.slice(0, maxWords).join(" ");
 
       // Kita traverse HTML dan potong berdasarkan jumlah kata
       let wordCount = 0;
@@ -623,13 +657,17 @@ const GaleriKegiatan = () => {
         if (wordCount >= targetWords) return null;
 
         if (node.nodeType === Node.TEXT_NODE) {
-          const nodeWords = node.textContent.trim().split(/\s+/).filter(w => w);
+          const nodeWords = node.textContent
+            .trim()
+            .split(/\s+/)
+            .filter((w) => w);
           if (wordCount + nodeWords.length <= targetWords) {
             wordCount += nodeWords.length;
             return node.cloneNode(true);
           } else {
             const remainingWords = targetWords - wordCount;
-            const truncated = nodeWords.slice(0, remainingWords).join(' ') + '...';
+            const truncated =
+              nodeWords.slice(0, remainingWords).join(" ") + "...";
             wordCount = targetWords;
             const newNode = document.createTextNode(truncated);
             return newNode;
@@ -669,17 +707,32 @@ const GaleriKegiatan = () => {
           "video/quicktime",
           "video/x-msvideo",
           "video/mpeg",
-          "video/webm"
+          "video/webm",
         ];
 
-        const allowedExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.mp4', '.avi', '.mov', '.mpeg', '.webm'];
-        const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+        const allowedExtensions = [
+          ".pdf",
+          ".jpg",
+          ".jpeg",
+          ".png",
+          ".mp4",
+          ".avi",
+          ".mov",
+          ".mpeg",
+          ".webm",
+        ];
+        const fileExtension = "." + file.name.split(".").pop().toLowerCase();
 
-        if (allowedTypes.includes(file.type) && allowedExtensions.includes(fileExtension)) {
+        if (
+          allowedTypes.includes(file.type) &&
+          allowedExtensions.includes(fileExtension)
+        ) {
           setUploadFile(file);
           setFileName(file.name);
         } else {
-          alert("Format file tidak didukung. Pilih file PDF, JPG, PNG, JPEG, atau video (MP4, AVI, MOV, MPEG, WEBM).");
+          alert(
+            "Format file tidak didukung. Pilih file PDF, JPG, PNG, JPEG, atau video (MP4, AVI, MOV, MPEG, WEBM).",
+          );
           e.target.value = null;
           setFileName("");
           setUploadFile(null);
@@ -724,17 +777,25 @@ const GaleriKegiatan = () => {
         }
 
         const formData = new FormData();
-        formData.append("namaLengkap", userDataDaftar.namaLengkap || userDataDaftar.nama);
+        formData.append(
+          "namaLengkap",
+          userDataDaftar.namaLengkap || userDataDaftar.nama,
+        );
         formData.append("npa", userDataDaftar.npaPgri);
         formData.append("email", userDataDaftar.email);
         formData.append("cabang", userDataDaftar.cabang);
         formData.append("unitKerja", userDataDaftar.unitKerja);
         formData.append("jabatan", jabatan.trim());
-        formData.append("nomorHp", userDataDaftar.nomorHp || userDataDaftar.noHp);
+        formData.append(
+          "nomorHp",
+          userDataDaftar.nomorHp || userDataDaftar.noHp,
+        );
         formData.append("namaEvent", currentEvent.namaEvent);
 
         if (fotoBase64) {
-          const blob = await fetch(`data:image/jpeg;base64,${fotoBase64}`).then((res) => res.blob());
+          const blob = await fetch(`data:image/jpeg;base64,${fotoBase64}`).then(
+            (res) => res.blob(),
+          );
           formData.append("foto", blob, "profile.jpg");
         }
 
@@ -744,24 +805,24 @@ const GaleriKegiatan = () => {
 
         await GlobalApi.addPesertaEvent(formData);
 
-        setRegistrationStatus(prev => ({
+        setRegistrationStatus((prev) => ({
           ...prev,
-          [currentEvent.id]: "Sudah Terdaftar"
+          [currentEvent.id]: "Sudah Terdaftar",
         }));
 
         await fetchEventParticipants();
 
         setShowEventDetailPopup(false);
         setNotification({
-          type: 'success',
-          message: `Selamat! Anda telah berhasil terdaftar untuk event "${currentEvent.namaEvent}".`
+          type: "success",
+          message: `Selamat! Anda telah berhasil terdaftar untuk event "${currentEvent.namaEvent}".`,
         });
-
       } catch (error) {
         console.error("Error submitting registration:", error);
         setNotification({
-          type: 'error',
-          message: 'Maaf, pendaftaran event gagal. Silakan coba lagi atau hubungi administrator jika masalah berlanjut.'
+          type: "error",
+          message:
+            "Maaf, pendaftaran event gagal. Silakan coba lagi atau hubungi administrator jika masalah berlanjut.",
         });
       } finally {
         setIsSubmitting(false);
@@ -772,8 +833,14 @@ const GaleriKegiatan = () => {
 
     return (
       <div className="fixed inset-0 flex items-center justify-center z-[1000]">
-        <div className="absolute inset-0 bg-black opacity-50" onClick={() => setShowEventDetailPopup(false)}></div>
-        <div className="relative bg-white rounded-lg shadow-xl z-[1001] w-full max-w-4xl mx-4 transform transition-all duration-300 ease-in-out overflow-hidden" style={{ maxHeight: '90vh' }}>
+        <div
+          className="absolute inset-0 bg-black opacity-50"
+          onClick={() => setShowEventDetailPopup(false)}
+        ></div>
+        <div
+          className="relative bg-white rounded-lg shadow-xl z-[1001] w-full max-w-4xl mx-4 transform transition-all duration-300 ease-in-out overflow-hidden"
+          style={{ maxHeight: "90vh" }}
+        >
           <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-end items-center z-10">
             <button
               onClick={() => setShowEventDetailPopup(false)}
@@ -784,7 +851,10 @@ const GaleriKegiatan = () => {
             </button>
           </div>
 
-          <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 80px)' }}>
+          <div
+            className="p-6 overflow-y-auto"
+            style={{ maxHeight: "calc(90vh - 80px)" }}
+          >
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Kolom Kiri: Detail Event */}
               <div>
@@ -796,28 +866,38 @@ const GaleriKegiatan = () => {
                     height={600}
                     className="w-full h-auto object-contain"
                     sizes="(max-width: 1024px) 100vw, 50vw"
-                    style={{ maxHeight: '500px' }}
+                    style={{ maxHeight: "500px" }}
                   />
                 </div>
                 <div className="prose max-w-none">
-                  <h4 className="text-xl sm:text-2xl font-bold mb-3">{selectedEventDetail.namaEvent}</h4>
-                  <h5 className="text-lg font-semibold mb-2 text-gray-700">Deskripsi Event</h5>
+                  <h4 className="text-xl sm:text-2xl font-bold mb-3">
+                    {selectedEventDetail.namaEvent}
+                  </h4>
+                  <h5 className="text-lg font-semibold mb-2 text-gray-700">
+                    Deskripsi Event
+                  </h5>
                   <div
                     className="text-gray-700"
-                    dangerouslySetInnerHTML={
-                      renderHTML(
-                        isDescriptionExpanded
-                          ? selectedEventDetail.deskripsi
-                          : truncateHtmlByWords(selectedEventDetail.deskripsi, 100)
-                      )
-                    }
+                    dangerouslySetInnerHTML={renderHTML(
+                      isDescriptionExpanded
+                        ? selectedEventDetail.deskripsi
+                        : truncateHtmlByWords(
+                            selectedEventDetail.deskripsi,
+                            100,
+                          ),
+                    )}
                   ></div>
-                  {stripHtml(selectedEventDetail.deskripsi).split(/\s+/).length > 100 && (
+                  {stripHtml(selectedEventDetail.deskripsi).split(/\s+/)
+                    .length > 100 && (
                     <button
-                      onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                      onClick={() =>
+                        setIsDescriptionExpanded(!isDescriptionExpanded)
+                      }
                       className="text-blue-600 hover:text-blue-800 mt-2 text-sm font-medium focus:outline-none transition-colors"
                     >
-                      {isDescriptionExpanded ? "Lihat lebih sedikit" : "Lihat lebih banyak"}
+                      {isDescriptionExpanded
+                        ? "Lihat lebih sedikit"
+                        : "Lihat lebih banyak"}
                     </button>
                   )}
                 </div>
@@ -831,11 +911,15 @@ const GaleriKegiatan = () => {
                       <div className="inline-block px-8 py-3 bg-yellow-500 text-white rounded-lg font-semibold text-base shadow-md mb-4">
                         {isRegistered}
                       </div>
-                      <p className="text-gray-600">Anda sudah terdaftar untuk event ini.</p>
+                      <p className="text-gray-600">
+                        Anda sudah terdaftar untuk event ini.
+                      </p>
                     </div>
                   ) : (
                     <>
-                      <h4 className="text-xl font-bold mb-4 text-center">Form Pendaftaran Event</h4>
+                      <h4 className="text-xl font-bold mb-4 text-center">
+                        Form Pendaftaran Event
+                      </h4>
 
                       {/* User Photo Section */}
                       <div className="flex justify-center mb-4">
@@ -870,7 +954,9 @@ const GaleriKegiatan = () => {
                         <div className="bg-white p-3 rounded-md">
                           <p className="text-sm text-gray-600">Nama Lengkap</p>
                           <p className="text-gray-800 font-medium">
-                            {userData?.namaLengkap || userData?.nama || "Loading..."}
+                            {userData?.namaLengkap ||
+                              userData?.nama ||
+                              "Loading..."}
                           </p>
                         </div>
 
@@ -905,13 +991,19 @@ const GaleriKegiatan = () => {
                         <div className="bg-white p-3 rounded-md">
                           <p className="text-sm text-gray-600">Nomor HP</p>
                           <p className="text-gray-800 font-medium">
-                            {userData?.noHp || userData?.nomorHp || "Loading..."}
+                            {userData?.noHp ||
+                              userData?.nomorHp ||
+                              "Loading..."}
                           </p>
                         </div>
 
                         <div className="bg-white p-3 rounded-md">
-                          <label className="text-sm text-gray-600" htmlFor="jabatan">
-                            Jabatan Organisasi PGRI <span className="text-red-500">*</span>
+                          <label
+                            className="text-sm text-gray-600"
+                            htmlFor="jabatan"
+                          >
+                            Jabatan Organisasi PGRI{" "}
+                            <span className="text-red-500">*</span>
                           </label>
                           <input
                             id="jabatan"
@@ -923,12 +1015,17 @@ const GaleriKegiatan = () => {
                             required
                           />
                           {jabatanError && (
-                            <p className="text-red-500 text-sm mt-1">{jabatanError}</p>
+                            <p className="text-red-500 text-sm mt-1">
+                              {jabatanError}
+                            </p>
                           )}
                         </div>
 
                         <div className="bg-white p-3 rounded-md">
-                          <label className="text-sm text-gray-600" htmlFor="uploadFile">
+                          <label
+                            className="text-sm text-gray-600"
+                            htmlFor="uploadFile"
+                          >
                             Upload Dokumen atau Video (opsional)
                           </label>
                           <div className="flex flex-col space-y-2">
@@ -956,7 +1053,10 @@ const GaleriKegiatan = () => {
                               <div className="p-3 bg-blue-50 border border-blue-200 rounded-md flex items-start">
                                 <div className="flex-grow">
                                   <p className="text-sm text-blue-700 break-words">
-                                    <span className="font-medium">File terpilih:</span> {fileName}
+                                    <span className="font-medium">
+                                      File terpilih:
+                                    </span>{" "}
+                                    {fileName}
                                   </p>
                                 </div>
                                 <button
@@ -976,7 +1076,8 @@ const GaleriKegiatan = () => {
                             )}
                           </div>
                           <p className="text-xs text-gray-500 mt-1">
-                            Format yang didukung: PDF, JPG, PNG, JPEG, MP4, AVI, MOV, MPEG, WEBM
+                            Format yang didukung: PDF, JPG, PNG, JPEG, MP4, AVI,
+                            MOV, MPEG, WEBM
                           </p>
                         </div>
                       </div>
@@ -992,7 +1093,7 @@ const GaleriKegiatan = () => {
                             Mendaftar...
                           </div>
                         ) : (
-                          'Daftar Event'
+                          "Daftar Event"
                         )}
                       </button>
                     </>
@@ -1032,17 +1133,32 @@ const GaleriKegiatan = () => {
           "video/quicktime",
           "video/x-msvideo",
           "video/mpeg",
-          "video/webm"
+          "video/webm",
         ];
 
-        const allowedExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.mp4', '.avi', '.mov', '.mpeg', '.webm'];
-        const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+        const allowedExtensions = [
+          ".pdf",
+          ".jpg",
+          ".jpeg",
+          ".png",
+          ".mp4",
+          ".avi",
+          ".mov",
+          ".mpeg",
+          ".webm",
+        ];
+        const fileExtension = "." + file.name.split(".").pop().toLowerCase();
 
-        if (allowedTypes.includes(file.type) && allowedExtensions.includes(fileExtension)) {
+        if (
+          allowedTypes.includes(file.type) &&
+          allowedExtensions.includes(fileExtension)
+        ) {
           setUploadFile(file);
           setFileName(file.name);
         } else {
-          alert("Format file tidak didukung. Pilih file PDF, JPG, PNG, JPEG, atau video (MP4, AVI, MOV, MPEG, WEBM).");
+          alert(
+            "Format file tidak didukung. Pilih file PDF, JPG, PNG, JPEG, atau video (MP4, AVI, MOV, MPEG, WEBM).",
+          );
           e.target.value = null;
           setFileName("");
           setUploadFile(null);
@@ -1087,17 +1203,25 @@ const GaleriKegiatan = () => {
         }
 
         const formData = new FormData();
-        formData.append("namaLengkap", userDataDaftar.namaLengkap || userDataDaftar.nama);
+        formData.append(
+          "namaLengkap",
+          userDataDaftar.namaLengkap || userDataDaftar.nama,
+        );
         formData.append("npa", userDataDaftar.npaPgri);
         formData.append("email", userDataDaftar.email);
         formData.append("cabang", userDataDaftar.cabang);
         formData.append("unitKerja", userDataDaftar.unitKerja);
         formData.append("jabatan", jabatan.trim());
-        formData.append("nomorHp", userDataDaftar.nomorHp || userDataDaftar.noHp);
+        formData.append(
+          "nomorHp",
+          userDataDaftar.nomorHp || userDataDaftar.noHp,
+        );
         formData.append("namaEvent", currentEvent.namaEvent);
 
         if (fotoBase64) {
-          const blob = await fetch(`data:image/jpeg;base64,${fotoBase64}`).then((res) => res.blob());
+          const blob = await fetch(`data:image/jpeg;base64,${fotoBase64}`).then(
+            (res) => res.blob(),
+          );
           formData.append("foto", blob, "profile.jpg");
         }
 
@@ -1107,24 +1231,24 @@ const GaleriKegiatan = () => {
 
         await GlobalApi.addPesertaEvent(formData);
 
-        setRegistrationStatus(prev => ({
+        setRegistrationStatus((prev) => ({
           ...prev,
-          [currentEvent.id]: "Sudah Terdaftar"
+          [currentEvent.id]: "Sudah Terdaftar",
         }));
 
         await fetchEventParticipants();
 
         setShowPopup(false);
         setNotification({
-          type: 'success',
-          message: `Selamat! Anda telah berhasil terdaftar untuk event "${currentEvent.namaEvent}".`
+          type: "success",
+          message: `Selamat! Anda telah berhasil terdaftar untuk event "${currentEvent.namaEvent}".`,
         });
-
       } catch (error) {
         console.error("Error submitting registration:", error);
         setNotification({
-          type: 'error',
-          message: 'Maaf, pendaftaran event gagal. Silakan coba lagi atau hubungi administrator jika masalah berlanjut.'
+          type: "error",
+          message:
+            "Maaf, pendaftaran event gagal. Silakan coba lagi atau hubungi administrator jika masalah berlanjut.",
         });
       } finally {
         setIsSubmitting(false);
@@ -1265,7 +1389,8 @@ const GaleriKegiatan = () => {
                   <div className="p-3 bg-blue-50 border border-blue-200 rounded-md flex items-start">
                     <div className="flex-grow">
                       <p className="text-sm text-blue-700 break-words">
-                        <span className="font-medium">File terpilih:</span> {fileName}
+                        <span className="font-medium">File terpilih:</span>{" "}
+                        {fileName}
                       </p>
                     </div>
                     <button
@@ -1285,7 +1410,8 @@ const GaleriKegiatan = () => {
                 )}
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                Format yang didukung: PDF, JPG, PNG, JPEG, MP4, AVI, MOV, MPEG, WEBM
+                Format yang didukung: PDF, JPG, PNG, JPEG, MP4, AVI, MOV, MPEG,
+                WEBM
               </p>
             </div>
           </div>
@@ -1301,7 +1427,7 @@ const GaleriKegiatan = () => {
                 Mendaftar...
               </div>
             ) : (
-              'Daftar Event'
+              "Daftar Event"
             )}
           </button>
         </div>
@@ -1313,11 +1439,35 @@ const GaleriKegiatan = () => {
     <>
       <div id="galeriSec" className="bg-gray-100 py-8 z-10">
         <div className="container mx-auto px-4 md:px-12 lg:px-24">
-          <GallerySwiper items={nonEventGalleries} title="Galeri Kegiatan" />
+          <div className="text-center mb-8">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4">
+              <span className="relative">
+                Galeri
+                <span className="absolute -bottom-2 left-0 w-full h-2 bg-gradient-to-r from-teal-400 via-teal-400/50 to-transparent rounded-full"></span>
+              </span>{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-emerald-600">
+                Kegiatan
+              </span>
+            </h2>
+          </div>
+          <GallerySwiper
+            items={nonEventGalleries}
+            // title="Galeri Kegiatan"
+          />
         </div>
       </div>
       <div id="eventSec" className="bg-gray-50 py-8 z-10">
         <div className="container mx-auto px-4 md:px-12 lg:px-24">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-500">
+                Event
+              </span>
+              <br className="md:hidden" /> Kami
+            </h2>
+
+            <div className="w-24 h-1 bg-gradient-to-r from-amber-400 to-orange-400 rounded-full mx-auto mt-3"></div>
+          </div>
           <GallerySwiper
             items={eventGalleries}
             title="Event"

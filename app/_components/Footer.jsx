@@ -2,7 +2,7 @@ import Image from "next/image";
 import React from "react";
 import {
   FaFacebook,
-  FaTwitter,
+  FaTiktok,
   FaYoutube,
   FaInstagram,
   FaApple,
@@ -95,7 +95,7 @@ const Footer = () => {
               <div className="flex gap-4">
                 {[
                   { icon: FaFacebook, label: "Facebook" },
-                  { icon: FaTwitter, label: "Twitter" },
+                  { icon: FaTiktok, label: "Tiktok" },
                   { icon: FaYoutube, label: "Youtube" },
                   { icon: FaInstagram, label: "Instagram" },
                 ].map((item) => (

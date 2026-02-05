@@ -24,7 +24,7 @@ function LayananKami() {
     setError("");
     try {
       const member = await GlobalApi.cekNpa(npaPgri);
-  
+
       if (member) {
         const detailedMember = await GlobalApi.getUserById(member.id);
         if (detailedMember) {
@@ -99,15 +99,15 @@ function LayananKami() {
               </span>
             </Button>
           </div>
-         <div className="mt-4 w-full max-w-xl">
-  {error && (
-    <Alert variant="destructive">
-      <AlertCircle className="h-4 w-4" />
-      <div className="mt-1">
-        <AlertTitle>{error}</AlertTitle>
-      </div>
-    </Alert>
-  )}
+          <div className="mt-4 w-full max-w-xl">
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <div className="mt-1">
+                  <AlertTitle>{error}</AlertTitle>
+                </div>
+              </Alert>
+            )}
             {filteredMember && (
               <div className="p-4 border border-green-200 rounded-lg shadow-md">
                 <h3 className="font-bold text-center text-lg mb-2">
