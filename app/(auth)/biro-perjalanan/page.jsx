@@ -1,5 +1,7 @@
-import React from "react";
+"use client";
+import React, { useState } from "react";
 import Header from "@/app/_components/Header";
+import ShareButton from "@/app/_components/ShareButton";
 
 const travelPackages = [
   {
@@ -235,31 +237,32 @@ const travelPackages = [
 ];
 
 const TravelPage = () => {
+  const [selectedPackage, setSelectedPackage] = useState(null);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-50">
       <Header />
 
       <div
-  className="relative py-24 mt-20 px-6 bg-center bg-cover"
-  style={{
-    backgroundImage:
-      "url('https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600')",
-  }}
->
-  {/* Overlay */}
-  <div className="absolute inset-0 bg-black/50"></div>
+        className="relative py-24 mt-20 px-6 bg-center bg-cover"
+        style={{
+          backgroundImage:
+            "url('https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600')",
+        }}
+      >
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-black/50"></div>
 
-  {/* Content */}
-  <div className="relative max-w-7xl mx-auto text-center text-white ">
-    <h1 className="text-4xl md:text-5xl font-bold mb-4">
-      Tour and Travel
-    </h1>
-    <p className="text-xl md:text-2xl font-light mb-6">
-      Temukan Destinasi Menakjubkan dengan Paket Eksklusif
-    </p>
-  </div>
-</div>
-
+        {/* Content */}
+        <div className="relative max-w-7xl mx-auto text-center text-white ">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+            Tour and Travel
+          </h1>
+          <p className="text-xl md:text-2xl font-light mb-6">
+            Temukan Destinasi Menakjubkan dengan Paket Eksklusif
+          </p>
+        </div>
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -320,7 +323,10 @@ const TravelPage = () => {
                     </p>
                   </div>
 
-                  <button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-3 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center group/btn">
+                  <button
+                    onClick={() => setSelectedPackage(item)}
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-3 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center group/btn"
+                  >
                     <span>Details</span>
                     <span className="ml-2 group-hover/btn:translate-x-1 transition-transform">
                       →
@@ -345,6 +351,154 @@ const TravelPage = () => {
           </button>
         </div>
       </div>
+
+      {/* Modal Detail Paket Perjalanan */}
+      {selectedPackage && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl w-full max-w-2xl my-auto shadow-2xl">
+            {/* Header Modal */}
+            <div className="relative h-80 overflow-hidden rounded-t-2xl">
+              <img
+                src={selectedPackage.image}
+                alt={selectedPackage.title}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+              <div className="absolute bottom-4 left-4 right-4 text-white">
+                <div className="flex gap-2 mb-2">
+                  <span
+                    className={`${selectedPackage.tagColor} text-white text-xs font-bold px-3 py-1 rounded-full`}
+                  >
+                    {selectedPackage.tag}
+                  </span>
+                  <span className="bg-yellow-400 text-gray-800 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                    ⭐ {selectedPackage.rating} ({selectedPackage.reviews}{" "}
+                    reviews)
+                  </span>
+                </div>
+                <h2 className="text-2xl font-bold">{selectedPackage.title}</h2>
+              </div>
+              <button
+                onClick={() => setSelectedPackage(null)}
+                className="absolute top-4 right-4 bg-white hover:bg-gray-200 text-gray-800 rounded-full w-10 h-10 flex items-center justify-center font-bold text-xl transition"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Content Modal */}
+            <div className="p-6 max-h-[60vh] overflow-y-auto">
+              {/* Info Dasar */}
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="bg-blue-50 p-4 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-blue-600">
+                    {selectedPackage.duration}
+                  </div>
+                  <div className="text-xs text-gray-600">Durasi</div>
+                </div>
+                <div className="bg-green-50 p-4 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-green-600">
+                    📍 {selectedPackage.country}
+                  </div>
+                  <div className="text-xs text-gray-600">Destinasi</div>
+                </div>
+                <div className="bg-red-50 p-4 rounded-lg text-center">
+                  <div className="text-xl font-bold text-red-600">
+                    -{selectedPackage.discount}
+                  </div>
+                  <div className="text-xs text-gray-600">Diskon</div>
+                </div>
+              </div>
+
+              {/* Harga */}
+              <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-teal-50 rounded-lg">
+                <div className="text-sm text-gray-600 mb-1">
+                  Harga per Orang
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-bold text-blue-700">
+                    IDR {selectedPackage.priceNew}
+                  </span>
+                  <span className="text-sm text-gray-400 line-through">
+                    IDR {selectedPackage.priceOld}
+                  </span>
+                </div>
+              </div>
+
+              {/* Keberangkatan */}
+              <div className="mb-6">
+                <h3 className="font-bold text-lg text-gray-800 mb-3 flex items-center gap-2">
+                  📅 Keberangkatan Tersedia
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {selectedPackage.departures.map((date, idx) => (
+                    <span
+                      key={idx}
+                      className="bg-blue-100 text-blue-700 px-3 py-2 rounded-lg text-sm font-medium"
+                    >
+                      {date}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Highlights */}
+              <div className="mb-6">
+                <h3 className="font-bold text-lg text-gray-800 mb-3 flex items-center gap-2">
+                  ✨ Highlight Paket
+                </h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {selectedPackage.highlights.map((highlight, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center gap-2 text-gray-700"
+                    >
+                      <span className="text-lg">🎯</span>
+                      <span>{highlight}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Includes */}
+              <div className="mb-6">
+                <h3 className="font-bold text-lg text-gray-800 mb-3 flex items-center gap-2">
+                  ✅ Yang Termasuk
+                </h3>
+                <div className="space-y-2">
+                  {selectedPackage.includes.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center gap-2 text-gray-700"
+                    >
+                      <span className="text-lg">✓</span>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Modal */}
+            <div className="border-t p-6 flex gap-3 bg-gray-50 rounded-b-2xl">
+              <button
+                onClick={() => setSelectedPackage(null)}
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-4 rounded-lg transition"
+              >
+                Tutup
+              </button>
+              <ShareButton
+                title={selectedPackage.title}
+                text={`${selectedPackage.country} - ${selectedPackage.duration} - IDR ${selectedPackage.priceNew}`}
+                url={`${typeof window !== "undefined" ? window.location.origin : ""}/biro-perjalanan#package-${selectedPackage.id}`}
+              />
+              <button className="flex-1 bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-700 hover:to-teal-600 text-white font-semibold py-3 px-4 rounded-lg transition shadow-lg">
+                Pesan Sekarang
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

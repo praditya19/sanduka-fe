@@ -113,6 +113,22 @@ const Event = () => {
       ? words.slice(0, maxWords).join(" ") + "..."
       : text;
   };
+const handleShare = (event) => {
+  const shareData = {
+    title: event.title,
+    text: event.shortDesc,
+    url: window.location.href,
+  };
+
+  if (navigator.share) {
+    navigator.share(shareData).catch((err) => console.error(err));
+  } else {
+    navigator.clipboard.writeText(
+      `${event.title}\n\n${event.shortDesc}\n\n${window.location.href}`
+    );
+    alert("Link event berhasil disalin!");
+  }
+};
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -152,7 +168,6 @@ const Event = () => {
         </div>
       </div>
 
-      {/* MODAL DETAIL EVENT */}
       {selectedEvent && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl w-full max-w-lg p-6 relative">
@@ -176,6 +191,15 @@ const Event = () => {
             <p className="text-gray-700 text-sm leading-relaxed">
               {selectedEvent.fullDesc}
             </p>
+            <div className="mt-6 flex justify-end">
+  <button
+    onClick={() => handleShare(selectedEvent)}
+    className="px-4 py-2 rounded-lg bg-teal-600 text-white text-sm font-medium hover:bg-teal-700 transition"
+  >
+    🔗 Share Event
+  </button>
+</div>
+
           </div>
         </div>
       )}

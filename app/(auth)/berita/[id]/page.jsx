@@ -97,7 +97,7 @@ export default function BeritaDetail({ params }) {
   const { id } = params;
   const { token, loading } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
-  
+
   const news = newsDataDetail.find((item) => item.id === parseInt(id));
 
   useEffect(() => {
@@ -107,7 +107,26 @@ export default function BeritaDetail({ params }) {
     }
   }, [loading]);
 
-  // Jangan render apapun saat loading
+  const handleShare = async () => {
+    const shareData = {
+      title: document.title,
+      text: "Cek halaman ini, informasinya menarik!",
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        // fallback: copy link
+        await navigator.clipboard.writeText(window.location.href);
+        alert("Link berhasil disalin ke clipboard!");
+      }
+    } catch (error) {
+      console.error("Gagal share:", error);
+    }
+  };
+
   if (isLoading || loading) {
     return null;
   }
@@ -144,7 +163,6 @@ export default function BeritaDetail({ params }) {
       <Header />
       <section className="pt-28 pb-20 bg-gray-50 min-h-screen">
         <div className="max-w-7xl mx-auto px-4">
-          {/* Back Button */}
           <Link
             href="/berita"
             className="inline-flex items-center gap-2 text-teal-600 hover:text-teal-700 mb-8 font-medium"
@@ -153,24 +171,21 @@ export default function BeritaDetail({ params }) {
             Kembali ke Berita
           </Link>
 
-          {/* Main Layout with Sidebar */}
           <div className="flex gap-8">
-            {/* Sidebar Social Actions - Sticky */}
             <div className="hidden lg:flex lg:w-20 flex-shrink-0">
               <div className="sticky top-32 flex flex-col items-center gap-2 bg-white rounded-full p-3 shadow-md w-20 h-fit">
                 <button
+                  onClick={handleShare}
                   className="flex flex-col items-center justify-center w-14 h-14 rounded-full bg-gray-100 hover:bg-teal-100 hover:text-teal-600 transition text-gray-600 font-semibold text-xs"
                   title="Share"
                 >
                   <Share2 size={18} />
+                  <span className="text-[10px] mt-1">Share</span>
                 </button>
-        
               </div>
             </div>
 
-            {/* Article Container */}
             <article className="flex-1 bg-white rounded-xl shadow-lg overflow-hidden">
-              {/* Hero Image */}
               <div className="relative h-96 overflow-hidden">
                 <img
                   src={news.image}
@@ -180,9 +195,7 @@ export default function BeritaDetail({ params }) {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
               </div>
 
-              {/* Content */}
               <div className="p-8 md:p-12">
-                {/* Meta Information */}
                 <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-6 pb-6 border-b">
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-gray-700">
@@ -195,19 +208,16 @@ export default function BeritaDetail({ params }) {
                   <div>👁️ {news.views} views</div>
                 </div>
 
-                {/* Title */}
                 <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
                   {news.title}
                 </h1>
 
-                {/* Editor Information */}
                 <div className="bg-teal-50 border-l-4 border-teal-600 p-4 mb-8 rounded">
                   <p className="text-sm text-gray-700">
                     <span className="font-medium">Editor:</span> {news.editor}
                   </p>
                 </div>
 
-                {/* Main Content */}
                 <div className="prose prose-lg max-w-none mb-12">
                   {news.content.split("\n\n").map((paragraph, idx) => (
                     <p
@@ -218,12 +228,10 @@ export default function BeritaDetail({ params }) {
                     </p>
                   ))}
                 </div>
-
               </div>
             </article>
           </div>
 
-          {/* Related Articles Section */}
           <div className="mt-20">
             <h2 className="text-3xl font-bold text-gray-900 mb-10">
               Berita Lainnya Untuk Anda
@@ -263,7 +271,6 @@ export default function BeritaDetail({ params }) {
         </div>
       </section>
 
-      {/* Mobile Action Bar */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg p-4 z-40">
         <div className="flex justify-around items-center gap-2">
           <button className="flex flex-col items-center justify-center flex-1 py-2 rounded-lg hover:bg-gray-100 transition text-gray-600 text-xs font-medium">

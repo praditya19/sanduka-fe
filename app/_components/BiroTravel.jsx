@@ -118,7 +118,7 @@ const BiroTravel = () => {
       <section className="max-w-7xl mx-auto px-4 py-14">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-3xl font-bold text-gray-800">
-            🆕 Perjalanan Terbaru
+            Perjalanan Terbaru
           </h2>
           <span className="text-sm text-blue-600 font-medium">
             Keberangkatan Terdekat
