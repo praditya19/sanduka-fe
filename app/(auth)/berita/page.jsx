@@ -260,6 +260,7 @@ const Berita = () => {
                     className="inline-block text-sm font-medium text-teal-600 hover:underline"
                   >
                     Baca Selengkapnya →
+                    
                   </a>
 
                   <div className="pt-3 border-t text-xs text-gray-500 flex flex-wrap justify-between gap-2">

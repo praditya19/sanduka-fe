@@ -7,8 +7,12 @@ import {
   Share2,
   MessageSquare,
   ThumbsUp,
-  MoreVertical,
+  Facebook,
+  Send,
 } from "lucide-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
+
 import { useAuth } from "@/app/AuthContext";
 
 // Data yang sama seperti di halaman berita
@@ -126,6 +130,24 @@ export default function BeritaDetail({ params }) {
       console.error("Gagal share:", error);
     }
   };
+  const shareUrl = typeof window !== "undefined" ? window.location.href : "";
+
+  const shareText = encodeURIComponent(news?.title || "");
+
+  const shareLinks = {
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+      shareUrl,
+    )}`,
+    whatsapp: `https://wa.me/?text=${shareText}%20${encodeURIComponent(
+      shareUrl,
+    )}`,
+    telegram: `https://t.me/share/url?url=${encodeURIComponent(
+      shareUrl,
+    )}&text=${shareText}`,
+    twitter: `https://twitter.com/intent/tweet?text=${shareText}&url=${encodeURIComponent(
+      shareUrl,
+    )}`,
+  };
 
   if (isLoading || loading) {
     return null;
@@ -174,6 +196,43 @@ export default function BeritaDetail({ params }) {
           <div className="flex gap-8">
             <div className="hidden lg:flex lg:w-20 flex-shrink-0">
               <div className="sticky top-32 flex flex-col items-center gap-2 bg-white rounded-full p-3 shadow-md w-20 h-fit">
+                <div className="flex flex-col items-center gap-3">
+                  <span className="text-xs font-medium text-gray-600">
+                    Bagikan
+                  </span>
+
+                  <a
+                    href={shareLinks.facebook}
+                    target="_blank"
+                    className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center hover:opacity-90"
+                  >
+                    <Facebook size={18} />
+                  </a>
+
+                  <a
+                    href={shareLinks.twitter}
+                    target="_blank"
+      className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center hover:opacity-90"
+                  >
+                    𝕏
+                  </a>
+
+                  <a
+                    href={shareLinks.whatsapp}
+                    target="_blank"
+                    className="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center hover:opacity-90"
+                  >
+                     <FontAwesomeIcon icon={faWhatsapp} size="lg" />
+                  </a>
+
+                  <a
+                    href={shareLinks.telegram}
+                    target="_blank"
+                    className="w-10 h-10 rounded-full bg-blue-400 text-white flex items-center justify-center hover:opacity-90"
+                  >
+                    <Send size={18} />
+                  </a>
+                </div>
                 <button
                   onClick={handleShare}
                   className="flex flex-col items-center justify-center w-14 h-14 rounded-full bg-gray-100 hover:bg-teal-100 hover:text-teal-600 transition text-gray-600 font-semibold text-xs"

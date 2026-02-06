@@ -1,7 +1,9 @@
 "use client";
 import React, { useState } from "react";
 import Header from "@/app/_components/Header";
-import ShareButton from "@/app/_components/ShareButton";
+import { Share2, Facebook, Send } from "lucide-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 
 const travelPackages = [
   {
@@ -239,6 +241,40 @@ const travelPackages = [
 const TravelPage = () => {
   const [selectedPackage, setSelectedPackage] = useState(null);
 
+  const getShareLinks = (pkg) => {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+
+    const text = encodeURIComponent(pkg.title);
+
+    return {
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+        url,
+      )}`,
+      twitter: `https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(
+        url,
+      )}`,
+      whatsapp: `https://wa.me/?text=${text}%20${encodeURIComponent(url)}`,
+      telegram: `https://t.me/share/url?url=${encodeURIComponent(
+        url,
+      )}&text=${text}`,
+    };
+  };
+  const handleShare = (event) => {
+    const shareData = {
+      title: event.title,
+      text: event.shortDesc,
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      navigator.share(shareData).catch((err) => console.error(err));
+    } else {
+      navigator.clipboard.writeText(
+        `${event.title}\n\n${event.shortDesc}\n\n${window.location.href}`,
+      );
+      alert("Link event berhasil disalin!");
+    }
+  };
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-50">
       <Header />
@@ -387,7 +423,7 @@ const TravelPage = () => {
             </div>
 
             {/* Content Modal */}
-            <div className="p-6 max-h-[60vh] overflow-y-auto">
+            <div className="p-6 max-h-[60vh] overflow-y-auto mb-4">
               {/* Info Dasar */}
               <div className="grid grid-cols-3 gap-4 mb-6">
                 <div className="bg-blue-50 p-4 rounded-lg text-center">
@@ -478,6 +514,57 @@ const TravelPage = () => {
                 </div>
               </div>
             </div>
+            {/* Share Section */}
+            <div className="px-6 pb-2">
+              <p className="text-sm font-medium text-gray-600 mb-3">
+                Bagikan paket perjalanan ini
+              </p>
+
+              <div className="flex items-center gap-3">
+                <a
+                  href={getShareLinks(selectedPackage).facebook}
+                  target="_blank"
+                  className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center hover:opacity-90 transition"
+                  title="Share ke Facebook"
+                >
+                  <Facebook size={18} />
+                </a>
+
+                <a
+                  href={getShareLinks(selectedPackage).twitter}
+                  target="_blank"
+                  className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center hover:opacity-90 transition"
+                  title="Share ke X"
+                >
+                  𝕏
+                </a>
+
+                <a
+                  href={getShareLinks(selectedPackage).whatsapp}
+                  target="_blank"
+                  className="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center hover:opacity-90 transition"
+                  title="Share ke WhatsApp"
+                >
+                  <FontAwesomeIcon icon={faWhatsapp} size="lg" />
+                </a>
+
+                <a
+                  href={getShareLinks(selectedPackage).telegram}
+                  target="_blank"
+                  className="w-10 h-10 rounded-full bg-sky-500 text-white flex items-center justify-center hover:opacity-90 transition"
+                  title="Share ke Telegram"
+                >
+                  <Send size={18} />
+                </a>
+                <button
+                  onClick={handleShare}
+                  className="flex flex-col items-center justify-center w-10 h-10 rounded-full bg-gray-100 hover:bg-teal-100 hover:text-teal-600 transition text-gray-600 font-semibold text-xs"
+                  title="Share"
+                >
+                  <Share2 size={18} />
+                </button>
+              </div>
+            </div>
 
             {/* Footer Modal */}
             <div className="border-t p-6 flex gap-3 bg-gray-50 rounded-b-2xl">
@@ -487,11 +574,6 @@ const TravelPage = () => {
               >
                 Tutup
               </button>
-              <ShareButton
-                title={selectedPackage.title}
-                text={`${selectedPackage.country} - ${selectedPackage.duration} - IDR ${selectedPackage.priceNew}`}
-                url={`${typeof window !== "undefined" ? window.location.origin : ""}/biro-perjalanan#package-${selectedPackage.id}`}
-              />
               <button className="flex-1 bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-700 hover:to-teal-600 text-white font-semibold py-3 px-4 rounded-lg transition shadow-lg">
                 Pesan Sekarang
               </button>
