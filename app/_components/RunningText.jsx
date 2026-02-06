@@ -25,7 +25,7 @@ const RunningText = () => {
           <div className="flex-shrink-0 flex items-center">
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-teal-600 to-emerald-600 text-white text-xs font-bold rounded-full whitespace-nowrap shadow-md">
               <span className="inline-block w-2 h-2 bg-yellow-300 rounded-full animate-pulse"></span>
-              PENGUMUMAN
+              INFO
             </span>
           </div>
 
