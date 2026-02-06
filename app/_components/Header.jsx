@@ -30,7 +30,7 @@ const Header = () => {
           {/* Logo */}
           <Link href="/" className="flex items-center group">
             <Image
-              src="/sanduka_bg_white.png"
+              src="/logo_pgri_jepara.svg"
               width={60}
               height={60}
               alt="Sanduka Logo"

@@ -1,6 +1,13 @@
 "use client";
 import Header from "@/app/_components/Header";
 import React, { useState } from "react";
+import {
+  Share2,
+  Facebook,
+  Send,
+} from "lucide-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 
 const eventData = [
   {
@@ -113,22 +120,40 @@ const Event = () => {
       ? words.slice(0, maxWords).join(" ") + "..."
       : text;
   };
-const handleShare = (event) => {
-  const shareData = {
-    title: event.title,
-    text: event.shortDesc,
-    url: window.location.href,
-  };
+  const handleShare = (event) => {
+    const shareData = {
+      title: event.title,
+      text: event.shortDesc,
+      url: window.location.href,
+    };
 
-  if (navigator.share) {
-    navigator.share(shareData).catch((err) => console.error(err));
-  } else {
-    navigator.clipboard.writeText(
-      `${event.title}\n\n${event.shortDesc}\n\n${window.location.href}`
-    );
-    alert("Link event berhasil disalin!");
-  }
-};
+    if (navigator.share) {
+      navigator.share(shareData).catch((err) => console.error(err));
+    } else {
+      navigator.clipboard.writeText(
+        `${event.title}\n\n${event.shortDesc}\n\n${window.location.href}`,
+      );
+      alert("Link event berhasil disalin!");
+    }
+  };
+  const getShareLinks = (event) => {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+
+    const text = encodeURIComponent(event.title);
+
+    return {
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+        url,
+      )}`,
+      twitter: `https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(
+        url,
+      )}`,
+      whatsapp: `https://wa.me/?text=${text}%20${encodeURIComponent(url)}`,
+      telegram: `https://t.me/share/url?url=${encodeURIComponent(
+        url,
+      )}&text=${text}`,
+    };
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -136,12 +161,10 @@ const handleShare = (event) => {
 
       <div className="max-w-7xl mx-auto px-6 py-10 pt-28">
         <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4">
-              <span className="">
-                Event
-              </span>
-            </h2>
-          </div>
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4">
+            <span className="">Event</span>
+          </h2>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {eventData.map((event) => (
@@ -184,22 +207,57 @@ const handleShare = (event) => {
               className="w-full h-56 object-cover rounded-lg mb-4"
             />
 
-            <h2 className="text-2xl font-bold mb-2">
-              {selectedEvent.title}
-            </h2>
+            <h2 className="text-2xl font-bold mb-2">{selectedEvent.title}</h2>
 
             <p className="text-gray-700 text-sm leading-relaxed">
               {selectedEvent.fullDesc}
             </p>
-            <div className="mt-6 flex justify-end">
-  <button
-    onClick={() => handleShare(selectedEvent)}
-    className="px-4 py-2 rounded-lg bg-teal-600 text-white text-sm font-medium hover:bg-teal-700 transition"
-  >
-    🔗 Share Event
-  </button>
-</div>
+            <div className="mt-6">
+              <p className="text-sm font-medium text-gray-600 mb-3">
+                Bagikan event ini
+              </p>
 
+              <div className="flex items-center gap-3">
+                <a
+                  href={getShareLinks(selectedEvent).facebook}
+                  target="_blank"
+                  className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center hover:opacity-90"
+                >
+                  <Facebook size={18} />
+                </a>
+
+                <a
+                  href={getShareLinks(selectedEvent).twitter}
+                  target="_blank"
+                  className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center hover:opacity-90"
+                >
+                  𝕏
+                </a>
+
+                <a
+                  href={getShareLinks(selectedEvent).whatsapp}
+                  target="_blank"
+                  className="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center hover:opacity-90"
+                >
+                  <FontAwesomeIcon icon={faWhatsapp} size="lg" />
+                </a>
+
+                <a
+                  href={getShareLinks(selectedEvent).telegram}
+                  target="_blank"
+                  className="w-10 h-10 rounded-full bg-sky-500 text-white flex items-center justify-center hover:opacity-90"
+                >
+                  <Send size={18} />
+                </a>
+                <button
+                  onClick={handleShare}
+                  className="flex flex-col items-center justify-center w-10 h-10 rounded-full bg-gray-100 hover:bg-teal-100 hover:text-teal-600 transition text-gray-600 font-semibold text-xs"
+                  title="Share"
+                >
+                  <Share2 size={18} />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
