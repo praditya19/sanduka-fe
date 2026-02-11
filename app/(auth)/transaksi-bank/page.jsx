@@ -678,9 +678,9 @@ export default function BankTransactionPage() {
       setProgress(0);
 
       const tagihanUntukBulan = resetUntukBulan;
-      await GlobalApi.deleteBalancing(
-        `/api/target-iuran-anggota/by-bulan/${tagihanUntukBulan}`,
-        {
+     await GlobalApi.deleteBalancing(
+  tagihanUntukBulan,
+  {
           onDownloadProgress: (progressEvent) => {
             if (progressEvent.total) {
               const percentCompleted = Math.round(
