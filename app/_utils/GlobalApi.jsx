@@ -1326,14 +1326,11 @@ const deleteBalancingById = async (id) => {
   }
 };
 
-const deleteBalancing = async (tagihanUntukBulan) => {
-  try {
-    const response = await axiosClient.delete(`/api/target-iuran-anggota/by-bulan/${tagihanUntukBulan}`);
-    return response.data;
-  } catch (error) {
-    console.error("Error delete iuran data: ", error);
-    throw error;
-  }
+const deleteBalancing = async (tagihanUntukBulan, config = {}) => {
+  return axiosClient.delete(
+    `/api/target-iuran-anggota/by-bulan/${encodeURIComponent(tagihanUntukBulan)}`,
+    config
+  );
 };
 
 const deleteTransaksiBank = async (tanggal) => {
