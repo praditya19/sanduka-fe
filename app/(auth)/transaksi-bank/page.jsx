@@ -677,20 +677,17 @@ export default function BankTransactionPage() {
       setLoader(true);
       setProgress(0);
 
-      const tagihanUntukBulan = resetUntukBulan;
-     await GlobalApi.deleteBalancing(
-  tagihanUntukBulan,
-  {
-          onDownloadProgress: (progressEvent) => {
-            if (progressEvent.total) {
-              const percentCompleted = Math.round(
-                (progressEvent.loaded * 100) / progressEvent.total,
-              );
-              setProgress(percentCompleted);
-            }
-          },
+      const tagihanUntukBulan = resetUntukBulan.trim();
+      await GlobalApi.deleteBalancing(tagihanUntukBulan, {
+        onDownloadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total,
+            );
+            setProgress(percentCompleted);
+          }
         },
-      );
+      });
 
       setNotification({
         type: "success",
