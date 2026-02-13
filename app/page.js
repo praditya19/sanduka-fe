@@ -12,6 +12,8 @@ import GlobalApi from "./_utils/GlobalApi";
 import News from "./_components/News";
 import LayananKami from "./_components/LayananKami";
 import BiroTravel from "./_components/BiroTravel";
+import Live from "./_components/Live";
+import Whatsapp from "./_components/Whatsapp";
 
 export default function Home() {
   const [isPopupVisible, setIsPopupVisible] = useState(false);
@@ -145,6 +147,10 @@ export default function Home() {
 
       <Header />
       <RunningText />
+      
+      <Live />
+      
+      {/* <Whatsapp /> */}
       <div className="pt-[120px] md:pt-[140px]">
         <News />
         <GaleriKegiatan />
