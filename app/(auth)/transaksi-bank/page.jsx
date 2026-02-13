@@ -235,52 +235,37 @@ export default function BankTransactionPage() {
     }
   };
 
+  const filterDataByNPA = (dataToFilter) => {
+    const npaMap = {};
+
+    dataToFilter.forEach((item) => {
+      const npa = item.npa;
+
+      if (!npaMap[npa] || item.id > npaMap[npa].id) {
+        npaMap[npa] = item;
+      }
+    });
+
+    return Object.values(npaMap);
+  };
+
   const getBalancingdata = async () => {
     setLoadingBalancing(true);
+
     try {
-      let result;
-
-      if (displayCount === "all") {
-        const tempResult = await GlobalApi.getTransaksiBankBalancing(
-          selectedCabang,
-          selectedUnitKerja,
-          year,
-          month,
-          paymentNote,
-          searchBalancing,
-          1,
-          0,
-        );
-
-        const totalElements = tempResult.totalElements;
-
-        result = await GlobalApi.getTransaksiBankBalancing(
-          selectedCabang,
-          selectedUnitKerja,
-          year,
-          month,
-          paymentNote,
-          searchBalancing,
-          totalElements,
-          0,
-        );
-      } else {
-        result = await GlobalApi.getTransaksiBankBalancing(
-          selectedCabang,
-          selectedUnitKerja,
-          year,
-          month,
-          paymentNote,
-          searchBalancing,
-          displayCount,
-          currentPageBalancing - 1,
-        );
-      }
-
-      setDataBalancing(result.content);
-      setTotalPagesBalancing(result.totalPages);
+      const result = await GlobalApi.getTransaksiBankBalancing(
+        selectedCabang,
+        selectedUnitKerja,
+        null,
+        null,
+        paymentNote,
+        searchBalancing,
+      );
+      const filteredResult = Array.isArray(result) ? result : [];
+      setDataBalancing(filterDataByNPA(filteredResult));
     } catch (err) {
       console.error("Gagal memuat data:", err);
+      setDataBalancing([]);
     } finally {
       setLoadingBalancing(false);
     }
@@ -312,7 +297,6 @@ export default function BankTransactionPage() {
         try {
           const res = await GlobalApi.getCabang();
 
-          // 🔐 PAKSA array
           setListCabang(Array.isArray(res) ? res : res?.data || []);
         } catch (error) {
           console.error(error);
@@ -1014,6 +998,8 @@ export default function BankTransactionPage() {
         currentPage++;
       }
 
+      allData = filterDataByNPA(allData);
+
       const rekeningCount = {};
       allData.forEach((item) => {
         if (item.rekening) {
@@ -1098,6 +1084,8 @@ export default function BankTransactionPage() {
         currentPage++;
       }
 
+      allData = filterDataByNPA(allData);
+
       const rekeningCount = {};
       allData.forEach((item) => {
         rekeningCount[item.rekening] = (rekeningCount[item.rekening] || 0) + 1;
@@ -1175,46 +1163,6 @@ export default function BankTransactionPage() {
     return pages;
   };
   // Balancing
-  const handlePageClickBalancing = (page) => {
-    setCurrentPageBalancing(page);
-  };
-
-  const handlePreviousPageBalancing = () => {
-    setCurrentPageBalancing((prev) => Math.max(prev - 1, 1));
-  };
-
-  const handleNextPageBalancing = () => {
-    setCurrentPageBalancing((prev) => Math.min(prev + 1, totalPagesBalancing));
-  };
-
-  const getVisiblePagesBalancing = () => {
-    const pages = [];
-    const maxVisible = 5;
-
-    let start = Math.max(currentPageBalancing - 2, 1);
-    let end = Math.min(start + maxVisible - 1, totalPagesBalancing);
-
-    if (end - start < maxVisible - 1) {
-      start = Math.max(end - maxVisible + 1, 1);
-    }
-
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-
-    return pages;
-  };
-  const startIndex =
-    displayCount === "all" ? 0 : (currentPageBalancing - 1) * displayCount;
-
-  const endIndex =
-    displayCount === "all" ? dataBalancing.length : startIndex + displayCount;
-
-  const pageData =
-    displayCount === "all"
-      ? dataBalancing
-      : dataBalancing.slice(startIndex, endIndex);
-
   const handleSort = (key) => {
     let direction = "asc";
     if (sortConfig.key === key && sortConfig.direction === "asc") {
@@ -1770,28 +1718,6 @@ export default function BankTransactionPage() {
                       </span>
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Tampilan
-                    </label>
-                    <select
-                      className="w-full h-10 text-base px-4 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition-all"
-                      value={displayCountPotongan}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        setDisplayCountPotongan(
-                          value === "all" ? "all" : Number(value),
-                        );
-                        setCurrentPage(1);
-                      }}
-                    >
-                      <option value={10}>10</option>
-                      <option value={25}>25</option>
-                      <option value={50}>50</option>
-                      <option value={100}>100</option>
-                      <option value="all">All</option>
-                    </select>
-                  </div>
                 </div>
               </div>
 
@@ -1826,7 +1752,6 @@ export default function BankTransactionPage() {
                   <tbody>
                     {loadingFilter ? (
                       <>
-                        {/* Loading message */}
                         <tr>
                           <td colSpan="12" className="p-6 text-center">
                             <div className="flex flex-col items-center justify-center space-y-3">
@@ -1850,7 +1775,7 @@ export default function BankTransactionPage() {
                             </div>
                           </td>
                         </tr>
-                        {/* Loading skeleton rows */}
+
                         {Array.from({ length: 4 }).map((_, idx) => (
                           <tr key={`skeleton-${idx}`} className="bg-white">
                             {Array.from({ length: 12 }).map((_, cellIdx) => (
@@ -2265,22 +2190,7 @@ export default function BankTransactionPage() {
                       </div>
                     )}
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Bulan Transaksi
-                    </label>
-                    <select
-                      className="w-full h-10 text-base px-4 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition-all"
-                      value={month}
-                      onChange={(e) => setMonth(e.target.value)}
-                    >
-                      {bulanList.map((bulan) => (
-                        <option key={bulan.value} value={bulan.value}>
-                          {bulan.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Tahun Transaksi
@@ -2314,28 +2224,7 @@ export default function BankTransactionPage() {
                       </span>
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Tampilan
-                    </label>
-                    <select
-                      className="w-full h-10 text-base px-4 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition-all"
-                      value={displayCount}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        setDisplayCount(
-                          value === "all" ? "all" : Number(value),
-                        );
-                        setCurrentPageBalancing(1);
-                      }}
-                    >
-                      <option value={10}>10</option>
-                      <option value={25}>25</option>
-                      <option value={50}>50</option>
-                      <option value={100}>100</option>
-                      <option value="all">All</option>
-                    </select>
-                  </div>
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Ket. Pembayaran
@@ -2497,7 +2386,6 @@ export default function BankTransactionPage() {
                         </th>
                       ))}
 
-                      {/* ACTION */}
                       {cekRole === "SUPER ADMIN" && (
                         <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-[#0B131E]">
                           Action
@@ -2509,7 +2397,6 @@ export default function BankTransactionPage() {
                   <tbody>
                     {loadingBalancing ? (
                       <>
-                        {/* Loading message */}
                         <tr>
                           <td colSpan="12" className="p-6 text-center">
                             <div className="flex flex-col items-center justify-center space-y-3">
@@ -2533,7 +2420,7 @@ export default function BankTransactionPage() {
                             </div>
                           </td>
                         </tr>
-                        {/* Loading skeleton rows */}
+
                         {Array.from({ length: 4 }).map((_, idx) => (
                           <tr key={`skeleton-${idx}`} className="bg-white">
                             {Array.from({ length: 12 }).map((_, cellIdx) => (
@@ -2547,7 +2434,7 @@ export default function BankTransactionPage() {
                           </tr>
                         ))}
                       </>
-                    ) : dataBalancing.length > 0 ? (
+                    ) : (sortedData?.length ?? 0) > 0 ? (
                       sortedData.map((item, index) => (
                         <tr
                           key={item.id}
@@ -2690,72 +2577,73 @@ export default function BankTransactionPage() {
                       </td>
                       <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
                         {formatRupiah(
-                          dataBalancing.reduce(
-                            (sum, item) => sum + item.totalIuranAnggota,
+                          (dataBalancing ?? []).reduce(
+                            (sum, item) => sum + (item.totalIuranAnggota || 0),
                             0,
                           ),
                         )}
                       </td>
                       <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
                         {formatRupiah(
-                          dataBalancing.reduce(
-                            (sum, item) => sum + item.totalIuranSanduka,
+                          (dataBalancing ?? []).reduce(
+                            (sum, item) => sum + (item.totalIuranSanduka || 0),
                             0,
                           ),
                         )}
                       </td>
                       <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
                         {formatRupiah(
-                          dataBalancing.reduce(
-                            (sum, item) => sum + item.totalIuranDaspen,
+                          (dataBalancing ?? []).reduce(
+                            (sum, item) => sum + (item.totalIuranDaspen || 0),
                             0,
                           ),
                         )}
                       </td>
                       <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
                         {formatRupiah(
-                          dataBalancing.reduce(
-                            (sum, item) => sum + item.totalIuranDerap,
+                          (dataBalancing ?? []).reduce(
+                            (sum, item) => sum + (item.totalIuranDerap || 0),
                             0,
                           ),
                         )}
                       </td>
                       <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
                         {formatRupiah(
-                          dataBalancing.reduce(
-                            (sum, item) => sum + item.totalIuranKalender,
+                          (dataBalancing ?? []).reduce(
+                            (sum, item) => sum + (item.totalIuranKalender || 0),
                             0,
                           ),
                         )}
                       </td>
                       <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
                         {formatRupiah(
-                          dataBalancing.reduce(
-                            (sum, item) => sum + item.totalIuranSumbangan,
+                          (dataBalancing ?? []).reduce(
+                            (sum, item) =>
+                              sum + (item.totalIuranSumbangan || 0),
                             0,
                           ),
                         )}
                       </td>
                       <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
                         {formatRupiah(
-                          dataBalancing.reduce(
-                            (sum, item) => sum + item.totalIuran,
+                          (dataBalancing ?? []).reduce(
+                            (sum, item) => sum + (item.totalIuran || 0),
                             0,
                           ),
                         )}
                       </td>
                       <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
                         {formatRupiah(
-                          dataBalancing.reduce(
-                            (sum, item) => sum + item.potongan,
+                          (dataBalancing ?? []).reduce(
+                            (sum, item) => sum + (item.potongan || 0),
                             0,
                           ),
                         )}
                       </td>
                       <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
                         {formatRupiah(
-                          dataBalancing.reduce(
-                            (sum, item) => sum + item.selisih,
+                          (dataBalancing ?? []).reduce(
+                            (sum, item) => sum + (item.selisih || 0),
                             0,
                           ),
                         )}
@@ -2765,118 +2653,7 @@ export default function BankTransactionPage() {
                     </tr>
                   </tfoot>
                 </table>
-                <div className="p-4 border-t">
-                  <div className="flex flex-wrap justify-center gap-2">
-                    <button
-                      onClick={() => handlePageClickBalancing(1)}
-                      disabled={currentPageBalancing === 1}
-                      className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm flex items-center"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4 mr-1"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
-                        />
-                      </svg>
-                      First
-                    </button>
-
-                    <button
-                      onClick={handlePreviousPageBalancing}
-                      disabled={currentPageBalancing === 1}
-                      className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm flex items-center"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4 mr-1"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 19l-7-7 7-7"
-                        />
-                      </svg>
-                      Prev
-                    </button>
-
-                    {getVisiblePagesBalancing().map((page) => (
-                      <button
-                        key={page}
-                        onClick={() => handlePageClickBalancing(page)}
-                        className={`px-3 py-1 border rounded-md text-sm ${
-                          page === currentPageBalancing
-                            ? "bg-teal-600 text-white border-teal-600"
-                            : "bg-white hover:bg-gray-50"
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    ))}
-
-                    {totalPagesBalancing > 3 &&
-                      currentPageBalancing < totalPagesBalancing - 3 && (
-                        <span className="px-2 py-1">...</span>
-                      )}
-
-                    <button
-                      onClick={handleNextPageBalancing}
-                      disabled={currentPageBalancing === totalPagesBalancing}
-                      className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm flex items-center"
-                    >
-                      Next
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4 ml-1"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
-                    </button>
-
-                    <button
-                      onClick={() =>
-                        handlePageClickBalancing(totalPagesBalancing)
-                      }
-                      disabled={currentPageBalancing === totalPagesBalancing}
-                      className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm flex items-center"
-                    >
-                      Last
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4 ml-1"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13 5l7 7-7 7M5 5l7 7-7 7"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
+                <div className="p-4 border-t"></div>
               </div>
             </div>
           )}
