@@ -207,12 +207,12 @@ const Event = () => {
 
         <div className="relative overflow-hidden">
           {/* BUTTON LEFT */}
-          <button
+          {/* <button
             onClick={() => setDirection("right")}
             className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:scale-110 transition"
           >
             <ChevronLeft size={22} />
-          </button>
+          </button> */}
 
           <div
             className={`flex gap-6 w-max ${
@@ -259,12 +259,12 @@ const Event = () => {
               </div>
             ))}
           </div>
-          <button
+          {/* <button
             onClick={() => setDirection("left")}
             className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:scale-110 transition"
           >
             <ChevronRight size={22} />
-          </button>
+          </button> */}
           <style jsx>{`
             @keyframes scroll-left {
               0% {
