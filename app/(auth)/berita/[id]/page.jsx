@@ -194,55 +194,7 @@ export default function BeritaDetail({ params }) {
           </Link>
 
           <div className="flex gap-8">
-            <div className="hidden lg:flex lg:w-20 flex-shrink-0">
-              <div className="sticky top-32 flex flex-col items-center gap-2 bg-white rounded-full p-3 shadow-md w-20 h-fit">
-                <div className="flex flex-col items-center gap-3">
-                  <span className="text-xs font-medium text-gray-600">
-                    Bagikan
-                  </span>
-
-                  <a
-                    href={shareLinks.facebook}
-                    target="_blank"
-                    className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center hover:opacity-90"
-                  >
-                    <Facebook size={18} />
-                  </a>
-
-                  <a
-                    href={shareLinks.twitter}
-                    target="_blank"
-      className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center hover:opacity-90"
-                  >
-                    𝕏
-                  </a>
-
-                  <a
-                    href={shareLinks.whatsapp}
-                    target="_blank"
-                    className="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center hover:opacity-90"
-                  >
-                     <FontAwesomeIcon icon={faWhatsapp} size="lg" />
-                  </a>
-
-                  <a
-                    href={shareLinks.telegram}
-                    target="_blank"
-                    className="w-10 h-10 rounded-full bg-blue-400 text-white flex items-center justify-center hover:opacity-90"
-                  >
-                    <Send size={18} />
-                  </a>
-                </div>
-                <button
-                  onClick={handleShare}
-                  className="flex flex-col items-center justify-center w-14 h-14 rounded-full bg-gray-100 hover:bg-teal-100 hover:text-teal-600 transition text-gray-600 font-semibold text-xs"
-                  title="Share"
-                >
-                  <Share2 size={18} />
-                  <span className="text-[10px] mt-1">Share</span>
-                </button>
-              </div>
-            </div>
+            <div className="hidden lg:flex lg:w-20 flex-shrink-0"></div>
 
             <article className="flex-1 bg-white rounded-xl shadow-lg overflow-hidden">
               <div className="relative h-96 overflow-hidden">
@@ -260,6 +212,8 @@ export default function BeritaDetail({ params }) {
                     <span className="font-medium text-gray-700">
                       {news.contributor}
                     </span>
+                    <span>|</span>
+                    <span className="font-medium">{news.editor}</span> 
                   </div>
                   <span>•</span>
                   <div>{news.date}</div>
@@ -271,13 +225,7 @@ export default function BeritaDetail({ params }) {
                   {news.title}
                 </h1>
 
-                <div className="bg-teal-50 border-l-4 border-teal-600 p-4 mb-8 rounded">
-                  <p className="text-sm text-gray-700">
-                    <span className="font-medium">Editor:</span> {news.editor}
-                  </p>
-                </div>
-
-                <div className="prose prose-lg max-w-none mb-12">
+                <div className="prose prose-lg max-w-none mb-4">
                   {news.content.split("\n\n").map((paragraph, idx) => (
                     <p
                       key={idx}
@@ -286,6 +234,53 @@ export default function BeritaDetail({ params }) {
                       {paragraph}
                     </p>
                   ))}
+                </div>
+
+                <div className="pt-4 border-t">
+                  <div className="flex justify-start items-center flex-wrap gap-4">
+                    <h3 className="text-lg font-semibold text-gray-800">
+                      Bagikan Berita Ini:
+                    </h3>
+
+                    <a
+                      href={shareLinks.facebook}
+                      target="_blank"
+                      className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center hover:scale-110 transition duration-200 shadow-md"
+                    >
+                      <Facebook size={20} />
+                    </a>
+
+                    <a
+                      href={shareLinks.twitter}
+                      target="_blank"
+                      className="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center hover:scale-110 transition duration-200 shadow-md"
+                    >
+                      𝕏
+                    </a>
+
+                    <a
+                      href={shareLinks.whatsapp}
+                      target="_blank"
+                      className="w-12 h-12 rounded-full bg-green-500 text-white flex items-center justify-center hover:scale-110 transition duration-200 shadow-md"
+                    >
+                      <FontAwesomeIcon icon={faWhatsapp} size="lg" />
+                    </a>
+
+                    <a
+                      href={shareLinks.telegram}
+                      target="_blank"
+                      className="w-12 h-12 rounded-full bg-blue-400 text-white flex items-center justify-center hover:scale-110 transition duration-200 shadow-md"
+                    >
+                      <Send size={20} />
+                    </a>
+
+                    <button
+                      onClick={handleShare}
+                      className="w-12 h-12 rounded-full bg-gray-200 text-gray-700 flex items-center justify-center hover:bg-teal-100 hover:text-teal-600 hover:scale-110 transition duration-200 shadow-md"
+                    >
+                      <Share2 size={20} />
+                    </button>
+                  </div>
                 </div>
               </div>
             </article>

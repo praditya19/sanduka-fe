@@ -1,10 +1,12 @@
 "use client";
 import Header from "@/app/_components/Header";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Share2,
   Facebook,
   Send,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
@@ -113,6 +115,40 @@ const eventData = [
 
 const Event = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [direction, setDirection] = useState("left");
+  const [isPaused, setIsPaused] = useState(false);
+
+  const sliderRef = useRef(null);
+  const [isHovered, setIsHovered] = useState(false);
+
+  const scrollAmount = 320; // lebar card + gap
+
+  // 👉 AUTO SCROLL
+  useEffect(() => {
+    if (selectedEvent || isHovered) return; // pause kalau popup buka / hover
+
+    const interval = setInterval(() => {
+      if (sliderRef.current) {
+        sliderRef.current.scrollBy({
+          left: scrollAmount,
+          behavior: "smooth",
+        });
+
+        // kalau sudah mentok kanan → balik ke awal
+        if (
+          sliderRef.current.scrollLeft + sliderRef.current.offsetWidth >=
+          sliderRef.current.scrollWidth
+        ) {
+          sliderRef.current.scrollTo({
+            left: 0,
+            behavior: "smooth",
+          });
+        }
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [selectedEvent, isHovered]);
 
   const limitWords = (text, maxWords = 20) => {
     const words = text.split(" ");
@@ -158,36 +194,108 @@ const Event = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-
-      <div className="max-w-7xl mx-auto px-6 py-10 pt-28">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4">
-            <span className="">Event</span>
-          </h2>
+      <div className="max-w-[1120px] overflow-hidden mx-auto px-6 py-10 pt-24">
+        <div className="text-center mb-8">
+          <h3 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+            <span className="">Event PGRI Jepara</span>
+          </h3>
+          <span className="">
+            Kegiatan dan acara yang dapat diikuti semua anggota PGRI Kabupaten
+            Jepara
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {eventData.map((event) => (
-            <div
-              key={event.id}
-              onClick={() => setSelectedEvent(event)}
-              className="cursor-pointer bg-white rounded-xl shadow-md hover:shadow-xl transition overflow-hidden"
-            >
-              <img
-                src={event.image}
-                alt={event.title}
-                className="w-full h-48 object-cover"
-              />
-              <div className="p-4">
-                <h2 className="text-lg font-semibold text-gray-800 mb-2">
-                  {event.title}
-                </h2>
-                <p className="text-sm text-gray-600">
-                  {limitWords(event.shortDesc, 20)}
-                </p>
+        <div className="relative overflow-hidden">
+          {/* BUTTON LEFT */}
+          <button
+            onClick={() => setDirection("right")}
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:scale-110 transition"
+          >
+            <ChevronLeft size={22} />
+          </button>
+
+          <div
+            className={`flex gap-6 w-max ${
+              direction === "left" ? "animate-left" : "animate-right"
+            } ${isPaused || selectedEvent ? "paused" : ""}`}
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+          >
+            {[...eventData, ...eventData].map((event, index) => (
+              <div
+                key={`${event.id}-${index}`}
+                onClick={() => setSelectedEvent(event)}
+                className="flex-shrink-0 w-[300px] h-[520px] rounded-2xl overflow-hidden shadow-lg cursor-pointer bg-[#0f172a] text-white"
+              >
+                {/* Image */}
+                <div className="h-[220px] overflow-hidden">
+                  <img
+                    src={event.image}
+                    alt={event.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+
+                {/* Content */}
+                <div className="p-5 flex flex-col justify-between h-[300px]">
+                  <div>
+                    <h2 className="text-xl font-bold mb-3">{event.title}</h2>
+
+                    <p className="text-sm text-gray-300 mb-4">
+                      {limitWords(event.shortDesc, 18)}
+                    </p>
+
+                    <div className="space-y-2 text-sm text-gray-400">
+                      <p>📅 {event.date}</p>
+                      <p>📍 {event.location}</p>
+                      <p>👥 Kuota: 75 orang</p>
+                    </div>
+                  </div>
+
+                  <button className="mt-6 w-full py-2 rounded-lg bg-gradient-to-r from-pink-500 to-purple-600 font-semibold hover:opacity-90 transition">
+                    Daftar Event
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+          <button
+            onClick={() => setDirection("left")}
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:scale-110 transition"
+          >
+            <ChevronRight size={22} />
+          </button>
+          <style jsx>{`
+            @keyframes scroll-left {
+              0% {
+                transform: translateX(0);
+              }
+              100% {
+                transform: translateX(-50%);
+              }
+            }
+
+            @keyframes scroll-right {
+              0% {
+                transform: translateX(-50%);
+              }
+              100% {
+                transform: translateX(0);
+              }
+            }
+
+            .animate-left {
+              animation: scroll-left 60s linear infinite;
+            }
+
+            .animate-right {
+              animation: scroll-right 60s linear infinite;
+            }
+
+            .paused {
+              animation-play-state: paused;
+            }
+          `}</style>
         </div>
       </div>
 

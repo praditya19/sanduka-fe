@@ -292,10 +292,10 @@ const TravelPage = () => {
         {/* Content */}
         <div className="relative max-w-7xl mx-auto text-center text-white ">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Tour and Travel
+            Biro Travel PGRI Jepara
           </h1>
           <p className="text-xl md:text-2xl font-light mb-6">
-            Temukan Destinasi Menakjubkan dengan Paket Eksklusif
+            Paket wisata terpercaya untuk guru, staf, dan keluarga dengan harga spesial anggota PGRI
           </p>
         </div>
       </div>
