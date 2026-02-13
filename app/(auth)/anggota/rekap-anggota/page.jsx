@@ -1836,10 +1836,6 @@ function RekapAnggota() {
     };
   }, []);
 
-  const handleExpand = (index) => {
-    setExpandedIndex(expandedIndex === index ? null : index);
-  };
-
   const formatTanggal = (timestamp, format = "DMY") => {
     if (!timestamp) return "-";
 
