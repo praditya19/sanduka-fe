@@ -15,6 +15,7 @@ const newsData = [
     link: "/berita/1",
     contributor: "Admin PGRI",
     editor: "Tim Editorial",
+    date: "13 Februari 2026",
     views: 1240,
     date: "5 Februari 2026",
   },
@@ -27,6 +28,7 @@ const newsData = [
     link: "/berita/2",
     contributor: "Humas PGRI",
     editor: "Redaksi",
+    date: "13 Februari 2026",
     views: 980,
   },
   {
@@ -38,6 +40,7 @@ const newsData = [
     link: "/berita/3",
     contributor: "Sekretariat",
     editor: "Editor Lapangan",
+    date: "13 Februari 2026",
     views: 760,
   },
   {
@@ -49,6 +52,7 @@ const newsData = [
     link: "/berita/4",
     contributor: "Admin PGRI",
     editor: "Tim Editorial",
+    date: "13 Februari 2026",
     views: 1240,
   },
   {
@@ -60,6 +64,7 @@ const newsData = [
     link: "/berita/5",
     contributor: "Humas PGRI",
     editor: "Redaksi",
+    date: "13 Februari 2026",
     views: 980,
   },
   {
@@ -71,6 +76,7 @@ const newsData = [
     link: "/berita/6",
     contributor: "Sekretariat",
     editor: "Editor Lapangan",
+    date: "13 Februari 2026",
     views: 760,
   },
   {
@@ -82,6 +88,7 @@ const newsData = [
     link: "/berita/7",
     contributor: "Admin PGRI",
     editor: "Tim Editorial",
+    date: "13 Februari 2026",
     views: 1240,
   },
   {
@@ -93,6 +100,7 @@ const newsData = [
     link: "/berita/8",
     contributor: "Humas PGRI",
     editor: "Redaksi",
+    date: "13 Februari 2026",
     views: 980,
   },
   {
@@ -104,6 +112,7 @@ const newsData = [
     link: "/berita/9",
     contributor: "Sekretariat",
     editor: "Editor Lapangan",
+    date: "13 Februari 2026",
     views: 760,
   },
   {
@@ -115,6 +124,7 @@ const newsData = [
     link: "/berita/10",
     contributor: "Admin PGRI",
     editor: "Tim Editorial",
+    date: "13 Februari 2026",
     views: 1240,
   },
   {
@@ -126,6 +136,7 @@ const newsData = [
     link: "#",
     contributor: "Humas PGRI",
     editor: "Redaksi",
+    date: "13 Februari 2026",
     views: 980,
   },
   {
@@ -137,6 +148,7 @@ const newsData = [
     link: "#",
     contributor: "Sekretariat",
     editor: "Editor Lapangan",
+    date: "13 Februari 2026",
     views: 760,
   },
   {
@@ -148,6 +160,7 @@ const newsData = [
     link: "#",
     contributor: "Admin PGRI",
     editor: "Tim Editorial",
+    date: "13 Februari 2026",
     views: 1240,
   },
   {
@@ -159,6 +172,7 @@ const newsData = [
     link: "#",
     contributor: "Humas PGRI",
     editor: "Redaksi",
+    date: "13 Februari 2026",
     views: 980,
   },
   {
@@ -170,6 +184,7 @@ const newsData = [
     link: "#",
     contributor: "Sekretariat",
     editor: "Editor Lapangan",
+    date: "13 Februari 2026",
     views: 760,
   },
   {
@@ -181,6 +196,7 @@ const newsData = [
     link: "#",
     contributor: "Admin PGRI",
     editor: "Tim Editorial",
+    date: "13 Februari 2026",
     views: 1240,
   },
   {
@@ -192,6 +208,7 @@ const newsData = [
     link: "#",
     contributor: "Humas PGRI",
     editor: "Redaksi",
+    date: "13 Februari 2026",
     views: 980,
   },
   {
@@ -203,6 +220,7 @@ const newsData = [
     link: "#",
     contributor: "Sekretariat",
     editor: "Editor Lapangan",
+    date: "13 Februari 2026",
     views: 760,
   },
 ];
@@ -250,7 +268,18 @@ const Berita = () => {
                   </h3>
                 </div>
 
-                <div className="p-5 space-y-3">
+                <div className="p-4 border-t text-xs text-gray-500 flex flex-wrap justify-between gap-2">
+                  <div>
+                    <span className="font-medium text-gray-700">
+                      Contributor: {news.contributor} | Editor: {news.editor}
+                    </span>
+
+                    <div className="mt-1 text-gray-400">{news.date}</div>
+                  </div>
+
+                  <div>👁️ {news.views} views</div>
+                </div>
+                <div className="px-4 pb-4 space-y-3">
                   <p className="text-sm text-gray-600">
                     {truncateWords(news.excerpt, 20)}
                   </p>
@@ -260,18 +289,7 @@ const Berita = () => {
                     className="inline-block text-sm font-medium text-teal-600 hover:underline"
                   >
                     Baca Selengkapnya →
-                    
                   </a>
-
-                  <div className="pt-3 border-t text-xs text-gray-500 flex flex-wrap justify-between gap-2">
-                    <div>
-                      <span className="font-medium text-gray-700">
-                        Contributor: {news.contributor}
-                      </span>{" "}
-                      · Editor: {news.editor}
-                    </div>
-                    <div>👁️ {news.views} views</div>
-                  </div>
                 </div>
               </div>
             ))}
