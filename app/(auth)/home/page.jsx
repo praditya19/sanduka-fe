@@ -34,6 +34,8 @@ import {
   faFileInvoiceDollar,
   faMoneyBillTransfer,
   faImages,
+  faNewspaper,
+  faPenNib,
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import {
@@ -57,7 +59,7 @@ const MapComponent = dynamic(
   () => import("../../_components/MapComponent.jsx"),
   {
     ssr: false,
-  }
+  },
 );
 const NotificationPopup = ({ type, message, onClose }) => {
   useEffect(() => {
@@ -183,12 +185,6 @@ export default function IconGrid() {
       href: "/anggota/rekap-anggota",
       color: "text-gray-500",
     },
-    // {
-    //   icon: faUbuntu,
-    //   label: "New By Nominal",
-    //   href: "/by-nominal",
-    //   color: "text-blue-500",
-    // },
     {
       icon: faSyncAlt,
       label: "Sinkronisasi",
@@ -286,6 +282,12 @@ export default function IconGrid() {
       href: "/eksport-foto",
       color: "text-green-600",
     },
+    {
+      icon: faPenNib,
+      label: "Kontributor",
+      href: "/berita/create-berita",
+      color: "text-orange-600",
+    },
   ];
   const sortByDate = (data) => {
     return [...data].sort((a, b) => {
@@ -300,13 +302,13 @@ export default function IconGrid() {
         const dateA = new Date(
           a.waktuMeninggalTerlapor[0],
           a.waktuMeninggalTerlapor[1] - 1,
-          a.waktuMeninggalTerlapor[2]
+          a.waktuMeninggalTerlapor[2],
         );
 
         const dateB = new Date(
           b.waktuMeninggalTerlapor[0],
           b.waktuMeninggalTerlapor[1] - 1,
-          b.waktuMeninggalTerlapor[2]
+          b.waktuMeninggalTerlapor[2],
         );
 
         if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
@@ -363,8 +365,6 @@ export default function IconGrid() {
         const responseDiterima = await GlobalApi.getTotalSantunan();
 
         setTotalNominal(responseDiterima);
-
-        console.log("Data Lapor Diterima:", fetchedDataDiterima);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -377,7 +377,6 @@ export default function IconGrid() {
         const data = await GlobalApi.getSantunanDiberikan();
 
         setJumlahSantunan(data);
-
       } catch (error) {
         console.error("Error:", error);
       }
@@ -398,7 +397,7 @@ export default function IconGrid() {
           deceasedData.map(async (deceased, index) => {
             try {
               const userResponse = await GlobalApi.searchUsersByName(
-                deceased.namaLengkap
+                deceased.namaLengkap,
               );
 
               let decodedFoto = null;
@@ -407,10 +406,12 @@ export default function IconGrid() {
                 userResponse?.data?.users &&
                 userResponse.data.users.length > 0
               ) {
-                // Cari user yang paling cocok berdasarkan nama
-                const userData = userResponse.data.users.find(user =>
-                  user.namaLengkap?.toLowerCase() === deceased.namaLengkap?.toLowerCase()
-                ) || userResponse.data.users[0];
+                const userData =
+                  userResponse.data.users.find(
+                    (user) =>
+                      user.namaLengkap?.toLowerCase() ===
+                      deceased.namaLengkap?.toLowerCase(),
+                  ) || userResponse.data.users[0];
 
                 if (userData.foto) {
                   try {
@@ -441,26 +442,26 @@ export default function IconGrid() {
                   nomorHpPelapor:
                     userData.nomorHpPelapor || deceased.nomorHpPelapor,
                   foto: decodedFoto || null,
-                  originalIndex: index
+                  originalIndex: index,
                 };
               }
               return {
                 ...deceased,
                 foto: null,
-                originalIndex: index
+                originalIndex: index,
               };
             } catch (error) {
               console.error(
                 `Error fetching details for ${deceased.namaLengkap}:`,
-                error
+                error,
               );
               return {
                 ...deceased,
                 foto: null,
-                originalIndex: index
+                originalIndex: index,
               };
             }
-          })
+          }),
         );
 
         setAnggotaMeninggal(detailedData);
@@ -563,7 +564,7 @@ export default function IconGrid() {
   const formatDate = (dateArray) => {
     if (Array.isArray(dateArray) && dateArray.length === 3) {
       return `${String(dateArray[2]).padStart(2, "0")}-${String(
-        dateArray[1]
+        dateArray[1],
       ).padStart(2, "0")}-${dateArray[0]}`;
     }
     return "Tanggal tidak valid";
@@ -596,12 +597,11 @@ export default function IconGrid() {
     ) {
       return (
         <div className="inline-flex items-center space-x-2">
-          {/* Tombol "Belum Terdaftar" sejajar dengan teks */}
           <div className="flex items-center">
             <FontAwesomeIcon
               icon={faInfoCircle}
               className="w-6 h-6 text-blue-500 cursor-pointer hover:text-blue-600 mr-2"
-              onClick={handleOpenPopup} // Menampilkan popup saat diklik
+              onClick={handleOpenPopup}
             />{" "}
             <button
               className="inline-flex items-center px-2 py-0.5 rounded text-[0.625rem] sm:text-xs md:text-xs font-medium bg-red-500 text-white sm:whitespace-normal whitespace-nowrap"
@@ -611,11 +611,10 @@ export default function IconGrid() {
             </button>
           </div>
 
-          {/* Ikon informasi di sebelah kanan tombol */}
           <FontAwesomeIcon
             icon={faInfoCircle}
             className="w-6 h-6 text-white ml-2"
-            onClick={handleOpenPopup} // Menampilkan popup saat diklik
+            onClick={handleOpenPopup}
           />
         </div>
       );
@@ -635,57 +634,50 @@ export default function IconGrid() {
     try {
       setLoadingButton(true);
 
-      // Ambil userId dari sessionStorage
       const userId = sessionStorage.getItem("userId");
       if (!userId) {
         setNotification({
           type: "error",
           message: `User ID tidak ditemukan!`,
         });
-        setLoadingButton(false); // Matikan loading button
+        setLoadingButton(false);
         return;
       }
 
-      // Mengambil data pengguna berdasarkan userId
       const userData = await GlobalApi.getUserById(userId);
       if (!userData || !userData.nip) {
         setNotification({
           type: "error",
           message: `NIP tidak ditemukan!`,
         });
-        setLoadingButton(false); // Matikan loading button
+        setLoadingButton(false);
         return;
       }
 
-      // Menyimpan NIP yang diperoleh ke dalam state nip
       const nip = userData.nip;
 
-      // Mengecek data berdasarkan NIP
       const data = await GlobalApi.getByNIP(nip);
       if (!data) {
         setNotification({
           type: "error",
           message: `Data NIP ini tidak ditemukan!`,
         });
-        setLoadingButton(false); // Matikan loading button
+        setLoadingButton(false);
         return;
       }
 
-      // Mengecek apakah data sudah disinkronkan
       const nipData = await GlobalApi.getFileByNip(nip);
       if (nipData?.verifikasi === true) {
         setNotification({
           type: "success",
           message: `Data anda sudah tersinkronisasi!`,
         });
-        setLoadingButton(false); // Matikan loading button
+        setLoadingButton(false);
         return;
       }
 
-      // Melakukan sinkronisasi data pengguna
       const response = await GlobalApi.updateRegisUser(userId, data);
 
-      // Menampilkan notifikasi setelah data berhasil disinkronkan
       setNotification({
         type: "success",
         message: `Data berhasil disinkronkan!`,
@@ -702,7 +694,7 @@ export default function IconGrid() {
       //   message: `Nip atau tanggal lahir tidak sesuai dengan data Dansetjateng.org.`
       // });
     } finally {
-      setLoadingButton(false); // Menonaktifkan loading button setelah selesai
+      setLoadingButton(false);
     }
   };
 
@@ -715,7 +707,6 @@ export default function IconGrid() {
               key={index}
               className="flex-shrink-0 w-72 bg-white rounded-lg shadow-md"
             >
-              {/* Gradient Header */}
               <div className="bg-gradient-to-r from-blue-400 to-blue-800 p-4 rounded-t-lg">
                 <div className="flex justify-center mb-2">
                   <Image
@@ -739,7 +730,6 @@ export default function IconGrid() {
                 </p>
               </div>
 
-              {/* Content */}
               <div className="p-4">
                 <div className="text-center space-y-1 mb-3">
                   <p className="text-sm">{currentData.npaPgri || "N/A"}</p>
@@ -799,72 +789,83 @@ export default function IconGrid() {
   const filteredIcons =
     role === "USER"
       ? icons
-        .filter((item) =>
-          [
-            "Lapor",
-            "Teman Unit",
-            "Ketentuan",
-            "Bantuan",
-            "History data",
-            "Pengaduan",
-          ].includes(item.label)
-        )
-        .concat({
-          icon: faUser,
-          label: "Detail Anggota",
-          href: "/anggota/detail-anggota",
-          color: "text-blue-500",
-          bgHover: "hover:bg-blue-100",
-          iconColor: "text-blue-600",
-        })
-        .concat({
-          icon: faUserPen,
-          label: "Edit Anggota",
-          href: "/anggota/edit-anggota",
-          color: "text-orange-500",
-          bgHover: "hover:bg-blue-100",
-          iconColor: "text-blue-600",
-        })
-        .concat({
-          icon: faRightLeft,
-          label: "Mutasi",
-          href: "/anggota/data-anggota/mutasiCabangUnit",
-          color: "text-cyan-500",
-        })
-        .concat({
-          icon: faFileAlt,
-          label: "Daspen",
-          href: "/daspen",
-          color: "text-teal-700",
-        })
-
-        .concat({
-          icon: faFileInvoiceDollar,
-          label: "Tagihan",
-          href: "/tagihan",
-          color: "text-blue-700",
-        })
-        .sort((a, b) => {
-          const order = [
-            "Lapor",
-            "Tagihan",
-            "Detail Anggota",
-            "Edit Anggota",
-            "Mutasi",
-            "Daspen",
-            "Ketentuan",
-            "Bantuan",
-            "Teman Unit",
-            "Pengaduan",
-          ];
-          return order.indexOf(a.label) - order.indexOf(b.label);
-        })
-      : role === "SUPER ADMIN"
-        ? icons
-        : icons.filter((item) =>
-        item.label !== "Galeri" &&
-        item.label !== "Eksport Foto"
-    );
+          .filter((item) =>
+            [
+              "Lapor",
+              "Teman Unit",
+              "Ketentuan",
+              "Bantuan",
+              "Pengaduan",
+              "Kontributor",
+            ].includes(item.label),
+          )
+          .concat({
+            icon: faUser,
+            label: "Detail Anggota",
+            href: "/anggota/detail-anggota",
+            color: "text-blue-500",
+            bgHover: "hover:bg-blue-100",
+            iconColor: "text-blue-600",
+          })
+          .concat({
+            icon: faUserPen,
+            label: "Edit Anggota",
+            href: "/anggota/edit-anggota",
+            color: "text-orange-500",
+            bgHover: "hover:bg-blue-100",
+            iconColor: "text-blue-600",
+          })
+          .concat({
+            icon: faRightLeft,
+            label: "Mutasi",
+            href: "/anggota/data-anggota/mutasiCabangUnit",
+            color: "text-cyan-500",
+          })
+          .concat({
+            icon: faFileAlt,
+            label: "Daspen",
+            href: "/daspen",
+            color: "text-teal-700",
+          })
+          .concat({
+            icon: faFileInvoiceDollar,
+            label: "Tagihan",
+            href: "/tagihan",
+            color: "text-blue-700",
+          })
+          .concat({
+            icon: faFileInvoiceDollar,
+            label: "Tagihan",
+            href: "/tagihan",
+            color: "text-blue-700",
+          })
+          .sort((a, b) => {
+            const order = [
+              "Lapor",
+              "Tagihan",
+              "Detail Anggota",
+              "Edit Anggota",
+              "Mutasi",
+              "Daspen",
+              "Ketentuan",
+              "Bantuan",
+              "Teman Unit",
+              "Pengaduan",
+            ];
+            return order.indexOf(a.label) - order.indexOf(b.label);
+          })
+      : role === "SUPERADMIN"
+        ? icons.concat({
+            icon: faNewspaper,
+            label: "Berita",
+            href: "/berita/view-berita",
+            color: "text-purple-600",
+            bgHover: "hover:bg-purple-100",
+            iconColor: "text-purple-700",
+          })
+        : icons.filter(
+            (item) => item.label !== "Galeri" && item.label !== "Eksport Foto",
+          );
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -876,8 +877,9 @@ export default function IconGrid() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <main
-          className={`transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           {notification && (
             <NotificationPopup
@@ -1102,10 +1104,11 @@ export default function IconGrid() {
                       className="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-50 transition-all duration-300 cursor-pointer"
                     >
                       <div
-                        className={`w-14 h-14 ${item.color.includes("text-")
-                          ? item.color.replace("text-", "bg-") + "/10"
-                          : "bg-gray-100"
-                          } rounded-full flex items-center justify-center mb-3 shadow-sm`}
+                        className={`w-14 h-14 ${
+                          item.color.includes("text-")
+                            ? item.color.replace("text-", "bg-") + "/10"
+                            : "bg-gray-100"
+                        } rounded-full flex items-center justify-center mb-3 shadow-sm`}
                       >
                         <FontAwesomeIcon
                           icon={item.icon}

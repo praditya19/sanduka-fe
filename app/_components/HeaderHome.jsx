@@ -52,7 +52,7 @@ const HeaderHome = () => {
         const allPensiunList = pensiunResponse.data.content;
 
         const segeraItems = allPensiunList.filter(
-          (item) => item.keterangan === null && item.status === "Segera"
+          (item) => item.keterangan === null && item.status === "Segera",
         );
         const countSegera = segeraItems.length;
 
@@ -92,7 +92,7 @@ const HeaderHome = () => {
     const userRole = sessionStorage.getItem("role");
     const npa = sessionStorage.getItem("npa");
 
-    if (!userId) {
+    if (!userId && userRole !== "SUPERADMIN") {
       console.error("ID tidak ditemukan di sessionStorage");
       return;
     }
@@ -100,10 +100,13 @@ const HeaderHome = () => {
     try {
       let idToFetch = userId;
 
-      if ((userRole === "ADMIN" || userRole === "SUPER ADMIN") && npa) {
+      if (userRole === "SUPERADMIN" && npa) {
         const npaResponse = await GlobalApi.cekNpa(npa);
+
         if (npaResponse && npaResponse.id) {
           idToFetch = npaResponse.id;
+
+          sessionStorage.setItem("userId", idToFetch);
         } else {
           console.error("NPA tidak valid atau tidak ditemukan");
           return;

@@ -40,7 +40,7 @@ const registerUser = async (userData) => {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-      }
+      },
     );
 
     return response.data;
@@ -57,7 +57,7 @@ const loginAdmin = async (loginData) => {
       loginData,
       {
         headers: { "Content-Type": "application/json" },
-      }
+      },
     );
     return response.data;
   } catch (error) {
@@ -75,14 +75,14 @@ const login = async (loginData) => {
         headers: {
           "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     return response.data;
   } catch (error) {
     if (error.response) {
       throw new Error(
-        error.response.data.message || "Terjadi kesalahan pada server"
+        error.response.data.message || "Terjadi kesalahan pada server",
       );
     } else {
       throw new Error("Terjadi kesalahan pada server");
@@ -98,7 +98,7 @@ const getUnitKerja = () => axiosClient.get("/api/unit-kerja");
 const getUnitKerjaByCabang = async (cabang) => {
   try {
     const response = await axiosClient.get(
-      `/api/unit-kerja?cabang=${encodeURIComponent(cabang)}`
+      `/api/unit-kerja?cabang=${encodeURIComponent(cabang)}`,
     );
     return response.data;
   } catch (error) {
@@ -118,7 +118,9 @@ const getJumlahSantunan = async () => {
 };
 const getSantunanDiberikan = async () => {
   try {
-    const response = await axiosClient.get(`/api/pengeluaran-sanduka/count-santunan-diberikan`);
+    const response = await axiosClient.get(
+      `/api/pengeluaran-sanduka/count-santunan-diberikan`,
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching jumlah santunan:", error);
@@ -127,7 +129,9 @@ const getSantunanDiberikan = async () => {
 };
 const getTotalSantunan = async () => {
   try {
-    const response = await axiosClient.get(`/api/pengeluaran-sanduka/count-santunan-duka`);
+    const response = await axiosClient.get(
+      `/api/pengeluaran-sanduka/count-santunan-duka`,
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching jumlah santunan:", error);
@@ -136,7 +140,7 @@ const getTotalSantunan = async () => {
 };
 const searchUsersByName = (namaLengkap) => {
   return axiosClient.get(
-    `/api/auth/search-users?namaLengkap=${encodeURIComponent(namaLengkap)}`
+    `/api/auth/search-users?namaLengkap=${encodeURIComponent(namaLengkap)}`,
   );
 };
 
@@ -148,7 +152,7 @@ const getAllAnggota = async (
   keyword = null,
   statusKeanggotaan = null,
   tingkatSekolah = null,
-  statusPegawai = null
+  statusPegawai = null,
 ) => {
   try {
     const params = new URLSearchParams({
@@ -165,7 +169,7 @@ const getAllAnggota = async (
     if (statusPegawai) params.append("statusPegawai", statusPegawai);
 
     const response = await axiosClient.get(
-      `/api/auth/users?${params.toString()}`
+      `/api/auth/users?${params.toString()}`,
     );
 
     return {
@@ -204,7 +208,7 @@ const updateAdminById = async (adminId, formData) => {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-      }
+      },
     );
     return response.data;
   } catch (error) {
@@ -221,7 +225,7 @@ const getUserById = async (userId) => {
     if (error.response) {
       console.error("Error Response:", error.response);
       throw new Error(
-        error.response.data.message || "Terjadi kesalahan pada server"
+        error.response.data.message || "Terjadi kesalahan pada server",
       );
     } else {
       console.error("Error Request:", error);
@@ -238,7 +242,7 @@ const getUserByNpa = async (npa) => {
     if (error.response) {
       console.error("Error Response:", error.response);
       throw new Error(
-        error.response.data.message || "Terjadi kesalahan pada server"
+        error.response.data.message || "Terjadi kesalahan pada server",
       );
     } else {
       console.error("Error Request:", error);
@@ -254,7 +258,7 @@ const getFileByNip = async (nip) => {
   } catch (error) {
     if (error.response) {
       throw new Error(
-        error.response.data.message || "Terjadi kesalahan pada server"
+        error.response.data.message || "Terjadi kesalahan pada server",
       );
     } else {
       throw new Error("Terjadi kesalahan pada jaringan");
@@ -272,7 +276,7 @@ const updateUserById = async (userId, formData) => {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-      }
+      },
     );
   } catch (error) {
     console.error("Error updating user:", error);
@@ -300,7 +304,7 @@ const updateRegisUser = async (userId, data) => {
         headers: {
           "Content-Type": "application/json",
         },
-      }
+      },
     );
     return response.data;
   } catch (error) {
@@ -326,7 +330,7 @@ const getUnverifiedUsers = (
   size = 10,
   cabang = null,
   unitKerja = null,
-  keyword = null
+  keyword = null,
 ) => {
   const params = new URLSearchParams({ page, size });
 
@@ -344,7 +348,7 @@ const verifyUser = async (userId) => {
   } catch (error) {
     if (error.response) {
       throw new Error(
-        error.response.data.message || "Terjadi kesalahan pada server"
+        error.response.data.message || "Terjadi kesalahan pada server",
       );
     } else {
       throw new Error("Terjadi kesalahan pada jaringan");
@@ -359,7 +363,7 @@ const RejectUser = async (userId) => {
   } catch (error) {
     if (error.response) {
       throw new Error(
-        error.response.data.message || "Terjadi kesalahan pada server"
+        error.response.data.message || "Terjadi kesalahan pada server",
       );
     } else {
       throw new Error("Terjadi kesalahan pada jaringan");
@@ -394,7 +398,7 @@ const deleteCabang = async (idCabang) => {
   } catch (error) {
     if (error.response) {
       throw new Error(
-        error.response.data.message || "Terjadi kesalahan pada server"
+        error.response.data.message || "Terjadi kesalahan pada server",
       );
     } else {
       throw new Error("Terjadi kesalahan pada jaringan");
@@ -409,7 +413,7 @@ const cekNpa = async (npa) => {
   } catch (error) {
     if (error.response) {
       throw new Error(
-        error.response.data.message || "Terjadi kesalahan pada server"
+        error.response.data.message || "Terjadi kesalahan pada server",
       );
     } else {
       throw new Error("Terjadi kesalahan pada jaringan");
@@ -444,7 +448,7 @@ const createAdmin = async (adminData) => {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-      }
+      },
     );
 
     return response.data;
@@ -459,7 +463,7 @@ const deleteAdmin = async (idAdmin) => {
   } catch (error) {
     if (error.response) {
       throw new Error(
-        error.response.data.message || "Terjadi kesalahan pada server"
+        error.response.data.message || "Terjadi kesalahan pada server",
       );
     } else {
       throw new Error("Terjadi kesalahan pada jaringan");
@@ -471,7 +475,7 @@ const deleteAdmin = async (idAdmin) => {
 // Search users by name LAPOR
 const searchUsers = (name) => {
   return axiosClient.get(
-    `api/auth/users/name-and-ids?name=${encodeURIComponent(name)}`
+    `api/auth/users/name-and-ids?name=${encodeURIComponent(name)}`,
   );
 };
 
@@ -483,7 +487,7 @@ const submitReport = async (reportData) => {
   } catch (error) {
     console.error(
       "Error submitting report:",
-      error.response ? error.response.data : error.message
+      error.response ? error.response.data : error.message,
     );
     throw error;
   }
@@ -492,7 +496,7 @@ const submitReport = async (reportData) => {
 const getRekapAnggota = async (cabang) => {
   try {
     const response = await axiosClient.get(
-      `/api/rekap-anggota/by-cabang?cabang=${cabang}`
+      `/api/rekap-anggota/by-cabang?cabang=${cabang}`,
     );
     return response.data;
   } catch (error) {
@@ -529,7 +533,7 @@ const getRekapById = async (userId) => {
   } catch (error) {
     if (error.response) {
       throw new Error(
-        error.response.data.message || "Terjadi kesalahan pada server"
+        error.response.data.message || "Terjadi kesalahan pada server",
       );
     } else {
       throw new Error("Terjadi kesalahan pada jaringan");
@@ -575,17 +579,17 @@ const cekNpaList = async (npaList) => {
     for (const chunk of chunks) {
       try {
         const response = await axiosClient.get(
-          `/api/auth/getByNpa?npaList=${chunk.join(",")}`
+          `/api/auth/getByNpa?npaList=${chunk.join(",")}`,
         );
         if (response.data) {
           results.push(
-            ...(Array.isArray(response.data) ? response.data : [response.data])
+            ...(Array.isArray(response.data) ? response.data : [response.data]),
           );
         }
       } catch (chunkError) {
         console.warn(
           `Error fetching chunk of NPAs: ${chunk.join(",")}`,
-          chunkError
+          chunkError,
         );
         continue;
       }
@@ -647,7 +651,7 @@ const getCalculateSanduka = async (bulan, tahun, cabang) => {
     if (error.response && error.response.status === 500) {
       console.warn(
         "Server returned status 500 but with data:",
-        error.response.data
+        error.response.data,
       );
       return error.response.data;
     }
@@ -714,7 +718,7 @@ const getCalculateSandukaKeluar = async (month, year, cabang) => {
           year: year,
           month: month,
         },
-      }
+      },
     );
     return respons.data;
   } catch (error) {
@@ -772,7 +776,7 @@ const getAllFiles = async (query = null, statusKeanggotaan = null) => {
   } catch (error) {
     console.error(
       "Gagal mengambil data file:",
-      error?.response?.data || error.message
+      error?.response?.data || error.message,
     );
     throw error;
   }
@@ -794,7 +798,7 @@ const getCalculateSandukaAll = async (bulan, tahun) => {
           xbulan: xbulan,
           xtahun: xtahun,
         },
-      }
+      },
     );
 
     return response.data;
@@ -809,7 +813,7 @@ const getCalculateSandukaAll = async (bulan, tahun) => {
 const getTableIuran = async (bulan, tahun, cabang) => {
   try {
     const response = await axiosClient.get(
-      `/api/iuran/total-sumbangan?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`
+      `/api/iuran/total-sumbangan?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`,
     );
     return response.data;
   } catch (error) {
@@ -852,7 +856,7 @@ const editPemasukanUangMasuk = async (id, updatedFormValues) => {
   try {
     const response = await axiosClient.put(
       `/api/uang-masuk-keluar/${id}`,
-      updatedFormValues
+      updatedFormValues,
     );
     return response.data;
   } catch (error) {
@@ -907,7 +911,7 @@ const getTotalAnggota = async () => {
 const getIuranByFilter = async (iuran) => {
   try {
     const response = await axiosClient.get(
-      `/api/defaultIuran/filter?iuran=${iuran}`
+      `/api/defaultIuran/filter?iuran=${iuran}`,
     );
     return response.data;
   } catch (error) {
@@ -929,7 +933,7 @@ const createTargetIuaran = async (payload) => {
 const getTotalAnggotaByCabang = async (cabang) => {
   try {
     const response = await axiosClient.get(
-      `/api/iuran/total-anggota-by-cabang?cabang=${cabang}`
+      `/api/iuran/total-anggota-by-cabang?cabang=${cabang}`,
     );
     return response.data;
   } catch (error) {
@@ -960,7 +964,7 @@ const createTargetDaspen = async (payload) => {
 const getTableDaspen = async (bulan, tahun, cabang) => {
   try {
     const response = await axiosClient.get(
-      `/api/target-daspen/summary?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`
+      `/api/target-daspen/summary?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`,
     );
     return response.data;
   } catch (error) {
@@ -981,7 +985,7 @@ const updateTargetDaspen = async (id, updatedData) => {
   try {
     const response = await axiosClient.put(
       `/api/target-daspen/${id}`,
-      updatedData
+      updatedData,
     );
     return response.data;
   } catch (error) {
@@ -1013,7 +1017,7 @@ const createTargetDerap = async (payload) => {
 const getTableDerap = async (bulan, tahun, cabang) => {
   try {
     const response = await axiosClient.get(
-      `/api/target-derap/tabel?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`
+      `/api/target-derap/tabel?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`,
     );
     return response.data;
   } catch (error) {
@@ -1034,7 +1038,7 @@ const updateDerap = async (id, updatedData) => {
   try {
     const response = await axiosClient.put(
       `/api/target-derap/${id}`,
-      updatedData
+      updatedData,
     );
     return response.data;
   } catch (error) {
@@ -1066,7 +1070,7 @@ const createTargetKalender = async (payload) => {
 const getTableKalender = async (bulan, tahun, cabang) => {
   try {
     const response = await axiosClient.get(
-      `/api/target-kalender/tabel?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`
+      `/api/target-kalender/tabel?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`,
     );
     return response.data;
   } catch (error) {
@@ -1087,7 +1091,7 @@ const updateKalender = async (id, updatedData) => {
   try {
     const response = await axiosClient.put(
       `/api/target-kalender/${id}`,
-      updatedData
+      updatedData,
     );
     return response.data;
   } catch (error) {
@@ -1131,7 +1135,7 @@ const updateLainlain = async (id, updatedData) => {
   try {
     const response = await axiosClient.put(
       `/api/tabel-lain-lain/${id}`,
-      updatedData
+      updatedData,
     );
     return response.data;
   } catch (error) {
@@ -1147,7 +1151,7 @@ const deleteLainlain = async (id) => {
   } catch (error) {
     if (error.response) {
       throw new Error(
-        error.response.data.message || "Terjadi kesalahan pada server"
+        error.response.data.message || "Terjadi kesalahan pada server",
       );
     } else {
       throw new Error("Terjadi kesalahan pada jaringan");
@@ -1162,7 +1166,7 @@ const getTransaksiBank = async (
   tahun = null,
   query = null,
   size = 10,
-  page = 0
+  page = 0,
 ) => {
   try {
     const params = new URLSearchParams({ page, size });
@@ -1172,7 +1176,7 @@ const getTransaksiBank = async (
     if (query) params.append("query", query);
 
     const response = await axios.get(
-      `https://sanduka.my.id/api/potongan-gaji?${params.toString()}`
+      `https://sanduka.my.id/api/potongan-gaji?${params.toString()}`,
     );
 
     return {
@@ -1192,7 +1196,7 @@ const getTransaksiBankBalancing = async (
   tahun = null,
   bulan = null,
   keterangan = null,
-  search = null
+  search = null,
 ) => {
   try {
     const params = new URLSearchParams();
@@ -1299,7 +1303,10 @@ const getBalancingById = async (id) => {
 
 const updateBalancing = async (id, payload) => {
   try {
-    const response = await axiosClient.put(`/api/target-iuran-anggota/${id}`, payload);
+    const response = await axiosClient.put(
+      `/api/target-iuran-anggota/${id}`,
+      payload,
+    );
     return response.data;
   } catch (error) {
     console.error("Error saat update anggota: ", error);
@@ -1309,7 +1316,9 @@ const updateBalancing = async (id, payload) => {
 
 const deleteBalancingById = async (id) => {
   try {
-    const response = await axiosClient.delete(`/api/target-iuran-anggota/${id}`);
+    const response = await axiosClient.delete(
+      `/api/target-iuran-anggota/${id}`,
+    );
     return response.data;
   } catch (error) {
     console.error("Error delete balancing data: ", error);
@@ -1320,15 +1329,18 @@ const deleteBalancingById = async (id) => {
 const deleteBalancing = async (tagihanUntukBulan, config = {}) => {
   return axiosClient.delete(
     `/api/target-iuran-anggota/by-bulan/${encodeURIComponent(tagihanUntukBulan)}`,
-    config
+    config,
   );
 };
 
 const deleteTransaksiBank = async (tanggal) => {
   try {
-    const response = await axiosClient.delete(`/api/potongan-gaji/delete-by-tanggal`, {
-      params: { tanggal },
-    });
+    const response = await axiosClient.delete(
+      `/api/potongan-gaji/delete-by-tanggal`,
+      {
+        params: { tanggal },
+      },
+    );
     return response.data;
   } catch (error) {
     console.error("Error delete iuran data: ", error);
@@ -1342,7 +1354,7 @@ const sendSesuaiJumlahTarget = async (data) => {
   try {
     const response = await axiosClient.post(
       "/api/uang-masuk-keluar/sesuai-jumlah-target",
-      data
+      data,
     );
 
     return response.data;
@@ -1363,7 +1375,7 @@ const getNoBukti = async () => {
 const getTablePemasukanSanduka = async (month, year, jenisPembayaran) => {
   try {
     const response = await axiosClient.get(
-      `/api/uang-masuk-keluar/tabel?month=${month}&year=${year}&jenisPembayaran=${jenisPembayaran}`
+      `/api/uang-masuk-keluar/tabel?month=${month}&year=${year}&jenisPembayaran=${jenisPembayaran}`,
     );
     return response.data;
   } catch (error) {
@@ -1385,7 +1397,7 @@ const createSaldoAwal = async (saldoAwalRequest) => {
   try {
     const response = await axiosClient.post(
       "/api/uang-masuk-keluar/create-saldo-awal",
-      saldoAwalRequest
+      saldoAwalRequest,
     );
     return response.data;
   } catch (error) {
@@ -1404,7 +1416,7 @@ const getRekapLaporDiterima = async (bulan, tahun, cabang) => {
           bulanTransaksi: bulan,
           tahunTransaksi: tahun,
         },
-      }
+      },
     );
     return response.data;
   } catch (error) {
@@ -1416,7 +1428,7 @@ const getRekapLaporDiterima = async (bulan, tahun, cabang) => {
 const getRekapLaporBelom = async () => {
   try {
     const response = await axiosClient.get(
-      "/api/rekap-lapor-sanduka/belom-diterima"
+      "/api/rekap-lapor-sanduka/belom-diterima",
     );
     return response.data;
   } catch (error) {
@@ -1442,11 +1454,11 @@ const getTableTargetRealisasi = async (
   tahun,
   bulan,
   inputKecamatan,
-  bulanuangmasuk
+  bulanuangmasuk,
 ) => {
   try {
     const response = await axiosClient.get(
-      `/api/laporan-target-realisasi?bulan=${bulan}&tahun=${tahun}&inputKecamatan=${inputKecamatan}&bulanuangmasuk=${bulanuangmasuk}`
+      `/api/laporan-target-realisasi?bulan=${bulan}&tahun=${tahun}&inputKecamatan=${inputKecamatan}&bulanuangmasuk=${bulanuangmasuk}`,
       // Pastikan '=' ditambahkan di sini
     );
     return response.data;
@@ -1459,7 +1471,7 @@ const getTableTargetRealisasi = async (
 const getLaporanPemasukan = async (bulan) => {
   try {
     const response = await axiosClient.get(
-      `/api/laporan-pemasukan-sanduka?bulan=${bulan}`
+      `/api/laporan-pemasukan-sanduka?bulan=${bulan}`,
     );
     return response.data;
   } catch (error) {
@@ -1472,7 +1484,7 @@ const getLaporanPemasukan = async (bulan) => {
 const getLaporanPengeluaran = async (tanggal) => {
   try {
     const response = await axiosClient.get(
-      `/api/laporan-pengeluaran-sanduka?tanggal=${tanggal}`
+      `/api/laporan-pengeluaran-sanduka?tanggal=${tanggal}`,
     );
     return response.data;
   } catch (error) {
@@ -1518,7 +1530,7 @@ const createKwitansiByIdAndNpa = async (id, npaPgri, formData) => {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-      }
+      },
     );
 
     // Mengembalikan data dari respons API
@@ -1546,7 +1558,7 @@ const getKwitansiByIdAndNpa = async (id, npaPgri) => {
 const getLaporanPemasukanTahunan = async (tahun) => {
   try {
     const response = await axiosClient.get(
-      `api/laporan-pemasukan-tahunan?tahun=${tahun}`
+      `api/laporan-pemasukan-tahunan?tahun=${tahun}`,
     );
     return response.data;
   } catch (error) {
@@ -1558,7 +1570,7 @@ const getLaporanPemasukanTahunan = async (tahun) => {
 const getLaporanPengeluaranTahunan = async (year) => {
   try {
     const response = await axiosClient.get(
-      `/api/laporan-pengeluaran-tahunan?year=${year}`
+      `/api/laporan-pengeluaran-tahunan?year=${year}`,
     );
     const data = response.data;
     return data;
@@ -1598,7 +1610,7 @@ const getNominalAggregatedData = async (
   unitKerja,
   namaAnggota,
   bulan,
-  tahun
+  tahun,
 ) => {
   try {
     const params = new URLSearchParams();
@@ -1609,7 +1621,7 @@ const getNominalAggregatedData = async (
     if (tahun) params.append("tahun", tahun);
 
     const response = await axiosClient.get(
-      `/api/by-nominal/aggregated?${params.toString()}`
+      `/api/by-nominal/aggregated?${params.toString()}`,
     );
     return response.data;
   } catch (error) {
@@ -1627,7 +1639,7 @@ const uploadSinkronBank = async (formData) => {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-      }
+      },
     );
 
     return response.data;
@@ -1641,7 +1653,7 @@ const postToBackup = async (tagihanUntukBulan) => {
   try {
     const response = await axiosClient.post(
       `/api/by-nominal/backup?tagihanUntukBulan=${tagihanUntukBulan}`,
-      {}
+      {},
     );
     return response.data;
   } catch (error) {
@@ -1654,7 +1666,7 @@ const postToBackupNew = async (tagihanUntukBulan) => {
   try {
     const response = await axiosClient.post(
       `/api/by-nominal-new/create-from-by-nominal?tagihanUntukBulan=${tagihanUntukBulan}`,
-      {}
+      {},
     );
     return response.data;
   } catch (error) {
@@ -1672,7 +1684,7 @@ const postToBackupByNominal = async (tahun, bulan) => {
         headers: {
           "Content-Type": "application/json",
         },
-      }
+      },
     );
     return response.data;
   } catch (error) {
@@ -1700,8 +1712,8 @@ const getIuranAnggotaAll = async (bulan, tahun) => {
     const response = await axiosClient.get(`/api/iuran-anggota`, {
       params: {
         bulan: bulan,
-        tahun: tahun
-      }
+        tahun: tahun,
+      },
     });
     return response.data;
   } catch (error) {
@@ -1740,7 +1752,7 @@ const deleteIuranAnggota = async (id) => {
 const getNoRekening = async () => {
   try {
     const response = await axiosClient.get(
-      `/api/iuran-anggota/all-nomor-rekening`
+      `/api/iuran-anggota/all-nomor-rekening`,
     );
     return response.data;
   } catch (error) {
@@ -1755,7 +1767,7 @@ const getAllPensiun = (
   cabang = null,
   bulan = null,
   tahun = null,
-  keyword = null
+  keyword = null,
 ) => {
   const params = new URLSearchParams({ page, size });
 
@@ -1794,7 +1806,7 @@ const getAnggotaMeninggal = async (year, month) => {
 const keluarAnggota = async (anggotaId) => {
   try {
     const response = await axiosClient.put(
-      `api/mutasi-anggota/${anggotaId}/keluar`
+      `api/mutasi-anggota/${anggotaId}/keluar`,
     );
     return response.data;
   } catch (error) {
@@ -1806,7 +1818,7 @@ const keluarAnggota = async (anggotaId) => {
 const pensiunAnggota = async (anggotaId) => {
   try {
     const response = await axiosClient.put(
-      `api/mutasi-anggota/${anggotaId}/pensiun`
+      `api/mutasi-anggota/${anggotaId}/pensiun`,
     );
     return response.data;
   } catch (error) {
@@ -1818,7 +1830,7 @@ const pensiunAnggota = async (anggotaId) => {
 const mutasiCabangUnitKerja = async (idAnggota, cabang, unitKerja) => {
   try {
     const url = `/api/mutasi-anggota/${idAnggota}/update-cabang-unitkerja?cabang=${encodeURIComponent(
-      cabang
+      cabang,
     )}&unitKerja=${encodeURIComponent(unitKerja)}`;
     const response = await axiosClient.put(url);
     return response.data; // Kembalikan data response
@@ -1845,7 +1857,7 @@ const verifikasiLaporanById = async (id, data) => {
   try {
     const response = await axiosClient.put(
       `/api/laporan/${id}/tanggal-santunan`,
-      data
+      data,
     );
 
     return response.data;
@@ -1918,7 +1930,7 @@ const deleteFiles = async (id) => {
 const getRantingSummary = async (
   cabang = "",
   unitKerja = "",
-  namaRanting = ""
+  namaRanting = "",
 ) => {
   try {
     const params = {};
@@ -1986,7 +1998,7 @@ const processNamaAnggota = (namaAnggotaArray) => {
     namaParts.forEach((part) => {
       if (
         part.match(
-          /.*(S\.Pd\.I|M\.Pd\.I|S\.Ag|M\.Pd|S\.Pd|S\.PDi|S\.M\.|M\.Pd\.I|S\.Si|S\.Sos|S\.Kom|S\.Ak|S\.Or|S\.Fil\.I|S\.Ps\.I|M\.Kom|A\.Md|Gr|SPd\.SD|S\.Ps|S\.Pust).*/i
+          /.*(S\.Pd\.I|M\.Pd\.I|S\.Ag|M\.Pd|S\.Pd|S\.PDi|S\.M\.|M\.Pd\.I|S\.Si|S\.Sos|S\.Kom|S\.Ak|S\.Or|S\.Fil\.I|S\.Ps\.I|M\.Kom|A\.Md|Gr|SPd\.SD|S\.Ps|S\.Pust).*/i,
         )
       ) {
         currentPart = currentPart ? `${currentPart} ${part}` : part;
@@ -2035,8 +2047,8 @@ const deleteRanting = async (namaRanting) => {
   try {
     const response = await axiosClient.delete(
       `/api/ranting/deleteByNamaRanting?namaRanting=${encodeURIComponent(
-        namaRanting
-      )}`
+        namaRanting,
+      )}`,
     );
     return response.data;
   } catch (error) {
@@ -2080,7 +2092,7 @@ const getUnverifiedUsersCountByCabang = async (cabang = "") => {
   try {
     const params = cabang ? { cabang } : {};
     const url = `/api/auth/unverified-users-count?${new URLSearchParams(
-      params
+      params,
     ).toString()}`;
     const response = await axiosClient.get(encodeURI(url));
     return response;
@@ -2093,7 +2105,7 @@ const getAllUnitKerja = async (
   page = 0,
   size = 10,
   cabang = "",
-  unitKerja = ""
+  unitKerja = "",
 ) => {
   try {
     const params = {
@@ -2124,7 +2136,7 @@ const deleteUnitKerja = async (id) => {
 const getUnverifiedUsersCountSuperAdmin = async () => {
   try {
     const response = await axiosClient.get(
-      "/api/auth/unverified-users-count-super-admin"
+      "/api/auth/unverified-users-count-super-admin",
     );
     return response.data;
   } catch (error) {
@@ -2140,7 +2152,7 @@ const activasiUser = async (userId) => {
   } catch (error) {
     if (error.response) {
       throw new Error(
-        error.response.data.message || "Terjadi kesalahan pada server"
+        error.response.data.message || "Terjadi kesalahan pada server",
       );
     } else {
       throw new Error("Terjadi kesalahan pada jaringan");
@@ -2201,7 +2213,7 @@ const getBackupDatabaseFile = async () => {
 const getBackupHistoryFile = async (
   page = 0,
   size = 10,
-  searchFileName = null
+  searchFileName = null,
 ) => {
   try {
     const params = {
@@ -2222,7 +2234,7 @@ const getCekHistoryData = async (
   size = 10,
   cabang = null,
   unitKerja = null,
-  search = null
+  search = null,
 ) => {
   try {
     const response = await axiosClient.get(`/api/history/cekData`, {
@@ -2278,7 +2290,7 @@ const updateSidebarGallery = async (id, data) => {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-      }
+      },
     );
     return response.data;
   } catch (error) {
@@ -2304,7 +2316,7 @@ const getSidebarGalleryById = async (id) => {
 const getSidebarGalleryByCategory = async (category) => {
   try {
     const response = await axiosClient.get(
-      `/api/sidebar-gallery/category/${category}`
+      `/api/sidebar-gallery/category/${category}`,
     );
     return response.data;
   } catch (error) {
@@ -2327,10 +2339,10 @@ const createNamaRanting = async (namaRanting) => {
   } catch (error) {
     console.error(
       "Error creating nama ranting:",
-      error.response?.data || error.message
+      error.response?.data || error.message,
     );
     throw new Error(
-      error.response?.data?.message || "Gagal membuat nama ranting"
+      error.response?.data?.message || "Gagal membuat nama ranting",
     );
   }
 };
@@ -2364,7 +2376,7 @@ const deleteUnitKerjaRanting = async (unitKerjaIds) => {
         paramsSerializer: (params) => {
           return new URLSearchParams(params).toString();
         },
-      }
+      },
     );
 
     return response.data;
@@ -2404,7 +2416,7 @@ const addPesertaEvent = async (formData) => {
 const getAllPeserta = async (queryString = "") => {
   try {
     const response = await axiosClient.get(
-      `/api/event${queryString ? `?${queryString}` : ""}`
+      `/api/event${queryString ? `?${queryString}` : ""}`,
     );
     return response.data;
   } catch (error) {
@@ -2526,7 +2538,7 @@ const createResponPengaduan = async (data) => {
 const getResponPengaduanByPengaduanId = async (pengaduanId) => {
   try {
     const response = await axiosClient.get(
-      `/api/respon-pengaduan/pengaduan/${pengaduanId}`
+      `/api/respon-pengaduan/pengaduan/${pengaduanId}`,
     );
     return response.data;
   } catch (error) {
@@ -2537,7 +2549,7 @@ const getResponPengaduanByPengaduanId = async (pengaduanId) => {
 const countResponsesByPengaduanId = async (pengaduanId) => {
   try {
     const response = await axiosClient.get(
-      `/api/respon-pengaduan/pengaduan/${pengaduanId}/count`
+      `/api/respon-pengaduan/pengaduan/${pengaduanId}/count`,
     );
     return response.data;
   } catch (error) {
@@ -2561,7 +2573,7 @@ const exportTidakTerdaftarToExcel = async (cabang = "", unitKerja = "") => {
       {
         params: { cabang, unitKerja },
         responseType: "blob",
-      }
+      },
     );
 
     // Buat file download
@@ -2581,7 +2593,7 @@ const exportTidakTerdaftarToExcel = async (cabang = "", unitKerja = "") => {
 const getTableKasSanduka = async (bulan, tahun) => {
   try {
     const response = await axiosClient.get(
-      `/api/rekap-transaksi-sanduka?bulan=${bulan}&tahun=${tahun}`
+      `/api/rekap-transaksi-sanduka?bulan=${bulan}&tahun=${tahun}`,
     );
     return response.data;
   } catch (error) {
@@ -2704,11 +2716,15 @@ const getPemasukanKasSandukaById = async (id) => {
 };
 const updatePemasukanKasSanduka = async (id, payload) => {
   try {
-    const response = await axiosClient.put(`/api/pemasukan-sanduka/${id}`, payload, {
-      headers: {
-        "Content-Type": "application/json",
+    const response = await axiosClient.put(
+      `/api/pemasukan-sanduka/${id}`,
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
       },
-    });
+    );
     return response.data;
   } catch (error) {
     console.error("Error updating data:", error);
@@ -2726,11 +2742,15 @@ const getPengeluaranKasSandukaById = async (id) => {
 };
 const updatePengeluaranKasSanduka = async (id, payload) => {
   try {
-    const response = await axiosClient.put(`/api/pengeluaran-sanduka/${id}`, payload, {
-      headers: {
-        "Content-Type": "application/json",
+    const response = await axiosClient.put(
+      `/api/pengeluaran-sanduka/${id}`,
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
       },
-    });
+    );
     return response.data;
   } catch (error) {
     console.error("Error updating data:", error);
@@ -2745,7 +2765,7 @@ const deletePosPenerimaanSanduka = async (id) => {
   } catch (error) {
     if (error.response) {
       throw new Error(
-        error.response.data.message || "Terjadi kesalahan pada server"
+        error.response.data.message || "Terjadi kesalahan pada server",
       );
     } else {
       throw new Error("Terjadi kesalahan pada jaringan");
@@ -2759,7 +2779,7 @@ const deletePosPengeluaranSanduka = async (id) => {
   } catch (error) {
     if (error.response) {
       throw new Error(
-        error.response.data.message || "Terjadi kesalahan pada server"
+        error.response.data.message || "Terjadi kesalahan pada server",
       );
     } else {
       throw new Error("Terjadi kesalahan pada jaringan");
@@ -2774,7 +2794,7 @@ const deletePemasukanSanduka = async (id) => {
   } catch (error) {
     if (error.response) {
       throw new Error(
-        error.response.data.message || "Terjadi kesalahan pada server"
+        error.response.data.message || "Terjadi kesalahan pada server",
       );
     } else {
       throw new Error("Terjadi kesalahan pada jaringan");
@@ -2788,7 +2808,7 @@ const deletePengeluaranSanduka = async (id) => {
   } catch (error) {
     if (error.response) {
       throw new Error(
-        error.response.data.message || "Terjadi kesalahan pada server"
+        error.response.data.message || "Terjadi kesalahan pada server",
       );
     } else {
       throw new Error("Terjadi kesalahan pada jaringan");
@@ -2805,7 +2825,7 @@ const postSesuaiTargetSanduka = async (tanggalTransaksi) => {
         headers: {
           "Content-Type": "application/json",
         },
-      }
+      },
     );
     return response.data;
   } catch (error) {
@@ -2817,7 +2837,7 @@ const postSesuaiTargetSanduka = async (tanggalTransaksi) => {
 const getRingaksanKasSanduka = async (bulan, tahun) => {
   try {
     const response = await axiosClient.get(
-      `/api/ringkasan-saldo?bulan=${bulan}&tahun=${tahun}`
+      `/api/ringkasan-saldo?bulan=${bulan}&tahun=${tahun}`,
     );
     return response.data;
   } catch (error) {
@@ -2830,11 +2850,15 @@ const getRingaksanKasSanduka = async (bulan, tahun) => {
 // KAS UMUM
 const createPosPenerimaanUmum = async (data) => {
   try {
-    const response = await axiosClient.post(`/api/pos-penerimaan-kas-umum`, data, {
-      headers: {
-        "Content-Type": "application/json",
+    const response = await axiosClient.post(
+      `/api/pos-penerimaan-kas-umum`,
+      data,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
       },
-    });
+    );
     return response.data;
   } catch (error) {
     console.error("Error create penerimaan umum:", error);
@@ -2854,12 +2878,14 @@ const getPosPenerimaanUmum = async () => {
 
 const deletePosPenerimaanUmum = async (id) => {
   try {
-    const response = await axiosClient.delete(`/api/pos-penerimaan-kas-umum/${id}`);
+    const response = await axiosClient.delete(
+      `/api/pos-penerimaan-kas-umum/${id}`,
+    );
     return response.data;
   } catch (error) {
     if (error.response) {
       throw new Error(
-        error.response.data.message || "Terjadi kesalahan pada server"
+        error.response.data.message || "Terjadi kesalahan pada server",
       );
     } else {
       throw new Error("Terjadi kesalahan pada jaringan");
@@ -2869,11 +2895,15 @@ const deletePosPenerimaanUmum = async (id) => {
 
 const createPosPengeluaranUmum = async (data) => {
   try {
-    const response = await axiosClient.post(`/api/pos-pengeluaran-kas-umum`, data, {
-      headers: {
-        "Content-Type": "application/json",
+    const response = await axiosClient.post(
+      `/api/pos-pengeluaran-kas-umum`,
+      data,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
       },
-    });
+    );
     return response.data;
   } catch (error) {
     console.error("Error post pengeluaran umum:", error);
@@ -2898,7 +2928,7 @@ const deletePosPengeluaranUmum = async (id) => {
   } catch (error) {
     if (error.response) {
       throw new Error(
-        error.response.data.message || "Terjadi kesalahan pada server"
+        error.response.data.message || "Terjadi kesalahan pada server",
       );
     } else {
       throw new Error("Terjadi kesalahan pada jaringan");
@@ -2962,11 +2992,15 @@ const getPemasukanUmumById = async (id) => {
 
 const updatePemasukanUmum = async (id, payload) => {
   try {
-    const response = await axiosClient.put(`/api/pemasukan-organisasi/${id}`, payload, {
-      headers: {
-        "Content-Type": "application/json",
+    const response = await axiosClient.put(
+      `/api/pemasukan-organisasi/${id}`,
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
       },
-    });
+    );
     return response.data;
   } catch (error) {
     console.error("Error updating data:", error);
@@ -2976,12 +3010,14 @@ const updatePemasukanUmum = async (id, payload) => {
 
 const deletePemasukanUmum = async (id) => {
   try {
-    const response = await axiosClient.delete(`/api/pemasukan-organisasi/${id}`);
+    const response = await axiosClient.delete(
+      `/api/pemasukan-organisasi/${id}`,
+    );
     return response.data;
   } catch (error) {
     if (error.response) {
       throw new Error(
-        error.response.data.message || "Terjadi kesalahan pada server"
+        error.response.data.message || "Terjadi kesalahan pada server",
       );
     } else {
       throw new Error("Terjadi kesalahan pada jaringan");
@@ -2998,7 +3034,7 @@ const postSesuaiTargetUmum = async (tanggalTransaksi) => {
         headers: {
           "Content-Type": "application/json",
         },
-      }
+      },
     );
     return response.data;
   } catch (error) {
@@ -3009,11 +3045,15 @@ const postSesuaiTargetUmum = async (tanggalTransaksi) => {
 
 const createPengeluaranUmum = async (data) => {
   try {
-    const response = await axiosClient.post("/api/pengeluaran-organisasi", data, {
-      headers: {
-        "Content-Type": "application/json",
+    const response = await axiosClient.post(
+      "/api/pengeluaran-organisasi",
+      data,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
       },
-    });
+    );
     return response.data;
   } catch (error) {
     console.error("Error create pengeluaran kas umum:", error);
@@ -3042,11 +3082,15 @@ const getPengeluaranUmumById = async (id) => {
 
 const updatePengeluaranUmum = async (id, payload) => {
   try {
-    const response = await axiosClient.put(`/api/pengeluaran-organisasi/${id}`, payload, {
-      headers: {
-        "Content-Type": "application/json",
+    const response = await axiosClient.put(
+      `/api/pengeluaran-organisasi/${id}`,
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
       },
-    });
+    );
     return response.data;
   } catch (error) {
     console.error("Error updating data:", error);
@@ -3056,12 +3100,14 @@ const updatePengeluaranUmum = async (id, payload) => {
 
 const deletePengeluaranUmum = async (id) => {
   try {
-    const response = await axiosClient.delete(`/api/pengeluaran-organisasi/${id}`);
+    const response = await axiosClient.delete(
+      `/api/pengeluaran-organisasi/${id}`,
+    );
     return response.data;
   } catch (error) {
     if (error.response) {
       throw new Error(
-        error.response.data.message || "Terjadi kesalahan pada server"
+        error.response.data.message || "Terjadi kesalahan pada server",
       );
     } else {
       throw new Error("Terjadi kesalahan pada jaringan");
@@ -3072,7 +3118,7 @@ const deletePengeluaranUmum = async (id) => {
 const getTableUmum = async (bulan, tahun) => {
   try {
     const response = await axiosClient.get(
-      `/api/rekap-transaksi-organisasi?bulan=${bulan}&tahun=${tahun}`
+      `/api/rekap-transaksi-organisasi?bulan=${bulan}&tahun=${tahun}`,
     );
     return response.data;
   } catch (error) {
@@ -3115,12 +3161,15 @@ const importByNominal = async (file, tagihanUntukBulan) => {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-      }
+      },
     );
 
     return response.data;
   } catch (error) {
-    console.error("❌ Error posting to import API:", error.response?.data || error);
+    console.error(
+      "❌ Error posting to import API:",
+      error.response?.data || error,
+    );
     throw error;
   }
 };
@@ -3132,7 +3181,7 @@ const deleteByNominal = async (id) => {
   } catch (error) {
     if (error.response) {
       throw new Error(
-        error.response.data.message || "Terjadi kesalahan pada server"
+        error.response.data.message || "Terjadi kesalahan pada server",
       );
     } else {
       throw new Error("Terjadi kesalahan pada jaringan");
@@ -3163,7 +3212,7 @@ const updateByNominalByBulan = async (npa, tagihanUntukBulan, payload) => {
         headers: {
           "Content-Type": "application/json",
         },
-      }
+      },
     );
     return response.data;
   } catch (error) {
@@ -3174,23 +3223,148 @@ const updateByNominalByBulan = async (npa, tagihanUntukBulan, payload) => {
 // END
 // Eksport Foto
 const downloadFotoPerCabang = (cabang) => {
-  return axiosClient.get(
-    `/api/foto-anggota/download-per-cabang`,
-    {
-      params: { cabang },
-      responseType: "blob", // ⬅️ penting karena ini file download
-    }
-  );
+  return axiosClient.get(`/api/foto-anggota/download-per-cabang`, {
+    params: { cabang },
+    responseType: "blob",
+  });
 };
 const downloadFotoByNpa = (npa) => {
-  return axiosClient.get(
-    `/api/foto-anggota/${npa}`,
-    {
-      responseType: "blob", // ⬅️ wajib untuk file
-    }
-  );
+  return axiosClient.get(`/api/foto-anggota/${npa}`, {
+    responseType: "blob",
+  });
 };
 
+// Berita
+const createBerita = async (data) => {
+  try {
+    const formData = new FormData();
+
+    formData.append("judul", data.judul);
+    formData.append("username", data.username);
+    formData.append("email", data.email);
+    formData.append("role", data.role);
+    formData.append("ketFoto1", data.ketFoto1);
+    formData.append("isiBerita1", data.isiBerita1);
+    formData.append("status", data.status);
+
+    if (data.fotoUtama) {
+      formData.append("fotoUtama", data.fotoUtama);
+    }
+
+    const response = await axiosClient.post("/api/berita/create", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error createBerita:", error);
+    throw error;
+  }
+};
+const updateBerita = async (id, data) => {
+  try {
+    const formData = new FormData();
+
+    formData.append("judul", data.judul);
+    formData.append("username", data.username);
+    formData.append("email", data.email);
+    formData.append("role", data.role);
+    formData.append("ketFoto1", data.ketFoto1);
+    formData.append("isiBerita1", data.isiBerita1);
+    formData.append("status", data.status);
+
+    if (data.fotoUtama) {
+      formData.append("fotoUtama", data.fotoUtama);
+    }
+
+    const response = await axiosClient.put(
+      `/api/berita/update/${id}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error createBerita:", error);
+    throw error;
+  }
+};
+const getAllBerita = async (status) => {
+  try {
+    const response = await axiosClient.get("/api/berita/all", {
+      params: { status },
+    });
+
+    return response.data.content || [];
+  } catch (error) {
+    throw error;
+  }
+};
+
+const getBeritaById = async (id) => {
+  try {
+    const response = await axiosClient.get(`/api/berita/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+const deleteBerita = async (id, username, role) => {
+  try {
+    const response = await axiosClient.delete(`/api/berita/${id}`, {
+      params: {
+        username: username,
+        role: role,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error deleteBerita:", error.response?.data);
+    throw error.response?.data;
+  }
+};
+const publishBerita = async (id, username, role) => {
+  try {
+    const response = await axiosClient.post(`/api/berita/publish/${id}`, null, {
+      params: {
+        username: username,
+        role: role,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error publishBerita:", error.response?.data);
+    throw error.response?.data;
+  }
+};
+const updateStatusBerita = async (id, status, username, role) => {
+  try {
+    const response = await axiosClient.post(
+      `/api/berita/update-status/${id}`,
+      null,
+      {
+        params: {
+          status: status,
+          username: username,
+          role: role,
+        },
+      },
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error updateStatusBerita:", error.response?.data);
+    throw error.response?.data;
+  }
+};
 
 // Export all functions
 export default {
@@ -3420,4 +3594,11 @@ export default {
   getUnitKerjaByCabang,
   downloadFotoPerCabang,
   downloadFotoByNpa,
+  createBerita,
+  getAllBerita,
+  getBeritaById,
+  updateBerita,
+  deleteBerita,
+  publishBerita,
+  updateStatusBerita,
 };

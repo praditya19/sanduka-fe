@@ -12,104 +12,63 @@ import {
 } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
+import GlobalApi from "@/app/_utils/GlobalApi";
 
 import { useAuth } from "@/app/AuthContext";
-
-// Data yang sama seperti di halaman berita
-const newsDataDetail = [
-  {
-    id: 1,
-    title: "PGRI Resmi Meluncurkan Program Digitalisasi Administrasi",
-    excerpt:
-      "Program digitalisasi ini bertujuan untuk meningkatkan efisiensi layanan dan transparansi administrasi di lingkungan PGRI.",
-    content:
-      "Program digitalisasi yang dicanangkan oleh PGRI ini merupakan langkah strategis dalam menghadapi era transformasi digital. Dengan teknologi terkini, kami berkomitmen meningkatkan efisiensi operasional dan transparansi dalam setiap aspek administrasi organisasi.\n\nProgram ini mencakup digitalisasi database anggota, sistem pelaporan keuangan, dan manajemen dokumentasi elektronik. Diharapkan implementasi penuh dapat tercapai dalam kuartal pertama tahun 2026.\n\nSemua anggota PGRI akan mendapatkan pelatihan gratis untuk menggunakan platform digital ini. Tim teknis kami siap memberikan dukungan 24/7 untuk memastikan transisi yang mulus.",
-    image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f",
-    contributor: "Admin PGRI",
-    editor: "Tim Editorial",
-    views: 1240,
-    date: "5 Februari 2026",
-  },
-  {
-    id: 2,
-    title: "Workshop Pengembangan Kompetensi Guru Digelar di Jepara",
-    excerpt:
-      "Workshop ini diikuti ratusan guru dengan fokus pada peningkatan kualitas pembelajaran berbasis teknologi.",
-    content:
-      "Workshop pengembangan kompetensi guru yang diadakan di Jepara menghadirkan pembicara-pembicara terkemuka dari bidang pendidikan dan teknologi. Acara ini berlangsung selama tiga hari dengan menghadirkan lebih dari 500 peserta guru dari berbagai cabang PGRI.\n\nMateri workshop mencakup strategi pembelajaran modern, integrasi teknologi dalam kelas, dan pengembangan bahan ajar digital. Para peserta juga mendapatkan sertifikat resmi yang dapat meningkatkan kredibilitas profesional mereka.\n\nFeedback dari peserta sangat positif, dengan 95% menyatakan workshop ini sangat bermanfaat dan ingin mengikuti kegiatan serupa di masa mendatang.",
-    image: "https://images.unsplash.com/photo-1509062522246-3755977927d7",
-    contributor: "Humas PGRI",
-    editor: "Redaksi",
-    views: 980,
-    date: "3 Februari 2026",
-  },
-  {
-    id: 3,
-    title: "Kerja Sama PGRI dengan Mitra Biro Perjalanan Resmi Dimulai",
-    excerpt:
-      "Kerja sama ini diharapkan dapat memberikan kemudahan dan manfaat khusus bagi seluruh anggota PGRI.",
-    content:
-      "Kemitraan strategis antara PGRI dan Biro Perjalanan terkemuka resmi diluncurkan untuk memberikan benefit eksklusif kepada semua anggota. Melalui kerjasama ini, anggota PGRI akan mendapatkan harga khusus untuk paket wisata, umroh, dan perjalanan bisnis.\n\nBenefitnya termasuk diskon hingga 20% untuk paket tour, kemudahan pembayaran cicilan tanpa bunga, dan layanan konsultasi perjalanan gratis. Program ini juga menawarkan asuransi perjalanan komprehensif dengan harga terjangkau.\n\nPendaftaran sudah dibuka dan anggota dapat langsung menghubungi kantor cabang masing-masing untuk mendapatkan informasi lebih lengkap dan menikmati berbagai keuntungan eksklusif ini.",
-    image: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
-    contributor: "Sekretariat",
-    editor: "Editor Lapangan",
-    views: 760,
-    date: "1 Februari 2026",
-  },
-  {
-    id: 4,
-    title: "PGRI Resmi Meluncurkan Program Digitalisasi Administrasi",
-    excerpt:
-      "Program digitalisasi ini bertujuan untuk meningkatkan efisiensi layanan dan transparansi administrasi di lingkungan PGRI.",
-    content:
-      "Program digitalisasi yang dicanangkan oleh PGRI ini merupakan langkah strategis dalam menghadapi era transformasi digital. Dengan teknologi terkini, kami berkomitmen meningkatkan efisiensi operasional dan transparansi dalam setiap aspek administrasi organisasi.\n\nProgram ini mencakup digitalisasi database anggota, sistem pelaporan keuangan, dan manajemen dokumentasi elektronik. Diharapkan implementasi penuh dapat tercapai dalam kuartal pertama tahun 2026.\n\nSemua anggota PGRI akan mendapatkan pelatihan gratis untuk menggunakan platform digital ini. Tim teknis kami siap memberikan dukungan 24/7 untuk memastikan transisi yang mulus.",
-    image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f",
-    contributor: "Admin PGRI",
-    editor: "Tim Editorial",
-    views: 1240,
-    date: "5 Februari 2026",
-  },
-  {
-    id: 5,
-    title: "Workshop Pengembangan Kompetensi Guru Digelar di Jepara",
-    excerpt:
-      "Workshop ini diikuti ratusan guru dengan fokus pada peningkatan kualitas pembelajaran berbasis teknologi.",
-    content:
-      "Workshop pengembangan kompetensi guru yang diadakan di Jepara menghadirkan pembicara-pembicara terkemuka dari bidang pendidikan dan teknologi. Acara ini berlangsung selama tiga hari dengan menghadirkan lebih dari 500 peserta guru dari berbagai cabang PGRI.\n\nMateri workshop mencakup strategi pembelajaran modern, integrasi teknologi dalam kelas, dan pengembangan bahan ajar digital. Para peserta juga mendapatkan sertifikat resmi yang dapat meningkatkan kredibilitas profesional mereka.\n\nFeedback dari peserta sangat positif, dengan 95% menyatakan workshop ini sangat bermanfaat dan ingin mengikuti kegiatan serupa di masa mendatang.",
-    image: "https://images.unsplash.com/photo-1509062522246-3755977927d7",
-    contributor: "Humas PGRI",
-    editor: "Redaksi",
-    views: 980,
-    date: "3 Februari 2026",
-  },
-  {
-    id: 6,
-    title: "Kerja Sama PGRI dengan Mitra Biro Perjalanan Resmi Dimulai",
-    excerpt:
-      "Kerja sama ini diharapkan dapat memberikan kemudahan dan manfaat khusus bagi seluruh anggota PGRI.",
-    content:
-      "Kemitraan strategis antara PGRI dan Biro Perjalanan terkemuka resmi diluncurkan untuk memberikan benefit eksklusif kepada semua anggota. Melalui kerjasama ini, anggota PGRI akan mendapatkan harga khusus untuk paket wisata, umroh, dan perjalanan bisnis.\n\nBenefitnya termasuk diskon hingga 20% untuk paket tour, kemudahan pembayaran cicilan tanpa bunga, dan layanan konsultasi perjalanan gratis. Program ini juga menawarkan asuransi perjalanan komprehensif dengan harga terjangkau.\n\nPendaftaran sudah dibuka dan anggota dapat langsung menghubungi kantor cabang masing-masing untuk mendapatkan informasi lebih lengkap dan menikmati berbagai keuntungan eksklusif ini.",
-    image: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
-    contributor: "Sekretariat",
-    editor: "Editor Lapangan",
-    views: 760,
-    date: "1 Februari 2026",
-  },
-];
 
 export default function BeritaDetail({ params }) {
   const { id } = params;
   const { token, loading } = useAuth();
+  const [relatedNews, setRelatedNews] = useState([]);
+
+  const [news, setNews] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const news = newsDataDetail.find((item) => item.id === parseInt(id));
-
   useEffect(() => {
-    // Tunggu hingga auth loading selesai
-    if (!loading) {
-      setIsLoading(false);
+    const fetchDetail = async () => {
+      try {
+        const data = await GlobalApi.getBeritaById(id);
+        setNews(data);
+      } catch (error) {
+        console.error("Gagal ambil detail:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDetail();
+  }, [id]);
+  useEffect(() => {
+    const fetchRelated = async () => {
+      try {
+        const data = await GlobalApi.getAllBerita("PUBLISH");
+
+        const filtered = data
+          .filter((item) => item.id !== parseInt(id))
+          .slice(0, 6);
+
+        setRelatedNews(filtered);
+      } catch (error) {
+        console.error("Gagal ambil related news:", error);
+      }
+    };
+
+    if (id) {
+      fetchRelated();
     }
-  }, [loading]);
+  }, [id]);
+
+  const formatDate = (arr) => {
+    if (!arr) return "";
+
+    const date = new Date(arr[0], arr[1] - 1, arr[2], arr[3], arr[4], arr[5]);
+
+    return date.toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
+  };
 
   const handleShare = async () => {
     const shareData = {
@@ -199,9 +158,13 @@ export default function BeritaDetail({ params }) {
             <article className="flex-1 bg-white rounded-xl shadow-lg overflow-hidden">
               <div className="relative h-96 overflow-hidden">
                 <img
-                  src={news.image}
-                  alt={news.title}
-                  className="w-full h-full object-cover"
+                  src={
+                    news.fotoUtama
+                      ? `data:image/jpeg;base64,${news.fotoUtama}`
+                      : "/placeholder.jpg"
+                  }
+                  alt={news.judul}
+                  className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
               </div>
@@ -210,13 +173,14 @@ export default function BeritaDetail({ params }) {
                 <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-6 pb-6 border-b">
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-gray-700">
-                      {news.contributor}
+                      {news.username}
                     </span>
                     <span>|</span>
-                    <span className="font-medium">{news.editor}</span> 
+                    <span className="font-medium">{news.editor}</span>
                   </div>
                   <span>•</span>
-                  <div>{news.date}</div>
+                  <div>{formatDate(news.updatedAt)}</div>
+
                   <span>•</span>
                   <div>👁️ {news.views} views</div>
                 </div>
@@ -226,7 +190,7 @@ export default function BeritaDetail({ params }) {
                 </h1>
 
                 <div className="prose prose-lg max-w-none mb-4">
-                  {news.content.split("\n\n").map((paragraph, idx) => (
+                  {news.isiBerita1?.split("\n").map((paragraph, idx) => (
                     <p
                       key={idx}
                       className="text-gray-700 text-base leading-relaxed mb-6"
@@ -290,36 +254,37 @@ export default function BeritaDetail({ params }) {
             <h2 className="text-3xl font-bold text-gray-900 mb-10">
               Berita Lainnya Untuk Anda
             </h2>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {newsDataDetail
-                .filter((item) => item.id !== news.id)
-                .slice(0, 6)
-                .map((relatedNews) => (
-                  <Link
-                    key={relatedNews.id}
-                    href={`/berita/${relatedNews.id}`}
-                    className="group bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition"
-                  >
-                    <div className="relative h-56 overflow-hidden">
-                      <img
-                        src={relatedNews.image}
-                        alt={relatedNews.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                      />
-                    </div>
-                    <div className="p-5">
-                      <h3 className="font-semibold text-gray-900 group-hover:text-teal-600 transition mb-3 line-clamp-2">
-                        {relatedNews.title}
-                      </h3>
-                      <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                        {relatedNews.excerpt}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {relatedNews.date}
-                      </p>
-                    </div>
-                  </Link>
-                ))}
+              {relatedNews.map((item) => (
+                <Link
+                  key={item.id}
+                  href={`/berita/${item.id}`}
+                  className="group bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition"
+                >
+                  <div className="relative h-56 overflow-hidden">
+                    <img
+                      src={
+                        item.fotoUtama
+                          ? `data:image/jpeg;base64,${item.fotoUtama}`
+                          : "/placeholder.jpg"
+                      }
+                      alt={item.judul}
+                      className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                    />
+                  </div>
+
+                  <div className="p-5">
+                    <h3 className="font-semibold text-gray-900 group-hover:text-teal-600 transition mb-3 line-clamp-2">
+                      {item.judul}
+                    </h3>
+
+                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                      {item.isiBerita1?.slice(0, 100)}...
+                    </p>
+                  </div>
+                </Link>
+              ))}
             </div>
           </div>
         </div>
