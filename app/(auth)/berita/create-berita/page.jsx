@@ -1,7 +1,6 @@
 "use client";
 import GlobalApi from "@/app/_utils/GlobalApi";
-import React, { useState, useEffect } from "react";
-import NavbarBerita from "@/app/_components/NavbarBerita";
+import React, { useState, useEffect, useRef } from "react";
 import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
@@ -10,6 +9,51 @@ import {
   FaCheckCircle,
   FaExclamationCircle,
 } from "react-icons/fa";
+import dynamic from "next/dynamic";
+const SummernoteEditor = dynamic(
+  () => {
+    return Promise.all([
+      import("jquery").then((mod) => mod.default),
+      import("summernote/dist/summernote-lite.min.css"),
+      import("summernote/dist/summernote-lite.min.js"),
+    ]).then(([jQuery]) => {
+      window.jQuery = jQuery;
+      window.$ = jQuery;
+
+      return ({ value, onChange, height }) => {
+        const editorRef = useRef(null);
+
+        useEffect(() => {
+          const $ = window.jQuery;
+
+          if ($ && editorRef.current) {
+            $(editorRef.current).summernote({
+              height: height || 300,
+              callbacks: {
+                onChange: function (contents) {
+                  onChange(contents);
+                },
+              },
+            });
+
+            if (value) {
+              $(editorRef.current).summernote("code", value);
+            }
+
+            return () => {
+              $(editorRef.current).summernote("destroy");
+            };
+          } else {
+            console.error("jQuery or editorRef is not available");
+          }
+        }, []);
+
+        return <textarea ref={editorRef} />;
+      };
+    });
+  },
+  { ssr: false },
+);
 const NotificationPopup = ({ type, message, onClose }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -179,248 +223,352 @@ const CreateBerita = () => {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-     
           <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 py-4 px-4">
-  <div className="max-w-7xl mx-auto">
-    {/* Header dengan Gradient */}
-    <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-xl p-8 mb-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold text-white">Buat Berita Baru</h1>
-            <p className="text-blue-100 text-sm mt-1">Lengkapi form berikut untuk menambahkan berita baru</p>
-          </div>
-        </div>
-        
-     
-      </div>
-    </div>
-
-    {/* Main Form Card */}
-    <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-      <form onSubmit={handleSubmit} className="p-8">
-        {/* Grid Layout 12 Kolom */}
-        <div className="grid grid-cols-12 gap-6">
-          {/* Kolom Kiri - Foto (5 kolom) */}
-          <div className="col-span-12 lg:col-span-5 space-y-6">
-            {/* Card Foto Utama */}
-            <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200 p-6 sticky top-24">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <span className="w-1 h-5 bg-green-500 rounded-full"></span>
-                Foto Utama Berita
-              </h3>
-              
-              {/* Preview Foto Besar */}
-              <div className="mb-4">
-                {preview ? (
-                  <div className="relative rounded-xl overflow-hidden group">
-                    <img
-                      src={preview}
-                      alt="Preview"
-                      className="w-full h-64 object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <span className="text-white text-sm bg-black/50 px-3 py-1 rounded-full">
-                        Preview Foto
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="w-full h-64 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex flex-col items-center justify-center">
-                    <svg className="w-16 h-16 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <p className="text-gray-500 font-medium">Belum ada foto</p>
-                    <p className="text-xs text-gray-400">Upload foto untuk preview</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Upload Area */}
-              <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 hover:border-green-500 hover:bg-green-50/50 transition-all duration-300 cursor-pointer">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                  id="image-upload"
-                  required
-                />
-                <label htmlFor="image-upload" className="cursor-pointer block">
-                  <div className="text-center">
-                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
-                      <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            <div className="max-w-7xl mx-auto">
+              {/* Header dengan Gradient */}
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-xl p-8 mb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                      <svg
+                        className="w-8 h-8 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 4v16m8-8H4"
+                        />
                       </svg>
                     </div>
-                    <p className="text-sm text-gray-700 font-medium">Klik untuk upload foto</p>
-                    <p className="text-xs text-gray-500 mt-1">PNG, JPG, JPEG (Max. 5MB)</p>
-                  </div>
-                </label>
-              </div>
-
-              {/* Keterangan Foto */}
-              <div className="mt-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Keterangan Foto
-                </label>
-                <input
-                  type="text"
-                  name="ketFoto1"
-                  value={formData.ketFoto1}
-                  onChange={handleChange}
-                  className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-300 outline-none"
-                  placeholder="Tambahkan keterangan untuk foto ini..."
-                  required
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Kolom Kanan - Konten Berita (7 kolom) */}
-          <div className="col-span-12 lg:col-span-7 space-y-6">
-            {/* Judul Berita */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
-              <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                <span className="w-1 h-4 bg-blue-500 rounded-full"></span>
-                Judul Berita
-              </label>
-              <input
-                type="text"
-                name="judul"
-                value={formData.judul}
-                onChange={handleChange}
-                className="w-full border-2 border-gray-200 rounded-xl px-6 py-4 text-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-300 outline-none"
-                placeholder="Masukkan judul berita yang menarik..."
-                required
-              />
-            </div>
-
-            {/* Isi Berita */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
-              <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                <span className="w-1 h-4 bg-orange-500 rounded-full"></span>
-                Isi Berita
-              </label>
-              <textarea
-                name="isiBerita1"
-                value={formData.isiBerita1}
-                onChange={handleChange}
-                rows="10"
-                className="w-full border-2 border-gray-200 rounded-xl px-6 py-4 focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all duration-300 outline-none resize-none"
-                placeholder="Tulis isi berita Anda di sini..."
-                required
-              ></textarea>
-              <div className="flex justify-end items-center mt-2">
-                
-                <span className="text-xs text-gray-400 font-medium">
-                  {formData.isiBerita1?.length || 0} karakter
-                </span>
-              </div>
-            </div>
-
-            {/* Informasi Penulis & Status dalam 2 kolom */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* User Info Card */}
-              <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl shadow-lg p-6 text-white">
-                <h4 className="text-sm font-semibold text-blue-200 mb-3 flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  Informasi Penulis
-                </h4>
-                <div className="space-y-3">
-                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
-                    <p className="text-xs text-blue-200">Username</p>
-                    <p className="font-medium">{formData.username || "-"}</p>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
-                    <p className="text-xs text-blue-200">Email</p>
-                    <p className="font-medium truncate">{formData.email || "-"}</p>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
-                    <p className="text-xs text-blue-200">Role</p>
-                    <p className="font-medium">{formData.role || "-"}</p>
+                    <div>
+                      <h1 className="text-3xl font-bold text-white">
+                        Buat Berita Baru
+                      </h1>
+                      <p className="text-blue-100 text-sm mt-1">
+                        Lengkapi form berikut untuk menambahkan berita baru
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Status Card */}
-              <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Status Publikasi
-                </h4>
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 appearance-none bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 outline-none cursor-pointer mb-3"
-                >
-                  <option value="DRAFT">📝 Draft - Dalam Proses</option>
-                  <option value="PUBLISH">🚀 Publish - Siap Tayang</option>
-                </select>
-                
-                {formData.status === 'DRAFT' ? (
-                  <div className="p-3 bg-yellow-50 rounded-lg">
-                    <div className="flex items-start gap-2">
-                      <span className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse mt-1"></span>
-                      <div>
-                        <p className="text-xs font-semibold text-yellow-800">Mode Draft</p>
-                        <p className="text-xs text-yellow-700">Berita akan disimpan sebagai draft</p>
+              {/* Main Form Card */}
+              <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+                <form onSubmit={handleSubmit} className="p-8">
+                  {/* Grid Layout 12 Kolom */}
+                  <div className="grid grid-cols-12 gap-6">
+                    {/* Kolom Kiri - Foto (5 kolom) */}
+                    <div className="col-span-12 lg:col-span-5 space-y-6">
+                      {/* Card Foto Utama */}
+                      <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200 p-6 sticky top-24">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                          <span className="w-1 h-5 bg-green-500 rounded-full"></span>
+                          Foto Utama Berita
+                        </h3>
+
+                        {/* Preview Foto Besar */}
+                        <div className="mb-4">
+                          {preview ? (
+                            <div className="relative rounded-xl overflow-hidden group">
+                              <img
+                                src={preview}
+                                alt="Preview"
+                                className="w-full h-64 object-cover"
+                              />
+                              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <span className="text-white text-sm bg-black/50 px-3 py-1 rounded-full">
+                                  Preview Foto
+                                </span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="w-full h-64 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex flex-col items-center justify-center">
+                              <svg
+                                className="w-16 h-16 text-gray-400 mb-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                />
+                              </svg>
+                              <p className="text-gray-500 font-medium">
+                                Belum ada foto
+                              </p>
+                              <p className="text-xs text-gray-400">
+                                Upload foto untuk preview
+                              </p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Upload Area */}
+                        <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 hover:border-green-500 hover:bg-green-50/50 transition-all duration-300 cursor-pointer">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageChange}
+                            className="hidden"
+                            id="image-upload"
+                            required
+                          />
+                          <label
+                            htmlFor="image-upload"
+                            className="cursor-pointer block"
+                          >
+                            <div className="text-center">
+                              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
+                                <svg
+                                  className="w-6 h-6 text-green-500"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                  />
+                                </svg>
+                              </div>
+                              <p className="text-sm text-gray-700 font-medium">
+                                Klik untuk upload foto
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                PNG, JPG, JPEG (Max. 5MB)
+                              </p>
+                            </div>
+                          </label>
+                        </div>
+
+                        {/* Keterangan Foto */}
+                        <div className="mt-4">
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Keterangan Foto
+                          </label>
+                          <input
+                            type="text"
+                            name="ketFoto1"
+                            value={formData.ketFoto1}
+                            onChange={handleChange}
+                            className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-300 outline-none"
+                            placeholder="Tambahkan keterangan untuk foto ini..."
+                            required
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Kolom Kanan - Konten Berita (7 kolom) */}
+                    <div className="col-span-12 lg:col-span-7 space-y-6">
+                      {/* Judul Berita */}
+                      <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                          <span className="w-1 h-4 bg-blue-500 rounded-full"></span>
+                          Judul Berita
+                        </label>
+                        <input
+                          type="text"
+                          name="judul"
+                          value={formData.judul}
+                          onChange={handleChange}
+                          className="w-full border-2 border-gray-200 rounded-xl px-6 py-4 text-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-300 outline-none"
+                          placeholder="Masukkan judul berita yang menarik..."
+                          required
+                        />
+                      </div>
+
+                      {/* Isi Berita */}
+                      <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                          <span className="w-1 h-4 bg-orange-500 rounded-full"></span>
+                          Isi Berita
+                        </label>
+
+                        {typeof window !== "undefined" && (
+                          <SummernoteEditor
+                            value={formData.isiBerita1}
+                            onChange={(value) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                isiBerita1: value,
+                              }))
+                            }
+                            height={300}
+                          />
+                        )}
+
+                        <div className="flex justify-end items-center mt-2">
+                          <span className="text-xs text-gray-400 font-medium">
+                            {formData.isiBerita1?.length || 0} karakter
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Informasi Penulis & Status dalam 2 kolom */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* User Info Card */}
+                        <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl shadow-lg p-6 text-white">
+                          <h4 className="text-sm font-semibold text-blue-200 mb-3 flex items-center gap-2">
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                              />
+                            </svg>
+                            Informasi Penulis
+                          </h4>
+                          <div className="space-y-3">
+                            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
+                              <p className="text-xs text-blue-200">Username</p>
+                              <p className="font-medium">
+                                {formData.username || "-"}
+                              </p>
+                            </div>
+                            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
+                              <p className="text-xs text-blue-200">Email</p>
+                              <p className="font-medium truncate">
+                                {formData.email || "-"}
+                              </p>
+                            </div>
+                            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
+                              <p className="text-xs text-blue-200">Role</p>
+                              <p className="font-medium">
+                                {formData.role || "-"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Status Card */}
+                        <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                          <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                            Status Publikasi
+                          </h4>
+                          <select
+                            name="status"
+                            value={formData.status}
+                            onChange={handleChange}
+                            className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 appearance-none bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 outline-none cursor-pointer mb-3"
+                          >
+                            <option value="DRAFT">
+                              📝 Draft - Dalam Proses
+                            </option>
+                            <option value="PUBLISH">
+                              🚀 Publish - Siap Tayang
+                            </option>
+                          </select>
+
+                          {formData.status === "DRAFT" ? (
+                            <div className="p-3 bg-yellow-50 rounded-lg">
+                              <div className="flex items-start gap-2">
+                                <span className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse mt-1"></span>
+                                <div>
+                                  <p className="text-xs font-semibold text-yellow-800">
+                                    Mode Draft
+                                  </p>
+                                  <p className="text-xs text-yellow-700">
+                                    Berita akan disimpan sebagai draft
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="p-3 bg-green-50 rounded-lg">
+                              <div className="flex items-start gap-2">
+                                <span className="w-2 h-2 bg-green-500 rounded-full mt-1"></span>
+                                <div>
+                                  <p className="text-xs font-semibold text-green-800">
+                                    Mode Publish
+                                  </p>
+                                  <p className="text-xs text-green-700">
+                                    Berita akan langsung tampil di publik
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                ) : (
-                  <div className="p-3 bg-green-50 rounded-lg">
-                    <div className="flex items-start gap-2">
-                      <span className="w-2 h-2 bg-green-500 rounded-full mt-1"></span>
-                      <div>
-                        <p className="text-xs font-semibold text-green-800">Mode Publish</p>
-                        <p className="text-xs text-green-700">Berita akan langsung tampil di publik</p>
-                      </div>
-                    </div>
+
+                  {/* Footer Actions */}
+                  <div className="flex items-center justify-end gap-4 mt-8 pt-6 border-t border-gray-200">
+                    <button
+                      type="button"
+                      onClick={() => window.history.back()}
+                      className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all duration-300 font-medium flex items-center gap-2"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                      Batal
+                    </button>
+
+                    <button
+                      type="submit"
+                      className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 font-medium shadow-lg hover:shadow-xl flex items-center gap-2"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      Simpan Berita
+                    </button>
                   </div>
-                )}
+                </form>
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Footer Actions */}
-        <div className="flex items-center justify-end gap-4 mt-8 pt-6 border-t border-gray-200">
-          <button
-            type="button"
-            onClick={() => window.history.back()}
-            className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all duration-300 font-medium flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-            Batal
-          </button>
-
-          <button
-            type="submit"
-            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 font-medium shadow-lg hover:shadow-xl flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-            Simpan Berita
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
         </main>
       </div>
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState,useRef } from "react";
 import { useRouter } from "next/navigation";
 import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
@@ -11,6 +11,51 @@ import {
   FaCheckCircle,
   FaExclamationCircle,
 } from "react-icons/fa";
+import dynamic from "next/dynamic";
+const SummernoteEditor = dynamic(
+  () => {
+    return Promise.all([
+      import("jquery").then((mod) => mod.default),
+      import("summernote/dist/summernote-lite.min.css"),
+      import("summernote/dist/summernote-lite.min.js"),
+    ]).then(([jQuery]) => {
+      window.jQuery = jQuery;
+      window.$ = jQuery;
+
+      return ({ value, onChange, height }) => {
+        const editorRef = useRef(null);
+
+        useEffect(() => {
+          const $ = window.jQuery;
+
+          if ($ && editorRef.current) {
+            $(editorRef.current).summernote({
+              height: height || 300,
+              callbacks: {
+                onChange: function (contents) {
+                  onChange(contents);
+                },
+              },
+            });
+
+            if (value) {
+              $(editorRef.current).summernote("code", value);
+            }
+
+            return () => {
+              $(editorRef.current).summernote("destroy");
+            };
+          } else {
+            console.error("jQuery or editorRef is not available");
+          }
+        }, []);
+
+        return <textarea ref={editorRef} />;
+      };
+    });
+  },
+  { ssr: false },
+);
 const NotificationPopup = ({ type, message, onClose }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -200,6 +245,7 @@ const ViewBerita = () => {
         type: "success",
         message: `Berita berhasil diupdate!`,
       });
+      setEditMode(false)
     } catch (error) {
       const errorMessage = error?.response?.data || "Terjadi kesalahan";
 
@@ -296,7 +342,7 @@ const ViewBerita = () => {
               <div className="relative">
                 <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
                 <p className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-gray-600 font-medium">
-                  Memuat berita...
+                  Loading...
                 </p>
               </div>
             </div>
@@ -1147,15 +1193,18 @@ const ViewBerita = () => {
                             <span className="w-1 h-4 bg-orange-500 rounded-full"></span>
                             Isi Berita
                           </label>
-                          <textarea
-                            name="isiBerita1"
+                          {typeof window !== "undefined" && (
+                          <SummernoteEditor
                             value={formData.isiBerita1}
-                            onChange={handleChange}
-                            rows="12"
-                            className="w-full border-2 border-gray-200 rounded-xl px-6 py-4 focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all duration-300 outline-none resize-none"
-                            placeholder="Tulis isi berita Anda di sini..."
-                            required
-                          ></textarea>
+                            onChange={(value) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                isiBerita1: value,
+                              }))
+                            }
+                            height={300}
+                          />
+                        )}
                           <div className="flex justify-end items-center mt-2">
                             <span className="text-xs text-gray-400 font-medium">
                               {formData.isiBerita1?.length || 0} karakter
