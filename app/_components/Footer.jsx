@@ -91,7 +91,7 @@ const Footer = () => {
 
             {/* Media Section */}
             <div className="w-full lg:w-1/3 mt-4">
-              <h3 className="font-bold mb-2 text-yellow-400">MEDIA</h3>
+              <h3 className="font-bold mb-2 text-yellow-400">Official Kabupaten Jepara</h3>
               <div className="flex gap-4">
                 {[
                   { icon: FaFacebook, label: "Facebook" },
