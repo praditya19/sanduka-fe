@@ -2,7 +2,7 @@ import axios from "axios";
 import { ReceiptEuro } from "lucide-react";
 
 const axiosClient = axios.create({
-  baseURL: "https://sanduka.my.id",
+  baseURL: "https://sb.pgrikabupatenjepara.com",
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",
