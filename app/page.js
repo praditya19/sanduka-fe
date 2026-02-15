@@ -13,6 +13,8 @@ import News from "./_components/News";
 import LayananKami from "./_components/LayananKami";
 import BiroTravel from "./_components/BiroTravel";
 import Live from "./_components/Live";
+import Metsos from "./_components/Metsos";
+import SandukaHome from "./(auth)/sanduka-home/page";
 
 export default function Home() {
   const [isPopupVisible, setIsPopupVisible] = useState(false);
@@ -151,8 +153,9 @@ export default function Home() {
       <div className="pt-[120px] md:pt-[140px]">
         <News />
         <GaleriKegiatan />
-        <LayananKami />
+        <SandukaHome />
         <BiroTravel />
+        <Metsos />
       </div>
       <Footer />
     </div>

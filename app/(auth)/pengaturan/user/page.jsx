@@ -20,7 +20,11 @@ import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
-import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
+import {
+  FaTimesCircle,
+  FaCheckCircle,
+  FaExclamationCircle,
+} from "react-icons/fa";
 
 const phoneNumberForLink = (phoneNumber) => {
   const formatted = phoneNumber.startsWith("08")
@@ -40,20 +44,20 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getBgColor = () => {
     switch (type) {
-      case 'success':
-        return 'bg-green-100';
-      case 'error':
-        return 'bg-red-100';
+      case "success":
+        return "bg-green-100";
+      case "error":
+        return "bg-red-100";
       default:
-        return 'bg-blue-100';
+        return "bg-blue-100";
     }
   };
 
   const getIcon = () => {
     switch (type) {
-      case 'success':
+      case "success":
         return <FaCheckCircle className="text-green-500 text-3xl" />;
-      case 'error':
+      case "error":
         return <FaExclamationCircle className="text-red-500 text-3xl" />;
       default:
         return null;
@@ -62,19 +66,24 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getTextColor = () => {
     switch (type) {
-      case 'success':
-        return 'text-green-800';
-      case 'error':
-        return 'text-red-800';
+      case "success":
+        return "text-green-800";
+      case "error":
+        return "text-red-800";
       default:
-        return 'text-blue-800';
+        return "text-blue-800";
     }
   };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
-      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+      <div
+        className="absolute inset-0 bg-black opacity-50"
+        onClick={onClose}
+      ></div>
+      <div
+        className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}
+      >
         <button
           onClick={onClose}
           className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
@@ -84,17 +93,13 @@ const NotificationPopup = ({ type, message, onClose }) => {
         </button>
 
         <div className="flex flex-col items-center space-y-4">
-          <div className="animate-bounce">
-            {getIcon()}
-          </div>
+          <div className="animate-bounce">{getIcon()}</div>
 
           <h3 className={`text-xl font-bold ${getTextColor()}`}>
-            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+            {type === "success" ? "Berhasil!" : "Gagal!"}
           </h3>
 
-          <div className={`${getTextColor()} text-center`}>
-            {message}
-          </div>
+          <div className={`${getTextColor()} text-center`}>{message}</div>
         </div>
       </div>
     </div>
@@ -149,7 +154,7 @@ const Page = () => {
     page = currentPage,
     size = entries,
     nama = "",
-    email = ""
+    email = "",
   ) => {
     try {
       const response = await GlobalApi.getAllAdmin(page, size, nama, email);
@@ -180,8 +185,8 @@ const Page = () => {
 
   const filteredOptions = query
     ? cabang.filter((item) =>
-      item.kecamatan.toLowerCase().includes(query.toLowerCase())
-    )
+        item.kecamatan.toLowerCase().includes(query.toLowerCase()),
+      )
     : cabang;
 
   const handleCabangChange = (item) => {
@@ -242,7 +247,7 @@ const Page = () => {
     try {
       const response = await GlobalApi.deleteAdmin(idAdmin);
       setNotification({
-        type: 'success',
+        type: "success",
         message: `Admin berhasil dihapus!`,
       });
       setTimeout(() => {
@@ -350,7 +355,7 @@ const Page = () => {
     try {
       const result = await GlobalApi.createAdmin(updatedAdminData);
       setNotification({
-        type: 'success',
+        type: "success",
         message: `Admin berhasil ditambahkan!`,
       });
       setTimeout(() => {
@@ -358,7 +363,7 @@ const Page = () => {
       }, 3000);
     } catch (error) {
       setNotification({
-        type: 'error',
+        type: "error",
         message: `Gagal menambahkan admin!`,
       });
     }
@@ -396,8 +401,9 @@ const Page = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <div className="min-h-screen bg-gray-50 p-4 md:p-6">
             <nav className="ml-6 mt-12">
@@ -411,7 +417,7 @@ const Page = () => {
                   </Link>
                 </li>
 
-                {sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                {sessionStorage.getItem("role") === "SUPERADMIN" && (
                   <li>
                     <Link
                       href="/pengaturan/tambah"
@@ -429,7 +435,7 @@ const Page = () => {
                     Unit Kerja
                   </Link>
                 </li>
-                {sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                {sessionStorage.getItem("role") === "SUPERADMIN" && (
                   <li>
                     <Link
                       href="/pengaturan/backup-data"
@@ -462,7 +468,7 @@ const Page = () => {
                     </select>
                     <span className="ml-2">entries</span>
                   </div>
-                  {sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                  {sessionStorage.getItem("role") === "SUPERADMIN" && (
                     <Button
                       className="bg-blue-500 text-white text-xs px-4 py-2 rounded"
                       onClick={handleAddUserClick}
@@ -502,7 +508,7 @@ const Page = () => {
                         No HP
                       </th>
                       <th className="p-2 md:p-3 border ">Email</th>
-                      {sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                      {sessionStorage.getItem("role") === "SUPERADMIN" && (
                         <th className="p-2 md:p-3 border hidden md:table-cell">
                           Password
                         </th>
@@ -535,40 +541,40 @@ const Page = () => {
                                 {item.email}
                               </td>
                               {sessionStorage.getItem("role") ===
-                                "SUPER ADMIN" && (
-                                  <td className="p-2 md:p-3 border hidden md:table-cell text-center">
-                                    <span
-                                      className="text-gray-800 font-medium cursor-pointer hover:text-blue-500 transition duration-300"
-                                      onClick={() =>
-                                        setShowPassword(!showPassword)
-                                      }
-                                    >
-                                      {showPassword
+                                "SUPERADMIN" && (
+                                <td className="p-2 md:p-3 border hidden md:table-cell text-center">
+                                  <span
+                                    className="text-gray-800 font-medium cursor-pointer hover:text-blue-500 transition duration-300"
+                                    onClick={() =>
+                                      setShowPassword(!showPassword)
+                                    }
+                                  >
+                                    {showPassword
+                                      ? item.passwordNew
                                         ? item.passwordNew
-                                          ? item.passwordNew
-                                          : "-"
-                                        : "*****"}
-                                    </span>
-                                  </td>
-                                )}
+                                        : "-"
+                                      : "*****"}
+                                  </span>
+                                </td>
+                              )}
                               <td className="p-2 border text-center">
                                 <div className="flex space-x-2 justify-center">
                                   {!isMobile ? (
                                     <>
                                       {sessionStorage.getItem("role") ===
-                                        "SUPER ADMIN" && (
-                                          <Button
-                                            className="bg-red-500 text-white px-2 py-2 rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 transition ease-in-out duration-150"
-                                            onClick={() =>
-                                              handleDeleteAdminClick(item.id)
-                                            }
-                                          >
-                                            <FontAwesomeIcon icon={faTrash} />
-                                          </Button>
-                                        )}
+                                        "SUPERADMIN" && (
+                                        <Button
+                                          className="bg-red-500 text-white px-2 py-2 rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 transition ease-in-out duration-150"
+                                          onClick={() =>
+                                            handleDeleteAdminClick(item.id)
+                                          }
+                                        >
+                                          <FontAwesomeIcon icon={faTrash} />
+                                        </Button>
+                                      )}
                                       <Link
                                         href={`https://wa.me/${phoneNumberForLink(
-                                          item.noHp
+                                          item.noHp,
                                         )}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
@@ -613,21 +619,21 @@ const Page = () => {
                                         <strong>Nomor HP:</strong> {item.noHp}
                                       </p>
                                       {sessionStorage.getItem("role") ===
-                                        "SUPER ADMIN" && (
-                                          <p>
-                                            <strong>Password:</strong>{" "}
-                                            <span
-                                              className="cursor-pointer text-blue-500 hover:text-blue-700 transition duration-300"
-                                              onClick={() =>
-                                                setShowPassword(!showPassword)
-                                              }
-                                            >
-                                              {showPassword
-                                                ? item.passwordNew || "-"
-                                                : "*****"}
-                                            </span>
-                                          </p>
-                                        )}
+                                        "SUPERADMIN" && (
+                                        <p>
+                                          <strong>Password:</strong>{" "}
+                                          <span
+                                            className="cursor-pointer text-blue-500 hover:text-blue-700 transition duration-300"
+                                            onClick={() =>
+                                              setShowPassword(!showPassword)
+                                            }
+                                          >
+                                            {showPassword
+                                              ? item.passwordNew || "-"
+                                              : "*****"}
+                                          </span>
+                                        </p>
+                                      )}
 
                                       <div className="flex flex-col space-y-2 mt-4">
                                         <strong className="text-lg font-semibold">
@@ -644,7 +650,7 @@ const Page = () => {
                                           </button>
                                           <Link
                                             href={`https://wa.me/${phoneNumberForLink(
-                                              item.noHp
+                                              item.noHp,
                                             )}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
@@ -685,8 +691,9 @@ const Page = () => {
                 <div className="flex flex-wrap justify-center md:justify-end space-x-2">
                   <button
                     onClick={() => handlePageChange(currentPage - 1)}
-                    className={`px-3 py-1 border text-sm rounded ${currentPage === 0 ? "bg-gray-300" : "bg-white"
-                      }`}
+                    className={`px-3 py-1 border text-sm rounded ${
+                      currentPage === 0 ? "bg-gray-300" : "bg-white"
+                    }`}
                     disabled={currentPage === 0}
                   >
                     Previous
@@ -702,10 +709,11 @@ const Page = () => {
                         <button
                           key={index}
                           onClick={() => handlePageChange(index)}
-                          className={`px-3 py-1 border text-sm rounded ${currentPage === index
-                            ? "bg-blue-500 text-white"
-                            : "bg-white"
-                            }`}
+                          className={`px-3 py-1 border text-sm rounded ${
+                            currentPage === index
+                              ? "bg-blue-500 text-white"
+                              : "bg-white"
+                          }`}
                         >
                           {index + 1}
                         </button>
@@ -726,10 +734,11 @@ const Page = () => {
 
                   <button
                     onClick={() => handlePageChange(currentPage + 1)}
-                    className={`px-3 py-1 border text-sm rounded ${currentPage === totalPages - 1
-                      ? "bg-gray-300"
-                      : "bg-white"
-                      }`}
+                    className={`px-3 py-1 border text-sm rounded ${
+                      currentPage === totalPages - 1
+                        ? "bg-gray-300"
+                        : "bg-white"
+                    }`}
                     disabled={currentPage === totalPages - 1}
                   >
                     Next
@@ -946,8 +955,9 @@ const Page = () => {
                                       setEditablePassword(e.target.value);
                                       setPasswordError("");
                                     }}
-                                    className={`border rounded w-full p-2 text-black bg-white ${passwordError ? "border-red-500" : ""
-                                      }`}
+                                    className={`border rounded w-full p-2 text-black bg-white ${
+                                      passwordError ? "border-red-500" : ""
+                                    }`}
                                     placeholder="Masukkan password"
                                     required
                                   />
@@ -990,7 +1000,7 @@ const Page = () => {
                                   value={role}
                                   onChange={handleRoleChange}
                                 >
-                                  <option value="SUPER ADMIN">
+                                  <option value="SUPERADMIN">
                                     SUPER ADMIN
                                   </option>
                                   <option value="ADMIN">ADMIN</option>
