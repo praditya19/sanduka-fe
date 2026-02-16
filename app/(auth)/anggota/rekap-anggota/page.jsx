@@ -2691,7 +2691,7 @@ function RekapAnggota() {
                       <span>{isExporting ? "Exporting..." : "Excel"}</span>
                     </button>
 
-                    {sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                    {sessionStorage.getItem("role") === "SUPERADMIN" && (
                       <button
                         className="py-2 px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-3"
                         onClick={() => setPopupBackup(true)}
@@ -2739,10 +2739,12 @@ function RekapAnggota() {
                         </div>
                       )}
                     </div>
-                    {sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                    {sessionStorage.getItem("role") === "SUPERADMIN" && (
                       <button
-                        className="py-2 px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-3"
+                        className="py-2 px-4 bg-teal-600 text-white rounded-lg shadow-md flex items-center gap-3
+               disabled:bg-gray-400 disabled:cursor-not-allowed disabled:shadow-none"
                         onClick={() => setPopupRekapByNominal(true)}
+                        disabled={true}
                       >
                         <span>Backup Target</span>
                       </button>
