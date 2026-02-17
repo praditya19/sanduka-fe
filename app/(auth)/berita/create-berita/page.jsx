@@ -10,6 +10,7 @@ import {
   FaExclamationCircle,
 } from "react-icons/fa";
 import dynamic from "next/dynamic";
+
 const SummernoteEditor = dynamic(
   () => {
     return Promise.all([
@@ -132,13 +133,18 @@ const CreateBerita = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [formData, setFormData] = useState({
     judul: "",
-    username: "",
-    email: "",
-    role: "",
-    ketFoto1: "",
-    isiBerita1: "",
-    status: "DRAFT",
-    fotoUtama: null,
+    username: sessionStorage.getItem("nama") || "",
+    email: sessionStorage.getItem("email") || "",
+    role: sessionStorage.getItem("role") || "",
+    isiBerita: "",
+    status: "",
+    galeri: [
+      {
+        file: null,
+        deskripsi: "",
+        preview: null,
+      },
+    ],
   });
 
   const [preview, setPreview] = useState(null);
@@ -154,9 +160,14 @@ const CreateBerita = () => {
       role: role || "",
     }));
   }, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleImageChange = (e) => {
@@ -166,38 +177,67 @@ const CreateBerita = () => {
       setPreview(URL.createObjectURL(file));
     }
   };
+  const handleAddGaleri = () => {
+    setFormData((prev) => ({
+      ...prev,
+      galeri: [...prev.galeri, { file: null, deskripsi: "", preview: null }],
+    }));
+  };
+
+  const handleRemoveGaleri = (index) => {
+    const newGaleri = [...formData.galeri];
+    newGaleri.splice(index, 1);
+
+    setFormData((prev) => ({
+      ...prev,
+      galeri: newGaleri,
+    }));
+  };
+  const handleGaleriChange = (index, file) => {
+    const newGaleri = [...formData.galeri];
+    newGaleri[index].file = file;
+    newGaleri[index].preview = URL.createObjectURL(file);
+
+    setFormData((prev) => ({
+      ...prev,
+      galeri: newGaleri,
+    }));
+  };
+
+  const handleDeskripsiChange = (index, value) => {
+    const newGaleri = [...formData.galeri];
+    newGaleri[index].deskripsi = value;
+
+    setFormData((prev) => ({
+      ...prev,
+      galeri: newGaleri,
+    }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const dataToSubmit = {
+      ...formData,
+      galeriImages: formData.galeri.map((g) => g.file),
+      galeriDeskripsi: formData.galeri.map((g) => g.deskripsi),
+    };
     try {
-      const response = await GlobalApi.createBerita(formData);
-      console.log("Berhasil simpan:", response);
+      await GlobalApi.createBerita(dataToSubmit);
+
       setNotification({
         type: "success",
-        message: `Berita berhasil disimpan!`,
+        message: "Berita berhasil disimpan!",
       });
-
-      setFormData({
-        judul: "",
-        username: sessionStorage.getItem("nama") || "",
-        email: sessionStorage.getItem("email") || "",
-        role: sessionStorage.getItem("role") || "",
-        ketFoto1: "",
-        isiBerita1: "",
-        status: "DRAFT",
-        fotoUtama: null,
-      });
-
-      setPreview(null);
+      window.location.reload();
     } catch (error) {
-      console.error("Gagal simpan berita:", error);
       setNotification({
         type: "error",
-        message: `Terjadi kesalahan saat menyimpan berita.`,
+        message: "Terjadi kesalahan saat menyimpan berita.",
       });
     }
   };
+
   const toggleSidebar = () => {
     const newSidebarState = !isSidebarOpen;
     setIsSidebarOpen(newSidebarState);
@@ -267,103 +307,71 @@ const CreateBerita = () => {
                       <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200 p-6 sticky top-24">
                         <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                           <span className="w-1 h-5 bg-green-500 rounded-full"></span>
-                          Foto Utama Berita
+                          Galeri Berita
                         </h3>
 
-                        {/* Preview Foto Besar */}
-                        <div className="mb-4">
-                          {preview ? (
-                            <div className="relative rounded-xl overflow-hidden group">
-                              <img
-                                src={preview}
-                                alt="Preview"
-                                className="w-full h-64 object-cover"
-                              />
-                              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                <span className="text-white text-sm bg-black/50 px-3 py-1 rounded-full">
-                                  Preview Foto
-                                </span>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="w-full h-64 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex flex-col items-center justify-center">
-                              <svg
-                                className="w-16 h-16 text-gray-400 mb-2"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                />
-                              </svg>
-                              <p className="text-gray-500 font-medium">
-                                Belum ada foto
-                              </p>
-                              <p className="text-xs text-gray-400">
-                                Upload foto untuk preview
-                              </p>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Upload Area */}
-                        <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 hover:border-green-500 hover:bg-green-50/50 transition-all duration-300 cursor-pointer">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleImageChange}
-                            className="hidden"
-                            id="image-upload"
-                            required
-                          />
-                          <label
-                            htmlFor="image-upload"
-                            className="cursor-pointer block"
+                        {formData.galeri.map((item, index) => (
+                          <div
+                            key={index}
+                            className="mb-6 border rounded-lg p-4 bg-white"
                           >
-                            <div className="text-center">
-                              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
-                                <svg
-                                  className="w-6 h-6 text-green-500"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                  />
-                                </svg>
+                            {/* Preview */}
+                            {item.preview ? (
+                              <img
+                                src={item.preview}
+                                className="w-full h-48 object-cover rounded-lg mb-3"
+                              />
+                            ) : (
+                              <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 mb-3">
+                                Belum ada foto
                               </div>
-                              <p className="text-sm text-gray-700 font-medium">
-                                Klik untuk upload foto
-                              </p>
-                              <p className="text-xs text-gray-500 mt-1">
-                                PNG, JPG, JPEG (Max. 5MB)
-                              </p>
-                            </div>
-                          </label>
-                        </div>
+                            )}
 
-                        {/* Keterangan Foto */}
+                            {/* Upload */}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) =>
+                                handleGaleriChange(index, e.target.files[0])
+                              }
+                              className="mb-3"
+                              required
+                            />
+
+                            {/* Deskripsi */}
+                            <input
+                              type="text"
+                              value={item.deskripsi}
+                              onChange={(e) =>
+                                handleDeskripsiChange(index, e.target.value)
+                              }
+                              placeholder="Masukkan deskripsi foto..."
+                              className="w-full border rounded-lg px-3 py-2"
+                              required
+                            />
+
+                            {/* Hapus */}
+                            {formData.galeri.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveGaleri(index)}
+                                className="text-red-500 text-sm mt-2"
+                              >
+                                Hapus Foto
+                              </button>
+                            )}
+                          </div>
+                        ))}
+
+                        {/* ✅ BUTTON TAMBAH DI PALING BAWAH */}
                         <div className="mt-4">
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Keterangan Foto
-                          </label>
-                          <input
-                            type="text"
-                            name="ketFoto1"
-                            value={formData.ketFoto1}
-                            onChange={handleChange}
-                            className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-300 outline-none"
-                            placeholder="Tambahkan keterangan untuk foto ini..."
-                            required
-                          />
+                          <button
+                            type="button"
+                            onClick={handleAddGaleri}
+                            className="w-full border-2 border-dashed border-green-400 hover:bg-green-50 text-green-600 py-3 rounded-xl flex items-center justify-center gap-2 transition-all"
+                          >
+                            ➕ Tambah Foto
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -396,22 +404,16 @@ const CreateBerita = () => {
 
                         {typeof window !== "undefined" && (
                           <SummernoteEditor
-                            value={formData.isiBerita1}
+                            value={formData.isiBerita}
                             onChange={(value) =>
                               setFormData((prev) => ({
                                 ...prev,
-                                isiBerita1: value,
+                                isiBerita: value,
                               }))
                             }
                             height={300}
                           />
                         )}
-
-                        <div className="flex justify-end items-center mt-2">
-                          <span className="text-xs text-gray-400 font-medium">
-                            {formData.isiBerita1?.length || 0} karakter
-                          </span>
-                        </div>
                       </div>
 
                       {/* Informasi Penulis & Status dalam 2 kolom */}
@@ -480,6 +482,7 @@ const CreateBerita = () => {
                             onChange={handleChange}
                             className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 appearance-none bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 outline-none cursor-pointer mb-3"
                           >
+                            <option value="">-- Pilih Status --</option>
                             <option value="DRAFT">
                               📝 Draft - Dalam Proses
                             </option>
