@@ -3239,23 +3239,37 @@ const createBerita = async (data) => {
   try {
     const formData = new FormData();
 
+    // Field utama
     formData.append("judul", data.judul);
     formData.append("username", data.username);
     formData.append("email", data.email);
     formData.append("role", data.role);
-    formData.append("ketFoto1", data.ketFoto1);
-    formData.append("isiBerita1", data.isiBerita1);
+    formData.append("isiBerita", data.isiBerita);
     formData.append("status", data.status);
 
-    if (data.fotoUtama) {
-      formData.append("fotoUtama", data.fotoUtama);
+    // Jika ada multiple gambar
+    if (data.galeriImages && data.galeriImages.length > 0) {
+      data.galeriImages.forEach((file) => {
+        formData.append("galeriImages", file);
+      });
     }
 
-    const response = await axiosClient.post("/api/berita/create", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    // Jika ada multiple deskripsi
+    if (data.galeriDeskripsi && data.galeriDeskripsi.length > 0) {
+      data.galeriDeskripsi.forEach((desc) => {
+        formData.append("galeriDeskripsi", desc);
+      });
+    }
+
+    const response = await axiosClient.post(
+  "/api/berita/create",
+  formData,
+  {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  }
+);
 
     return response.data;
   } catch (error) {
@@ -3267,34 +3281,46 @@ const updateBerita = async (id, data) => {
   try {
     const formData = new FormData();
 
-    formData.append("judul", data.judul);
-    formData.append("username", data.username);
-    formData.append("email", data.email);
-    formData.append("role", data.role);
-    formData.append("ketFoto1", data.ketFoto1);
-    formData.append("isiBerita1", data.isiBerita1);
-    formData.append("status", data.status);
+    // Helper function biar rapi
+    const safeAppend = (key, value) => {
+      if (value !== undefined && value !== null && value !== "") {
+        formData.append(key, value);
+      }
+    };
 
-    if (data.fotoUtama) {
+    safeAppend("judul", data.judul);
+    safeAppend("username", data.username);
+    safeAppend("email", data.email);
+
+    // ENUM WAJIB VALID
+    safeAppend("role", data.role?.toUpperCase());
+    safeAppend("status", data.status?.toUpperCase());
+
+    safeAppend("ketFoto1", data.ketFoto1);
+    safeAppend("isiBerita1", data.isiBerita1);
+
+    if (data.fotoUtama instanceof File) {
       formData.append("fotoUtama", data.fotoUtama);
+    }
+
+    // 🔍 DEBUG (hapus nanti kalau sudah aman)
+    for (let pair of formData.entries()) {
+      console.log(pair[0] + ": ", pair[1]);
     }
 
     const response = await axiosClient.put(
       `/api/berita/update/${id}`,
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      },
+      formData
+      // ❗ Jangan set Content-Type manual
     );
 
     return response.data;
   } catch (error) {
-    console.error("Error createBerita:", error);
+    console.error("Error updateBerita:", error);
     throw error;
   }
 };
+
 const getAllBerita = async (status) => {
   try {
     const response = await axiosClient.get("/api/berita/all", {
@@ -3363,6 +3389,124 @@ const updateStatusBerita = async (id, status, username, role) => {
   } catch (error) {
     console.error("Error updateStatusBerita:", error.response?.data);
     throw error.response?.data;
+  }
+};
+
+// EDITOR
+const createEditor = async (data) => {
+  try {
+    const formData = new FormData();
+
+    const safeAppend = (key, value) => {
+      if (value !== undefined && value !== null) {
+        formData.append(key, value);
+      }
+    };
+
+    safeAppend("daerah", data.daerah);
+    safeAppend("cabang", data.cabang);
+    safeAppend("nama", data.nama);
+    safeAppend("npapgri", data.npapgri);
+    safeAppend("jabatan", data.jabatan);
+    safeAppend("nohp", data.nohp);
+    safeAppend("email", data.email);
+    safeAppend("password", data.password);
+    safeAppend("passwordNew", data.passwordNew);
+
+    // 🔍 Debug (hapus nanti)
+    for (let pair of formData.entries()) {
+      console.log(pair[0] + ":", pair[1]);
+    }
+
+    const response = await axiosClient.post(
+      "/api/register-editor/create",
+      formData
+      // ❗ Jangan set Content-Type manual
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error createEditor:", error);
+    throw error;
+  }
+};
+const updateEditor = async (id, data) => {
+  try {
+    const formData = new FormData();
+
+    const safeAppend = (key, value) => {
+      if (value !== undefined && value !== null) {
+        formData.append(key, value);
+      }
+    };
+
+    safeAppend("daerah", data.daerah);
+    safeAppend("cabang", data.cabang);
+    safeAppend("nama", data.nama);
+    safeAppend("npapgri", data.npapgri);
+    safeAppend("jabatan", data.jabatan);
+    safeAppend("nohp", data.nohp);
+    safeAppend("email", data.email);
+    safeAppend("password", data.password);
+    safeAppend("passwordNew", data.passwordNew);
+
+    // 🔍 Debug (hapus nanti kalau sudah aman)
+    for (let pair of formData.entries()) {
+      console.log(pair[0] + ":", pair[1]);
+    }
+
+    const response = await axiosClient.put(
+      `/api/register-editor/update/${id}`,
+      formData
+      // ❗ Jangan set Content-Type manual
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error updateEditor:", error);
+    throw error;
+  }
+};
+const getEditorById = async (id) => {
+  try {
+    const response = await axiosClient.get(
+      `/api/register-editor/${id}`
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error getEditorById:", error);
+    throw error;
+  }
+};
+const getAllEditor = async (page = 0, size = 5) => {
+  try {
+    const response = await axiosClient.get(
+      `/api/register-editor/all`,
+      {
+        params: {
+          page,
+          size,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error getAllEditor:", error);
+    throw error;
+  }
+};
+const deleteEditor = async (id) => {
+  try {
+    const response = await axiosClient.delete(
+      `/api/register-editor/${id}`
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error deleteEditor:", error);
+    throw error;
   }
 };
 

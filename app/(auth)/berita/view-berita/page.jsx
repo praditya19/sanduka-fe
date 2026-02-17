@@ -12,6 +12,7 @@ import {
   FaExclamationCircle,
 } from "react-icons/fa";
 import dynamic from "next/dynamic";
+
 const SummernoteEditor = dynamic(
   () => {
     return Promise.all([
@@ -131,16 +132,16 @@ const NotificationPopup = ({ type, message, onClose }) => {
 const ViewBerita = () => {
   const [newsData, setNewsData] = useState([]);
   const [formData, setFormData] = useState({
-    id: "",
-    judul: "",
-    username: "",
-    email: "",
-    role: "",
-    ketFoto1: "",
-    isiBerita1: "",
-    status: "DRAFT",
-    fotoUtama: "",
-  });
+  id: "",
+  judul: "",
+  username: "",
+  email: "",
+  role: "",
+  isiBerita: "",
+  status: "DRAFT",
+  galeri: [],  
+});
+
   const [loading, setLoading] = useState(true);
   const [selectedNews, setSelectedNews] = useState(null);
   const router = useRouter();
@@ -183,6 +184,10 @@ const ViewBerita = () => {
       minute: "2-digit",
     });
   };
+const stripHtml = (html) => {
+  if (!html) return "";
+  return html.replace(/<[^>]*>?/gm, "");
+};
 
   const truncateWords = (text, limit) => {
     if (!text) return "";
@@ -191,26 +196,29 @@ const ViewBerita = () => {
     return words.slice(0, limit).join(" ") + "...";
   };
 
-  const handleEdit = (news) => {
-    setFormData({
-      id: news.id,
-      judul: news.judul || "",
-      username: news.username || "",
-      email: news.email || "",
-      role: news.role || "",
-      ketFoto1: news.ketFoto1 || "",
-      isiBerita1: news.isiBerita1 || "",
-      status: news.status || "DRAFT",
-      fotoUtama: news.fotoUtama || "",
-    });
-    setOldPhoto(news.fotoUtama);
+ const handleEdit = (news) => {
+  setFormData({
+    id: news.id,
+    judul: news.judul ?? "",
+    username: news.username ?? "",
+    email: news.email ?? "",
+    role: news.role ?? "",
+    isiBerita: news.isiBerita ?? "",
+    status: news.status ?? "DRAFT",
 
-    setPreview(
-      news.fotoUtama ? `data:image/jpeg;base64,${news.fotoUtama}` : null,
-    );
+    galeri: news.galeri
+      ? news.galeri.map((item) => ({
+          id: item.id,
+          file: null,
+          preview: `data:image/jpeg;base64,${item.gambar}`,
+          deskripsi: item.deskripsi ?? "",
+        }))
+      : [],
+  });
 
-    setEditMode(true);
-  };
+  setEditMode(true);
+};
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -218,45 +226,47 @@ const ViewBerita = () => {
       [name]: value,
     }));
   };
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    setImageFile(file);
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPreview(reader.result);
-    };
-    reader.readAsDataURL(file);
-  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const payload = {
-      ...formData,
-      fotoUtama: imageFile,
-    };
+  const formDataToSend = new FormData();
 
-    try {
-      await GlobalApi.updateBerita(formData.id, payload);
-      setNotification({
-        type: "success",
-        message: `Berita berhasil diupdate!`,
-      });
-      setEditMode(false)
-    } catch (error) {
-      const errorMessage = error?.response?.data || "Terjadi kesalahan";
+  formDataToSend.append("judul", formData.judul);
+  formDataToSend.append("username", formData.username);
+  formDataToSend.append("email", formData.email);
+  formDataToSend.append("role", formData.role);
+  formDataToSend.append("isiBerita", formData.isiBerita);
+  formDataToSend.append("status", formData.status);
 
-      console.error(errorMessage);
-
-      setNotification({
-        type: "error",
-        message: errorMessage,
-      });
+  formData.galeri.forEach((item) => {
+    if (item.file) {
+      formDataToSend.append("galeriImages", item.file);
+      formDataToSend.append("galeriDeskripsi", item.deskripsi);
     }
-  };
+  });
+console.log([...formDataToSend.entries()]);
+  try {
+     await GlobalApi.updateBerita(formData.id, formDataToSend);
+
+    setNotification({
+      type: "success",
+      message: "Berita berhasil diupdate!",
+    });
+
+    setEditMode(false);
+
+  } catch (error) {
+    const errorMessage =
+      error?.response?.data || "Terjadi kesalahan";
+
+    setNotification({
+      type: "error",
+      message: errorMessage,
+    });
+  }
+};
+
   const confirmDelete = async () => {
     try {
       const username = sessionStorage.getItem("nama");
@@ -471,14 +481,15 @@ const ViewBerita = () => {
                         >
                           <div className="relative h-56 overflow-hidden">
                             <img
-                              src={
-                                news.fotoUtama
-                                  ? `data:image/jpeg;base64,${news.fotoUtama}`
-                                  : "/placeholder.jpg"
-                              }
-                              alt={news.judul}
-                              className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
-                            />
+  src={
+    news.galeri?.length > 0
+      ? `data:image/jpeg;base64,${news.galeri[0].gambar}`
+      : "/placeholder.jpg"
+  }
+  alt={news.judul}
+  className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+/>
+
 
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-80"></div>
 
@@ -507,7 +518,7 @@ const ViewBerita = () => {
                                     d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                                   />
                                 </svg>
-                                <span>{news.contributor || "Anonymous"}</span>
+                                <span>{news.username || "Anonymous"}</span>
                               </div>
                               <div className="flex items-center space-x-2">
                                 <svg
@@ -543,12 +554,12 @@ const ViewBerita = () => {
                               </svg>
                               <span className="font-medium">Editor:</span>
                               <span className="ml-1">
-                                {news.username || "-"}
+                                {news.sss || "editor"}
                               </span>
                             </div>
 
                             <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3">
-                              {truncateWords(news.isiBerita1, 20)}
+                                {truncateWords(stripHtml(news.isiBerita), 20)}
                             </p>
 
                             <div className="flex items-center text-blue-600 text-sm font-medium group-hover:text-blue-700 transition-colors mb-4">
@@ -747,14 +758,14 @@ const ViewBerita = () => {
 
                 <div className="relative h-80 overflow-hidden group">
                   <img
-                    src={
-                      selectedNews.fotoUtama
-                        ? `data:image/jpeg;base64,${selectedNews.fotoUtama}`
-                        : "/placeholder.jpg"
-                    }
-                    alt={selectedNews.judul}
-                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
-                  />
+  src={
+    selectedNews.galeri?.length > 0
+      ? `data:image/jpeg;base64,${selectedNews.galeri[0].gambar}`
+      : "/placeholder.jpg"
+  }
+  alt={selectedNews.judul}
+  className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+/>
 
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
 
@@ -814,7 +825,7 @@ const ViewBerita = () => {
                       <div>
                         <p className="text-xs text-gray-400">Kontributor</p>
                         <p className="font-medium">
-                          {selectedNews.contributor || "Anonymous"}
+                          {selectedNews.username || "Anonymous"}
                         </p>
                       </div>
                     </div>
@@ -838,7 +849,7 @@ const ViewBerita = () => {
                       <div>
                         <p className="text-xs text-gray-400">Editor</p>
                         <p className="font-medium">
-                          {selectedNews.username || "-"}
+                          {selectedNews.ss || "editor"}
                         </p>
                       </div>
                     </div>
@@ -848,7 +859,7 @@ const ViewBerita = () => {
                     <div className="relative pl-6 mb-8">
                       <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full"></div>
                       <p className="text-gray-700 leading-relaxed text-lg italic">
-                        {selectedNews.isiBerita1}
+                          {(stripHtml(selectedNews.isiBerita))}
                       </p>
                     </div>
 
@@ -1007,6 +1018,7 @@ const ViewBerita = () => {
   .overflow-y-auto::-webkit-scrollbar-thumb:hover {
     background: #a0aec0;
     `}</style>
+          
           {editMode && (
             <div
               className="fixed inset-0 bg-gradient-to-br from-gray-50 to-white z-50 overflow-y-auto"
@@ -1078,96 +1090,86 @@ const ViewBerita = () => {
                           </h3>
 
                           <div className="mb-4">
-                            {preview ? (
-                              <div className="relative rounded-xl overflow-hidden group">
-                                <img
-                                  src={preview}
-                                  alt="Preview"
-                                  className="w-full h-64 object-cover"
-                                />
-                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                  <span className="text-white text-sm bg-black/50 px-3 py-1 rounded-full">
-                                    Preview Foto Utama
-                                  </span>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="w-full h-64 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex flex-col items-center justify-center">
-                                <svg
-                                  className="w-16 h-16 text-gray-400 mb-2"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                  />
-                                </svg>
-                                <p className="text-gray-500 font-medium">
-                                  Belum ada foto
-                                </p>
-                                <p className="text-xs text-gray-400">
-                                  Upload foto untuk preview
-                                </p>
-                              </div>
-                            )}
+                          {formData.galeri.map((item, index) => (
+  <div
+    key={item.id || index}
+    className="border rounded-xl p-4 mb-4 bg-gray-50"
+  >
+    {/* PREVIEW */}
+    <img
+      src={item.preview}
+      alt="Preview"
+      className="w-full h-48 object-cover rounded-lg mb-3"
+    />
+
+    {/* GANTI FOTO */}
+    <input
+      type="file"
+      accept="image/*"
+      onChange={(e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const updated = [...formData.galeri];
+        updated[index].file = file;
+        updated[index].preview = URL.createObjectURL(file);
+
+        setFormData({ ...formData, galeri: updated });
+      }}
+      className="mb-3"
+    />
+
+    {/* DESKRIPSI */}
+    <input
+      type="text"
+      value={item.deskripsi}
+      onChange={(e) => {
+        const updated = [...formData.galeri];
+        updated[index].deskripsi = e.target.value;
+
+        setFormData({ ...formData, galeri: updated });
+      }}
+      placeholder="Masukkan deskripsi foto..."
+      className="w-full border rounded-lg px-3 py-2 mb-2"
+    />
+
+    {/* HAPUS FOTO */}
+    <button
+      type="button"
+      onClick={() => {
+        const updated = formData.galeri.filter((_, i) => i !== index);
+        setFormData({ ...formData, galeri: updated });
+      }}
+      className="text-red-500 text-sm"
+    >
+      Hapus Foto
+    </button>
+  </div>
+))}
+<button
+  type="button"
+  onClick={() => {
+    setFormData({
+      ...formData,
+      galeri: [
+        ...formData.galeri,
+        {
+          id: null,
+          file: null,
+          preview: "/placeholder.jpg",
+          deskripsi: "",
+        },
+      ],
+    });
+  }}
+  className="px-4 py-2 bg-green-500 text-white rounded-lg"
+>
+  + Tambah Foto
+</button>
+
                           </div>
 
-                          <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 hover:border-green-500 hover:bg-green-50/50 transition-all duration-300 cursor-pointer">
-                            <input
-                              type="file"
-                              accept="image/*"
-                              onChange={handleImageChange}
-                              className="hidden"
-                              id="image-upload-full"
-                            />
-                            <label
-                              htmlFor="image-upload-full"
-                              className="cursor-pointer block"
-                            >
-                              <div className="text-center">
-                                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
-                                  <svg
-                                    className="w-6 h-6 text-green-500"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                    />
-                                  </svg>
-                                </div>
-                                <p className="text-sm text-gray-700 font-medium">
-                                  Klik untuk upload foto
-                                </p>
-                                <p className="text-xs text-gray-500 mt-1">
-                                  PNG, JPG, JPEG (Max. 5MB)
-                                </p>
-                              </div>
-                            </label>
-                          </div>
-
-                          <div className="mt-4">
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                              Keterangan Foto
-                            </label>
-                            <input
-                              type="text"
-                              name="ketFoto1"
-                              value={formData.ketFoto1}
-                              onChange={handleChange}
-                              className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-300 outline-none"
-                              placeholder="Tambahkan keterangan untuk foto ini..."
-                              required
-                            />
-                          </div>
+                    
                         </div>
                       </div>
 
@@ -1195,11 +1197,12 @@ const ViewBerita = () => {
                           </label>
                           {typeof window !== "undefined" && (
                           <SummernoteEditor
-                            value={formData.isiBerita1}
+                            value={formData.isiBerita}
+
                             onChange={(value) =>
                               setFormData((prev) => ({
                                 ...prev,
-                                isiBerita1: value,
+                                isiBerita: value,
                               }))
                             }
                             height={300}
@@ -1207,7 +1210,7 @@ const ViewBerita = () => {
                         )}
                           <div className="flex justify-end items-center mt-2">
                             <span className="text-xs text-gray-400 font-medium">
-                              {formData.isiBerita1?.length || 0} karakter
+                              {formData.isiBerita?.length || 0} karakter
                             </span>
                           </div>
                         </div>

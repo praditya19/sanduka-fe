@@ -289,6 +289,16 @@ const Page = () => {
                     </Link>
                   </li>
                 )}
+                {sessionStorage.getItem("role") === "SUPERADMIN" && (
+                  <li>
+                    <Link
+                      href="/pengaturan/create-editor"
+                      className="text-gray-700 hover:text-teal-600"
+                    >
+                      Tambah Editor
+                    </Link>
+                  </li>
+                )}
               </ul>
             </nav>
             <main className="container mx-auto p-4 md:p-6 bg-white shadow-lg rounded-lg mt-4">

@@ -177,7 +177,6 @@ export default function BankTransactionPage() {
   const [totalTerfilter, setTotalTerfilter] = useState(0);
   const [totalNominalTerfilter, setTotalNominalTerfilter] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [currentPageBalancing, setCurrentPageBalancing] = useState(1);
   const [totalPagesBalancing, setTotalPagesBalancing] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [searchBalancing, setSearchBalancing] = useState("");
@@ -256,7 +255,7 @@ export default function BankTransactionPage() {
       const result = await GlobalApi.getTransaksiBankBalancing(
         selectedCabang,
         selectedUnitKerja,
-        year,
+        null,
         null,
         paymentNote,
         searchBalancing,
@@ -288,7 +287,6 @@ export default function BankTransactionPage() {
     selectedUnitKerja,
     displayCountPotongan,
     currentPage,
-    currentPageBalancing,
   ]);
 
   useEffect(() => {
@@ -2040,7 +2038,7 @@ export default function BankTransactionPage() {
                     )}
                   </div>
 
-                  <div>
+                  {/* <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Tahun Transaksi
                     </label>
@@ -2055,7 +2053,7 @@ export default function BankTransactionPage() {
                         </option>
                       ))}
                     </select>
-                  </div>
+                  </div> */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Cari Anggota/Rekening
@@ -2293,11 +2291,7 @@ export default function BankTransactionPage() {
                           }`}
                         >
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {displayCount === "all"
-                              ? index + 1
-                              : (currentPageBalancing - 1) * displayCount +
-                                index +
-                                1}
+                            {index + 1}
                           </td>
                           <td className="text-center text-sm text-gray-900 whitespace-normal break-words max-w-[90px]">
                             {item.cabang}
