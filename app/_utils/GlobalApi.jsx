@@ -62,7 +62,11 @@ const loginAdmin = async (loginData) => {
     return response.data;
   } catch (error) {
     console.error("API Error:", error.response?.data || error.message);
-    throw new Error("Terjadi kesalahan pada server");
+    const errorObj = new Error(
+      error.response?.data?.message || "Terjadi kesalahan pada server",
+    );
+    errorObj.statusCode = error.response?.status;
+    throw errorObj;
   }
 };
 
@@ -80,13 +84,11 @@ const login = async (loginData) => {
 
     return response.data;
   } catch (error) {
-    if (error.response) {
-      throw new Error(
-        error.response.data.message || "Terjadi kesalahan pada server",
-      );
-    } else {
-      throw new Error("Terjadi kesalahan pada server");
-    }
+    const errorObj = new Error(
+      error.response?.data?.message || "Terjadi kesalahan pada server",
+    );
+    errorObj.statusCode = error.response?.status;
+    throw errorObj;
   }
 };
 
@@ -3261,15 +3263,11 @@ const createBerita = async (data) => {
       });
     }
 
-    const response = await axiosClient.post(
-  "/api/berita/create",
-  formData,
-  {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  }
-);
+    const response = await axiosClient.post("/api/berita/create", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
 
     return response.data;
   } catch (error) {
@@ -3310,7 +3308,7 @@ const updateBerita = async (id, data) => {
 
     const response = await axiosClient.put(
       `/api/berita/update/${id}`,
-      formData
+      formData,
       // ❗ Jangan set Content-Type manual
     );
 
@@ -3393,43 +3391,63 @@ const updateStatusBerita = async (id, status, username, role) => {
 };
 
 // EDITOR
-const createEditor = async (data) => {
+const createEditor = async (adminData) => {
   try {
     const formData = new FormData();
-
-    const safeAppend = (key, value) => {
-      if (value !== undefined && value !== null) {
+    for (const [key, value] of Object.entries(adminData)) {
+      if (key === "foto" && value) {
+        formData.append(key, value);
+      } else {
         formData.append(key, value);
       }
-    };
-
-    safeAppend("daerah", data.daerah);
-    safeAppend("cabang", data.cabang);
-    safeAppend("nama", data.nama);
-    safeAppend("npapgri", data.npapgri);
-    safeAppend("jabatan", data.jabatan);
-    safeAppend("nohp", data.nohp);
-    safeAppend("email", data.email);
-    safeAppend("password", data.password);
-    safeAppend("passwordNew", data.passwordNew);
-
-    // 🔍 Debug (hapus nanti)
-    for (let pair of formData.entries()) {
-      console.log(pair[0] + ":", pair[1]);
     }
 
     const response = await axiosClient.post(
       "/api/register-editor/create",
-      formData
-      // ❗ Jangan set Content-Type manual
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
     );
 
     return response.data;
   } catch (error) {
-    console.error("Error createEditor:", error);
     throw error;
   }
 };
+// const createEditor = async (data) => {
+//   try {
+//     const formData = new FormData();
+
+//     formData.append("daerah", data.daerah ?? "");
+// formData.append("cabang", data.cabang ?? "");
+// formData.append("nama", data.nama ?? "");
+// formData.append("npapgri", data.npapgri ?? "");
+// formData.append("jabatan", data.jabatan ?? "");
+// formData.append("nohp", data.nohp ?? "");
+// formData.append("email", data.email ?? "");
+// formData.append("password", data.password ?? "");
+// formData.append("passwordNew", data.passwordNew ?? "");
+
+//     // 🔍 Debug (hapus nanti)
+//     for (let pair of formData.entries()) {
+//       console.log(pair[0] + ":", pair[1]);
+//     }
+
+//     const response = await axiosClient.post(
+//       "/api/register-editor/create",
+//       formData
+//       // ❗ Jangan set Content-Type manual
+//     );
+
+//     return response.data;
+//   } catch (error) {
+//     console.error("Error createEditor:", error);
+//     throw error;
+//   }
+// };
 const updateEditor = async (id, data) => {
   try {
     const formData = new FormData();
@@ -3457,7 +3475,7 @@ const updateEditor = async (id, data) => {
 
     const response = await axiosClient.put(
       `/api/register-editor/update/${id}`,
-      formData
+      formData,
       // ❗ Jangan set Content-Type manual
     );
 
@@ -3469,9 +3487,7 @@ const updateEditor = async (id, data) => {
 };
 const getEditorById = async (id) => {
   try {
-    const response = await axiosClient.get(
-      `/api/register-editor/${id}`
-    );
+    const response = await axiosClient.get(`/api/register-editor/${id}`);
 
     return response.data;
   } catch (error) {
@@ -3481,15 +3497,12 @@ const getEditorById = async (id) => {
 };
 const getAllEditor = async (page = 0, size = 5) => {
   try {
-    const response = await axiosClient.get(
-      `/api/register-editor/all`,
-      {
-        params: {
-          page,
-          size,
-        },
-      }
-    );
+    const response = await axiosClient.get(`/api/register-editor/all`, {
+      params: {
+        page,
+        size,
+      },
+    });
 
     return response.data;
   } catch (error) {
@@ -3499,9 +3512,7 @@ const getAllEditor = async (page = 0, size = 5) => {
 };
 const deleteEditor = async (id) => {
   try {
-    const response = await axiosClient.delete(
-      `/api/register-editor/${id}`
-    );
+    const response = await axiosClient.delete(`/api/register-editor/${id}`);
 
     return response.data;
   } catch (error) {
@@ -3745,4 +3756,5 @@ export default {
   deleteBerita,
   publishBerita,
   updateStatusBerita,
+  createEditor,
 };

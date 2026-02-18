@@ -293,6 +293,7 @@ const Page = () => {
   const handleCekNpa = async () => {
     try {
       const data = await getAnggotaByNPA(npa);
+      console.log(data);
       if (data) {
         setAdminData(data);
         setEditableCabang(data.cabang);
@@ -340,7 +341,7 @@ const Page = () => {
     }
 
     const updatedAdminData = {
-      daerah: "",
+      daerah: adminData.unitKerja,
       cabang: editableCabang,
       nama: adminData.namaLengkap,
       npapgri: adminData.npaPgri,
@@ -353,24 +354,35 @@ const Page = () => {
     };
 
     try {
-      const result = await GlobalApi.createAdmin(updatedAdminData);
+      let result;
+
+      if (role === "EDITOR") {
+        console.log("Memanggil API: createEditor");
+        result = await GlobalApi.createEditor(updatedAdminData);
+      } else {
+        console.log("Memanggil API: createAdmin");
+        result = await GlobalApi.createAdmin(updatedAdminData);
+      }
+
+      console.log("Response dari server:", result);
+
       setNotification({
         type: "success",
-        message: `Admin berhasil ditambahkan!`,
+        message: `${role} berhasil ditambahkan!`,
       });
+
       setTimeout(() => {
         window.location.reload();
       }, 3000);
     } catch (error) {
+      console.error("ERROR SAAT CREATE:", error);
+      console.error("Response error:", error?.response?.data);
+
       setNotification({
         type: "error",
-        message: `Gagal menambahkan admin!`,
+        message: `Gagal menambahkan ${role}!`,
       });
     }
-  };
-
-  const handleBackClick = () => {
-    router.back();
   };
 
   const toggleSidebar = () => {
@@ -1014,6 +1026,7 @@ const Page = () => {
                                     SUPER ADMIN
                                   </option>
                                   <option value="ADMIN">ADMIN</option>
+                                  <option value="EDITOR">EDITOR</option>
                                 </select>
                               </div>
                             </div>

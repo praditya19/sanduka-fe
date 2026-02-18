@@ -15,7 +15,6 @@ import { useMute } from "../MuteContext";
 import PencarianAnggota from "../_components/PencarianAnggota";
 
 const HeaderMenu = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
   const [emailCount, setEmailCount] = useState(0);
@@ -29,55 +28,11 @@ const HeaderMenu = () => {
   const profileImageUrl = "/profile.png";
   const [fotoBase64, setFotoBase64] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [role, setRole] = useState(null);
-  const [statusSegeraCount, setStatusSegeraCount] = useState(0);
   const { isMuted, handleMuteToggle } = useMute();
   const [isIconBlinking, setIsIconBlinking] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-  const [pensiunList, setPensiunList] = useState([]);
-  const [filteredPensiunList, setFilteredPensiunList] = useState([]);
-  const [loader, setLoader] = useState(false);
 
-  // Fetch Pensiun Data
-  useEffect(() => {
-    const fetchPensiunData = async () => {
-      try {
-        const pensiunResponse = await GlobalApi.getAllPensiun();
-
-        if (
-          !pensiunResponse ||
-          !pensiunResponse.data ||
-          !pensiunResponse.data.content
-        ) {
-          throw new Error("Response dari API tidak valid");
-        }
-
-        const allPensiunList = pensiunResponse.data.content;
-
-        const segeraItems = allPensiunList.filter(
-          (item) => item.keterangan === null && item.status === "Segera",
-        );
-        const countSegera = segeraItems.length;
-
-        sessionStorage.setItem("statusSegera", countSegera.toString());
-        setStatusSegeraCount(countSegera);
-      } catch (error) {
-        console.error("Terjadi kesalahan saat mengambil data pensiun:", error);
-      }
-    };
-
-    if (isLoggedIn) {
-      const statusSegera = sessionStorage.getItem("statusSegera");
-      if (statusSegera) {
-        setStatusSegeraCount(parseInt(statusSegera, 10));
-        fetchPensiunData();
-      } else {
-        fetchPensiunData();
-      }
-    }
-  }, [isLoggedIn]);
-
-  // Fetch User Data
+  
   const fetchUserData = async () => {
     const userId = sessionStorage.getItem("userId");
     const userRole = sessionStorage.getItem("role");
@@ -182,7 +137,6 @@ const HeaderMenu = () => {
       : "/anggota/edit-anggota";
   };
 
-  // Fetch notifications
   useEffect(() => {
     const fetchNotificationCount = async () => {
       try {
@@ -200,7 +154,6 @@ const HeaderMenu = () => {
     return () => clearInterval(intervalId);
   }, []);
 
-  // Handle notifications and sounds
   useEffect(() => {
     fetchUserData();
 
@@ -241,7 +194,6 @@ const HeaderMenu = () => {
     isMuted,
   ]);
 
-  // Handle click outside for profile menu
   useEffect(() => {
     if (isProfileMenuOpen) {
       document.addEventListener("mousedown", handleClickOutside);
