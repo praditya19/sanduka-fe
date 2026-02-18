@@ -301,7 +301,7 @@ const TravelPage = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {travelPackages.map((item) => (
             <div
               key={item.id}
@@ -372,7 +372,7 @@ const TravelPage = () => {
               </div>
             </div>
           ))}
-        </div>
+        </div> */}
 
         <div className="mt-16 text-center bg-gradient-to-r from-blue-100 to-teal-100 rounded-2xl p-10">
           <h2 className="text-3xl font-bold text-gray-800 mb-4">

@@ -5,9 +5,9 @@ import { FaWhatsapp } from "react-icons/fa";
 
 const Live = () => {
   const liveLink =
-    "https://www.youtube.com/watch?v=6SEpjbyAjeE&pp=ygULcGdyaSBqZXBhcmE%3D";
+    "";
 
-  const phoneNumber = "6281325552982";
+  const phoneNumber = "6285649590078";
   const whatsappLink = `https://wa.me/${phoneNumber}`;
 
   return (

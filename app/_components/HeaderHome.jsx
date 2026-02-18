@@ -15,7 +15,6 @@ import { useMute } from "../MuteContext";
 import PencarianAnggota from "../_components/PencarianAnggota";
 
 const HeaderHome = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
   const [emailCount, setEmailCount] = useState(0);
@@ -30,62 +29,9 @@ const HeaderHome = () => {
   const [fotoBase64, setFotoBase64] = useState(null);
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState(null);
-  const [statusSegeraCount, setStatusSegeraCount] = useState(0);
   const { isMuted, handleMuteToggle } = useMute();
   const [isIconBlinking, setIsIconBlinking] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-
-  useEffect(() => {
-    const fetchPensiunData = async () => {
-      setLoader(true);
-      try {
-        const pensiunResponse = await GlobalApi.getAllPensiun();
-
-        if (
-          !pensiunResponse ||
-          !pensiunResponse.data ||
-          !pensiunResponse.data.content
-        ) {
-          throw new Error("Response dari API tidak valid");
-        }
-
-        const allPensiunList = pensiunResponse.data.content;
-
-        const segeraItems = allPensiunList.filter(
-          (item) => item.keterangan === null && item.status === "Segera",
-        );
-        const countSegera = segeraItems.length;
-
-        sessionStorage.setItem("statusSegera", countSegera.toString());
-
-        setStatusSegeraCount(countSegera);
-        setPensiunList(allPensiunList);
-
-        const finalFilteredPensiunList = allPensiunList.filter((item) => {
-          if (item.keterangan === null) {
-            return item.status === "Segera";
-          }
-          return item.keterangan !== "Pensiun";
-        });
-
-        setFilteredPensiunList(finalFilteredPensiunList);
-      } catch (error) {
-        console.error("Terjadi kesalahan saat mengambil data pensiun:", error);
-      } finally {
-        setLoader(false);
-      }
-    };
-
-    if (isLoggedIn) {
-      const statusSegera = sessionStorage.getItem("statusSegera");
-      if (statusSegera) {
-        setStatusSegeraCount(parseInt(statusSegera, 10));
-        fetchPensiunData();
-      } else {
-        fetchPensiunData();
-      }
-    }
-  }, [isLoggedIn]);
 
   const fetchUserData = async () => {
     const userId = sessionStorage.getItem("userId");
@@ -100,7 +46,7 @@ const HeaderHome = () => {
     try {
       let idToFetch = userId;
 
-      if (userRole === "SUPERADMIN" && npa) {
+      if ((userRole === "SUPERADMIN" || userRole === "ADMIN") && npa) {
         const npaResponse = await GlobalApi.cekNpa(npa);
 
         if (npaResponse && npaResponse.id) {
@@ -182,7 +128,7 @@ const HeaderHome = () => {
 
   const getEditProfilePath = () => {
     const userRole = sessionStorage.getItem("role");
-    return userRole === "SUPER ADMIN" || userRole === "ADMIN"
+    return userRole === "SUPERADMIN" || userRole === "ADMIN"
       ? "/anggota/edit-admin"
       : "/anggota/edit-anggota";
   };

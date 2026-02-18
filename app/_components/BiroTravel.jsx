@@ -125,7 +125,7 @@ const BiroTravel = () => {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {latestTrips.map((item) => (
             <div
               key={item.id}
@@ -162,7 +162,7 @@ const BiroTravel = () => {
               </div>
             </div>
           ))}
-        </div>
+        </div> */}
       </section>
     </div>
   );
