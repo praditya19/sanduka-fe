@@ -163,6 +163,11 @@ function SignIn() {
     } catch (error) {
       console.error("Error:", error);
 
+      if (error.response?.status === 524 || error.status === 524) {
+        setIsServerDown(true);
+        return;
+      }
+
       setNotification({
         type: "error",
         message: `Terjadi kesalahan saat login: ${
