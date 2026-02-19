@@ -18,7 +18,6 @@ import {
 } from "react-icons/fa";
 import ServerDown from "@/app/_components/ServerDown";
 
-// Updated NotificationPopup component with improved message formatting
 const NotificationPopup = ({ type, message, onClose }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -146,7 +145,6 @@ function SignIn() {
         response.unitKerja || "Tidak diketahui",
       );
 
-      // Updated success notification with formatted name and branch on separate lines
       setNotification({
         type: "success",
         message: (
@@ -165,31 +163,6 @@ function SignIn() {
     } catch (error) {
       console.error("Error:", error);
 
-      // Cek jika error status code menunjukkan server down
-      const serverDownStatusCodes = [500, 502, 503, 504, 524]; // Internal Server Error, Bad Gateway, Service Unavailable, Gateway Timeout, Unknown Error
-      if (serverDownStatusCodes.includes(error.statusCode)) {
-        setIsServerDown(true);
-        return;
-      }
-
-      // Cek jika error message mengindikasikan network/server problem
-      const errorMessage = error.message?.toLowerCase() || "";
-      const serverDownKeywords = [
-        "network",
-        "timeout",
-        "econnrefused",
-        "enotfound",
-        "server",
-        "unavailable",
-      ];
-      if (
-        serverDownKeywords.some((keyword) => errorMessage.includes(keyword))
-      ) {
-        setIsServerDown(true);
-        return;
-      }
-
-      // Show error notification
       setNotification({
         type: "error",
         message: `Terjadi kesalahan saat login: ${
@@ -209,7 +182,6 @@ function SignIn() {
   const isEmail = email.includes("@gmail.com");
   const isNPA = /^\d{10,11}$/.test(email);
 
-  // Jika server down, tampilkan ServerDown component
   if (isServerDown) {
     return <ServerDown />;
   }

@@ -10,8 +10,7 @@ const ServerDown = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-gray-100 px-6">
       <div className="bg-white shadow-2xl rounded-2xl p-10 max-w-md w-full text-center border border-red-100">
-        
-        {/* Icon */}
+   
         <div className="flex justify-center mb-6">
           <div className="bg-red-100 p-4 rounded-full">
             <svg
@@ -24,24 +23,19 @@ const ServerDown = () => {
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                d="M9.75 17L15 12l-5.25-5M4.5 4.5h15v15h-15z"
+                d="M10.5 2.5l-1.5 1.5L5 2.5m3 12.5l-3-3m10.5-10l1.5 1.5L19 2.5m-3 12.5l3-3m-6-6L5 20.25M19 3.75l-14 14.5"
               />
             </svg>
           </div>
         </div>
 
-        {/* Title */}
-        <h1 className="text-2xl font-bold text-gray-800 mb-3">
-          Server Sedang Down
-        </h1>
-
-        {/* Message */}
+        
         <p className="text-gray-600 mb-6">
-          Mohon maaf, server sedang mengalami gangguan atau dalam proses
-          maintenance. Silakan coba beberapa saat lagi.
+          Mohon maaf, layanan sedang dalam proses maintenance. Kami berusaha
+          menyelesaikannya secepatnya. Terima kasih atas kesabaran dan
+          pengertian Anda.
         </p>
 
-        {/* Button */}
         <button
           onClick={handleReload}
           className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 rounded-xl transition duration-300"
