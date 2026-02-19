@@ -18,7 +18,6 @@ import {
 } from "react-icons/fa";
 import ServerDown from "@/app/_components/ServerDown";
 
-// Updated NotificationPopup component with improved message formatting
 const NotificationPopup = ({ type, message, onClose }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
