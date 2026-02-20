@@ -1177,8 +1177,8 @@ const getTransaksiBank = async (
     if (tahun) params.append("tahun", tahun);
     if (query) params.append("query", query);
 
-    const response = await axios.get(
-      `https://sanduka.my.id/api/potongan-gaji?${params.toString()}`,
+    const response = await axiosClient.get(
+      `/api/potongan-gaji?${params.toString()}`
     );
 
     return {
@@ -1208,12 +1208,12 @@ const getTransaksiBankBalancing = async (
     if (tahun) params.append("tahun", tahun);
     if (keterangan) params.append("keterangan", keterangan);
     if (search) params.append("search", search);
-    // bulan tidak dipakai lagi
 
-    const url = `https://sanduka.my.id/api/potongan-gaji/balancing?${params.toString()}`;
-    const response = await axiosClient.get(url);
+    const response = await axiosClient.get(
+      `/api/potongan-gaji/balancing?${params.toString()}`
+    );
 
-    return response.data; // ✅ langsung return array
+    return response.data;
   } catch (error) {
     console.error("Error fetching transaksi bank balancing:", error);
     throw error;
@@ -1225,9 +1225,10 @@ const getCountAnggotaPotonganBank = async (bulan, tahun) => {
   params.append("bulan", bulan);
   params.append("tahun", tahun);
 
-  const url = `/api/potongan-gaji/count-anggota-potongan-bank?${params.toString()}`;
   try {
-    const response = await axiosClient.get(url);
+    const response = await axiosClient.get(
+      `/api/potongan-gaji/count-anggota-potongan-bank?${params.toString()}`
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching Potongan Gaji Summary:", error);
@@ -1253,10 +1254,10 @@ const getCountAnggotaSetorTunai = async ({
 
   if (search) params.append("search", search);
 
-  const url = `/api/potongan-gaji/count-anggota-setor-tunai?${params.toString()}`;
-
   try {
-    const response = await axiosClient.get(url);
+    const response = await axiosClient.get(
+      `/api/potongan-gaji/count-anggota-setor-tunai?${params.toString()}`
+    );
     return response.data;
   } catch (error) {
     console.error("❌ Error fetching Setor Tunai Summary:", error);
@@ -1282,10 +1283,10 @@ const getCountAnggotaTerfilter = async ({
 
   if (search) params.append("search", search);
 
-  const url = `/api/potongan-gaji/count-total-anggota-terfilter?${params.toString()}`;
-
   try {
-    const response = await axiosClient.get(url);
+    const response = await axiosClient.get(
+      `/api/potongan-gaji/count-total-anggota-terfilter?${params.toString()}`
+    );
     return response.data;
   } catch (error) {
     console.error("❌ Error fetching Setor Tunai Summary:", error);

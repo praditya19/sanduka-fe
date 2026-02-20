@@ -221,6 +221,7 @@ const CreateBerita = () => {
       ...formData,
       galeriImages: formData.galeri.map((g) => g.file),
       galeriDeskripsi: formData.galeri.map((g) => g.deskripsi),
+      role: "CONTRIBUTOR",
     };
     try {
       await GlobalApi.createBerita(dataToSubmit);
@@ -265,7 +266,6 @@ const CreateBerita = () => {
         >
           <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 py-4 px-4">
             <div className="max-w-7xl mx-auto">
-              {/* Header dengan Gradient */}
               <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-xl p-8 mb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -296,14 +296,10 @@ const CreateBerita = () => {
                 </div>
               </div>
 
-              {/* Main Form Card */}
               <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
                 <form onSubmit={handleSubmit} className="p-8">
-                  {/* Grid Layout 12 Kolom */}
                   <div className="grid grid-cols-12 gap-6">
-                    {/* Kolom Kiri - Foto (5 kolom) */}
                     <div className="col-span-12 lg:col-span-5 space-y-6">
-                      {/* Card Foto Utama */}
                       <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200 p-6 sticky top-24">
                         <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                           <span className="w-1 h-5 bg-green-500 rounded-full"></span>
@@ -315,7 +311,6 @@ const CreateBerita = () => {
                             key={index}
                             className="mb-6 border rounded-lg p-4 bg-white"
                           >
-                            {/* Preview */}
                             {item.preview ? (
                               <img
                                 src={item.preview}
@@ -327,7 +322,6 @@ const CreateBerita = () => {
                               </div>
                             )}
 
-                            {/* Upload */}
                             <input
                               type="file"
                               accept="image/*"
@@ -338,7 +332,6 @@ const CreateBerita = () => {
                               required
                             />
 
-                            {/* Deskripsi */}
                             <input
                               type="text"
                               value={item.deskripsi}
@@ -350,7 +343,6 @@ const CreateBerita = () => {
                               required
                             />
 
-                            {/* Hapus */}
                             {formData.galeri.length > 1 && (
                               <button
                                 type="button"
@@ -363,7 +355,6 @@ const CreateBerita = () => {
                           </div>
                         ))}
 
-                        {/* ✅ BUTTON TAMBAH DI PALING BAWAH */}
                         <div className="mt-4">
                           <button
                             type="button"
@@ -376,9 +367,7 @@ const CreateBerita = () => {
                       </div>
                     </div>
 
-                    {/* Kolom Kanan - Konten Berita (7 kolom) */}
                     <div className="col-span-12 lg:col-span-7 space-y-6">
-                      {/* Judul Berita */}
                       <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
                         <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                           <span className="w-1 h-4 bg-blue-500 rounded-full"></span>
@@ -395,7 +384,6 @@ const CreateBerita = () => {
                         />
                       </div>
 
-                      {/* Isi Berita */}
                       <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
                         <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                           <span className="w-1 h-4 bg-orange-500 rounded-full"></span>
@@ -416,9 +404,7 @@ const CreateBerita = () => {
                         )}
                       </div>
 
-                      {/* Informasi Penulis & Status dalam 2 kolom */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* User Info Card */}
                         <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl shadow-lg p-6 text-white">
                           <h4 className="text-sm font-semibold text-blue-200 mb-3 flex items-center gap-2">
                             <svg
@@ -458,7 +444,6 @@ const CreateBerita = () => {
                           </div>
                         </div>
 
-                        {/* Status Card */}
                         <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
                           <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                             <svg
@@ -525,7 +510,6 @@ const CreateBerita = () => {
                     </div>
                   </div>
 
-                  {/* Footer Actions */}
                   <div className="flex items-center justify-end gap-4 mt-8 pt-6 border-t border-gray-200">
                     <button
                       type="button"
