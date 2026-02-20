@@ -2856,24 +2856,19 @@ function RekapAnggota() {
               </div>
             </div>
             <div className="bg-teal-700 p-4 rounded-t-lg mt-2">
-              <div className="flex justify-between items-center">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h2 className="text-white text-xl font-semibold">
-                      Laporan Tagihan
-                    </h2>
-                    <p className="text-teal-100 text-sm">
-                      Daftar iuran anggota per unit kerja
-                    </p>
-                  </div>
+              <div className="flex items-start justify-between w-full">
+                <div>
+                  <h2 className="text-white text-xl font-semibold">
+                    Laporan Tagihan
+                  </h2>
+                  <p className="text-teal-100 text-sm">
+                    Daftar iuran anggota per unit kerja
+                  </p>
+                </div>
 
-                  <div className="text-right text-white font-semibold">
-                    Total anggota:{" "}
-                    {groupedData.reduce(
-                      (sum, g) => sum + parseInt(g.jumlah),
-                      0,
-                    )}
-                  </div>
+                <div className="text-right text-white font-semibold">
+                  Total anggota:{" "}
+                  {groupedData.reduce((sum, g) => sum + parseInt(g.jumlah), 0)}
                 </div>
                 {/* <div className="flex gap-2 items-center">
                   <select
