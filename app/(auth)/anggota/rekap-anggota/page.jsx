@@ -764,18 +764,6 @@ function RekapAnggota() {
     };
   }, []);
 
-  const toggleExpand = (unitKerja) => {
-    setExpandedRows((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(unitKerja)) {
-        newSet.delete(unitKerja);
-      } else {
-        newSet.add(unitKerja);
-      }
-      return newSet;
-    });
-  };
-
   const calculateTotals = (dataArray) => {
     const newTotals = dataArray.reduce(
       (acc, item) => ({
