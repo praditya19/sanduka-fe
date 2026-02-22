@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination, Autoplay } from "swiper/modules";
+import { Navigation, Pagination, Autoplay } from "swiper/modules"; // Import dikembalikan
 import {
   FaTimesCircle,
   FaCheckCircle,
@@ -74,11 +74,9 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
         <div className="flex flex-col items-center space-y-4">
           <div className="animate-bounce">{getIcon()}</div>
-
           <h3 className={`text-xl font-bold ${getTextColor()}`}>
             {type === "success" ? "Berhasil!" : "Gagal!"}
           </h3>
-
           <p className={`${getTextColor()} text-center`}>{message}</p>
         </div>
       </div>
@@ -110,7 +108,6 @@ const GaleriKegiatan = () => {
   const [nonEventGalleries, setNonEventGalleries] = useState([]);
   const [eventGalleries, setEventGalleries] = useState([]);
 
-  // State baru untuk popup lihat semua event dan detail event
   const [showAllEventsPopup, setShowAllEventsPopup] = useState(false);
   const [showEventDetailPopup, setShowEventDetailPopup] = useState(false);
   const [selectedEventDetail, setSelectedEventDetail] = useState(null);
@@ -148,7 +145,6 @@ const GaleriKegiatan = () => {
             : null;
         }
       });
-
       setRegistrationStatus(newRegistrationStatus);
     }
   }, [userData, eventParticipants, galleries]);
@@ -168,7 +164,6 @@ const GaleriKegiatan = () => {
           ? "Sudah Terdaftar"
           : null;
       });
-
       setRegistrationStatus(newRegistrationStatus);
     }
   }, [userData, eventParticipants, eventGalleries]);
@@ -213,7 +208,6 @@ const GaleriKegiatan = () => {
     try {
       setIsLoading(true);
       const data = await GlobalApi.getSidebarGalleryByCategory("NON EVENT");
-
       const processedGalleries = await Promise.all(
         data.map(async (item) => {
           const blob = await fetch(`data:image/jpeg;base64,${item.photo}`).then(
@@ -223,7 +217,6 @@ const GaleriKegiatan = () => {
           return { ...item, imageUrl: objectUrl };
         }),
       );
-
       setNonEventGalleries(processedGalleries);
     } catch (error) {
       console.error("Error fetching non-event galleries:", error);
@@ -236,7 +229,6 @@ const GaleriKegiatan = () => {
     try {
       setIsLoading(true);
       const data = await GlobalApi.getSidebarGalleryByCategory("EVENT");
-
       const processedGalleries = await Promise.all(
         data.map(async (item) => {
           const blob = await fetch(`data:image/jpeg;base64,${item.photo}`).then(
@@ -246,7 +238,6 @@ const GaleriKegiatan = () => {
           return { ...item, imageUrl: objectUrl };
         }),
       );
-
       setEventGalleries(processedGalleries);
     } catch (error) {
       console.error("Error fetching event galleries:", error);
@@ -259,7 +250,6 @@ const GaleriKegiatan = () => {
     try {
       setIsLoading(true);
       const data = await GlobalApi.getAllSidebarGallery();
-
       const processedGalleries = await Promise.all(
         data.map(async (item) => {
           const blob = await fetch(`data:image/jpeg;base64,${item.photo}`).then(
@@ -269,7 +259,6 @@ const GaleriKegiatan = () => {
           return { ...item, imageUrl: objectUrl };
         }),
       );
-
       setGalleries(processedGalleries);
     } catch (error) {
       console.error("Error fetching galleries:", error);
@@ -290,14 +279,9 @@ const GaleriKegiatan = () => {
 
   const handleRegister = async (itemId) => {
     const selectedEvent = eventGalleries.find((item) => item.id === itemId);
-
-    if (!selectedEvent) {
-      console.error("Event not found with ID:", itemId);
-      return;
-    }
-
+    if (!selectedEvent) return;
     setCurrentEvent(selectedEvent);
-
+    
     try {
       const userId = sessionStorage.getItem("userId");
       const role = sessionStorage.getItem("role");
@@ -306,12 +290,7 @@ const GaleriKegiatan = () => {
       if (userId) {
         let userDataDaftar;
         if (role === "ADMIN" || role === "SUPER ADMIN") {
-          if (npa) {
-            userDataDaftar = await GlobalApi.getUserByNpa(npa);
-          } else {
-            console.error("NPA not found in session storage");
-            return;
-          }
+          if (npa) userDataDaftar = await GlobalApi.getUserByNpa(npa);
         } else {
           userDataDaftar = await GlobalApi.getUserById(userId);
         }
@@ -323,10 +302,7 @@ const GaleriKegiatan = () => {
 
     setJabatan("");
     setJabatanError("");
-
-    setTimeout(() => {
-      setShowPopup(true);
-    }, 100);
+    setTimeout(() => { setShowPopup(true); }, 100);
   };
 
   const handleEventClick = (event) => {
@@ -348,13 +324,11 @@ const GaleriKegiatan = () => {
     const tmp = document.createElement("DIV");
     tmp.innerHTML = html;
     const text = tmp.textContent || tmp.innerText || "";
-
     if (text.length <= maxLength) return html;
 
     let truncated = "";
     let currentLength = 0;
     const words = text.split(" ");
-
     for (const word of words) {
       if (currentLength + word.length <= maxLength - 3) {
         truncated += word + " ";
@@ -363,27 +337,20 @@ const GaleriKegiatan = () => {
         break;
       }
     }
-
     return truncated.trim() + "...";
   };
 
   const toggleExpand = (itemId) => {
-    setExpandedItems((prev) => ({
-      ...prev,
-      [itemId]: !prev[itemId],
-    }));
+    setExpandedItems((prev) => ({ ...prev, [itemId]: !prev[itemId] }));
   };
 
   const processHTML = (htmlContent) => {
     if (!htmlContent) return "";
-
     const urlRegex = /(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/g;
-
     const processedContent = htmlContent.replace(urlRegex, (url) => {
       const href = url.startsWith("www.") ? `http://${url}` : url;
       return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">${url}</a>`;
     });
-
     return processedContent;
   };
 
@@ -397,15 +364,10 @@ const GaleriKegiatan = () => {
       <>
         <div className="bg-gray-100 py-12">
           <div className="container mx-auto px-4 md:px-12 lg:px-24">
-            <h2 className="text-xl font-bold mb-6 text-center">
-              Galeri Kegiatan
-            </h2>
+            <h2 className="text-xl font-bold mb-6 text-center">Galeri Kegiatan</h2>
             <div className="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-4">
               {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="animate-pulse bg-gray-300 rounded-lg w-full md:w-[400px] h-[200px]"
-                />
+                <div key={i} className="animate-pulse bg-gray-300 rounded-lg w-full md:w-[400px] h-[200px]" />
               ))}
             </div>
           </div>
@@ -415,10 +377,7 @@ const GaleriKegiatan = () => {
             <h2 className="text-xl font-bold mb-6 text-center">Event</h2>
             <div className="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-4">
               {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="animate-pulse bg-gray-300 rounded-lg w-full md:w-[400px] h-[200px]"
-                />
+                <div key={i} className="animate-pulse bg-gray-300 rounded-lg w-full md:w-[400px] h-[200px]" />
               ))}
             </div>
           </div>
@@ -427,18 +386,10 @@ const GaleriKegiatan = () => {
     );
   }
 
-  const GallerySwiper = ({ items, title, showRegisterButton = false }) => {
+  // --- KOMPONEN GALLERY SWIPER (DIPISAH LOGIKA EVENT & NON EVENT) ---
+  const GallerySwiper = ({ items, title }) => {
     const maxDescriptionLength = 250;
-
-    const getAutoplayConfig = () => {
-      if (title === "Galeri Kegiatan") {
-        return {
-          delay: 3000,
-          disableOnInteraction: false,
-        };
-      }
-      return false;
-    };
+    const isEvent = title === "Event"; // Cek apakah ini bagian Event atau bukan
 
     const renderDescription = (item) => {
       const plainText = item.deskripsi ? stripHtml(item.deskripsi) : "";
@@ -474,12 +425,28 @@ const GaleriKegiatan = () => {
       );
     };
 
+    // Helper: Duplikasi Data Untuk Infinite Scroll (Khusus Event)
+    const getSeamlessItems = (arr) => {
+      if (!arr || arr.length === 0) return [];
+      if (!isEvent) return arr; // Jika bukan Event, kembalikan array asli tanpa duplikasi
+
+      const MIN_ITEMS = 6;
+      let duplicated = [...arr];
+
+      while (duplicated.length < MIN_ITEMS) {
+        duplicated = [...duplicated, ...arr];
+      }
+      return [...duplicated, ...duplicated];
+    };
+
+    const displayItems = getSeamlessItems(items);
+
     return (
-      <div className="mb-12">
+      <div className="mb-12 overflow-hidden">
         <div className="mb-6">
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center px-4">
             <h2 className="text-xl font-bold">{title}</h2>
-            {title === "Event" && items.length > 0 && (
+            {isEvent && items.length > 0 && (
               <button
                 onClick={() => setShowAllEventsPopup(true)}
                 className="text-blue-600 hover:text-blue-800 text-sm font-semibold transition-colors hover:underline"
@@ -489,64 +456,109 @@ const GaleriKegiatan = () => {
             )}
           </div>
         </div>
+        
         {items.length === 0 ? (
           <div className="text-center text-gray-600">
-            {title === "Event" && "Tidak ada event apa pun untuk saat ini."}
+            {isEvent ? "Tidak ada event apa pun untuk saat ini." : "Belum ada galeri kegiatan."}
           </div>
         ) : (
-          <Swiper
-            modules={[
-              Navigation,
-              Pagination,
-              ...(getAutoplayConfig() ? [Autoplay] : []),
-            ]}
-            spaceBetween={30}
-            slidesPerView={1}
-            navigation={true}
-            pagination={{ clickable: true }}
-            autoplay={getAutoplayConfig()}
-            loop={true}
-            className="w-full"
-          >
-            {items.map((item) => (
-              <SwiperSlide
-                key={item.id}
-                className="flex flex-col items-center pb-12"
-              >
-                <div
-                  className="relative w-full max-w-md mx-auto rounded-lg shadow-md bg-white cursor-pointer hover:shadow-lg transition-shadow overflow-hidden"
-                  onClick={() => title === "Event" && handleEventClick(item)}
-                  style={{ height: "400px" }}
-                >
-                  <Image
-                    src={item.imageUrl}
-                    alt={item.deskripsi || "Gallery image"}
-                    fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 90vw, 500px"
-                    className="object-contain"
-                    priority={true}
-                    quality={90}
-                  />
-                </div>
-                <div className="mt-4 text-center w-full px-2 sm:px-4 md:px-8">
-                  {item.category === "EVENT" ? (
-                    <div>
-                      <p className="text-lg font-medium">{item.namaEvent}</p>
-                    </div>
-                  ) : (
-                    <div>{renderDescription(item)}</div>
-                  )}
-                </div>
-              </SwiperSlide>
-            ))}
-            <div className="swiper-pagination !relative mt-6"></div>
-          </Swiper>
+          <div className="relative w-full px-2">
+              
+              {isEvent ? (
+                  // --- SWIPER KHUSUS EVENT (AUTO SCROLL / MARQUEE) ---
+                  <Swiper
+                    modules={[Autoplay]}
+                    spaceBetween={30}
+                    slidesPerView={"auto"}
+                    loop={true}
+                    speed={4000} // Kecepatan scroll linear (ms)
+                    autoplay={{
+                        delay: 0,
+                        disableOnInteraction: false,
+                        pauseOnMouseEnter: true, 
+                    }}
+                    className="w-full !py-4 marquee-swiper" // Class marquee-swiper untuk mentarget CSS linear
+                  >
+                    {displayItems.map((item, index) => (
+                      <SwiperSlide
+                        key={`${item.id}-${index}`}
+                        className="flex flex-col items-center pb-8"
+                        style={{ width: "400px" }}
+                      >
+                        <div
+                          className="relative w-full mx-auto rounded-lg shadow-md bg-white cursor-pointer hover:shadow-lg transition-shadow overflow-hidden"
+                          onClick={() => handleEventClick(item)}
+                          style={{ height: "400px" }}
+                        >
+                          <Image
+                            src={item.imageUrl}
+                            alt={item.deskripsi || "Gallery image"}
+                            fill
+                            sizes="(max-width: 640px) 100vw, (max-width: 768px) 90vw, 500px"
+                            className="object-contain"
+                            priority={true}
+                            quality={90}
+                          />
+                          
+                          {registrationStatus[item.id] && (
+                            <div className="absolute top-4 right-4 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-full shadow-md z-10 flex items-center gap-1">
+                                <FaCheckCircle /> Terdaftar
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="mt-4 text-center w-full px-2 sm:px-4 md:px-8">
+                            <p className="text-lg font-bold text-gray-900">{item.namaEvent}</p>
+                        </div>
+                      </SwiperSlide>
+                    ))}
+                  </Swiper>
+              ) : (
+                  // --- SWIPER KHUSUS GALERI (MANUAL DENGAN PANAH & PAGINATION) ---
+                  <div className="px-6 md:px-12">
+                      <Swiper
+                        modules={[Navigation, Pagination, Autoplay]}
+                        spaceBetween={30}
+                        slidesPerView={1}
+                        navigation={true}
+                        pagination={{ clickable: true }}
+                        loop={true}
+                        autoplay={{ delay: 3000, disableOnInteraction: false }}
+                        className="w-full !pb-12" // Padding bawah agar titik pagination tidak tertutup
+                      >
+                        {displayItems.map((item) => (
+                          <SwiperSlide
+                            key={item.id}
+                            className="flex flex-col items-center pb-4"
+                          >
+                            <div
+                              className="relative w-full max-w-md mx-auto rounded-lg shadow-md bg-white overflow-hidden"
+                              style={{ height: "400px" }}
+                            >
+                              <Image
+                                src={item.imageUrl}
+                                alt={item.deskripsi || "Gallery image"}
+                                fill
+                                sizes="(max-width: 640px) 100vw, (max-width: 768px) 90vw, 500px"
+                                className="object-contain"
+                                priority={true}
+                                quality={90}
+                              />
+                            </div>
+                            <div className="mt-4 text-center w-full px-2 sm:px-4 md:px-8">
+                                <div>{renderDescription(item)}</div>
+                            </div>
+                          </SwiperSlide>
+                        ))}
+                      </Swiper>
+                  </div>
+              )}
+          </div>
         )}
       </div>
     );
   };
 
-  // Popup untuk menampilkan semua event
   const AllEventsPopup = () => {
     if (!showAllEventsPopup) return null;
 
@@ -619,7 +631,6 @@ const GaleriKegiatan = () => {
     );
   };
 
-  // Popup untuk menampilkan detail event beserta form pendaftaran
   const EventDetailPopup = () => {
     if (!showEventDetailPopup || !selectedEventDetail) return null;
 
@@ -638,7 +649,6 @@ const GaleriKegiatan = () => {
 
     const truncateHtmlByWords = (html, maxWords) => {
       if (!html) return "";
-
       const tmp = document.createElement("DIV");
       tmp.innerHTML = html;
       const text = tmp.textContent || tmp.innerText || "";
@@ -646,10 +656,7 @@ const GaleriKegiatan = () => {
 
       if (words.length <= maxWords) return html;
 
-      // Jika perlu dipotong, kita ambil X kata pertama dari text
       const truncatedText = words.slice(0, maxWords).join(" ");
-
-      // Kita traverse HTML dan potong berdasarkan jumlah kata
       let wordCount = 0;
       const targetWords = maxWords;
 
@@ -698,41 +705,20 @@ const GaleriKegiatan = () => {
       const file = e.target.files[0];
       if (file) {
         const allowedTypes = [
-          "application/pdf",
-          "image/jpeg",
-          "image/png",
-          "image/jpg",
-          "video/mp4",
-          "video/avi",
-          "video/quicktime",
-          "video/x-msvideo",
-          "video/mpeg",
-          "video/webm",
+          "application/pdf", "image/jpeg", "image/png", "image/jpg",
+          "video/mp4", "video/avi", "video/quicktime", "video/x-msvideo",
+          "video/mpeg", "video/webm",
         ];
-
         const allowedExtensions = [
-          ".pdf",
-          ".jpg",
-          ".jpeg",
-          ".png",
-          ".mp4",
-          ".avi",
-          ".mov",
-          ".mpeg",
-          ".webm",
+          ".pdf", ".jpg", ".jpeg", ".png", ".mp4", ".avi", ".mov", ".mpeg", ".webm",
         ];
         const fileExtension = "." + file.name.split(".").pop().toLowerCase();
 
-        if (
-          allowedTypes.includes(file.type) &&
-          allowedExtensions.includes(fileExtension)
-        ) {
+        if (allowedTypes.includes(file.type) && allowedExtensions.includes(fileExtension)) {
           setUploadFile(file);
           setFileName(file.name);
         } else {
-          alert(
-            "Format file tidak didukung. Pilih file PDF, JPG, PNG, JPEG, atau video (MP4, AVI, MOV, MPEG, WEBM).",
-          );
+          alert("Format file tidak didukung. Pilih file PDF, JPG, PNG, JPEG, atau video (MP4, AVI, MOV, MPEG, WEBM).");
           e.target.value = null;
           setFileName("");
           setUploadFile(null);
@@ -752,14 +738,11 @@ const GaleriKegiatan = () => {
 
       try {
         setIsSubmitting(true);
-
         const userId = sessionStorage.getItem("userId");
         const role = sessionStorage.getItem("role");
         const npa = sessionStorage.getItem("npa");
 
-        if (!userId) {
-          throw new Error("User ID not found");
-        }
+        if (!userId) throw new Error("User ID not found");
 
         let userDataDaftar;
         if (role === "ADMIN" || role === "SUPER ADMIN") {
@@ -772,30 +755,20 @@ const GaleriKegiatan = () => {
           userDataDaftar = await GlobalApi.getUserById(userId);
         }
 
-        if (!userDataDaftar) {
-          throw new Error("Could not retrieve user data");
-        }
+        if (!userDataDaftar) throw new Error("Could not retrieve user data");
 
         const formData = new FormData();
-        formData.append(
-          "namaLengkap",
-          userDataDaftar.namaLengkap || userDataDaftar.nama,
-        );
+        formData.append("namaLengkap", userDataDaftar.namaLengkap || userDataDaftar.nama);
         formData.append("npa", userDataDaftar.npaPgri);
         formData.append("email", userDataDaftar.email);
         formData.append("cabang", userDataDaftar.cabang);
         formData.append("unitKerja", userDataDaftar.unitKerja);
         formData.append("jabatan", jabatan.trim());
-        formData.append(
-          "nomorHp",
-          userDataDaftar.nomorHp || userDataDaftar.noHp,
-        );
+        formData.append("nomorHp", userDataDaftar.nomorHp || userDataDaftar.noHp);
         formData.append("namaEvent", currentEvent.namaEvent);
 
         if (fotoBase64) {
-          const blob = await fetch(`data:image/jpeg;base64,${fotoBase64}`).then(
-            (res) => res.blob(),
-          );
+          const blob = await fetch(`data:image/jpeg;base64,${fotoBase64}`).then((res) => res.blob());
           formData.append("foto", blob, "profile.jpg");
         }
 
@@ -811,7 +784,6 @@ const GaleriKegiatan = () => {
         }));
 
         await fetchEventParticipants();
-
         setShowEventDetailPopup(false);
         setNotification({
           type: "success",
@@ -821,8 +793,7 @@ const GaleriKegiatan = () => {
         console.error("Error submitting registration:", error);
         setNotification({
           type: "error",
-          message:
-            "Maaf, pendaftaran event gagal. Silakan coba lagi atau hubungi administrator jika masalah berlanjut.",
+          message: "Maaf, pendaftaran event gagal. Silakan coba lagi.",
         });
       } finally {
         setIsSubmitting(false);
@@ -856,7 +827,6 @@ const GaleriKegiatan = () => {
             style={{ maxHeight: "calc(90vh - 80px)" }}
           >
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Kolom Kiri: Detail Event */}
               <div>
                 <div className="relative w-full rounded-lg overflow-hidden shadow-md mb-4">
                   <Image
@@ -881,29 +851,20 @@ const GaleriKegiatan = () => {
                     dangerouslySetInnerHTML={renderHTML(
                       isDescriptionExpanded
                         ? selectedEventDetail.deskripsi
-                        : truncateHtmlByWords(
-                            selectedEventDetail.deskripsi,
-                            100,
-                          ),
+                        : truncateHtmlByWords(selectedEventDetail.deskripsi, 100)
                     )}
                   ></div>
-                  {stripHtml(selectedEventDetail.deskripsi).split(/\s+/)
-                    .length > 100 && (
+                  {stripHtml(selectedEventDetail.deskripsi).split(/\s+/).length > 100 && (
                     <button
-                      onClick={() =>
-                        setIsDescriptionExpanded(!isDescriptionExpanded)
-                      }
+                      onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
                       className="text-blue-600 hover:text-blue-800 mt-2 text-sm font-medium focus:outline-none transition-colors"
                     >
-                      {isDescriptionExpanded
-                        ? "Lihat lebih sedikit"
-                        : "Lihat lebih banyak"}
+                      {isDescriptionExpanded ? "Lihat lebih sedikit" : "Lihat lebih banyak"}
                     </button>
                   )}
                 </div>
               </div>
 
-              {/* Kolom Kanan: Form Pendaftaran */}
               {userData && (
                 <div className="bg-gray-50 rounded-lg p-6">
                   {isRegistered ? (
@@ -920,17 +881,11 @@ const GaleriKegiatan = () => {
                       <h4 className="text-xl font-bold mb-4 text-center">
                         Form Pendaftaran Event
                       </h4>
-
-                      {/* User Photo Section */}
                       <div className="flex justify-center mb-4">
                         <div className="relative flex items-center justify-center w-24 h-24 rounded-full border-2 border-gray-300 shadow-md overflow-hidden">
                           {fotoBase64 ? (
                             <Image
-                              src={
-                                fotoBase64
-                                  ? `data:image/jpeg;base64,${fotoBase64}`
-                                  : profileImageUrl
-                              }
+                              src={fotoBase64 ? `data:image/jpeg;base64,${fotoBase64}` : profileImageUrl}
                               width={100}
                               height={100}
                               alt={`Foto User`}
@@ -954,56 +909,34 @@ const GaleriKegiatan = () => {
                         <div className="bg-white p-3 rounded-md">
                           <p className="text-sm text-gray-600">Nama Lengkap</p>
                           <p className="text-gray-800 font-medium">
-                            {userData?.namaLengkap ||
-                              userData?.nama ||
-                              "Loading..."}
+                            {userData?.namaLengkap || userData?.nama || "Loading..."}
                           </p>
                         </div>
-
                         <div className="bg-white p-3 rounded-md">
                           <p className="text-sm text-gray-600">NPA PGRI</p>
-                          <p className="text-gray-800 font-medium">
-                            {userData?.npaPgri || "Loading..."}
-                          </p>
+                          <p className="text-gray-800 font-medium">{userData?.npaPgri || "Loading..."}</p>
                         </div>
-
                         <div className="bg-white p-3 rounded-md">
                           <p className="text-sm text-gray-600">Email</p>
-                          <p className="text-gray-800 font-medium">
-                            {userData?.email || "Loading..."}
-                          </p>
+                          <p className="text-gray-800 font-medium">{userData?.email || "Loading..."}</p>
                         </div>
-
                         <div className="bg-white p-3 rounded-md">
                           <p className="text-sm text-gray-600">Cabang</p>
-                          <p className="text-gray-800 font-medium">
-                            {userData?.cabang || "Loading..."}
-                          </p>
+                          <p className="text-gray-800 font-medium">{userData?.cabang || "Loading..."}</p>
                         </div>
-
                         <div className="bg-white p-3 rounded-md">
                           <p className="text-sm text-gray-600">Unit Kerja</p>
-                          <p className="text-gray-800 font-medium">
-                            {userData?.unitKerja || "Loading..."}
-                          </p>
+                          <p className="text-gray-800 font-medium">{userData?.unitKerja || "Loading..."}</p>
                         </div>
-
                         <div className="bg-white p-3 rounded-md">
                           <p className="text-sm text-gray-600">Nomor HP</p>
                           <p className="text-gray-800 font-medium">
-                            {userData?.noHp ||
-                              userData?.nomorHp ||
-                              "Loading..."}
+                            {userData?.noHp || userData?.nomorHp || "Loading..."}
                           </p>
                         </div>
-
                         <div className="bg-white p-3 rounded-md">
-                          <label
-                            className="text-sm text-gray-600"
-                            htmlFor="jabatan"
-                          >
-                            Jabatan Organisasi PGRI{" "}
-                            <span className="text-red-500">*</span>
+                          <label className="text-sm text-gray-600" htmlFor="jabatan">
+                            Jabatan Organisasi PGRI <span className="text-red-500">*</span>
                           </label>
                           <input
                             id="jabatan"
@@ -1014,18 +947,10 @@ const GaleriKegiatan = () => {
                             className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             required
                           />
-                          {jabatanError && (
-                            <p className="text-red-500 text-sm mt-1">
-                              {jabatanError}
-                            </p>
-                          )}
+                          {jabatanError && <p className="text-red-500 text-sm mt-1">{jabatanError}</p>}
                         </div>
-
                         <div className="bg-white p-3 rounded-md">
-                          <label
-                            className="text-sm text-gray-600"
-                            htmlFor="uploadFile"
-                          >
+                          <label className="text-sm text-gray-600" htmlFor="uploadFile">
                             Upload Dokumen atau Video (opsional)
                           </label>
                           <div className="flex flex-col space-y-2">
@@ -1048,24 +973,18 @@ const GaleriKegiatan = () => {
                                 {fileName || "No file chosen"}
                               </div>
                             </div>
-
                             {fileName && (
                               <div className="p-3 bg-blue-50 border border-blue-200 rounded-md flex items-start">
                                 <div className="flex-grow">
                                   <p className="text-sm text-blue-700 break-words">
-                                    <span className="font-medium">
-                                      File terpilih:
-                                    </span>{" "}
-                                    {fileName}
+                                    <span className="font-medium">File terpilih:</span> {fileName}
                                   </p>
                                 </div>
                                 <button
                                   onClick={() => {
                                     setFileName("");
                                     setUploadFile(null);
-                                    if (fileInputRef.current) {
-                                      fileInputRef.current.value = "";
-                                    }
+                                    if (fileInputRef.current) fileInputRef.current.value = "";
                                   }}
                                   className="text-red-500 hover:text-red-700 ml-2"
                                   aria-label="Remove file"
@@ -1076,8 +995,7 @@ const GaleriKegiatan = () => {
                             )}
                           </div>
                           <p className="text-xs text-gray-500 mt-1">
-                            Format yang didukung: PDF, JPG, PNG, JPEG, MP4, AVI,
-                            MOV, MPEG, WEBM
+                            Format yang didukung: PDF, JPG, PNG, JPEG, MP4, AVI, MOV, MPEG, WEBM
                           </p>
                         </div>
                       </div>
@@ -1124,41 +1042,20 @@ const GaleriKegiatan = () => {
       const file = e.target.files[0];
       if (file) {
         const allowedTypes = [
-          "application/pdf",
-          "image/jpeg",
-          "image/png",
-          "image/jpg",
-          "video/mp4",
-          "video/avi",
-          "video/quicktime",
-          "video/x-msvideo",
-          "video/mpeg",
-          "video/webm",
+          "application/pdf", "image/jpeg", "image/png", "image/jpg",
+          "video/mp4", "video/avi", "video/quicktime", "video/x-msvideo",
+          "video/mpeg", "video/webm",
         ];
-
         const allowedExtensions = [
-          ".pdf",
-          ".jpg",
-          ".jpeg",
-          ".png",
-          ".mp4",
-          ".avi",
-          ".mov",
-          ".mpeg",
-          ".webm",
+          ".pdf", ".jpg", ".jpeg", ".png", ".mp4", ".avi", ".mov", ".mpeg", ".webm",
         ];
         const fileExtension = "." + file.name.split(".").pop().toLowerCase();
 
-        if (
-          allowedTypes.includes(file.type) &&
-          allowedExtensions.includes(fileExtension)
-        ) {
+        if (allowedTypes.includes(file.type) && allowedExtensions.includes(fileExtension)) {
           setUploadFile(file);
           setFileName(file.name);
         } else {
-          alert(
-            "Format file tidak didukung. Pilih file PDF, JPG, PNG, JPEG, atau video (MP4, AVI, MOV, MPEG, WEBM).",
-          );
+          alert("Format file tidak didukung. Pilih file PDF, JPG, PNG, JPEG, atau video (MP4, AVI, MOV, MPEG, WEBM).");
           e.target.value = null;
           setFileName("");
           setUploadFile(null);
@@ -1178,14 +1075,11 @@ const GaleriKegiatan = () => {
 
       try {
         setIsSubmitting(true);
-
         const userId = sessionStorage.getItem("userId");
         const role = sessionStorage.getItem("role");
         const npa = sessionStorage.getItem("npa");
 
-        if (!userId) {
-          throw new Error("User ID not found");
-        }
+        if (!userId) throw new Error("User ID not found");
 
         let userDataDaftar;
         if (role === "ADMIN" || role === "SUPER ADMIN") {
@@ -1198,30 +1092,20 @@ const GaleriKegiatan = () => {
           userDataDaftar = await GlobalApi.getUserById(userId);
         }
 
-        if (!userDataDaftar) {
-          throw new Error("Could not retrieve user data");
-        }
+        if (!userDataDaftar) throw new Error("Could not retrieve user data");
 
         const formData = new FormData();
-        formData.append(
-          "namaLengkap",
-          userDataDaftar.namaLengkap || userDataDaftar.nama,
-        );
+        formData.append("namaLengkap", userDataDaftar.namaLengkap || userDataDaftar.nama);
         formData.append("npa", userDataDaftar.npaPgri);
         formData.append("email", userDataDaftar.email);
         formData.append("cabang", userDataDaftar.cabang);
         formData.append("unitKerja", userDataDaftar.unitKerja);
         formData.append("jabatan", jabatan.trim());
-        formData.append(
-          "nomorHp",
-          userDataDaftar.nomorHp || userDataDaftar.noHp,
-        );
+        formData.append("nomorHp", userDataDaftar.nomorHp || userDataDaftar.noHp);
         formData.append("namaEvent", currentEvent.namaEvent);
 
         if (fotoBase64) {
-          const blob = await fetch(`data:image/jpeg;base64,${fotoBase64}`).then(
-            (res) => res.blob(),
-          );
+          const blob = await fetch(`data:image/jpeg;base64,${fotoBase64}`).then((res) => res.blob());
           formData.append("foto", blob, "profile.jpg");
         }
 
@@ -1237,7 +1121,6 @@ const GaleriKegiatan = () => {
         }));
 
         await fetchEventParticipants();
-
         setShowPopup(false);
         setNotification({
           type: "success",
@@ -1247,8 +1130,7 @@ const GaleriKegiatan = () => {
         console.error("Error submitting registration:", error);
         setNotification({
           type: "error",
-          message:
-            "Maaf, pendaftaran event gagal. Silakan coba lagi atau hubungi administrator jika masalah berlanjut.",
+          message: "Maaf, pendaftaran event gagal. Silakan coba lagi.",
         });
       } finally {
         setIsSubmitting(false);
@@ -1275,11 +1157,7 @@ const GaleriKegiatan = () => {
             <div className="relative flex items-center justify-center w-24 h-24 rounded-full border-2 border-gray-300 shadow-md overflow-hidden">
               {fotoBase64 ? (
                 <Image
-                  src={
-                    fotoBase64
-                      ? `data:image/jpeg;base64,${fotoBase64}`
-                      : profileImageUrl
-                  }
+                  src={fotoBase64 ? `data:image/jpeg;base64,${fotoBase64}` : profileImageUrl}
                   width={100}
                   height={100}
                   alt={`Foto User`}
@@ -1302,46 +1180,28 @@ const GaleriKegiatan = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="bg-gray-50 p-3 rounded-md hover:bg-gray-100 transition-colors">
               <p className="text-sm text-gray-600">Nama Lengkap</p>
-              <p className="text-gray-800 font-medium">
-                {userData?.namaLengkap || userData?.nama || "Loading..."}
-              </p>
+              <p className="text-gray-800 font-medium">{userData?.namaLengkap || userData?.nama || "Loading..."}</p>
             </div>
-
             <div className="bg-gray-50 p-3 rounded-md hover:bg-gray-100 transition-colors">
               <p className="text-sm text-gray-600">NPA PGRI</p>
-              <p className="text-gray-800 font-medium">
-                {userData?.npaPgri || "Loading..."}
-              </p>
+              <p className="text-gray-800 font-medium">{userData?.npaPgri || "Loading..."}</p>
             </div>
-
             <div className="bg-gray-50 p-3 rounded-md hover:bg-gray-100 transition-colors">
               <p className="text-sm text-gray-600">Email</p>
-              <p className="text-gray-800 font-medium">
-                {userData?.email || "Loading..."}
-              </p>
+              <p className="text-gray-800 font-medium">{userData?.email || "Loading..."}</p>
             </div>
-
             <div className="bg-gray-50 p-3 rounded-md hover:bg-gray-100 transition-colors">
               <p className="text-sm text-gray-600">Cabang</p>
-              <p className="text-gray-800 font-medium">
-                {userData?.cabang || "Loading..."}
-              </p>
+              <p className="text-gray-800 font-medium">{userData?.cabang || "Loading..."}</p>
             </div>
-
             <div className="bg-gray-50 p-3 rounded-md hover:bg-gray-100 transition-colors">
               <p className="text-sm text-gray-600">Unit Kerja</p>
-              <p className="text-gray-800 font-medium">
-                {userData?.unitKerja || "Loading..."}
-              </p>
+              <p className="text-gray-800 font-medium">{userData?.unitKerja || "Loading..."}</p>
             </div>
-
             <div className="bg-white p-3 rounded-md">
               <p className="text-sm text-gray-600">Nomor HP</p>
-              <p className="text-gray-800 font-medium">
-                {userData?.nomorHp || userData?.noHp || "Loading..."}
-              </p>
+              <p className="text-gray-800 font-medium">{userData?.nomorHp || userData?.noHp || "Loading..."}</p>
             </div>
-
             <div className="bg-gray-50 p-3 rounded-md hover:bg-gray-100 transition-colors col-span-1 sm:col-span-2">
               <label className="text-sm text-gray-600" htmlFor="jabatan">
                 Jabatan Organisasi PGRI <span className="text-red-500">*</span>
@@ -1355,11 +1215,8 @@ const GaleriKegiatan = () => {
                 className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
-              {jabatanError && (
-                <p className="text-red-500 text-sm mt-1">{jabatanError}</p>
-              )}
+              {jabatanError && <p className="text-red-500 text-sm mt-1">{jabatanError}</p>}
             </div>
-
             <div className="bg-gray-50 p-3 rounded-md hover:bg-gray-100 transition-colors col-span-1 sm:col-span-2">
               <label className="text-sm text-gray-600" htmlFor="uploadFile">
                 Upload Dokumen atau Video (opsional)
@@ -1384,22 +1241,18 @@ const GaleriKegiatan = () => {
                     {fileName || "No file chosen"}
                   </div>
                 </div>
-
                 {fileName && (
                   <div className="p-3 bg-blue-50 border border-blue-200 rounded-md flex items-start">
                     <div className="flex-grow">
                       <p className="text-sm text-blue-700 break-words">
-                        <span className="font-medium">File terpilih:</span>{" "}
-                        {fileName}
+                        <span className="font-medium">File terpilih:</span> {fileName}
                       </p>
                     </div>
                     <button
                       onClick={() => {
                         setFileName("");
                         setUploadFile(null);
-                        if (fileInputRef.current) {
-                          fileInputRef.current.value = "";
-                        }
+                        if (fileInputRef.current) fileInputRef.current.value = "";
                       }}
                       className="text-red-500 hover:text-red-700 ml-2"
                       aria-label="Remove file"
@@ -1410,8 +1263,7 @@ const GaleriKegiatan = () => {
                 )}
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                Format yang didukung: PDF, JPG, PNG, JPEG, MP4, AVI, MOV, MPEG,
-                WEBM
+                Format yang didukung: PDF, JPG, PNG, JPEG, MP4, AVI, MOV, MPEG, WEBM
               </p>
             </div>
           </div>
@@ -1437,6 +1289,13 @@ const GaleriKegiatan = () => {
 
   return (
     <>
+      {/* Menambahkan CSS Global untuk efek linear (Marquee) HANYA untuk class marquee-swiper */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .marquee-swiper .swiper-wrapper {
+          transition-timing-function: linear !important;
+        }
+      `}} />
+      
       <div id="galeriSec" className="bg-gray-100 py-8 z-10">
         <div className="container mx-auto px-4 md:px-12 lg:px-24">
           <div className="text-center mb-8">
@@ -1452,7 +1311,7 @@ const GaleriKegiatan = () => {
           </div>
           <GallerySwiper
             items={nonEventGalleries}
-            // title="Galeri Kegiatan"
+            title="Galeri Kegiatan"
           />
         </div>
       </div>
