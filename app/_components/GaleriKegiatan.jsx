@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination, Autoplay } from "swiper/modules"; // Import dikembalikan
+import { Navigation, Pagination, Autoplay } from "swiper/modules"; 
 import {
   FaTimesCircle,
   FaCheckCircle,
@@ -386,10 +386,9 @@ const GaleriKegiatan = () => {
     );
   }
 
-  // --- KOMPONEN GALLERY SWIPER (DIPISAH LOGIKA EVENT & NON EVENT) ---
   const GallerySwiper = ({ items, title }) => {
     const maxDescriptionLength = 250;
-    const isEvent = title === "Event"; // Cek apakah ini bagian Event atau bukan
+    const isEvent = title === "Event"; 
 
     const renderDescription = (item) => {
       const plainText = item.deskripsi ? stripHtml(item.deskripsi) : "";
@@ -425,10 +424,9 @@ const GaleriKegiatan = () => {
       );
     };
 
-    // Helper: Duplikasi Data Untuk Infinite Scroll (Khusus Event)
     const getSeamlessItems = (arr) => {
       if (!arr || arr.length === 0) return [];
-      if (!isEvent) return arr; // Jika bukan Event, kembalikan array asli tanpa duplikasi
+      if (!isEvent) return arr; 
 
       const MIN_ITEMS = 6;
       let duplicated = [...arr];
@@ -442,9 +440,9 @@ const GaleriKegiatan = () => {
     const displayItems = getSeamlessItems(items);
 
     return (
-      <div className="mb-12 overflow-hidden">
+      <div className="mb-12 overflow-hidden w-full">
         <div className="mb-6">
-          <div className="flex justify-between items-center px-4">
+          <div className="container mx-auto px-4 md:px-12 lg:px-24 flex justify-between items-center">
             <h2 className="text-xl font-bold">{title}</h2>
             {isEvent && items.length > 0 && (
               <button
@@ -458,26 +456,25 @@ const GaleriKegiatan = () => {
         </div>
         
         {items.length === 0 ? (
-          <div className="text-center text-gray-600">
+          <div className="container mx-auto px-4 text-center text-gray-600">
             {isEvent ? "Tidak ada event apa pun untuk saat ini." : "Belum ada galeri kegiatan."}
           </div>
         ) : (
-          <div className="relative w-full px-2">
+          <div className="relative w-full">
               
               {isEvent ? (
-                  // --- SWIPER KHUSUS EVENT (AUTO SCROLL / MARQUEE) ---
                   <Swiper
                     modules={[Autoplay]}
                     spaceBetween={30}
                     slidesPerView={"auto"}
                     loop={true}
-                    speed={4000} // Kecepatan scroll linear (ms)
+                    speed={4000}
                     autoplay={{
                         delay: 0,
                         disableOnInteraction: false,
                         pauseOnMouseEnter: true, 
                     }}
-                    className="w-full !py-4 marquee-swiper" // Class marquee-swiper untuk mentarget CSS linear
+                    className="w-full !py-4 marquee-swiper px-4 md:px-12" 
                   >
                     {displayItems.map((item, index) => (
                       <SwiperSlide
@@ -486,7 +483,7 @@ const GaleriKegiatan = () => {
                         style={{ width: "400px" }}
                       >
                         <div
-                          className="relative w-full mx-auto rounded-lg shadow-md bg-white cursor-pointer hover:shadow-lg transition-shadow overflow-hidden"
+                          className="relative w-full mx-auto cursor-pointer transition-transform duration-300 hover:scale-105"
                           onClick={() => handleEventClick(item)}
                           style={{ height: "400px" }}
                         >
@@ -514,8 +511,7 @@ const GaleriKegiatan = () => {
                     ))}
                   </Swiper>
               ) : (
-                  // --- SWIPER KHUSUS GALERI (MANUAL DENGAN PANAH & PAGINATION) ---
-                  <div className="px-6 md:px-12">
+                  <div className="container mx-auto px-4 md:px-12 lg:px-24">
                       <Swiper
                         modules={[Navigation, Pagination, Autoplay]}
                         spaceBetween={30}
@@ -524,7 +520,7 @@ const GaleriKegiatan = () => {
                         pagination={{ clickable: true }}
                         loop={true}
                         autoplay={{ delay: 3000, disableOnInteraction: false }}
-                        className="w-full !pb-12" // Padding bawah agar titik pagination tidak tertutup
+                        className="w-full !pb-12"
                       >
                         {displayItems.map((item) => (
                           <SwiperSlide
@@ -532,7 +528,7 @@ const GaleriKegiatan = () => {
                             className="flex flex-col items-center pb-4"
                           >
                             <div
-                              className="relative w-full max-w-md mx-auto rounded-lg shadow-md bg-white overflow-hidden"
+                              className="relative w-full max-w-md mx-auto"
                               style={{ height: "400px" }}
                             >
                               <Image
@@ -591,36 +587,39 @@ const GaleriKegiatan = () => {
               {eventGalleries.map((event) => (
                 <div
                   key={event.id}
-                  className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow cursor-pointer transform hover:scale-105 duration-200"
+                  className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow cursor-pointer transform hover:scale-105 duration-200 flex flex-col"
                   onClick={() => handleEventClick(event)}
                 >
                   <div
-                    className="relative w-full"
-                    style={{ paddingBottom: "56.25%" }}
+                    className="relative w-full bg-gray-100"
+                    style={{ paddingBottom: "100%" }} 
                   >
                     <Image
                       src={event.imageUrl}
                       alt={event.namaEvent || "Event image"}
                       fill
-                      className="object-cover"
+                      className="object-cover" 
                       sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     />
                   </div>
-                  <div className="p-4">
+                  
+                  <div className="p-4 flex-grow flex flex-col">
                     <h4 className="text-lg font-semibold mb-2 line-clamp-2">
                       {event.namaEvent}
                     </h4>
                     <div
-                      className="text-gray-600 text-sm line-clamp-3"
+                      className="text-gray-600 text-sm line-clamp-3 mb-2"
                       dangerouslySetInnerHTML={renderHTML(event.deskripsi)}
                     ></div>
-                    {registrationStatus[event.id] && (
-                      <div className="mt-3">
-                        <span className="inline-block px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">
-                          {registrationStatus[event.id]}
-                        </span>
-                      </div>
-                    )}
+                    <div className="mt-auto">
+                        {registrationStatus[event.id] && (
+                          <div className="mt-2">
+                            <span className="inline-block px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">
+                              {registrationStatus[event.id]}
+                            </span>
+                          </div>
+                        )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -1289,7 +1288,6 @@ const GaleriKegiatan = () => {
 
   return (
     <>
-      {/* Menambahkan CSS Global untuk efek linear (Marquee) HANYA untuk class marquee-swiper */}
       <style dangerouslySetInnerHTML={{__html: `
         .marquee-swiper .swiper-wrapper {
           transition-timing-function: linear !important;
@@ -1309,12 +1307,13 @@ const GaleriKegiatan = () => {
               </span>
             </h2>
           </div>
-          <GallerySwiper
-            items={nonEventGalleries}
-            title="Galeri Kegiatan"
-          />
         </div>
+        <GallerySwiper
+          items={nonEventGalleries}
+          title="Galeri Kegiatan"
+        />
       </div>
+
       <div id="eventSec" className="bg-gray-50 py-8 z-10">
         <div className="container mx-auto px-4 md:px-12 lg:px-24">
           <div className="text-center mb-16">
@@ -1324,16 +1323,15 @@ const GaleriKegiatan = () => {
               </span>
               <br className="md:hidden" /> Kami
             </h2>
-
             <div className="w-24 h-1 bg-gradient-to-r from-amber-400 to-orange-400 rounded-full mx-auto mt-3"></div>
           </div>
-          <GallerySwiper
-            items={eventGalleries}
-            title="Event"
-            showRegisterButton={false}
-          />
         </div>
+        <GallerySwiper
+          items={eventGalleries}
+          title="Event"
+        />
       </div>
+
       {showPopup && <Popup setUploadFile={setUploadFile} />}
       {showAllEventsPopup && <AllEventsPopup />}
       {showEventDetailPopup && <EventDetailPopup />}
