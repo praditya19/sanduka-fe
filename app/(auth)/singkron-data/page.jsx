@@ -630,7 +630,7 @@ const SyncData = () => {
           <Button onClick={() => setShowTemplateModal(true)} className="w-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-2"><FaDownload /> Download Template</Button>
           <Button onClick={() => setIsUploadModalOpen(true)} className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"><FaUpload /> Upload Data</Button>
           <Button onClick={() => router.push("/singkron-data/cek-data")} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center gap-2"><FaSearch /> Cek Data</Button>
-          {role === 'SUPER ADMIN' && <Button onClick={handleDownloadRekap} className="w-full bg-yellow-600 hover:bg-yellow-700 text-white">Rekap Anggota</Button>}
+          {role === 'SUPERADMIN' && <Button onClick={handleDownloadRekap} className="w-full bg-yellow-600 hover:bg-yellow-700 text-white">Rekap Anggota</Button>}
         </div>
       </div>
       {showActions && <div className="fixed inset-0 bg-black bg-opacity-50 z-50" onClick={() => setShowActions(false)}></div>}

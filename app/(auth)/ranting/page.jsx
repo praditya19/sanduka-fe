@@ -393,7 +393,7 @@ const Page = () => {
 
   const handleSelectCabang = async (cabang) => {
     const role = sessionStorage.getItem("role");
-    if (cabang.id === "All" && role === "SUPER ADMIN") {
+    if (cabang.id === "All" && role === "SUPERADMIN") {
       setSelectedCabang("All");
       setShowCabangDropdown(false);
       const allCabang = filteredCabangList.map((item) => item.kecamatan);
@@ -504,7 +504,7 @@ const Page = () => {
 
   const handlefilteredCabang = async (cabang) => {
     const role = sessionStorage.getItem("role");
-    if (cabang.id === "All" && role === "SUPER ADMIN") {
+    if (cabang.id === "All" && role === "SUPERADMIN") {
       setFilteredCabang("All");
       setShowFilteredCabangDropdown(false);
       const allCabang = filteredCabangList.map((item) => item.kecamatan);
@@ -551,7 +551,7 @@ const Page = () => {
   const handleSelectNamaRantingCabang = async (cabang) => {
     const role = sessionStorage.getItem("role");
 
-    if (cabang.id === "All" && role === "SUPER ADMIN") {
+    if (cabang.id === "All" && role === "SUPERADMIN") {
       setSelectedNamaRantingCabang("All");
       setShowNamaRantingCabangDropdown(false);
     } else if (cabang.id !== "All") {
@@ -668,7 +668,7 @@ const Page = () => {
                               </li>
                               {[
                                 ...(sessionStorage.getItem("role") ===
-                                  "SUPER ADMIN"
+                                  "SUPERADMIN"
                                   ? [{ id: "All", kecamatan: "All" }]
                                   : []),
                                 ...filteredCabangList,
@@ -860,7 +860,7 @@ const Page = () => {
                             </li>
                             {[
                               ...(sessionStorage.getItem("role") ===
-                                "SUPER ADMIN"
+                                "SUPERADMIN"
                                 ? [{ id: "All", kecamatan: "All" }]
                                 : []),
                               ...filteredCabangList,
@@ -1000,7 +1000,7 @@ const Page = () => {
                                   </li>
                                   {[
                                     ...(sessionStorage.getItem("role") ===
-                                      "SUPER ADMIN"
+                                      "SUPERADMIN"
                                       ? [{ id: "All", kecamatan: "All" }]
                                       : []),
                                     ...filteredNamaRantingCabangList,

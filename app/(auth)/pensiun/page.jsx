@@ -316,7 +316,7 @@ const Page = () => {
     if (role === "ADMIN") {
       const cabang = sessionStorage.getItem("cabang");
       setSelectedCabang(cabang || "");
-    } else if (role === "SUPER ADMIN") {
+    } else if (role === "SUPERADMIN") {
       fetchCabang();
     }
   }, []);
@@ -413,7 +413,7 @@ const Page = () => {
     if (role === "ADMIN") {
       const cabang = sessionStorage.getItem("cabang");
       setSelectedCabang(cabang || "");
-    } else if (role === "SUPER ADMIN") {
+    } else if (role === "SUPERADMIN") {
       const fetchCabang = async () => {
         try {
           const response = await GlobalApi.getCabang();
@@ -506,7 +506,7 @@ const Page = () => {
   useEffect(() => {
     const role = sessionStorage.getItem("role");
 
-    if (role === "ADMIN" || role === "SUPER ADMIN") {
+    if (role === "ADMIN" || role === "SUPERADMIN") {
       const countSegera = filteredPensiunList.filter(
         (item) => item.status === "Segera"
       ).length;
@@ -649,20 +649,20 @@ const Page = () => {
                     className="border rounded-lg p-2 w-full bg-white shadow-sm cursor-pointer"
                     placeholder={selectedCabang || "Tampil Semua"}
                     value={
-                      sessionStorage.getItem("role") === "SUPER ADMIN"
+                      sessionStorage.getItem("role") === "SUPERADMIN"
                         ? selectedCabang
                         : sessionStorage.getItem("cabang") || "Tampil Semua"
                     }
-                    disabled={sessionStorage.getItem("role") !== "SUPER ADMIN"}
-                    readOnly={sessionStorage.getItem("role") !== "SUPER ADMIN"}
+                    disabled={sessionStorage.getItem("role") !== "SUPERADMIN"}
+                    readOnly={sessionStorage.getItem("role") !== "SUPERADMIN"}
                     onClick={() => {
-                      if (sessionStorage.getItem("role") === "SUPER ADMIN") {
+                      if (sessionStorage.getItem("role") === "SUPERADMIN") {
                         setShowDropdownCabang(true);
                       }
                     }}
                   />
                   {showDropdownCabang &&
-                    sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                    sessionStorage.getItem("role") === "SUPERADMIN" && (
                       <div
                         id="dropdownCabang"
                         className="absolute z-10 border rounded-lg bg-white shadow-md mt-1 w-full"

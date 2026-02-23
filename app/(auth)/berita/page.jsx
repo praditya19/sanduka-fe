@@ -41,7 +41,10 @@ const Berita = () => {
       year: "numeric",
     });
   };
-
+const stripHtml = (html) => {
+    if (!html) return "";
+    return html.replace(/<[^>]*>?/gm, "");
+  };
   return (
     <>
       <Header />
@@ -192,16 +195,15 @@ const Berita = () => {
 
                     <div className="relative h-56 lg:h-64 overflow-hidden">
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent z-10 opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
-                      <img
-                        src={
-                          news.fotoUtama
-                            ? `data:image/jpeg;base64,${news.fotoUtama}`
-                            : "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&auto=format&fit=crop"
-                        }
-                        alt={news.judul}
-                        className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-out"
-                        loading="lazy"
-                      />
+                     <img
+                  src={
+                    news.galeri?.length > 0
+                      ? `data:image/jpeg;base64,${news.galeri[0].gambar}`
+                      : "/placeholder.jpg"
+                  }
+                  alt={news.judul}
+                  className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                />
 
                       <h3 className="absolute bottom-4 left-4 right-4 z-20 text-white text-lg font-bold leading-tight drop-shadow-lg line-clamp-2">
                         {news.judul}
@@ -267,7 +269,7 @@ const Berita = () => {
                       </div>
 
                       <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3">
-                        {(news.isiBerita1 || "")
+                        {stripHtml(news.isiBerita || "")
                           .split(" ")
                           .slice(0, 25)
                           .join(" ")}

@@ -704,7 +704,7 @@ const Page = () => {
 
       let idToUse = null;
 
-      if (role === "SUPER ADMIN" || role === "ADMIN") {
+      if (role === "SUPERADMIN" || role === "ADMIN") {
         idToUse = anggotaId;
       } else if (role === "USER") {
         idToUse = userId;
@@ -1104,7 +1104,7 @@ const Page = () => {
   useEffect(() => {
     const userRole = sessionStorage.getItem("role");
 
-    if (userRole === "ADMIN" || userRole === "SUPER ADMIN") {
+    if (userRole === "ADMIN" || userRole === "SUPERADMIN") {
       setRole(userRole);
       setIsValidRole(true);
     } else {

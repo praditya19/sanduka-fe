@@ -46,7 +46,7 @@ const HeaderMobile = () => {
     try {
       let idToFetch = userId;
 
-      if ((userRole === "ADMIN" || userRole === "SUPER ADMIN") && npa) {
+      if ((userRole === "ADMIN" || userRole === "SUPERADMIN") && npa) {
         const npaResponse = await GlobalApi.cekNpa(npa);
         if (npaResponse && npaResponse.id) {
           idToFetch = npaResponse.id;
@@ -124,7 +124,7 @@ const HeaderMobile = () => {
 
   const getEditProfilePath = () => {
     const userRole = sessionStorage.getItem("role");
-    return userRole === "SUPER ADMIN" || userRole === "ADMIN"
+    return userRole === "SUPERADMIN" || userRole === "ADMIN"
       ? "/anggota/edit-admin"
       : "/anggota/edit-anggota";
   };
@@ -213,8 +213,8 @@ const HeaderMobile = () => {
           </div>
           <div className="flex space-x-4 items-center ">
             <div className="flex space-x-4 items-center ml-3">
-              {/* Only show email icon for ADMIN and SUPER ADMIN */}
-              {(role === "ADMIN" || role === "SUPER ADMIN") && (
+          
+              {(role === "ADMIN" || role === "SUPERADMIN") && (
                 <Link href="/pensiun">
                   <button className="relative">
                     <FontAwesomeIcon
@@ -242,7 +242,7 @@ const HeaderMobile = () => {
               </button>
 
               {/* Conditionally render search icon based on role */}
-              {(role === "ADMIN" || role === "SUPER ADMIN") && (
+              {(role === "ADMIN" || role === "SUPERADMIN") && (
                 <button onClick={handleSearchClick}>
                   <FontAwesomeIcon
                     icon={faSearch}

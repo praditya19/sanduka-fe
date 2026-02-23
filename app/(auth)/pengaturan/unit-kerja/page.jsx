@@ -364,7 +364,7 @@ const AddUnitForm = () => {
                   </Link>
                 </li>
 
-                {sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                {sessionStorage.getItem("role") === "SUPERADMIN" && (
                   <li>
                     <Link
                       href="/pengaturan/tambah"
@@ -382,7 +382,7 @@ const AddUnitForm = () => {
                     Unit Kerja
                   </Link>
                 </li>
-                {sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                {sessionStorage.getItem("role") === "SUPERADMIN" && (
                   <li>
                     <Link
                       href="/pengaturan/backup-data"
@@ -498,14 +498,14 @@ const AddUnitForm = () => {
                           readOnly
                           disabled={role === "ADMIN"}
                           onFocus={() => {
-                            if (role === "SUPER ADMIN") {
+                            if (role === "SUPERADMIN") {
                               setShowDropdownCabang(true);
                               setFilteredCabangOptions(cabangOptions);
                             }
                           }}
                           className="border rounded-lg p-2 w-full bg-white shadow-sm"
                         />
-                        {showDropdownCabang && role === "SUPER ADMIN" && (
+                        {showDropdownCabang && role === "SUPERADMIN" && (
                           <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-12 w-full">
                             <ul className="max-h-44 overflow-y-auto">
                               <li className="py-2 px-2">

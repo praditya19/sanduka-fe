@@ -82,7 +82,7 @@ export default function Home() {
     if (!selectedBulan || !selectedTahun) return;
 
     const role = sessionStorage.getItem("role");
-    const cabangParameter = role === "SUPER ADMIN" ? selectedCabang : cabang;
+    const cabangParameter = role === "SUPERADMIN" ? selectedCabang : cabang;
 
     const bulan1 = selectedBulan;
     const bulan2 =
@@ -128,7 +128,7 @@ export default function Home() {
       router.push("/sign-in");
     }
     const role = sessionStorage.getItem("role");
-    setIsSuperAdmin(role === "SUPER ADMIN");
+    setIsSuperAdmin(role === "SUPERADMIN");
   }, [token, router]);
 
   const fetchCabang = async () => {

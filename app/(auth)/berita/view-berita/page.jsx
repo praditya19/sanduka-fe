@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState,useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
@@ -132,29 +132,24 @@ const NotificationPopup = ({ type, message, onClose }) => {
 const ViewBerita = () => {
   const [newsData, setNewsData] = useState([]);
   const [formData, setFormData] = useState({
-  id: "",
-  judul: "",
-  username: "",
-  email: "",
-  role: "",
-  isiBerita: "",
-  status: "DRAFT",
-  galeri: [],  
-});
+    id: "",
+    judul: "",
+    username: "",
+    email: "",
+    role: "",
+    isiBerita: "",
+    status: "DRAFT",
+    galeri: [],
+  });
 
   const [loading, setLoading] = useState(true);
   const [selectedNews, setSelectedNews] = useState(null);
   const router = useRouter();
   const [editMode, setEditMode] = useState(false);
-  const [oldPhoto, setOldPhoto] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
-  const [imageFile, setImageFile] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const [notification, setNotification] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  const [preview, setPreview] = useState(null);
-  const [publishId, setPublishId] = useState(null);
 
   useEffect(() => {
     fetchBerita();
@@ -184,10 +179,10 @@ const ViewBerita = () => {
       minute: "2-digit",
     });
   };
-const stripHtml = (html) => {
-  if (!html) return "";
-  return html.replace(/<[^>]*>?/gm, "");
-};
+  const stripHtml = (html) => {
+    if (!html) return "";
+    return html.replace(/<[^>]*>?/gm, "");
+  };
 
   const truncateWords = (text, limit) => {
     if (!text) return "";
@@ -196,28 +191,28 @@ const stripHtml = (html) => {
     return words.slice(0, limit).join(" ") + "...";
   };
 
- const handleEdit = (news) => {
-  setFormData({
-    id: news.id,
-    judul: news.judul ?? "",
-    username: news.username ?? "",
-    email: news.email ?? "",
-    role: news.role ?? "",
-    isiBerita: news.isiBerita ?? "",
-    status: news.status ?? "DRAFT",
+  const handleEdit = (news) => {
+    setFormData({
+      id: news.id,
+      judul: news.judul ?? "",
+      username: news.username ?? "",
+      email: news.email ?? "",
+      role: news.role ?? "",
+      isiBerita: news.isiBerita ?? "",
+      status: news.status ?? "DRAFT",
 
-    galeri: news.galeri
-      ? news.galeri.map((item) => ({
-          id: item.id,
-          file: null,
-          preview: `data:image/jpeg;base64,${item.gambar}`,
-          deskripsi: item.deskripsi ?? "",
-        }))
-      : [],
-  });
+      galeri: news.galeri
+        ? news.galeri.map((item) => ({
+            id: item.id,
+            file: null,
+            preview: `data:image/jpeg;base64,${item.gambar}`,
+            deskripsi: item.deskripsi ?? "",
+          }))
+        : [],
+    });
 
-  setEditMode(true);
-};
+    setEditMode(true);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -228,44 +223,56 @@ const stripHtml = (html) => {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const formDataToSend = new FormData();
+    const formDataToSend = new FormData();
+    const roleSession = sessionStorage.getItem("role");
+    const namaSession = sessionStorage.getItem("nama");
 
-  formDataToSend.append("judul", formData.judul);
-  formDataToSend.append("username", formData.username);
-  formDataToSend.append("email", formData.email);
-  formDataToSend.append("role", formData.role);
-  formDataToSend.append("isiBerita", formData.isiBerita);
-  formDataToSend.append("status", formData.status);
+    // Debug console
+    console.log("=== DEBUG SUBMIT ===");
+    console.log("Role dari sessionStorage:", roleSession);
+    console.log("Role dari formData:", formData.role);
+    console.log("Role yang akan dikirim:", roleSession?.toUpperCase() || "");
+    console.log("ResponEditor (nama):", namaSession);
+    console.log("===================");
 
-  formData.galeri.forEach((item) => {
-    if (item.file) {
-      formDataToSend.append("galeriImages", item.file);
-      formDataToSend.append("galeriDeskripsi", item.deskripsi);
+    formDataToSend.append("judul", formData.judul);
+    formDataToSend.append("username", formData.username);
+    formDataToSend.append("email", formData.email);
+    formDataToSend.append("role", roleSession?.toUpperCase() || "");
+    formDataToSend.append("status", formData.status);
+    formDataToSend.append("isiBerita", formData.isiBerita);
+    formDataToSend.append("responEditor", namaSession || "");
+
+    // Loop untuk foto (hanya yang ada file baru)
+    formData.galeri.forEach((item) => {
+      if (item.file) {
+        formDataToSend.append("galeriImages", item.file);
+        formDataToSend.append("galeriDeskripsi", item.deskripsi);
+      }
+    });
+
+    console.log([...formDataToSend.entries()]);
+    try {
+      await GlobalApi.updateBerita(formData.id, formDataToSend);
+
+      setNotification({
+        type: "success",
+        message: "Berita berhasil diupdate!",
+      });
+
+      setEditMode(false);
+      fetchBerita();
+    } catch (error) {
+      const errorMessage = error?.response?.data || "Terjadi kesalahan";
+
+      setNotification({
+        type: "error",
+        message: errorMessage,
+      });
     }
-  });
-console.log([...formDataToSend.entries()]);
-  try {
-     await GlobalApi.updateBerita(formData.id, formDataToSend);
-
-    setNotification({
-      type: "success",
-      message: "Berita berhasil diupdate!",
-    });
-
-    setEditMode(false);
-
-  } catch (error) {
-    const errorMessage =
-      error?.response?.data || "Terjadi kesalahan";
-
-    setNotification({
-      type: "error",
-      message: errorMessage,
-    });
-  }
-};
+  };
 
   const confirmDelete = async () => {
     try {
@@ -450,7 +457,9 @@ console.log([...formDataToSend.entries()]);
                     </p>
 
                     <button
-                      onClick={() => (window.location.href = "/berita/create-berita")}
+                      onClick={() =>
+                        (window.location.href = "/berita/create-berita")
+                      }
                       className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl inline-flex items-center gap-2"
                     >
                       <svg
@@ -481,15 +490,14 @@ console.log([...formDataToSend.entries()]);
                         >
                           <div className="relative h-56 overflow-hidden">
                             <img
-  src={
-    news.galeri?.length > 0
-      ? `data:image/jpeg;base64,${news.galeri[0].gambar}`
-      : "/placeholder.jpg"
-  }
-  alt={news.judul}
-  className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
-/>
-
+                              src={
+                                news.galeri?.length > 0
+                                  ? `data:image/jpeg;base64,${news.galeri[0].gambar}`
+                                  : "/placeholder.jpg"
+                              }
+                              alt={news.judul}
+                              className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                            />
 
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-80"></div>
 
@@ -559,7 +567,7 @@ console.log([...formDataToSend.entries()]);
                             </div>
 
                             <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3">
-                                {truncateWords(stripHtml(news.isiBerita), 20)}
+                              {truncateWords(stripHtml(news.isiBerita), 20)}
                             </p>
 
                             <div className="flex items-center text-blue-600 text-sm font-medium group-hover:text-blue-700 transition-colors mb-4">
@@ -758,14 +766,14 @@ console.log([...formDataToSend.entries()]);
 
                 <div className="relative h-80 overflow-hidden group">
                   <img
-  src={
-    selectedNews.galeri?.length > 0
-      ? `data:image/jpeg;base64,${selectedNews.galeri[0].gambar}`
-      : "/placeholder.jpg"
-  }
-  alt={selectedNews.judul}
-  className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
-/>
+                    src={
+                      selectedNews.galeri?.length > 0
+                        ? `data:image/jpeg;base64,${selectedNews.galeri[0].gambar}`
+                        : "/placeholder.jpg"
+                    }
+                    alt={selectedNews.judul}
+                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                  />
 
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
 
@@ -859,7 +867,7 @@ console.log([...formDataToSend.entries()]);
                     <div className="relative pl-6 mb-8">
                       <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full"></div>
                       <p className="text-gray-700 leading-relaxed text-lg italic">
-                          {(stripHtml(selectedNews.isiBerita))}
+                        {stripHtml(selectedNews.isiBerita)}
                       </p>
                     </div>
 
@@ -1018,7 +1026,7 @@ console.log([...formDataToSend.entries()]);
   .overflow-y-auto::-webkit-scrollbar-thumb:hover {
     background: #a0aec0;
     `}</style>
-          
+
           {editMode && (
             <div
               className="fixed inset-0 bg-gradient-to-br from-gray-50 to-white z-50 overflow-y-auto"
@@ -1090,86 +1098,95 @@ console.log([...formDataToSend.entries()]);
                           </h3>
 
                           <div className="mb-4">
-                          {formData.galeri.map((item, index) => (
-  <div
-    key={item.id || index}
-    className="border rounded-xl p-4 mb-4 bg-gray-50"
-  >
-    {/* PREVIEW */}
-    <img
-      src={item.preview}
-      alt="Preview"
-      className="w-full h-48 object-cover rounded-lg mb-3"
-    />
+                            {formData.galeri.map((item, index) => (
+                              <div
+                                key={item.id || index}
+                                className="border rounded-xl p-4 mb-4 bg-gray-50"
+                              >
+                                {/* PREVIEW */}
+                                <img
+                                  src={item.preview}
+                                  alt="Preview"
+                                  className="w-full h-48 object-cover rounded-lg mb-3"
+                                />
 
-    {/* GANTI FOTO */}
-    <input
-      type="file"
-      accept="image/*"
-      onChange={(e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+                                {/* GANTI FOTO */}
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => {
+                                    const file = e.target.files[0];
+                                    if (!file) return;
 
-        const updated = [...formData.galeri];
-        updated[index].file = file;
-        updated[index].preview = URL.createObjectURL(file);
+                                    const updated = [...formData.galeri];
+                                    updated[index].file = file;
+                                    updated[index].preview =
+                                      URL.createObjectURL(file);
 
-        setFormData({ ...formData, galeri: updated });
-      }}
-      className="mb-3"
-    />
+                                    setFormData({
+                                      ...formData,
+                                      galeri: updated,
+                                    });
+                                  }}
+                                  className="mb-3"
+                                />
 
-    {/* DESKRIPSI */}
-    <input
-      type="text"
-      value={item.deskripsi}
-      onChange={(e) => {
-        const updated = [...formData.galeri];
-        updated[index].deskripsi = e.target.value;
+                                {/* DESKRIPSI */}
+                                <input
+                                  type="text"
+                                  value={item.deskripsi}
+                                  onChange={(e) => {
+                                    const updated = [...formData.galeri];
+                                    updated[index].deskripsi = e.target.value;
 
-        setFormData({ ...formData, galeri: updated });
-      }}
-      placeholder="Masukkan deskripsi foto..."
-      className="w-full border rounded-lg px-3 py-2 mb-2"
-    />
+                                    setFormData({
+                                      ...formData,
+                                      galeri: updated,
+                                    });
+                                  }}
+                                  placeholder="Masukkan deskripsi foto..."
+                                  className="w-full border rounded-lg px-3 py-2 mb-2"
+                                />
 
-    {/* HAPUS FOTO */}
-    <button
-      type="button"
-      onClick={() => {
-        const updated = formData.galeri.filter((_, i) => i !== index);
-        setFormData({ ...formData, galeri: updated });
-      }}
-      className="text-red-500 text-sm"
-    >
-      Hapus Foto
-    </button>
-  </div>
-))}
-<button
-  type="button"
-  onClick={() => {
-    setFormData({
-      ...formData,
-      galeri: [
-        ...formData.galeri,
-        {
-          id: null,
-          file: null,
-          preview: "/placeholder.jpg",
-          deskripsi: "",
-        },
-      ],
-    });
-  }}
-  className="px-4 py-2 bg-green-500 text-white rounded-lg"
->
-  + Tambah Foto
-</button>
-
+                                {/* HAPUS FOTO */}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updated = formData.galeri.filter(
+                                      (_, i) => i !== index,
+                                    );
+                                    setFormData({
+                                      ...formData,
+                                      galeri: updated,
+                                    });
+                                  }}
+                                  className="text-red-500 text-sm"
+                                >
+                                  Hapus Foto
+                                </button>
+                              </div>
+                            ))}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFormData({
+                                  ...formData,
+                                  galeri: [
+                                    ...formData.galeri,
+                                    {
+                                      id: null,
+                                      file: null,
+                                      preview: "/placeholder.jpg",
+                                      deskripsi: "",
+                                    },
+                                  ],
+                                });
+                              }}
+                              className="px-4 py-2 bg-green-500 text-white rounded-lg"
+                            >
+                              + Tambah Foto
+                            </button>
                           </div>
-
-                    
                         </div>
                       </div>
 
@@ -1196,18 +1213,17 @@ console.log([...formDataToSend.entries()]);
                             Isi Berita
                           </label>
                           {typeof window !== "undefined" && (
-                          <SummernoteEditor
-                            value={formData.isiBerita}
-
-                            onChange={(value) =>
-                              setFormData((prev) => ({
-                                ...prev,
-                                isiBerita: value,
-                              }))
-                            }
-                            height={300}
-                          />
-                        )}
+                            <SummernoteEditor
+                              value={formData.isiBerita}
+                              onChange={(value) =>
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  isiBerita: value,
+                                }))
+                              }
+                              height={300}
+                            />
+                          )}
                           <div className="flex justify-end items-center mt-2">
                             <span className="text-xs text-gray-400 font-medium">
                               {formData.isiBerita?.length || 0} karakter

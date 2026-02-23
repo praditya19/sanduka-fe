@@ -2196,7 +2196,7 @@ function RekapAnggota() {
             {!isMobile && (
               <div className="w-full">
                 {/* Navbar */}
-                {role === "SUPER ADMIN" && (
+                {role === "SUPERADMIN" && (
                   <nav className="bg-white shadow px-4 py-3">
                     <ul className="flex flex-wrap gap-4 md:gap-8">
                       <li>
@@ -2229,7 +2229,7 @@ function RekapAnggota() {
 
                 {/* Main Content */}
                 <main className="w-full bg-white shadow-lg rounded-none md:rounded-lg mt-4 p-6">
-                  {role === "SUPER ADMIN" && (
+                  {role === "SUPERADMIN" && (
                     <>
                       {/* Header */}
                       <div className="text-center mb-8">
