@@ -136,6 +136,7 @@ const CreateBerita = () => {
     username: sessionStorage.getItem("nama") || "",
     email: sessionStorage.getItem("email") || "",
     role: sessionStorage.getItem("role") || "",
+    responContributor: sessionStorage.getItem("nama") || "",
     isiBerita: "",
     status: "",
     galeri: [
@@ -215,29 +216,40 @@ const CreateBerita = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const dataToSubmit = {
-      ...formData,
-      galeriImages: formData.galeri.map((g) => g.file),
-      galeriDeskripsi: formData.galeri.map((g) => g.deskripsi),
-      role: "CONTRIBUTOR",
-    };
-    try {
-      await GlobalApi.createBerita(dataToSubmit);
+  const form = new FormData();
 
-      setNotification({
-        type: "success",
-        message: "Berita berhasil disimpan!",
-      });
-      window.location.reload();
-    } catch (error) {
-      setNotification({
-        type: "error",
-        message: "Terjadi kesalahan saat menyimpan berita.",
-      });
+  form.append("judul", formData.judul);
+  form.append("username", formData.username);
+  form.append("email", formData.email);
+  form.append("role", formData.role);
+  form.append("responContributor", formData.responContributor);
+  form.append("isiBerita", formData.isiBerita);
+  form.append("status", formData.status);
+
+  formData.galeri.forEach((g) => {
+    if (g.file) {
+      form.append("galeriImages", g.file);
+      form.append("galeriDeskripsi", g.deskripsi || "");
     }
-  };
+  });
+
+  try {
+    await GlobalApi.createBerita(form);
+
+    setNotification({
+      type: "success",
+      message: "Berita berhasil disimpan!",
+    });
+  } catch (error) {
+    console.error(error);
+    setNotification({
+      type: "error",
+      message: error?.response?.data || "Gagal simpan berita",
+    });
+  }
+};
 
   const toggleSidebar = () => {
     const newSidebarState = !isSidebarOpen;

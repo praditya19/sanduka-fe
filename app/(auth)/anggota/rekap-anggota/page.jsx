@@ -970,7 +970,7 @@ function RekapAnggota() {
     setAddedCategories([]);
     setManualInputs({});
     setStatusPegawai(member.statusPegawai || null);
-    // console.log("📌 Member clicked:", member);
+    console.log("📌 Member clicked:", member);
     try {
       const fileResponse = await GlobalApi.getFileByNip(member.nip);
       if (fileResponse?.sumbangan) {
@@ -1638,8 +1638,7 @@ function RekapAnggota() {
         (item) => item.jumlah > 0,
       );
 
-      // console.log(statusPegawai);
-      // console.log("Payload Lengkap:", JSON.parse(JSON.stringify(payload)));
+      console.log("Payload Lengkap:", JSON.parse(JSON.stringify(payload)));
 
       if (idIuran) {
         await GlobalApi.updateByNominalByBulan(

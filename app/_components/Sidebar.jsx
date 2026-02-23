@@ -185,7 +185,7 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
   };
 
   useEffect(() => {
-    if (role === "ADMIN" || role === "SUPER ADMIN") {
+    if (role === "ADMIN" || role === "SUPERADMIN") {
       fetchNewPengaduanCount();
 
       const interval = setInterval(fetchNewPengaduanCount, 60000);
@@ -206,7 +206,7 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
         "Pengaduan",
         "Tagihan",
       ].includes(item.label);
-    } else if (role === "SUPER ADMIN") {
+    } else if (role === "SUPERADMIN") {
       return true;
     } else {
       return item.label !== "Galeri";
@@ -271,7 +271,7 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
                   {item.label}
                 </span>
                 {item.label === "Pengaduan" &&
-                  (role === "ADMIN" || role === "SUPER ADMIN") &&
+                  (role === "ADMIN" || role === "SUPERADMIN") &&
                   newPengaduanCount > 0 &&
                   badgeVisible && (
                     <div className="bg-red-500 text-white rounded-full px-2 py-1 text-xs">

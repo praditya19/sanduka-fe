@@ -148,7 +148,7 @@ const page = () => {
       const role = sessionStorage.getItem("role");
       let userId;
 
-      if (role === "ADMIN" || role === "SUPER ADMIN") {
+      if (role === "ADMIN" || role === "SUPERADMIN") {
         userId = sessionStorage.getItem("anggotaId");
       } else if (role === "USER") {
         userId = sessionStorage.getItem("userId");
@@ -214,7 +214,7 @@ const page = () => {
     const role = sessionStorage.getItem("role");
     let idAnggota;
 
-    if (role === "ADMIN" || role === "SUPER ADMIN") {
+    if (role === "ADMIN" || role === "SUPERADMIN") {
       idAnggota = sessionStorage.getItem("anggotaId");
     } else if (role === "USER") {
       idAnggota = sessionStorage.getItem("userId");

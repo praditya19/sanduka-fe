@@ -1967,7 +1967,7 @@ const DataTable = ({
                                 </Button>
 
                                 {sessionStorage.getItem("role") ===
-                                "SUPER ADMIN" ? (
+                                "SUPERADMIN" ? (
                                   <Button
                                     className="text-white bg-red-500 hover:bg-red-600 p-2 border rounded-md"
                                     onClick={() => {
@@ -2336,7 +2336,7 @@ const DataTable = ({
                                 </div>
                               )}
                             </div>
-                            {["SUPER ADMIN", "ADMIN"].includes(
+                            {["SUPERADMIN", "ADMIN"].includes(
                               sessionStorage.getItem("role")
                             ) && (
                               <div className="flex justify-center">
@@ -2429,7 +2429,7 @@ const DataTable = ({
                               </Button>
 
                               {sessionStorage.getItem("role") ===
-                                "SUPER ADMIN" ||
+                                "SUPERADMIN" ||
                               sessionStorage.getItem("role") === "ADMIN" ? (
                                 <Button
                                   className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
@@ -2455,7 +2455,7 @@ const DataTable = ({
                               )}
 
                               {sessionStorage.getItem("role") ===
-                              "SUPER ADMIN" ? (
+                              "SUPERADMIN" ? (
                                 <Button
                                   className="text-white bg-red-500 hover:bg-red-600 p-2 border rounded-md"
                                   onClick={() => {
@@ -2801,7 +2801,7 @@ const DataTable = ({
                                   </div>
                                 )}
                               </div>
-                              {["SUPER ADMIN", "ADMIN"].includes(
+                              {["SUPERADMIN", "ADMIN"].includes(
                                 sessionStorage.getItem("role")
                               ) && (
                                 <div className="flex justify-center">

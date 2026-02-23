@@ -69,7 +69,10 @@ export default function BeritaDetail({ params }) {
       year: "numeric",
     });
   };
-
+  const stripHtml = (html) => {
+    if (!html) return "";
+    return html.replace(/<[^>]*>?/gm, "");
+  };
   const handleShare = async () => {
     const shareData = {
       title: document.title,
@@ -159,8 +162,8 @@ export default function BeritaDetail({ params }) {
               <div className="relative h-96 overflow-hidden">
                 <img
                   src={
-                    news.fotoUtama
-                      ? `data:image/jpeg;base64,${news.fotoUtama}`
+                    news.galeri?.length > 0
+                      ? `data:image/jpeg;base64,${news.galeri[0].gambar}`
                       : "/placeholder.jpg"
                   }
                   alt={news.judul}
@@ -190,14 +193,16 @@ export default function BeritaDetail({ params }) {
                 </h1>
 
                 <div className="prose prose-lg max-w-none mb-4">
-                  {news.isiBerita1?.split("\n").map((paragraph, idx) => (
-                    <p
-                      key={idx}
-                      className="text-gray-700 text-base leading-relaxed mb-6"
-                    >
-                      {paragraph}
-                    </p>
-                  ))}
+                  {stripHtml(news.isiBerita)
+                    .split("\n")
+                    .map((paragraph, idx) => (
+                      <p
+                        key={idx}
+                        className="text-gray-700 text-base leading-relaxed mb-6"
+                      >
+                        {paragraph}
+                      </p>
+                    ))}
                 </div>
 
                 <div className="pt-4 border-t">
@@ -263,15 +268,15 @@ export default function BeritaDetail({ params }) {
                   className="group bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition"
                 >
                   <div className="relative h-56 overflow-hidden">
-                    <img
-                      src={
-                        item.fotoUtama
-                          ? `data:image/jpeg;base64,${item.fotoUtama}`
-                          : "/placeholder.jpg"
-                      }
-                      alt={item.judul}
-                      className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                    />
+                   <img
+                  src={
+                    news.galeri?.length > 0
+                      ? `data:image/jpeg;base64,${news.galeri[0].gambar}`
+                      : "/placeholder.jpg"
+                  }
+                  alt={news.judul}
+                  className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                />
                   </div>
 
                   <div className="p-5">
@@ -280,7 +285,7 @@ export default function BeritaDetail({ params }) {
                     </h3>
 
                     <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                      {item.isiBerita1?.slice(0, 100)}...
+                      {item.isiBerita?.slice(0, 100)}...
                     </p>
                   </div>
                 </Link>

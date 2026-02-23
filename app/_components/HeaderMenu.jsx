@@ -132,7 +132,7 @@ const HeaderMenu = () => {
 
   const getEditProfilePath = () => {
     const userRole = sessionStorage.getItem("role");
-    return userRole === "SUPER ADMIN" || userRole === "ADMIN"
+    return userRole === "SUPERADMIN" || userRole === "ADMIN"
       ? "/anggota/edit-admin"
       : "/anggota/edit-anggota";
   };

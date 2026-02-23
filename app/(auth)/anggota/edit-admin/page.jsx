@@ -582,7 +582,7 @@ const Page = () => {
     useEffect(() => {
         const userRole = sessionStorage.getItem("role");
 
-        if (userRole === "ADMIN" || userRole === "SUPER ADMIN") {
+        if (userRole === "ADMIN" || userRole === "SUPERADMIN") {
             setRole(userRole);
             setIsValidRole(true);
         } else {

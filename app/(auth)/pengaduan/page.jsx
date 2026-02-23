@@ -216,7 +216,7 @@ export default function PengaduanPage() {
   };
 
   useEffect(() => {
-    if (selectedPengaduan && (userRole === 'ADMIN' || userRole === 'SUPER ADMIN' || userRole === 'USER')) {
+    if (selectedPengaduan && (userRole === 'ADMIN' || userRole === 'SUPERADMIN' || userRole === 'USER')) {
       const pollResponses = async () => {
         try {
           const fetchedResponses = await GlobalApi.getResponPengaduanByPengaduanId(selectedPengaduan.id);
@@ -270,7 +270,7 @@ export default function PengaduanPage() {
     const tempMessage = {
       id: Date.now(),
       message: message,
-      senderRole: userData.role === "SUPER ADMIN" ? "SUPERADMIN" :
+      senderRole: userData.role === "SUPERADMIN" ? "SUPERADMIN" :
         userData.role === "ADMIN" ? "ADMIN" : "USER",
       namaLengkap: role === "USER" ? userData.namaLengkap : userData.nama,
       createdAt: new Date().toISOString().split('T')[0].split('-'),
@@ -374,7 +374,7 @@ export default function PengaduanPage() {
                 </span>
               </div>
 
-              {(userRole === "ADMIN" || userRole === "SUPER ADMIN") && (
+              {(userRole === "ADMIN" || userRole === "SUPERADMIN") && (
                 <div className="mb-3 pb-3 border-b border-gray-200">
                   <div className="grid grid-cols-2 gap-1 text-gray-700 text-sm">
                     <p><strong>Pengirim:</strong> {selectedPengaduan.namaLengkap}</p>
@@ -575,20 +575,20 @@ export default function PengaduanPage() {
               setUserCabang(userData.cabang);
               setUserUnitKerja(userData.unitKerja);
               
-              // Store in session for quick access if needed
+              
               sessionStorage.setItem("npa", userData.npaPgri);
               sessionStorage.setItem("cabang", userData.cabang);
               sessionStorage.setItem("unitKerja", userData.unitKerja);
               sessionStorage.setItem("nama", userData.namaLengkap);
               sessionStorage.setItem("email", userData.email);
             } else {
-              // For ADMIN and SUPER ADMIN
+         
               userData = await GlobalApi.getAdminById(userId);
               setUserRole(userData.role);
               setUserNpa(userData.npapgri);
               setUserCabang(userData.cabang);
               
-              // Store in session for quick access if needed
+           
               sessionStorage.setItem("npa", userData.npapgri);
               sessionStorage.setItem("cabang", userData.cabang);
               sessionStorage.setItem("nama", userData.nama);
@@ -596,7 +596,7 @@ export default function PengaduanPage() {
             }
           }
   
-          if (role === "SUPER ADMIN" || role === "ADMIN") {
+          if (role === "SUPERADMIN" || role === "ADMIN") {
             fetchRekapPengaduan();
           }
         } catch (error) {
@@ -629,7 +629,7 @@ export default function PengaduanPage() {
 
       let filteredPengaduan = [];
 
-      if (userRole === "SUPER ADMIN") {
+      if (userRole === "SUPERADMIN") {
         filteredPengaduan = sortedResponse;
       } else if (userRole === "ADMIN") {
         filteredPengaduan = sortedResponse.filter(
@@ -800,9 +800,7 @@ export default function PengaduanPage() {
               </thead>
               <tbody>
                 {rekapPengaduan
-                  //.filter((rekap) =>
-                  //  userRole === "SUPER ADMIN" || rekap.category !== "Permohonan Bantuan"
-                  //)
+          
                   .map((rekap) => (
                     <tr key={rekap.id} className="border-b hover:bg-gray-50">
                       <td className="py-3 px-4">{rekap.category}</td>
@@ -962,7 +960,7 @@ export default function PengaduanPage() {
       await GlobalApi.deletePengaduan(pengaduanToDelete.id);
 
       fetchPengaduanList();
-      if (userRole === "SUPER ADMIN" || userRole === "ADMIN") {
+      if (userRole === "SUPERADMIN" || userRole === "ADMIN") {
         fetchRekapPengaduan();
       }
 
@@ -1003,7 +1001,7 @@ export default function PengaduanPage() {
           {/* Sidebar Pengaduan */}
           <div className="w-1/3 p-4 bg-gray-100 overflow-y-auto">
             <h3 className="text-2xl font-semibold mb-4 text-center">
-              {userRole === "SUPER ADMIN"
+              {userRole === "SUPERADMIN"
                 ? "Pengaduan Anggota"
                 : userRole === "ADMIN"
                   ? "Pengaduan Cabang"
@@ -1018,9 +1016,7 @@ export default function PengaduanPage() {
             ) : (
               <ul className="space-y-3">
                 {pengaduanList
-                  // .filter((pengaduan) =>
-                  //  userRole === "SUPER ADMIN" || pengaduan.category !== "Permohonan Bantuan"
-                  // )
+                 
                   .map((pengaduan) => (
                     <li
                       key={pengaduan.id}
@@ -1047,15 +1043,15 @@ export default function PengaduanPage() {
                         </div>
                       </div>
 
-                      {/* Notification Badge - keep in top right */}
+                     
                       {responseCountsMap[pengaduan.id] > 0 && (
                         <div className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
                           {responseCountsMap[pengaduan.id]}
                         </div>
                       )}
 
-                      {/* Delete button for admins - moved to bottom right */}
-                      {(userRole === "SUPER ADMIN" ||
+                  
+                      {(userRole === "SUPERADMIN" ||
                         (userRole === "ADMIN" && pengaduan.cabang === userCabang)) && (
                           <button
                             onClick={(e) => {
@@ -1096,7 +1092,7 @@ export default function PengaduanPage() {
                     </div>
                   </div>
                 )}
-                {(userRole === "SUPER ADMIN" || userRole === "ADMIN") && (
+                {(userRole === "SUPERADMIN" || userRole === "ADMIN") && (
                   <div
                     onClick={() => setModalType("rekap")}
                     className="p-6 bg-gradient-to-br from-purple-600 to-purple-800 text-white rounded-2xl shadow-xl cursor-pointer text-center 
@@ -1134,7 +1130,7 @@ export default function PengaduanPage() {
         {!isMobileChat ? (
           <div className="p-4 overflow-y-auto">
             <h3 className="text-2xl font-semibold mb-4 text-center">
-              {userRole === "SUPER ADMIN"
+              {userRole === "SUPERADMIN"
                 ? "Pengaduan Anggota"
                 : userRole === "ADMIN"
                   ? "Pengaduan Cabang"
@@ -1150,7 +1146,7 @@ export default function PengaduanPage() {
               <ul className="space-y-3">
                 {pengaduanList
                   // .filter((pengaduan) =>
-                  // userRole === "SUPER ADMIN" || pengaduan.category !== "Permohonan Bantuan"
+                  // userRole === "SUPERADMIN" || pengaduan.category !== "Permohonan Bantuan"
                   // )
                   .map((pengaduan) => (
                     <li
@@ -1186,7 +1182,7 @@ export default function PengaduanPage() {
                       )}
 
                       {/* Delete button moved to bottom right */}
-                      {(userRole === "SUPER ADMIN" ||
+                      {(userRole === "SUPERADMIN" ||
                         (userRole === "ADMIN" && pengaduan.cabang === userCabang)) && (
                           <button
                             onClick={(e) => {
@@ -1201,7 +1197,7 @@ export default function PengaduanPage() {
                         )}
                     </li>
                   ))}
-                {(userRole === "SUPER ADMIN" || userRole === "ADMIN") && (
+                {(userRole === "SUPERADMIN" || userRole === "ADMIN") && (
                   <div
                     onClick={() => setModalType("rekap")}
                     className="p-6 bg-gradient-to-br from-purple-600 to-purple-800 text-white rounded-2xl shadow-xl cursor-pointer text-center 
@@ -1396,8 +1392,8 @@ export default function PengaduanPage() {
               </div>
               <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/30 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
 
-              {/* Notifikasi Badge - Hanya tampilkan untuk ADMIN atau SUPER ADMIN */}
-              {(userRole === "ADMIN" || userRole === "SUPER ADMIN") && newPengaduanCount > 0 && (
+              {/* Notifikasi Badge - Hanya tampilkan untuk ADMIN atau SUPERADMIN */}
+              {(userRole === "ADMIN" || userRole === "SUPERADMIN") && newPengaduanCount > 0 && (
                 <div className="absolute top-2 right-2 bg-red-500 text-white rounded-full px-2 py-1 text-xs">
                   {newPengaduanCount}
                 </div>

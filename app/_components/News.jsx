@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import Link from "next/link";
+
 const truncateWords = (text, maxWords = 20) => {
+  if (!text) return "";
+
   const words = text.split(" ");
   return words.length > maxWords
     ? words.slice(0, maxWords).join(" ") + "..."
@@ -55,6 +58,10 @@ const News = () => {
       month: "long",
       year: "numeric",
     });
+  };
+   const stripHtml = (html) => {
+    if (!html) return "";
+    return html.replace(/<[^>]*>?/gm, "");
   };
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -131,15 +138,14 @@ const News = () => {
             <div className="relative h-64 lg:h-72 overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent z-10 opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
               <img
-                src={
-                  news.fotoUtama
-                    ? `data:image/jpeg;base64,${news.fotoUtama}`
-                    : "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&auto=format&fit=crop"
-                }
-                alt={news.judul}
-                className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-out"
-              />
-
+                              src={
+                                news.galeri?.length > 0
+                                  ? `data:image/jpeg;base64,${news.galeri[0].gambar}`
+                                  : "/placeholder.jpg"
+                              }
+                              alt={news.judul}
+                              className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                            />
               <div className="absolute top-4 right-4 z-20">
                 <span className="px-4 py-1.5 bg-white/90 backdrop-blur-sm text-gray-800 text-xs font-semibold rounded-full shadow-lg">
                   NEWS
@@ -193,7 +199,7 @@ const News = () => {
               </div>
 
               <p className="text-gray-600 leading-relaxed mb-5 line-clamp-3">
-                {truncateWords(news.isiBerita1, 25)}
+                {truncateWords(stripHtml(news.isiBerita, 25))}
               </p>
 
               <div className="flex items-center justify-end pt-4 border-t border-gray-100">

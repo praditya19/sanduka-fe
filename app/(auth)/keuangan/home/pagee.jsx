@@ -211,7 +211,7 @@ export default function Home() {
           }`}
         >
           <div className="min-h-screen bg-gray-50 p-2 md:p-2">
-            {role === "SUPER ADMIN" && (
+            {role === "SUPERADMIN" && (
               <>
                 <nav className="container mt-8 -ml-8 sm:-ml-4">
                   <ul className="flex flex-wrap space-x-2 md:space-x-6">
@@ -245,7 +245,7 @@ export default function Home() {
             )}
 
             <main className=" mx-auto w-full bg-white shadow-lg rounded-lg ">
-              {role === "SUPER ADMIN" && (
+              {role === "SUPERADMIN" && (
                 <>
                   <div className="text-center md:mx-6 my-4 md:my-0">
                     <h4 className="text-xl md:text-2xl font-extrabold">

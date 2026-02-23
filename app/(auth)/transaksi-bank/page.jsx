@@ -1542,7 +1542,7 @@ export default function BankTransactionPage() {
                     )}
                   </button>
                   {typeof window !== "undefined" &&
-                    sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                    sessionStorage.getItem("role") === "SUPERADMIN" && (
                       <div className="flex gap-2 ml-auto">
                         <button
                           className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 transition"
@@ -1921,7 +1921,7 @@ export default function BankTransactionPage() {
                       )}
                     </button>
                     {typeof window !== "undefined" &&
-                      sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                      sessionStorage.getItem("role") === "SUPERADMIN" && (
                         <div className="flex gap-2 ml-auto">
                           <button
                             className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 transition"
@@ -2233,7 +2233,7 @@ export default function BankTransactionPage() {
                         </th>
                       ))}
 
-                      {cekRole === "SUPER ADMIN" && (
+                      {cekRole === "SUPERADMIN" && (
                         <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-[#0B131E]">
                           Action
                         </th>
@@ -2371,7 +2371,7 @@ export default function BankTransactionPage() {
                             </span>
                           </td>
                           <td className="p-3 text-center text-sm">
-                            {cekRole === "SUPER ADMIN" && (
+                            {cekRole === "SUPERADMIN" && (
                               <div className="flex space-x-2 justify-center text-base">
                                 <button
                                   className="text-blue-500 hover:text-[#0B131E]"

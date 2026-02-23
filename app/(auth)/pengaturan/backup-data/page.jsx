@@ -261,7 +261,7 @@ const Page = () => {
                   </Link>
                 </li>
 
-                {sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                {sessionStorage.getItem("role") === "SUPERADMIN" && (
                   <li>
                     <Link
                       href="/pengaturan/tambah"
@@ -279,7 +279,7 @@ const Page = () => {
                     Unit Kerja
                   </Link>
                 </li>
-                {sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                {sessionStorage.getItem("role") === "SUPERADMIN" && (
                   <li>
                     <Link
                       href="/pengaturan/backup-data"

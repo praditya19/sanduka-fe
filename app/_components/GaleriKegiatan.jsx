@@ -176,7 +176,7 @@ const GaleriKegiatan = () => {
 
       if (userId) {
         let response;
-        if (role === "ADMIN" || role === "SUPER ADMIN") {
+        if (role === "ADMIN" || role === "SUPERADMIN") {
           if (npa) {
             response = await GlobalApi.getUserByNpa(npa);
           } else {
@@ -289,7 +289,7 @@ const GaleriKegiatan = () => {
 
       if (userId) {
         let userDataDaftar;
-        if (role === "ADMIN" || role === "SUPER ADMIN") {
+        if (role === "ADMIN" || role === "SUPERADMIN") {
           if (npa) userDataDaftar = await GlobalApi.getUserByNpa(npa);
         } else {
           userDataDaftar = await GlobalApi.getUserById(userId);
@@ -744,7 +744,7 @@ const GaleriKegiatan = () => {
         if (!userId) throw new Error("User ID not found");
 
         let userDataDaftar;
-        if (role === "ADMIN" || role === "SUPER ADMIN") {
+        if (role === "ADMIN" || role === "SUPERADMIN") {
           if (npa) {
             userDataDaftar = await GlobalApi.getUserByNpa(npa);
           } else {
@@ -1081,7 +1081,7 @@ const GaleriKegiatan = () => {
         if (!userId) throw new Error("User ID not found");
 
         let userDataDaftar;
-        if (role === "ADMIN" || role === "SUPER ADMIN") {
+        if (role === "ADMIN" || role === "SUPERADMIN") {
           if (npa) {
             userDataDaftar = await GlobalApi.getUserByNpa(npa);
           } else {

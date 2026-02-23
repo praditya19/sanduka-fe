@@ -222,7 +222,7 @@ const Page = () => {
 
   const handleSelectCabang = async (cabang) => {
     const role = sessionStorage.getItem("role");
-    if (cabang.id === "All" && role === "SUPER ADMIN") {
+    if (cabang.id === "All" && role === "SUPERADMIN") {
       setSelectedCabang("All");
       setShowCabangDropdown(false);
       const allCabang = filteredCabangList.map((item) => item.kecamatan);
@@ -798,7 +798,7 @@ const Page = () => {
                               </li>
                               {[
                                 ...(sessionStorage.getItem("role") ===
-                                "SUPER ADMIN"
+                                "SUPERADMIN"
                                   ? [{ id: "All", kecamatan: "All" }]
                                   : []),
                                 ...filteredCabangList,
@@ -968,7 +968,7 @@ const Page = () => {
                         >
                           Rekap Ranting
                         </Button>
-                        {sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                        {sessionStorage.getItem("role") === "SUPERADMIN" && (
                           <Button
                             className="px-8 w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white"
                             onClick={handleRekapRantingAll}

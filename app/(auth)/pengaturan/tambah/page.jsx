@@ -241,7 +241,7 @@ const Page = () => {
           <main className="min-h-screen bg-gray-50 p-4 md:p-6">
             <nav className=" mt-6">
               <ul className="flex flex-wrap space-x-4 md:space-x-6">
-                {sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                {sessionStorage.getItem("role") === "SUPERADMIN" && (
                   <li>
                     <Link
                       href="/pengaturan/user"
@@ -267,7 +267,7 @@ const Page = () => {
                     Unit Kerja
                   </Link>
                 </li>
-                {sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                {sessionStorage.getItem("role") === "SUPERADMIN" && (
                   <li>
                     <Link
                       href="/pengaturan/backup-data"

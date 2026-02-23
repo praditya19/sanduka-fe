@@ -100,7 +100,7 @@ const FormStep1 = ({
 
       try {
         let response;
-        if (role === "ADMIN" || role === "SUPER ADMIN") {
+        if (role === "ADMIN" || role === "SUPERADMIN") {
           response = await GlobalApi.getAdminById(userId);
         } else if (role === "USER") {
           response = await GlobalApi.getUserById(userId);
@@ -126,7 +126,7 @@ const FormStep1 = ({
         try {
           let laporanData;
 
-          if (role === "ADMIN" || role === "SUPER ADMIN") {
+          if (role === "ADMIN" || role === "SUPERADMIN") {
             laporanData = await GlobalApi.getAdminById(userId);
           } else if (role === "USER") {
             laporanData = await GlobalApi.getUserById(userId);
@@ -505,19 +505,19 @@ const FormStep1 = ({
                         className="border rounded-lg p-2 w-full bg-white shadow-sm cursor-pointer"
                         placeholder="Pilih Cabang"
                         value={
-                          sessionStorage.getItem("role") === "SUPER ADMIN"
+                          sessionStorage.getItem("role") === "SUPERADMIN"
                             ? queryCabang
                             : selectedCabang
                         }
                         disabled={
-                          sessionStorage.getItem("role") !== "SUPER ADMIN"
+                          sessionStorage.getItem("role") !== "SUPERADMIN"
                         }
                         readOnly={
-                          sessionStorage.getItem("role") !== "SUPER ADMIN"
+                          sessionStorage.getItem("role") !== "SUPERADMIN"
                         }
                         onClick={() => {
                           if (
-                            sessionStorage.getItem("role") === "SUPER ADMIN"
+                            sessionStorage.getItem("role") === "SUPERADMIN"
                           ) {
                             setShowDropdownCabang(true);
                           }
@@ -770,7 +770,7 @@ const Resume = ({
       try {
         let laporanData;
 
-        if (role === "ADMIN" || role === "SUPER ADMIN") {
+        if (role === "ADMIN" || role === "SUPERADMIN") {
           laporanData = await GlobalApi.getAdminById(userId);
         } else if (role === "USER") {
           laporanData = await GlobalApi.getUserById(userId);

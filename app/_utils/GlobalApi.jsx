@@ -510,7 +510,7 @@ const getRekapAnggota = async (cabang) => {
 // REKAP MENINGGAL
 const getRekapMeninggal = async () => {
   try {
-    const response = await axiosClient.get("/api/rekap/meninggal"); // Ganti dengan endpoint yang sesuai
+    const response = await axiosClient.get("/api/rekap/meninggal");
     return response.data;
   } catch (error) {
     console.error("Error fetching rekap meninggal:", error);
@@ -1178,7 +1178,7 @@ const getTransaksiBank = async (
     if (query) params.append("query", query);
 
     const response = await axiosClient.get(
-      `/api/potongan-gaji?${params.toString()}`
+      `/api/potongan-gaji?${params.toString()}`,
     );
 
     return {
@@ -1210,7 +1210,7 @@ const getTransaksiBankBalancing = async (
     if (search) params.append("search", search);
 
     const response = await axiosClient.get(
-      `/api/potongan-gaji/balancing?${params.toString()}`
+      `/api/potongan-gaji/balancing?${params.toString()}`,
     );
 
     return response.data;
@@ -1227,7 +1227,7 @@ const getCountAnggotaPotonganBank = async (bulan, tahun) => {
 
   try {
     const response = await axiosClient.get(
-      `/api/potongan-gaji/count-anggota-potongan-bank?${params.toString()}`
+      `/api/potongan-gaji/count-anggota-potongan-bank?${params.toString()}`,
     );
     return response.data;
   } catch (error) {
@@ -1256,7 +1256,7 @@ const getCountAnggotaSetorTunai = async ({
 
   try {
     const response = await axiosClient.get(
-      `/api/potongan-gaji/count-anggota-setor-tunai?${params.toString()}`
+      `/api/potongan-gaji/count-anggota-setor-tunai?${params.toString()}`,
     );
     return response.data;
   } catch (error) {
@@ -1285,7 +1285,7 @@ const getCountAnggotaTerfilter = async ({
 
   try {
     const response = await axiosClient.get(
-      `/api/potongan-gaji/count-total-anggota-terfilter?${params.toString()}`
+      `/api/potongan-gaji/count-total-anggota-terfilter?${params.toString()}`,
     );
     return response.data;
   } catch (error) {
@@ -1462,7 +1462,6 @@ const getTableTargetRealisasi = async (
   try {
     const response = await axiosClient.get(
       `/api/laporan-target-realisasi?bulan=${bulan}&tahun=${tahun}&inputKecamatan=${inputKecamatan}&bulanuangmasuk=${bulanuangmasuk}`,
-      // Pastikan '=' ditambahkan di sini
     );
     return response.data;
   } catch (error) {
@@ -1514,7 +1513,7 @@ const generateKwitansi = async (data) => {
       headers: {
         "Content-Type": "application/json",
       },
-      responseType: "blob", // Tambahkan ini untuk menerima data sebagai blob
+      responseType: "blob",
     });
 
     return response;
@@ -1548,7 +1547,7 @@ const createKwitansiByIdAndNpa = async (id, npaPgri, formData) => {
 const getKwitansiByIdAndNpa = async (id, npaPgri) => {
   try {
     const response = await axiosClient.get(`/api/kwitansi/${id}/${npaPgri}`, {
-      responseType: "blob", // Jika file yang dikembalikan berupa gambar atau PDF
+      responseType: "blob",
     });
     return response;
   } catch (error) {
@@ -1836,11 +1835,11 @@ const mutasiCabangUnitKerja = async (idAnggota, cabang, unitKerja) => {
       cabang,
     )}&unitKerja=${encodeURIComponent(unitKerja)}`;
     const response = await axiosClient.put(url);
-    return response.data; // Kembalikan data response
+    return response.data;
   } catch (error) {
     console.error("Error saat memutasikan anggota:", error);
-    console.error("Response data:", error.response?.data); // Log response data jika ada error
-    throw error; // Lempar kembali error untuk ditangani di tempat lain
+    console.error("Response data:", error.response?.data);
+    throw error;
   }
 };
 
@@ -3242,22 +3241,20 @@ const createBerita = async (data) => {
   try {
     const formData = new FormData();
 
-    // Field utama
     formData.append("judul", data.judul);
     formData.append("username", data.username);
     formData.append("email", data.email);
     formData.append("role", data.role);
     formData.append("isiBerita", data.isiBerita);
     formData.append("status", data.status);
+    formData.append("responContributor", data.responContributor);
 
-    // Jika ada multiple gambar
     if (data.galeriImages && data.galeriImages.length > 0) {
       data.galeriImages.forEach((file) => {
         formData.append("galeriImages", file);
       });
     }
 
-    // Jika ada multiple deskripsi
     if (data.galeriDeskripsi && data.galeriDeskripsi.length > 0) {
       data.galeriDeskripsi.forEach((desc) => {
         formData.append("galeriDeskripsi", desc);
@@ -3276,41 +3273,48 @@ const createBerita = async (data) => {
     throw error;
   }
 };
+
 const updateBerita = async (id, data) => {
   try {
-    const formData = new FormData();
+    let formDataToSend = data;
 
-    // Helper function biar rapi
-    const safeAppend = (key, value) => {
-      if (value !== undefined && value !== null && value !== "") {
-        formData.append(key, value);
+    if (!(data instanceof FormData)) {
+      formDataToSend = new FormData();
+
+      formDataToSend.append("judul", data.judul);
+      formDataToSend.append("username", data.username);
+      formDataToSend.append("email", data.email);
+      formDataToSend.append("role", data.role);
+      formDataToSend.append("status", data.status);
+      formDataToSend.append("isiBerita", data.isiBerita);
+      formDataToSend.append("responEditor", data.responEditor);
+
+      if (data.galeriImages?.length > 0) {
+        data.galeriImages.forEach((file) => {
+          formDataToSend.append("galeriImages", file);
+        });
       }
-    };
 
-    safeAppend("judul", data.judul);
-    safeAppend("username", data.username);
-    safeAppend("email", data.email);
-
-    // ENUM WAJIB VALID
-    safeAppend("role", data.role?.toUpperCase());
-    safeAppend("status", data.status?.toUpperCase());
-
-    safeAppend("ketFoto1", data.ketFoto1);
-    safeAppend("isiBerita1", data.isiBerita1);
-
-    if (data.fotoUtama instanceof File) {
-      formData.append("fotoUtama", data.fotoUtama);
+      if (data.galeriDeskripsi?.length > 0) {
+        data.galeriDeskripsi.forEach((desc) => {
+          formDataToSend.append("galeriDeskripsi", desc);
+        });
+      }
     }
 
-    // 🔍 DEBUG (hapus nanti kalau sudah aman)
-    for (let pair of formData.entries()) {
+    // Debug isi FormData
+    for (let pair of formDataToSend.entries()) {
       console.log(pair[0] + ": ", pair[1]);
     }
 
     const response = await axiosClient.put(
       `/api/berita/update/${id}`,
-      formData,
-      // ❗ Jangan set Content-Type manual
+      formDataToSend,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
     );
 
     return response.data;
@@ -3418,66 +3422,46 @@ const createEditor = async (adminData) => {
     throw error;
   }
 };
-// const createEditor = async (data) => {
-//   try {
-//     const formData = new FormData();
 
-//     formData.append("daerah", data.daerah ?? "");
-// formData.append("cabang", data.cabang ?? "");
-// formData.append("nama", data.nama ?? "");
-// formData.append("npapgri", data.npapgri ?? "");
-// formData.append("jabatan", data.jabatan ?? "");
-// formData.append("nohp", data.nohp ?? "");
-// formData.append("email", data.email ?? "");
-// formData.append("password", data.password ?? "");
-// formData.append("passwordNew", data.passwordNew ?? "");
-
-//     // 🔍 Debug (hapus nanti)
-//     for (let pair of formData.entries()) {
-//       console.log(pair[0] + ":", pair[1]);
-//     }
-
-//     const response = await axiosClient.post(
-//       "/api/register-editor/create",
-//       formData
-//       // ❗ Jangan set Content-Type manual
-//     );
-
-//     return response.data;
-//   } catch (error) {
-//     console.error("Error createEditor:", error);
-//     throw error;
-//   }
-// };
 const updateEditor = async (id, data) => {
   try {
     const formData = new FormData();
 
-    const safeAppend = (key, value) => {
-      if (value !== undefined && value !== null) {
-        formData.append(key, value);
-      }
-    };
+    if (data.daerah !== undefined && data.daerah !== null)
+      formData.append("daerah", data.daerah);
 
-    safeAppend("daerah", data.daerah);
-    safeAppend("cabang", data.cabang);
-    safeAppend("nama", data.nama);
-    safeAppend("npapgri", data.npapgri);
-    safeAppend("jabatan", data.jabatan);
-    safeAppend("nohp", data.nohp);
-    safeAppend("email", data.email);
-    safeAppend("password", data.password);
-    safeAppend("passwordNew", data.passwordNew);
+    if (data.cabang !== undefined && data.cabang !== null)
+      formData.append("cabang", data.cabang);
 
-    // 🔍 Debug (hapus nanti kalau sudah aman)
+    if (data.nama !== undefined && data.nama !== null)
+      formData.append("nama", data.nama);
+
+    if (data.npapgri !== undefined && data.npapgri !== null)
+      formData.append("npapgri", data.npapgri);
+
+    if (data.jabatan !== undefined && data.jabatan !== null)
+      formData.append("jabatan", data.jabatan);
+
+    if (data.nohp !== undefined && data.nohp !== null)
+      formData.append("nohp", data.nohp);
+
+    if (data.email !== undefined && data.email !== null)
+      formData.append("email", data.email);
+
+    if (data.password !== undefined && data.password !== null)
+      formData.append("password", data.password);
+
+    if (data.passwordNew !== undefined && data.passwordNew !== null)
+      formData.append("passwordNew", data.passwordNew);
+
+    // Debug
     for (let pair of formData.entries()) {
       console.log(pair[0] + ":", pair[1]);
     }
 
     const response = await axiosClient.put(
       `/api/register-editor/update/${id}`,
-      formData,
-      // ❗ Jangan set Content-Type manual
+      formData
     );
 
     return response.data;
@@ -3496,7 +3480,7 @@ const getEditorById = async (id) => {
     throw error;
   }
 };
-const getAllEditor = async (page = 0, size = 5) => {
+const getAllEditor = async (page = 0, size = 10) => {
   try {
     const response = await axiosClient.get(`/api/register-editor/all`, {
       params: {
@@ -3757,5 +3741,5 @@ export default {
   deleteBerita,
   publishBerita,
   updateStatusBerita,
-  createEditor,
+  createEditor,updateEditor,getEditorById,getAllEditor,deleteEditor
 };
