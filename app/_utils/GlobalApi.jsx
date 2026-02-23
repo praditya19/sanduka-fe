@@ -3246,25 +3246,20 @@ const createBerita = async (data) => {
     formData.append("email", data.email);
     formData.append("role", data.role);
     formData.append("isiBerita", data.isiBerita);
-    formData.append("status", data.status);
+    formData.append("status", data.status || "DRAFT");
     formData.append("responContributor", data.responContributor);
 
-    if (data.galeriImages && data.galeriImages.length > 0) {
-      data.galeriImages.forEach((file) => {
-        formData.append("galeriImages", file);
-      });
-    }
-
-    if (data.galeriDeskripsi && data.galeriDeskripsi.length > 0) {
-      data.galeriDeskripsi.forEach((desc) => {
-        formData.append("galeriDeskripsi", desc);
+    if (data.galeri && data.galeri.length > 0) {
+      data.galeri.forEach((g) => {
+        if (g.file) {
+          formData.append("galeriImages", g.file);
+          formData.append("galeriDeskripsi", g.deskripsi || "");
+        }
       });
     }
 
     const response = await axiosClient.post("/api/berita/create", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
+      headers: { "Content-Type": "multipart/form-data" },
     });
 
     return response.data;
