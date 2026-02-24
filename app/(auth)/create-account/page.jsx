@@ -24,7 +24,11 @@ import {
   AiOutlineEyeInvisible,
   AiOutlineWarning,
 } from "react-icons/ai";
-import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
+import {
+  FaTimesCircle,
+  FaCheckCircle,
+  FaExclamationCircle,
+} from "react-icons/fa";
 
 const MapComponent = dynamic(() => import("../../_components/MapComponent"), {
   ssr: false,
@@ -41,20 +45,20 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getBgColor = () => {
     switch (type) {
-      case 'success':
-        return 'bg-green-100';
-      case 'error':
-        return 'bg-red-100';
+      case "success":
+        return "bg-green-100";
+      case "error":
+        return "bg-red-100";
       default:
-        return 'bg-blue-100';
+        return "bg-blue-100";
     }
   };
 
   const getIcon = () => {
     switch (type) {
-      case 'success':
+      case "success":
         return <FaCheckCircle className="text-green-500 text-3xl" />;
-      case 'error':
+      case "error":
         return <FaExclamationCircle className="text-red-500 text-3xl" />;
       default:
         return null;
@@ -63,19 +67,24 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getTextColor = () => {
     switch (type) {
-      case 'success':
-        return 'text-green-800';
-      case 'error':
-        return 'text-red-800';
+      case "success":
+        return "text-green-800";
+      case "error":
+        return "text-red-800";
       default:
-        return 'text-blue-800';
+        return "text-blue-800";
     }
   };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
-      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+      <div
+        className="absolute inset-0 bg-black opacity-50"
+        onClick={onClose}
+      ></div>
+      <div
+        className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}
+      >
         <button
           onClick={onClose}
           className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
@@ -85,17 +94,13 @@ const NotificationPopup = ({ type, message, onClose }) => {
         </button>
 
         <div className="flex flex-col items-center space-y-4">
-          <div className="animate-bounce">
-            {getIcon()}
-          </div>
+          <div className="animate-bounce">{getIcon()}</div>
 
           <h3 className={`text-xl font-bold ${getTextColor()}`}>
-            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+            {type === "success" ? "Berhasil!" : "Gagal!"}
           </h3>
 
-          <div className={`${getTextColor()} text-center`}>
-            {message}
-          </div>
+          <div className={`${getTextColor()} text-center`}>{message}</div>
         </div>
       </div>
     </div>
@@ -126,7 +131,7 @@ const Page = () => {
   const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
   const [searchTermUnitKerja, setSearchTermUnitKerja] = useState("");
   const [filteredUnitKerjaByCabang, setFilteredUnitKerjaByCabang] = useState(
-    []
+    [],
   );
   const [showDropdownUnitKerja, setShowDropdownUnitKerja] = useState(false);
   const [allUnitKerja, setAllUnitKerja] = useState([]);
@@ -167,12 +172,14 @@ const Page = () => {
           unit.cabang === selectedCabang &&
           unit.unitKerja
             .toLowerCase()
-            .includes(searchTermUnitKerja.toLowerCase())
+            .includes(searchTermUnitKerja.toLowerCase()),
       );
       setFilteredUnitKerjaByCabang(filtered);
     } else {
       const filteredData = allUnitKerja.filter((item) =>
-        item.unitKerja.toLowerCase().includes(searchTermUnitKerja.toLowerCase())
+        item.unitKerja
+          .toLowerCase()
+          .includes(searchTermUnitKerja.toLowerCase()),
       );
       setFilteredUnitKerjaByCabang(filteredData);
     }
@@ -229,7 +236,7 @@ const Page = () => {
   }, []);
 
   const filteredCabang = cabang.filter((item) =>
-    item.kecamatan.toLowerCase().includes(searchTerm.toLowerCase())
+    item.kecamatan.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const handleGetLocation = () => {
@@ -255,13 +262,12 @@ const Page = () => {
       );
     } else {
       setNotification({
-        type: 'error',
-        message: `Geolocation tidak tersedia di perangkat Anda`
+        type: "error",
+        message: `Geolocation tidak tersedia di perangkat Anda`,
       });
       setLoading(false);
     }
   };
-
 
   const handleNpaChange = async (e) => {
     const npaValue = e.target.value;
@@ -282,15 +288,23 @@ const Page = () => {
               >
                 Login
               </a>
-            </span>
+            </span>,
           );
         }
       } catch (error) {
         if (error.response?.status === 404) {
-          setNpaMessage(<span style={{ color: "green" }}>Silakan Lanjutkan Pendaftaran Sanduka.</span>);
+          setNpaMessage(
+            <span style={{ color: "green" }}>
+              Silakan Lanjutkan Pendaftaran Sanduka.
+            </span>,
+          );
         } else {
           console.error("Error saat mengecek NPA:", error.message);
-          setNpaMessage(<span style={{ color: "green" }}>Silakan Lanjutkan Pendaftaran Sanduka.</span>);
+          setNpaMessage(
+            <span style={{ color: "green" }}>
+              Silakan Lanjutkan Pendaftaran Sanduka.
+            </span>,
+          );
         }
       }
     }
@@ -379,19 +393,19 @@ const Page = () => {
     const newNamesAnak = [...namaAnak];
     newNamesAnak[index] = event.target.value;
     setNamaAnak(newNamesAnak);
-    setValue("namaAnak", newNamesAnak); 
+    setValue("namaAnak", newNamesAnak);
   };
 
   const handleAddInput = () => {
     const newNamesAnak = [...namaAnak, ""];
     setNamaAnak(newNamesAnak);
-    setValue("namaAnak", newNamesAnak); 
+    setValue("namaAnak", newNamesAnak);
   };
 
   const handleRemoveInput = (index) => {
     const newNamesAnak = namaAnak.filter((_, i) => i !== index);
     setNamaAnak(newNamesAnak);
-    setValue("namaAnak", newNamesAnak); 
+    setValue("namaAnak", newNamesAnak);
   };
 
   const {
@@ -412,7 +426,7 @@ const Page = () => {
 
     parts[0] = parts[0].toUpperCase();
 
-    const formattedInput = parts.join('');
+    const formattedInput = parts.join("");
 
     setValue("namaLengkap", formattedInput);
   };
@@ -422,14 +436,13 @@ const Page = () => {
 
     for (const field in errors) {
       if (errors[field]) {
-  
         const formattedField = field
-          .replace(/([A-Z])/g, " $1") 
-          .replace(/^./, (str) => str.toUpperCase()); 
+          .replace(/([A-Z])/g, " $1")
+          .replace(/^./, (str) => str.toUpperCase());
 
         setNotification({
-          type: 'error',
-          message: `${formattedField} wajib diisi.`
+          type: "error",
+          message: `${formattedField} wajib diisi.`,
         });
 
         if (formRefs[field]?.current) {
@@ -536,18 +549,16 @@ const Page = () => {
 
     let dateObj;
     if (Array.isArray(dateInput)) {
-      
       const [year, month, day] = dateInput;
-      dateObj = new Date(year, month - 1, day); 
+      dateObj = new Date(year, month - 1, day);
     } else if (typeof dateInput === "string") {
-      
       dateObj = new Date(dateInput);
     } else {
-      return null; 
+      return null;
     }
 
     const day = dateObj.getDate().toString().padStart(2, "0");
-    const month = bulanList[dateObj.getMonth()]; 
+    const month = bulanList[dateObj.getMonth()];
     const year = dateObj.getFullYear();
 
     return `${day} ${month} ${year}`;
@@ -561,7 +572,7 @@ const Page = () => {
     const cleanBase64 = base64String.split(",")[1] || base64String;
 
     const formattedTanggalLahir = response.tanggalLahir
-      ? new Date(response.tanggalLahir).toISOString().split("T")[0] 
+      ? new Date(response.tanggalLahir).toISOString().split("T")[0]
       : null;
     const formattedTahunDiangkat = response.tahunDiangkat
       ? new Date(response.tahunDiangkat).toISOString().split("T")[0]
@@ -571,7 +582,6 @@ const Page = () => {
       : null;
 
     const finalData = {
-      id: response.id || null,
       email: response.email || "",
       password: response.password || "",
       npaPgri: response.npaPgri || "",
@@ -614,18 +624,16 @@ const Page = () => {
     try {
       const apiResponse = await GlobalApi.registerUser(finalData);
       setNotification({
-        type: 'success',
+        type: "success",
         message: (
           <>
-            <strong
-            >
-              Selamat Anda Berhasil Mendaftar Di New Sanduka
-            </strong> <br/>
+            <strong>Selamat Anda Berhasil Mendaftar Di New Sanduka</strong>{" "}
+            <br />
             <span style={{ fontSize: "1.75rem" }}>
               Anda Berhasil Mendaftar Menjadi Anggota Sanduka
             </span>
           </>
-        )
+        ),
       });
 
       setTimeout(() => {
@@ -636,11 +644,23 @@ const Page = () => {
         return;
       }
 
+      if (error.response?.status === 400) {
+        const errorMessage =
+          error.response?.data?.message ||
+          error.response?.data ||
+          "Terjadi kesalahan saat registrasi.";
+        setNotification({
+          type: "error",
+          message: errorMessage,
+        });
+        return;
+      }
+
       const errorMessage =
         error.response?.data || "Terjadi kesalahan saat registrasi.";
       setNotification({
-        type: 'error',
-        message: `Anda Belum Berhasil Mendaftar`
+        type: "error",
+        message: `Anda Belum Berhasil Mendaftar`,
       });
     }
   };
@@ -662,8 +682,8 @@ const Page = () => {
   const nextStep = () => {
     if (!selectedFile) {
       setNotification({
-        type: 'error',
-        message: `Harap unggah foto sebelum melanjutkan`
+        type: "error",
+        message: `Harap unggah foto sebelum melanjutkan`,
       });
       return;
     }
@@ -671,8 +691,8 @@ const Page = () => {
     const validFormats = ["image/jpeg", "image/png", "image/jpg"];
     if (!validFormats.includes(selectedFile.type)) {
       setNotification({
-        type: 'error',
-        message: `Format file tidak didukung. Harap unggah file jpg, jpeg, atau png.`
+        type: "error",
+        message: `Format file tidak didukung. Harap unggah file jpg, jpeg, atau png.`,
       });
       return;
     }
@@ -680,8 +700,8 @@ const Page = () => {
     const email = watch("email");
     if (!email) {
       setNotification({
-        type: 'error',
-        message: `Email harus diisi.`
+        type: "error",
+        message: `Email harus diisi.`,
       });
       return;
     }
@@ -689,8 +709,8 @@ const Page = () => {
     const password = watch("password");
     if (!password) {
       setNotification({
-        type: 'error',
-        message: `Password harus diisi.`
+        type: "error",
+        message: `Password harus diisi.`,
       });
       return;
     }
@@ -698,8 +718,8 @@ const Page = () => {
     const npaPgri = watch("npaPgri");
     if (!npaPgri) {
       setNotification({
-        type: 'error',
-        message: `NPA PGRI harus diisi.`
+        type: "error",
+        message: `NPA PGRI harus diisi.`,
       });
       return;
     }
@@ -707,8 +727,8 @@ const Page = () => {
     const nip = watch("nip");
     if (!nip) {
       setNotification({
-        type: 'error',
-        message: `NIP harus diisi.`
+        type: "error",
+        message: `NIP harus diisi.`,
       });
       return;
     }
@@ -716,8 +736,8 @@ const Page = () => {
     const nik = watch("nik");
     if (!nik) {
       setNotification({
-        type: 'error',
-        message: `NIK harus diisi.`
+        type: "error",
+        message: `NIK harus diisi.`,
       });
       return;
     }
@@ -725,8 +745,8 @@ const Page = () => {
     const namaLengkap = watch("namaLengkap");
     if (!namaLengkap) {
       setNotification({
-        type: 'error',
-        message: `Nama Lengkap harus diisi.`
+        type: "error",
+        message: `Nama Lengkap harus diisi.`,
       });
       return;
     }
@@ -734,8 +754,8 @@ const Page = () => {
     const tempatLahir = watch("tempatLahir");
     if (!tempatLahir) {
       setNotification({
-        type: 'error',
-        message: `Tempat Lahir harus diisi.`
+        type: "error",
+        message: `Tempat Lahir harus diisi.`,
       });
       return;
     }
@@ -743,16 +763,16 @@ const Page = () => {
     const tanggalLahir = watch("tanggalLahir");
     if (!tanggalLahir) {
       setNotification({
-        type: 'error',
-        message: `Tanggal Lahir harus diisi`
+        type: "error",
+        message: `Tanggal Lahir harus diisi`,
       });
       return;
     }
 
     if (!latitude || !longitude) {
       setNotification({
-        type: 'error',
-        message: `Harap Get Location terlebih dahulu.`
+        type: "error",
+        message: `Harap Get Location terlebih dahulu.`,
       });
       return;
     }
@@ -763,8 +783,8 @@ const Page = () => {
         block: "center",
       });
       setNotification({
-        type: 'error',
-        message: `Jenis Kelamin harus diisi`
+        type: "error",
+        message: `Jenis Kelamin harus diisi`,
       });
       return;
     }
@@ -775,8 +795,8 @@ const Page = () => {
         block: "center",
       });
       setNotification({
-        type: 'error',
-        message: `Agama harus diisi.`
+        type: "error",
+        message: `Agama harus diisi.`,
       });
       return;
     }
@@ -787,8 +807,8 @@ const Page = () => {
         block: "center",
       });
       setNotification({
-        type: 'error',
-        message: `Golongan darah harus diisi.`
+        type: "error",
+        message: `Golongan darah harus diisi.`,
       });
       return;
     }
@@ -796,8 +816,8 @@ const Page = () => {
     const kodePos = watch("kodePos");
     if (!kodePos) {
       setNotification({
-        type: 'error',
-        message: `Kode Pos harus diisi.`
+        type: "error",
+        message: `Kode Pos harus diisi.`,
       });
       return;
     }
@@ -805,8 +825,8 @@ const Page = () => {
     const nomorHp = watch("nomorHp");
     if (!nomorHp) {
       setNotification({
-        type: 'error',
-        message: `Nomor HP harus diisi.`
+        type: "error",
+        message: `Nomor HP harus diisi.`,
       });
       return;
     }
@@ -866,11 +886,12 @@ const Page = () => {
       <div className="w-full mx-auto overflow-x-auto">
         <div className="flex flex-row items-center justify-start space-x-2 sm:space-x-4 mb-2 whitespace-nowrap">
           <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${step === 1
-              ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-              : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-              }`}
-          // onClick={() => handleNavigation(1)}
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
+              step === 1
+                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+            }`}
+            // onClick={() => handleNavigation(1)}
           >
             1. SYARAT & KETENTUAN
           </div>
@@ -878,10 +899,11 @@ const Page = () => {
           <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
 
           <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${step === 2
-              ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-              : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-              }`}
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
+              step === 2
+                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+            }`}
             onClick={() => handleNavigation(2)}
           >
             2. DATA PRIBADI
@@ -890,10 +912,11 @@ const Page = () => {
           <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
 
           <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${step === 3
-              ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-              : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-              }`}
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
+              step === 3
+                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+            }`}
             onClick={() => handleNavigation(3)}
           >
             3. DATA PEKERJAAN
@@ -902,11 +925,12 @@ const Page = () => {
           <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
 
           <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${step === 4
-              ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-              : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-              }`}
-          // onClick={() => handleNavigation(4)}
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
+              step === 4
+                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+            }`}
+            // onClick={() => handleNavigation(4)}
           >
             4. MENUNGGU VERIFIKASI ADMIN
           </div>
@@ -914,11 +938,12 @@ const Page = () => {
           <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
 
           <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${step === 5
-              ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-              : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-              }`}
-          // onClick={() => handleNavigation(5)}
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
+              step === 5
+                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+            }`}
+            // onClick={() => handleNavigation(5)}
           >
             5. SELESAI
           </div>
@@ -1182,10 +1207,11 @@ const Page = () => {
                         onValueChange={field.onChange}
                       >
                         <SelectTrigger
-                          className={`border ${errors.jenisKelamin
-                            ? "border-red-500"
-                            : "border-teal-500"
-                            } focus:ring-teal-500`}
+                          className={`border ${
+                            errors.jenisKelamin
+                              ? "border-red-500"
+                              : "border-teal-500"
+                          } focus:ring-teal-500`}
                         >
                           <SelectValue placeholder="Pilih Jenis Kelamin" />
                         </SelectTrigger>
@@ -1221,8 +1247,9 @@ const Page = () => {
                         onValueChange={field.onChange}
                       >
                         <SelectTrigger
-                          className={`border ${errors.agama ? "border-red-500" : "border-teal-500"
-                            } focus:ring-teal-500`}
+                          className={`border ${
+                            errors.agama ? "border-red-500" : "border-teal-500"
+                          } focus:ring-teal-500`}
                         >
                           <SelectValue placeholder="Pilih Agama" />
                         </SelectTrigger>
@@ -1263,10 +1290,11 @@ const Page = () => {
                         onValueChange={field.onChange}
                       >
                         <SelectTrigger
-                          className={`border ${errors.golonganDarah
-                            ? "border-red-500"
-                            : "border-teal-500"
-                            } focus:ring-teal-500`}
+                          className={`border ${
+                            errors.golonganDarah
+                              ? "border-red-500"
+                              : "border-teal-500"
+                          } focus:ring-teal-500`}
                         >
                           <SelectValue placeholder="Pilih Golongan Darah" />
                         </SelectTrigger>
@@ -1490,7 +1518,7 @@ const Page = () => {
                               .filter((item) =>
                                 item.kecamatan
                                   .toLowerCase()
-                                  .includes(searchTerm.toLowerCase())
+                                  .includes(searchTerm.toLowerCase()),
                               )
                               .map((item) => (
                                 <div
@@ -1975,15 +2003,14 @@ const Page = () => {
                   onClick={onSubmit}
                   className="text-white bg-teal-500 hover:bg-teal-600 focus:ring-4 focus:ring-teal-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
                 >
-                 Submit
+                  Submit
                 </Button>
               </div>
             </form>
           </div>
-        )
-        }
-      </div >
-    </div >
+        )}
+      </div>
+    </div>
   );
 };
 
