@@ -1863,8 +1863,8 @@ const Page = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
-                          <SelectItem value="Pendidik">Pendidik</SelectItem>
-                          <SelectItem value="Tenaga Kependidikan">
+                          <SelectItem value="PENDIDIK">Pendidik</SelectItem>
+                          <SelectItem value="TENAGA KEPENDIDIKAN">
                             Tenaga Pendidik
                           </SelectItem>
                         </SelectGroup>
