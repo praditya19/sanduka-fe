@@ -623,46 +623,51 @@ const Page = () => {
 
     try {
       const apiResponse = await GlobalApi.registerUser(finalData);
-      setNotification({
-        type: "success",
-        message: (
-          <>
-            <strong>Selamat Anda Berhasil Mendaftar Di New Sanduka</strong>{" "}
-            <br />
-            <span style={{ fontSize: "1.75rem" }}>
-              Anda Berhasil Mendaftar Menjadi Anggota Sanduka
-            </span>
-          </>
-        ),
-      });
-
-      setTimeout(() => {
-        router.push("/tunggu-admin");
-      }, 2000);
-    } catch (error) {
-      if (error.response?.status === 500) {
+    } catch (registerError) {
+      if (registerError.response?.status === 400) {
+        console.warn("Register error 400 diabaikan:", registerError.response?.data);
+      } else if (registerError.response?.status === 500) {
         return;
-      }
-
-      if (error.response?.status === 400) {
-        const errorMessage =
-          error.response?.data?.message ||
-          error.response?.data ||
-          "Terjadi kesalahan saat registrasi.";
+      } else {
         setNotification({
           type: "error",
-          message: errorMessage,
+          message: `Anda Belum Berhasil Mendaftar`,
         });
         return;
       }
-
-      const errorMessage =
-        error.response?.data || "Terjadi kesalahan saat registrasi.";
-      setNotification({
-        type: "error",
-        message: `Anda Belum Berhasil Mendaftar`,
-      });
     }
+
+    try {
+      const npaResponse = await GlobalApi.cekNpa(response.npaPgri);
+      if (npaResponse?.isVerified === true) {
+        setNotification({
+          type: "warning",
+          message: "Data sudah ada di sistem",
+        });
+        setIsSubmitClicked(false);
+        return;
+      }
+    } catch (npaError) {
+
+      console.warn("Gagal cek NPA:", npaError);
+    }
+
+    setNotification({
+      type: "success",
+      message: (
+        <>
+          <strong>Selamat Anda Berhasil Mendaftar Di New Sanduka</strong>{" "}
+          <br />
+          <span style={{ fontSize: "1.75rem" }}>
+            Anda Berhasil Mendaftar Menjadi Anggota Sanduka
+          </span>
+        </>
+      ),
+    });
+
+    setTimeout(() => {
+      router.push("/tunggu-admin");
+    }, 2000);
   };
 
   const togglePassword = () => {
@@ -886,12 +891,11 @@ const Page = () => {
       <div className="w-full mx-auto overflow-x-auto">
         <div className="flex flex-row items-center justify-start space-x-2 sm:space-x-4 mb-2 whitespace-nowrap">
           <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
-              step === 1
-                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-            }`}
-            // onClick={() => handleNavigation(1)}
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${step === 1
+              ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+              : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+              }`}
+          // onClick={() => handleNavigation(1)}
           >
             1. SYARAT & KETENTUAN
           </div>
@@ -899,11 +903,10 @@ const Page = () => {
           <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
 
           <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
-              step === 2
-                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-            }`}
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${step === 2
+              ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+              : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+              }`}
             onClick={() => handleNavigation(2)}
           >
             2. DATA PRIBADI
@@ -912,11 +915,10 @@ const Page = () => {
           <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
 
           <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
-              step === 3
-                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-            }`}
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${step === 3
+              ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+              : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+              }`}
             onClick={() => handleNavigation(3)}
           >
             3. DATA PEKERJAAN
@@ -925,12 +927,11 @@ const Page = () => {
           <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
 
           <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
-              step === 4
-                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-            }`}
-            // onClick={() => handleNavigation(4)}
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${step === 4
+              ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+              : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+              }`}
+          // onClick={() => handleNavigation(4)}
           >
             4. MENUNGGU VERIFIKASI ADMIN
           </div>
@@ -938,12 +939,11 @@ const Page = () => {
           <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
 
           <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
-              step === 5
-                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-            }`}
-            // onClick={() => handleNavigation(5)}
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${step === 5
+              ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+              : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+              }`}
+          // onClick={() => handleNavigation(5)}
           >
             5. SELESAI
           </div>
@@ -1207,11 +1207,10 @@ const Page = () => {
                         onValueChange={field.onChange}
                       >
                         <SelectTrigger
-                          className={`border ${
-                            errors.jenisKelamin
-                              ? "border-red-500"
-                              : "border-teal-500"
-                          } focus:ring-teal-500`}
+                          className={`border ${errors.jenisKelamin
+                            ? "border-red-500"
+                            : "border-teal-500"
+                            } focus:ring-teal-500`}
                         >
                           <SelectValue placeholder="Pilih Jenis Kelamin" />
                         </SelectTrigger>
@@ -1247,9 +1246,8 @@ const Page = () => {
                         onValueChange={field.onChange}
                       >
                         <SelectTrigger
-                          className={`border ${
-                            errors.agama ? "border-red-500" : "border-teal-500"
-                          } focus:ring-teal-500`}
+                          className={`border ${errors.agama ? "border-red-500" : "border-teal-500"
+                            } focus:ring-teal-500`}
                         >
                           <SelectValue placeholder="Pilih Agama" />
                         </SelectTrigger>
@@ -1290,11 +1288,10 @@ const Page = () => {
                         onValueChange={field.onChange}
                       >
                         <SelectTrigger
-                          className={`border ${
-                            errors.golonganDarah
-                              ? "border-red-500"
-                              : "border-teal-500"
-                          } focus:ring-teal-500`}
+                          className={`border ${errors.golonganDarah
+                            ? "border-red-500"
+                            : "border-teal-500"
+                            } focus:ring-teal-500`}
                         >
                           <SelectValue placeholder="Pilih Golongan Darah" />
                         </SelectTrigger>

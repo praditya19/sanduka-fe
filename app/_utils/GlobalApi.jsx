@@ -17,7 +17,6 @@ const base64ToBlob = (base64, mime) => {
   }
   return new Blob([byteNumbers], { type: mime });
 };
-
 // Auth
 const registerUser = async (userData) => {
   try {
