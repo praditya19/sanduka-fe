@@ -255,8 +255,6 @@ export default function BankTransactionPage() {
       const storedRole = sessionStorage.getItem("role");
       const storedCabang = sessionStorage.getItem("cabang");
 
-      // Jika ADMIN, gunakan cabang dari sessionStorage
-      // Jika SUPERADMIN, gunakan selectedCabang (bisa kosong = semua data)
       const cabangFilter =
         storedRole === "ADMIN" && storedCabang
           ? storedCabang
@@ -732,7 +730,7 @@ export default function BankTransactionPage() {
   const handleEditClick = async (id) => {
     try {
       const data = await GlobalApi.getBalancingById(id);
-      // console.log("Data yang diambil untuk edit:", data);
+
       setEditData(data);
       setShowEditModal(true);
       await getBalancingdata();
@@ -1803,8 +1801,8 @@ export default function BankTransactionPage() {
                         key={page}
                         onClick={() => handlePageClick(page)}
                         className={`px-3 py-1 border rounded-md text-sm ${page === currentPage
-                            ? "bg-teal-600 text-white border-teal-600"
-                            : "bg-white hover:bg-gray-50"
+                          ? "bg-teal-600 text-white border-teal-600"
+                          : "bg-white hover:bg-gray-50"
                           }`}
                       >
                         {page}
@@ -2111,8 +2109,8 @@ export default function BankTransactionPage() {
                           <span>Cabang</span>
                           <span
                             className={`text-xs transition-all ${sortConfig.key === "cabang"
-                                ? "opacity-100"
-                                : "opacity-50 group-hover:opacity-80"
+                              ? "opacity-100"
+                              : "opacity-50 group-hover:opacity-80"
                               }`}
                           >
                             {sortConfig.key === "cabang" &&
@@ -2133,8 +2131,8 @@ export default function BankTransactionPage() {
                           <span>Unit Kerja</span>
                           <span
                             className={`text-xs ${sortConfig.key === "unitKerja"
-                                ? "opacity-100"
-                                : "opacity-50 group-hover:opacity-80"
+                              ? "opacity-100"
+                              : "opacity-50 group-hover:opacity-80"
                               }`}
                           >
                             {sortConfig.key === "unitKerja" &&
@@ -2155,8 +2153,8 @@ export default function BankTransactionPage() {
                           <span>Nama</span>
                           <span
                             className={`text-xs ${sortConfig.key === "nama"
-                                ? "opacity-100"
-                                : "opacity-50 group-hover:opacity-80"
+                              ? "opacity-100"
+                              : "opacity-50 group-hover:opacity-80"
                               }`}
                           >
                             {sortConfig.key === "nama" &&
@@ -2182,8 +2180,8 @@ export default function BankTransactionPage() {
                           <span>Rekening</span>
                           <span
                             className={`text-xs ${sortConfig.key === "rekening"
-                                ? "opacity-100"
-                                : "opacity-50 group-hover:opacity-80"
+                              ? "opacity-100"
+                              : "opacity-50 group-hover:opacity-80"
                               }`}
                           >
                             {sortConfig.key === "rekening" &&
@@ -2217,8 +2215,8 @@ export default function BankTransactionPage() {
                             <span>{label}</span>
                             <span
                               className={`text-xs ${sortConfig.key === key
-                                  ? "opacity-100"
-                                  : "opacity-50 group-hover:opacity-80"
+                                ? "opacity-100"
+                                : "opacity-50 group-hover:opacity-80"
                                 }`}
                             >
                               {sortConfig.key === key &&
@@ -3026,8 +3024,8 @@ export default function BankTransactionPage() {
                               key={page}
                               onClick={() => handlePageClickBalancing(page)}
                               className={`px-3 py-1 border rounded-md text-sm ${page === currentPageBalancing
-                                  ? "bg-teal-600 text-white border-teal-600"
-                                  : "bg-white hover:bg-gray-50"
+                                ? "bg-teal-600 text-white border-teal-600"
+                                : "bg-white hover:bg-gray-50"
                                 }`}
                             >
                               {page}
