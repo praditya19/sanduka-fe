@@ -5,10 +5,12 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Menu, X, LogIn } from "lucide-react";
 import { usePathname } from "next/navigation";
+import SignInModal from "./SignInModal";
 
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showSignIn, setShowSignIn] = useState(false);
   const pathname = usePathname();
 
   const navItems = [
@@ -48,10 +50,9 @@ const Header = () => {
                   className={`
                     px-5 py-2 rounded-full text-sm font-medium
                     transition-all duration-200
-                    ${
-                      isActive(item.href)
-                        ? "bg-white/25 text-white"
-                        : "text-white/90 hover:text-white hover:bg-white/10"
+                    ${isActive(item.href)
+                      ? "bg-white/25 text-white"
+                      : "text-white/90 hover:text-white hover:bg-white/10"
                     }
                   `}
                 >
@@ -62,28 +63,27 @@ const Header = () => {
           </div>
 
           {/* Login Button */}
-          <Link href="/sign-in">
-            <Button
-              className="
-                relative overflow-hidden group
-                rounded-full px-7 py-2.5
-                font-medium
-                bg-white text-teal-600
-                hover:bg-white
-                border border-white/60
-                shadow-md shadow-black/10
-                transition-all duration-300
-                hover:scale-[1.04]
-                active:scale-[0.97]
-              "
-            >
-              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-300/60 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-              <span className="relative flex items-center">
-                Login
-                <LogIn className="ml-2 h-4 w-4" />
-              </span>
-            </Button>
-          </Link>
+          <Button
+            onClick={() => setShowSignIn(true)}
+            className="
+              relative overflow-hidden group
+              rounded-full px-7 py-2.5
+              font-medium
+              bg-white text-teal-600
+              hover:bg-white
+              border border-white/60
+              shadow-md shadow-black/10
+              transition-all duration-300
+              hover:scale-[1.04]
+              active:scale-[0.97]
+            "
+          >
+            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-300/60 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+            <span className="relative flex items-center">
+              Login
+              <LogIn className="ml-2 h-4 w-4" />
+            </span>
+          </Button>
 
           {/* Mobile Toggle */}
           <button
@@ -106,19 +106,34 @@ const Header = () => {
                 onClick={() => setIsOpen(false)}
                 className={`
                   block px-4 py-3 rounded-lg font-medium
-                  ${
-                    isActive(item.href)
-                      ? "bg-white/20 text-white"
-                      : "text-white/90 hover:bg-white/10"
+                  ${isActive(item.href)
+                    ? "bg-white/20 text-white"
+                    : "text-white/90 hover:bg-white/10"
                   }
                 `}
               >
                 {item.label}
               </Link>
             ))}
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                setShowSignIn(true);
+              }}
+              className="flex items-center px-4 py-3 rounded-lg font-medium text-white/90 hover:bg-white/10 w-full"
+            >
+              <LogIn className="mr-2 h-4 w-4" />
+              Login
+            </button>
           </div>
         </div>
       )}
+
+      {/* Sign In Modal */}
+      <SignInModal
+        open={showSignIn}
+        onClose={() => setShowSignIn(false)}
+      />
     </nav>
   );
 };
