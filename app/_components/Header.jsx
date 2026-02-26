@@ -30,16 +30,21 @@ const Header = () => {
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <Link href="/" className="flex items-center group">
+          <Link
+            href="/"
+            className="flex flex-col items-center group"
+          >
             <Image
-              src="/logo_pgri_jepara.svg"
+              src="/logo.png"
               width={60}
               height={60}
               alt="Sanduka Logo"
               className="transition-transform duration-300 group-hover:scale-110"
             />
+            <span className="hidden sm:block text-white font-bold text-sm -mt-1">
+              PGRI Kabupaten Jepara
+            </span>
           </Link>
-
           {/* Desktop Navigation */}
           <div className="hidden md:flex absolute left-1/2 -translate-x-1/2">
             <div className="flex items-center rounded-full bg-white/10 backdrop-blur-md border border-white/20 px-2 py-1.5">
