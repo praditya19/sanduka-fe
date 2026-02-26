@@ -209,13 +209,12 @@ export default function BeritaDetail({ params }) {
         return (
           <div
             key={idx}
-            className={`article-sub-heading ${
-              el.level === "h2"
+            className={`article-sub-heading ${el.level === "h2"
                 ? "text-2xl md:text-3xl"
                 : el.level === "h3"
                   ? "text-xl md:text-2xl"
                   : "text-lg md:text-xl"
-            } font-bold text-gray-900 mt-10 mb-4`}
+              } font-bold text-gray-900 mt-10 mb-4`}
             dangerouslySetInnerHTML={{ __html: el.html }}
           />
         );
@@ -401,6 +400,13 @@ export default function BeritaDetail({ params }) {
               </div>
             </div>
 
+            {/* Deskripsi gambar utama - italic & small font, tepat di bawah gambar */}
+            {news.galeri?.[0]?.deskripsi && (
+              <p className="text-xs italic text-gray-500 px-8 md:px-12 pt-3">
+                {news.galeri[0].deskripsi}
+              </p>
+            )}
+
             {/* Konten Artikel */}
             <div className="p-8 md:p-12">
               {/* Editor info */}
@@ -417,15 +423,6 @@ export default function BeritaDetail({ params }) {
                   <p className="text-sm text-gray-500">Tim Redaksi</p>
                 </div>
               </div>
-
-              {/* Deskripsi gambar utama */}
-              {news.galeri?.[0]?.deskripsi && (
-                <div className="mb-8 text-start">
-                  <p className="text-gray-700 text-base max-w-3xl mx-auto">
-                    {news.galeri[0].deskripsi}
-                  </p>
-                </div>
-              )}
 
               {/* Isi Berita - Versi yang sudah dibersihkan */}
               <div className="prose prose-lg max-w-none">
@@ -447,7 +444,7 @@ export default function BeritaDetail({ params }) {
                         />
                       </div>
                       {g.deskripsi && (
-                        <p className="text-start text-gray-700  text-base">
+                        <p className="text-xs italic text-gray-500 mt-2">
                           {g.deskripsi}
                         </p>
                       )}
