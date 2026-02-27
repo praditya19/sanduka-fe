@@ -234,6 +234,50 @@ export default function BankTransactionPage() {
     }
   };
 
+  const getBalancingdata = async () => {
+    setDataBalancing([]);
+    setLoadingBalancing(true);
+
+    try {
+      const storedRole = sessionStorage.getItem("role");
+      const storedCabang = sessionStorage.getItem("cabang");
+
+      let cabangFilter = "";
+      if (storedRole === "ADMIN") {
+        cabangFilter = storedCabang || "";
+      } else {
+        cabangFilter = selectedCabang || "";
+      }
+
+      const result = await GlobalApi.getTransaksiBankBalancing(
+        cabangFilter,
+        selectedUnitKerja,
+        null,
+        null,
+        paymentNote,
+        searchBalancing,
+      );
+
+      const safeResult = Array.isArray(result) ? result : [];
+
+      const filteredByCabang = safeResult.filter(
+        (item) => !cabangFilter || item.cabang === cabangFilter,
+      );
+
+      const filteredByUnitKerja = filteredByCabang.filter(
+        (item) => !selectedUnitKerja || item.unitKerja === selectedUnitKerja,
+      );
+
+      const finalData = filterDataByNPA(filteredByUnitKerja);
+
+      setDataBalancing(finalData);
+    } catch (err) {
+      console.error("Gagal memuat data:", err);
+      setDataBalancing([]);
+    } finally {
+      setLoadingBalancing(false);
+    }
+  };
   const filterDataByNPA = (dataToFilter) => {
     const npaMap = {};
 
@@ -247,37 +291,6 @@ export default function BankTransactionPage() {
 
     return Object.values(npaMap);
   };
-
-  const getBalancingdata = async () => {
-    setLoadingBalancing(true);
-
-    try {
-      const storedRole = sessionStorage.getItem("role");
-      const storedCabang = sessionStorage.getItem("cabang");
-
-      const cabangFilter =
-        storedRole === "ADMIN" && storedCabang
-          ? storedCabang
-          : selectedCabang;
-
-      const result = await GlobalApi.getTransaksiBankBalancing(
-        cabangFilter,
-        selectedUnitKerja,
-        null,
-        null,
-        paymentNote,
-        searchBalancing,
-      );
-      const filteredResult = Array.isArray(result) ? result : [];
-      setDataBalancing(filterDataByNPA(filteredResult));
-    } catch (err) {
-      console.error("Gagal memuat data:", err);
-      setDataBalancing([]);
-    } finally {
-      setLoadingBalancing(false);
-    }
-  };
-
   useEffect(() => {
     handleFilter();
     getBalancingdata();
@@ -321,13 +334,9 @@ export default function BankTransactionPage() {
   }, [editData?.cabang]);
 
   const fetchUnitKerja = async (cabang) => {
-    console.log("REQUEST UNIT KERJA CABANG:", cabang);
-
     try {
       setLoadingUnitKerja(true);
       const res = await GlobalApi.getUnitKerjaByCabang(cabang);
-
-      console.log("RESPONSE UNIT KERJA:", res);
 
       setListUnitKerja(Array.isArray(res) ? res : res?.data || []);
     } catch (error) {
@@ -453,6 +462,8 @@ export default function BankTransactionPage() {
   };
 
   const handleSelectCabang = async (cabang) => {
+    setCurrentPage(1);
+    setDataBalancing([]);
     setSelectedCabang(cabang.kecamatan);
     setShowCabangDropdown(false);
   };
@@ -1073,18 +1084,11 @@ export default function BankTransactionPage() {
     setSortConfig({ key, direction });
   };
   const sortedData = useMemo(() => {
-    if (!sortConfig.key) return dataBalancing;
+    if (loadingBalancing || !dataBalancing || dataBalancing.length === 0)
+      return [];
 
-    return [...dataBalancing].sort((a, b) => {
-      if (a[sortConfig.key] < b[sortConfig.key]) {
-        return sortConfig.direction === "asc" ? -1 : 1;
-      }
-      if (a[sortConfig.key] > b[sortConfig.key]) {
-        return sortConfig.direction === "asc" ? 1 : -1;
-      }
-      return 0;
-    });
-  }, [dataBalancing, sortConfig]);
+    return [...dataBalancing].sort((a, b) => a.id - b.id);
+  }, [dataBalancing, loadingBalancing]);
 
   const filteredCabang = listCabang.filter((item) =>
     item.kecamatan.toLowerCase().includes(searchDropCabang.toLowerCase()),
@@ -1113,8 +1117,9 @@ export default function BankTransactionPage() {
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
         <div
-          className={`pt-20 pb-8 px-4 md:px-8 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`pt-20 pb-8 px-4 md:px-8 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           {notification && (
             <NotificationPopup
@@ -1135,8 +1140,9 @@ export default function BankTransactionPage() {
           </div>
 
           <div
-            className={`bg-white rounded-xl shadow-sm mb-8 ${activeTab === "potongan" ? "w-full" : "w-[1900px]"
-              }`}
+            className={`bg-white rounded-xl shadow-sm mb-8 ${
+              activeTab === "potongan" ? "w-full" : "w-[1900px]"
+            }`}
           >
             <div className="p-1 border-b border-gray-100">
               <div className="flex items-start justify-between">
@@ -1422,17 +1428,19 @@ export default function BankTransactionPage() {
           )}
 
           <div
-            className={`flex mb-6 border-b border-gray-200 ${activeTab === "potongan" ? "w-full" : "w-[1900px]"
-              }`}
+            className={`flex mb-6 border-b border-gray-200 ${
+              activeTab === "potongan" ? "w-full" : "w-[1900px]"
+            }`}
           >
             {["potongan", "balancing", "rekapitulasi"].map((tab) => (
               <button
                 key={tab}
                 className={`w-full text-center py-3 px-5 font-medium transition-colors duration-200 
-        ${activeTab === tab
-                    ? "bg-teal-100 text-teal-700 border-b-2 border-teal-600"
-                    : "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
-                  }`}
+        ${
+          activeTab === tab
+            ? "bg-teal-100 text-teal-700 border-b-2 border-teal-600"
+            : "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+        }`}
                 onClick={() => setActiveTab(tab)}
               >
                 {tab === "potongan"
@@ -1452,8 +1460,9 @@ export default function BankTransactionPage() {
                 </h2>
                 <div className="flex gap-3">
                   <button
-                    className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${isLoading ? "opacity-60 cursor-not-allowed" : ""
-                      }`}
+                    className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${
+                      isLoading ? "opacity-60 cursor-not-allowed" : ""
+                    }`}
                     onClick={exportAllToExcel}
                     disabled={isLoading}
                   >
@@ -1498,8 +1507,9 @@ export default function BankTransactionPage() {
                     )}
                   </button>
                   <button
-                    className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${isLoading ? "opacity-60 cursor-not-allowed" : ""
-                      }`}
+                    className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${
+                      isLoading ? "opacity-60 cursor-not-allowed" : ""
+                    }`}
                     onClick={exportToExcel}
                     disabled={isLoading}
                   >
@@ -1800,10 +1810,11 @@ export default function BankTransactionPage() {
                       <button
                         key={page}
                         onClick={() => handlePageClick(page)}
-                        className={`px-3 py-1 border rounded-md text-sm ${page === currentPage
-                          ? "bg-teal-600 text-white border-teal-600"
-                          : "bg-white hover:bg-gray-50"
-                          }`}
+                        className={`px-3 py-1 border rounded-md text-sm ${
+                          page === currentPage
+                            ? "bg-teal-600 text-white border-teal-600"
+                            : "bg-white hover:bg-gray-50"
+                        }`}
                       >
                         {page}
                       </button>
@@ -1875,8 +1886,9 @@ export default function BankTransactionPage() {
                   </div>
                   <div className="flex gap-3">
                     <button
-                      className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${isLoading ? "opacity-60 cursor-not-allowed" : ""
-                        }`}
+                      className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${
+                        isLoading ? "opacity-60 cursor-not-allowed" : ""
+                      }`}
                       onClick={exportBalancingToExcel}
                       disabled={isLoading}
                     >
@@ -2108,13 +2120,14 @@ export default function BankTransactionPage() {
                         <div className="flex items-center justify-center gap-1">
                           <span>Cabang</span>
                           <span
-                            className={`text-xs transition-all ${sortConfig.key === "cabang"
-                              ? "opacity-100"
-                              : "opacity-50 group-hover:opacity-80"
-                              }`}
+                            className={`text-xs transition-all ${
+                              sortConfig.key === "cabang"
+                                ? "opacity-100"
+                                : "opacity-50 group-hover:opacity-80"
+                            }`}
                           >
                             {sortConfig.key === "cabang" &&
-                              sortConfig.direction === "desc"
+                            sortConfig.direction === "desc"
                               ? "▼"
                               : "▲"}
                           </span>
@@ -2130,13 +2143,14 @@ export default function BankTransactionPage() {
                         <div className="flex items-center justify-center gap-1">
                           <span>Unit Kerja</span>
                           <span
-                            className={`text-xs ${sortConfig.key === "unitKerja"
-                              ? "opacity-100"
-                              : "opacity-50 group-hover:opacity-80"
-                              }`}
+                            className={`text-xs ${
+                              sortConfig.key === "unitKerja"
+                                ? "opacity-100"
+                                : "opacity-50 group-hover:opacity-80"
+                            }`}
                           >
                             {sortConfig.key === "unitKerja" &&
-                              sortConfig.direction === "desc"
+                            sortConfig.direction === "desc"
                               ? "▼"
                               : "▲"}
                           </span>
@@ -2152,13 +2166,14 @@ export default function BankTransactionPage() {
                         <div className="flex items-center justify-center gap-1">
                           <span>Nama</span>
                           <span
-                            className={`text-xs ${sortConfig.key === "nama"
-                              ? "opacity-100"
-                              : "opacity-50 group-hover:opacity-80"
-                              }`}
+                            className={`text-xs ${
+                              sortConfig.key === "nama"
+                                ? "opacity-100"
+                                : "opacity-50 group-hover:opacity-80"
+                            }`}
                           >
                             {sortConfig.key === "nama" &&
-                              sortConfig.direction === "desc"
+                            sortConfig.direction === "desc"
                               ? "▼"
                               : "▲"}
                           </span>
@@ -2179,13 +2194,14 @@ export default function BankTransactionPage() {
                         <div className="flex items-center justify-center gap-1">
                           <span>Rekening</span>
                           <span
-                            className={`text-xs ${sortConfig.key === "rekening"
-                              ? "opacity-100"
-                              : "opacity-50 group-hover:opacity-80"
-                              }`}
+                            className={`text-xs ${
+                              sortConfig.key === "rekening"
+                                ? "opacity-100"
+                                : "opacity-50 group-hover:opacity-80"
+                            }`}
                           >
                             {sortConfig.key === "rekening" &&
-                              sortConfig.direction === "desc"
+                            sortConfig.direction === "desc"
                               ? "▼"
                               : "▲"}
                           </span>
@@ -2214,13 +2230,14 @@ export default function BankTransactionPage() {
                           <div className="flex items-center justify-center gap-1">
                             <span>{label}</span>
                             <span
-                              className={`text-xs ${sortConfig.key === key
-                                ? "opacity-100"
-                                : "opacity-50 group-hover:opacity-80"
-                                }`}
+                              className={`text-xs ${
+                                sortConfig.key === key
+                                  ? "opacity-100"
+                                  : "opacity-50 group-hover:opacity-80"
+                              }`}
                             >
                               {sortConfig.key === key &&
-                                sortConfig.direction === "desc"
+                              sortConfig.direction === "desc"
                                 ? "▼"
                                 : "▲"}
                             </span>
@@ -2276,13 +2293,14 @@ export default function BankTransactionPage() {
                           </tr>
                         ))}
                       </>
-                    ) : (sortedData?.length ?? 0) > 0 ? (
+                    ) : sortedData.length > 0 ? (
                       sortedData.map((item, index) => (
                         <tr
                           key={item.id}
                           ref={item.id === updatedId ? updatedRowRef : null}
-                          className={`${index % 2 === 0 ? "bg-white" : "bg-gray-100"
-                            }`}
+                          className={`${
+                            index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                          }`}
                         >
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                             {index + 1}
@@ -2315,7 +2333,7 @@ export default function BankTransactionPage() {
 
                           <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
                             {item.statusPegawai &&
-                              item.statusPegawai.trim() !== ""
+                            item.statusPegawai.trim() !== ""
                               ? item.statusPegawai
                               : "-"}
                           </td>
@@ -2353,12 +2371,13 @@ export default function BankTransactionPage() {
                           <td className=" whitespace-nowrap text-sm text-center">
                             <span
                               className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-      ${item.keterangan === "Sukses"
-                                  ? "bg-green-200 text-green-800"
-                                  : item.keterangan === "Tunai"
-                                    ? "bg-yellow-200 text-yellow-800"
-                                    : "bg-red-200 text-red-800"
-                                }`}
+      ${
+        item.keterangan === "Sukses"
+          ? "bg-green-200 text-green-800"
+          : item.keterangan === "Tunai"
+            ? "bg-yellow-200 text-yellow-800"
+            : "bg-red-200 text-red-800"
+      }`}
                             >
                               {item.keterangan}
                             </span>
@@ -2507,8 +2526,9 @@ export default function BankTransactionPage() {
                     </p>
                   </div>
                   <button
-                    className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${isLoading ? "opacity-60 cursor-not-allowed" : ""
-                      }`}
+                    className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${
+                      isLoading ? "opacity-60 cursor-not-allowed" : ""
+                    }`}
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -2693,8 +2713,9 @@ export default function BankTransactionPage() {
                         </p>
                       </div>
                       <button
-                        className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${isLoading ? "opacity-60 cursor-not-allowed" : ""
-                          }`}
+                        className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${
+                          isLoading ? "opacity-60 cursor-not-allowed" : ""
+                        }`}
                         disabled={isLoading}
                       >
                         {isLoading ? (
@@ -3023,10 +3044,11 @@ export default function BankTransactionPage() {
                             <button
                               key={page}
                               onClick={() => handlePageClickBalancing(page)}
-                              className={`px-3 py-1 border rounded-md text-sm ${page === currentPageBalancing
-                                ? "bg-teal-600 text-white border-teal-600"
-                                : "bg-white hover:bg-gray-50"
-                                }`}
+                              className={`px-3 py-1 border rounded-md text-sm ${
+                                page === currentPageBalancing
+                                  ? "bg-teal-600 text-white border-teal-600"
+                                  : "bg-white hover:bg-gray-50"
+                              }`}
                             >
                               {page}
                             </button>
