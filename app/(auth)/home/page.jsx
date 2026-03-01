@@ -863,9 +863,19 @@ export default function IconGrid() {
             bgHover: "hover:bg-purple-100",
             iconColor: "text-purple-700",
           })
-        : icons.filter(
-            (item) => item.label !== "Galeri" && item.label !== "Eksport Foto",
-          );
+        : role === "EDITOR"
+          ? icons.concat({
+              icon: faNewspaper,
+              label: "Berita",
+              href: "/berita/view-berita",
+              color: "text-purple-600",
+              bgHover: "hover:bg-purple-100",
+              iconColor: "text-purple-700",
+            })
+          : icons.filter(
+              (item) =>
+                item.label !== "Galeri" && item.label !== "Eksport Foto",
+            );
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
