@@ -2309,35 +2309,25 @@ function RekapAnggota() {
     }
   };
 
-  const handleBackupByNominal = async () => {
-    if (!selectedDate) {
-      setNotification({
-        type: "error",
-        message: "Silakan pilih bulan terlebih dahulu.",
-      });
-      return;
-    }
+ const handleBackupByNominal = async () => {
+  try {
+    await GlobalApi.postToBackupNew();
 
-    try {
-      const formattedDate = `${selectedDate}-01`;
+    setNotification({
+      type: "success",
+      message: "Backup berhasil!",
+    });
 
-      await GlobalApi.postToBackupNew(formattedDate);
-
-      setNotification({
-        type: "success",
-        message: "Backup berhasil!",
-      });
-
-      setPopupRekapByNominal(false);
-      await fetchInitialData();
-    } catch (error) {
-      setNotification({
-        type: "error",
-        message: "Gagal melakukan backup.",
-      });
-      console.error("Backup error:", error);
-    }
-  };
+    setPopupRekapByNominal(false);
+    await fetchInitialData();
+  } catch (error) {
+    setNotification({
+      type: "error",
+      message: "Gagal melakukan backup.",
+    });
+    console.error("Backup error:", error);
+  }
+};
 
   const handleRekapClick = () => {
     setOpen((prev) => !prev);
@@ -2728,10 +2718,8 @@ function RekapAnggota() {
                     </div>
                     {sessionStorage.getItem("role") === "SUPERADMIN" && (
                       <button
-                        className="py-2 px-4 bg-teal-600 text-white rounded-lg shadow-md flex items-center gap-3
-               disabled:bg-gray-400 disabled:cursor-not-allowed disabled:shadow-none"
+                        className="py-2 px-4 bg-teal-600 text-white rounded-lg shadow-md flex items-center gap-3"
                         onClick={() => setPopupRekapByNominal(true)}
-                        disabled={true}
                       >
                         <span>Backup Target</span>
                       </button>
@@ -2934,36 +2922,34 @@ function RekapAnggota() {
               </div>
             )}
             {popupBackupRekapByNominal && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-                  <h2 className="text-lg font-semibold mb-4">
-                    Pilih Bulan Tagihan Untuk Backup Target
-                  </h2>
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md animate-fadeIn">
+      <h2 className="text-lg font-semibold mb-3 text-gray-800">
+        Konfirmasi Backup
+      </h2>
 
-                  <input
-                    type="month"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    className="w-full mb-4 p-2 border border-gray-300 rounded"
-                  />
+      <p className="text-sm text-gray-600 mb-6">
+        Apakah Anda yakin akan membackup data?
+      </p>
 
-                  <div className="flex justify-end gap-2">
-                    <button
-                      onClick={() => setPopupRekapByNominal(false)}
-                      className="px-4 py-2 bg-gray-400 hover:bg-gray-500 text-white rounded"
-                    >
-                      Batal
-                    </button>
-                    <button
-                      onClick={handleBackupByNominal}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
-                    >
-                      Konfirmasi
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+      <div className="flex justify-end gap-3">
+        <button
+          onClick={() => setPopupRekapByNominal(false)}
+          className="px-4 py-2 bg-gray-400 hover:bg-gray-500 text-white rounded-md transition"
+        >
+          Batal
+        </button>
+
+        <button
+          onClick={handleBackupByNominal}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition"
+        >
+          Ya, Backup
+        </button>
+      </div>
+    </div>
+  </div>
+)}
             <table className="w-full table-auto bg-white">
               <thead>
                 <tr>
