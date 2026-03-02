@@ -24,6 +24,8 @@ const FormStep1 = ({
 }) => {
   const tableRef = useRef();
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedMemberInfo, setSelectedMemberInfo] = useState(null);
+  const [isFetchingMember, setIsFetchingMember] = useState(false);
   const [filteredNames, setFilteredNames] = useState([]);
   const [cabangOptions, setCabangOptions] = useState([]);
   const [unitKerjaOptions, setUnitKerjaOptions] = useState([]);
@@ -240,13 +242,30 @@ const FormStep1 = ({
     }));
   };
 
+  const formatTanggalArray = (dateArray) => {
+    if (!Array.isArray(dateArray) || dateArray.length !== 3) {
+      return dateArray || "-"; 
+    }
+    const [year, month, day] = dateArray;
+    const formattedDay = String(day).padStart(2, "0");
+    const formattedMonth = String(month).padStart(2, "0");
+    return `${formattedDay}-${formattedMonth}-${year}`;
+  };
+
   const handleSearch = (e) => {
-    const value = e.target.value.toLowerCase().trim();
+    const value = e.target.value; 
     setSearchTerm(value);
+
+    const lowerValue = value.toLowerCase().trim();
+
+    if (selectedMemberInfo) {
+      setSelectedMemberInfo(null);
+      setFormData((prev) => ({ ...prev, memberId: null, memberName: "" }));
+    }
 
     if (Array.isArray(temanUnitKerjaData)) {
       const filtered = temanUnitKerjaData.filter((item) =>
-        item.namaLengkap.toLowerCase().includes(value)
+        item.namaLengkap.toLowerCase().includes(lowerValue)
       );
       setFilteredNames(filtered);
       setIsDropdownVisible(filtered.length > 0);
@@ -268,16 +287,42 @@ const FormStep1 = ({
     };
   }, []);
 
-  const handleNameClick = (name, id) => {
+  const handleNameClick = async (name, id) => {
     setFormData((prevFormData) => ({
       ...prevFormData,
       memberName: name,
       memberId: id,
     }));
-    console.log(`Nama Anggota yang dipilih: ${name}, ID: ${id}`);
     setSearchTerm(name);
     setFilteredNames([]);
+    setIsDropdownVisible(false);
     sessionStorage.setItem("selectedMemberId", id);
+
+    setIsFetchingMember(true);
+    try {
+      const response = await GlobalApi.getUserById(id);
+
+      let photoUrl = "/profile.png"; 
+      
+      if (response && response.foto) {
+        try {
+          const decodedString = atob(response.foto);
+          photoUrl = `data:image/jpeg;base64,${decodedString}`;
+        } catch (e) {
+          console.error("Gagal decode Base64 foto:", e);
+        }
+      }
+      
+      setSelectedMemberInfo({
+        foto: photoUrl,
+        tanggalLahir: formatTanggalArray(response?.tanggalLahir),
+        npaPgri: response?.npaPgri,
+      });
+    } catch (error) {
+      console.error("Error fetching detail anggota:", error);
+    } finally {
+      setIsFetchingMember(false);
+    }
   };
 
   const handleNext = () => {
@@ -666,11 +711,11 @@ const FormStep1 = ({
                       {Array.isArray(filteredNames) &&
                         filteredNames.length > 0 &&
                         isDropdownVisible && (
-                          <ul className="absolute left-0 w-full mt-[70px] bg-white border border-gray-300 rounded-md shadow-lg z-10">
-                            {filteredNames.slice(0, 5).map((data) => (
+                          <ul className="absolute left-0 w-full mt-[70px] bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-60 overflow-y-auto">
+                            {filteredNames.map((data) => (
                               <li
                                 key={data.id}
-                                className="py-2 px-4 hover:bg-gray-100 cursor-pointer"
+                                className="py-2 px-4 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
                                 onClick={() =>
                                   handleNameClick(data.namaLengkap, data.id)
                                 }
@@ -681,6 +726,34 @@ const FormStep1 = ({
                           </ul>
                         )}
                     </div>
+
+                    {isFetchingMember && (
+                      <p className="text-sm text-blue-500 mt-2">Memuat data anggota...</p>
+                    )}
+
+                    {selectedMemberInfo && !isFetchingMember && (
+                      <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-4 w-full shadow-sm">
+                        <Image
+                          src={selectedMemberInfo.foto}
+                          alt="Foto Anggota"
+                          width={60}
+                          height={60}
+                          className="w-16 h-16 object-cover rounded-full border border-gray-300 bg-white"
+                          unoptimized={true} 
+                        />
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold text-gray-800">{searchTerm}</span>
+                          <span className="text-xs text-gray-600">
+                            Tanggal Lahir: {selectedMemberInfo.tanggalLahir || "-"}
+                          </span>
+                          {selectedMemberInfo.npaPgri && (
+                            <span className="text-xs text-gray-600">
+                              NPA PGRI: {selectedMemberInfo.npaPgri}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
                     <div className="w-full flex flex-col items-start mt-3">
                       <Label className="block text-sm font-medium mb-1">
