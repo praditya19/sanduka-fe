@@ -1663,11 +1663,11 @@ const postToBackup = async (tagihanUntukBulan) => {
   }
 };
 
-const postToBackupNew = async (tagihanUntukBulan) => {
+const postToBackupNew = async () => {
   try {
     const response = await axiosClient.post(
-      `/api/by-nominal-new/create-from-by-nominal?tagihanUntukBulan=${tagihanUntukBulan}`,
-      {},
+      `/api/by-nominal-new/create-from-by-nominal`,
+      {}
     );
     return response.data;
   } catch (error) {
@@ -3296,11 +3296,6 @@ const updateBerita = async (id, data) => {
       }
     }
 
-    // Debug isi FormData
-    for (let pair of formDataToSend.entries()) {
-      console.log(pair[0] + ": ", pair[1]);
-    }
-
     const response = await axiosClient.put(
       `/api/berita/update/${id}`,
       formDataToSend,
@@ -3308,7 +3303,7 @@ const updateBerita = async (id, data) => {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-      }
+      },
     );
 
     return response.data;
@@ -3448,14 +3443,9 @@ const updateEditor = async (id, data) => {
     if (data.passwordNew !== undefined && data.passwordNew !== null)
       formData.append("passwordNew", data.passwordNew);
 
-    // Debug
-    for (let pair of formData.entries()) {
-      console.log(pair[0] + ":", pair[1]);
-    }
-
     const response = await axiosClient.put(
       `/api/register-editor/update/${id}`,
-      formData
+      formData,
     );
 
     return response.data;
@@ -3499,6 +3489,46 @@ const deleteEditor = async (id) => {
     throw error;
   }
 };
+
+//Biro & Tour
+//Paket Wisata
+const createPaketTour = async (data) => {
+  try {
+    const formData = new FormData();
+
+    formData.append("namaPaket", data.namaPaket);
+    formData.append("durasi", data.durasi);
+    formData.append("destinasi", data.destinasi);
+    formData.append("deskripsiPaket", data.deskripsiPaket);
+    formData.append("hargaNormal", data.hargaNormal);
+    formData.append("hargaDiskon", data.hargaDiskon);
+    formData.append("persentaseDiskon", data.persentaseDiskon);
+    formData.append("ratingPaket", data.ratingPaket);
+    formData.append("jumlahReview", data.jumlahReview);
+    formData.append("author", data.author);
+    formData.append("statusPaket", data.statusPaket);
+
+    if (data.gambarCover) {
+      formData.append("gambarCover", data.gambarCover);
+    }
+
+    const response = await axiosClient.post(
+      "/api/tour/paket/create",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error create paket tour:", error);
+    throw error;
+  }
+};
+
 
 // Export all functions
 export default {
@@ -3735,5 +3765,9 @@ export default {
   deleteBerita,
   publishBerita,
   updateStatusBerita,
-  createEditor,updateEditor,getEditorById,getAllEditor,deleteEditor
+  createEditor,
+  updateEditor,
+  getEditorById,
+  getAllEditor,
+  deleteEditor,createPaketTour,
 };
