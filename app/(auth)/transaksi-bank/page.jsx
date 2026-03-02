@@ -177,6 +177,7 @@ export default function BankTransactionPage() {
   const [totalTerfilter, setTotalTerfilter] = useState(0);
   const [totalNominalTerfilter, setTotalNominalTerfilter] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
+  const [currentPageBalancing, setCurrentPageBalancing] = useState(1);
   const [totalPagesBalancing, setTotalPagesBalancing] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [searchBalancing, setSearchBalancing] = useState("");
@@ -193,6 +194,7 @@ export default function BankTransactionPage() {
   const [loadingUnitKerja, setLoadingUnitKerja] = useState(false);
 
   const handleFilter = async () => {
+    setData([]);
     setLoadingFilter(true);
     try {
       let result;
@@ -236,6 +238,7 @@ export default function BankTransactionPage() {
 
   const getBalancingdata = async () => {
     setDataBalancing([]);
+    setCurrentPageBalancing(1);
     setLoadingBalancing(true);
 
     try {
@@ -251,11 +254,11 @@ export default function BankTransactionPage() {
 
       const result = await GlobalApi.getTransaksiBankBalancing(
         cabangFilter,
-        selectedUnitKerja,
-        null,
-        null,
-        paymentNote,
-        searchBalancing,
+        selectedUnitKerja || null,
+        year ? parseInt(year) : null,
+        month ? parseInt(month) : null,
+        paymentNote || null,
+        searchBalancing || null,
       );
 
       const safeResult = Array.isArray(result) ? result : [];
@@ -272,12 +275,13 @@ export default function BankTransactionPage() {
 
       setDataBalancing(finalData);
     } catch (err) {
-      console.error("Gagal memuat data:", err);
+      console.error("❌ Gagal memuat data:", err);
       setDataBalancing([]);
     } finally {
       setLoadingBalancing(false);
     }
   };
+
   const filterDataByNPA = (dataToFilter) => {
     const npaMap = {};
 
@@ -291,9 +295,10 @@ export default function BankTransactionPage() {
 
     return Object.values(npaMap);
   };
+
+  // useEffect untuk tab potongan bank
   useEffect(() => {
     handleFilter();
-    getBalancingdata();
     getPotonganBank();
     getSetorTunai();
     getAnggotaTerfilter();
@@ -302,12 +307,20 @@ export default function BankTransactionPage() {
     year,
     searchQuery,
     displayCount,
-    paymentNote,
-    searchBalancing,
-    selectedCabang,
-    selectedUnitKerja,
     displayCountPotongan,
     currentPage,
+  ]);
+
+  // useEffect khusus untuk balancing - akan di-trigger setiap kali ada perubahan filter balancing
+  useEffect(() => {
+    getBalancingdata();
+  }, [
+    selectedCabang,
+    selectedUnitKerja,
+    year,
+    month,
+    paymentNote,
+    searchBalancing,
   ]);
 
   useEffect(() => {
@@ -348,6 +361,8 @@ export default function BankTransactionPage() {
   };
 
   const getPotonganBank = async () => {
+    setJumlahPotonganBank(0);
+    setTotalNominalPotonganBank(0);
     try {
       const data = await GlobalApi.getCountAnggotaPotonganBank(month, year);
       setJumlahPotonganBank(data.jumlahAnggota || 0);
@@ -358,6 +373,8 @@ export default function BankTransactionPage() {
   };
 
   const getSetorTunai = async () => {
+    setJumlahSetorTunai(0);
+    setTotalNominalSetorTunai(0);
     try {
       const data = await GlobalApi.getCountAnggotaSetorTunai({
         cabang: selectedCabang || null,
@@ -375,6 +392,8 @@ export default function BankTransactionPage() {
   };
 
   const getAnggotaTerfilter = async () => {
+    setTotalTerfilter(0);
+    setTotalNominalTerfilter(0);
     try {
       const data = await GlobalApi.getCountAnggotaTerfilter({
         cabang: selectedCabang || null,
@@ -1075,6 +1094,42 @@ export default function BankTransactionPage() {
 
     return pages;
   };
+
+  // ===== PAGINATION BALANCING =====
+  const handlePreviousPageBalancing = () => {
+    if (currentPageBalancing > 1) {
+      setCurrentPageBalancing(currentPageBalancing - 1);
+    }
+  };
+
+  const handleNextPageBalancing = () => {
+    if (currentPageBalancing < totalPagesBalancing) {
+      setCurrentPageBalancing(currentPageBalancing + 1);
+    }
+  };
+
+  const handlePageClickBalancing = (page) => {
+    setCurrentPageBalancing(page);
+  };
+
+  const getVisiblePagesBalancing = () => {
+    const pages = [];
+    const maxPagesToShow = 5;
+    const half = Math.floor(maxPagesToShow / 2);
+    let start = Math.max(currentPageBalancing - half, 1);
+    let end = Math.min(start + maxPagesToShow - 1, totalPagesBalancing);
+
+    if (end - start < maxPagesToShow - 1) {
+      start = Math.max(end - maxPagesToShow + 1, 1);
+    }
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+
+    return pages;
+  };
+
   // Balancing
   const handleSort = (key) => {
     let direction = "asc";
@@ -2050,7 +2105,23 @@ export default function BankTransactionPage() {
                     )}
                   </div>
 
-                  {/* <div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Bulan
+                    </label>
+                    <select
+                      className="w-full h-10 text-base px-4 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition-all"
+                      value={month}
+                      onChange={(e) => setMonth(e.target.value)}
+                    >
+                      {bulanList.map((bulan) => (
+                        <option key={bulan.value} value={bulan.value}>
+                          {bulan.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Tahun Transaksi
                     </label>
@@ -2065,7 +2136,7 @@ export default function BankTransactionPage() {
                         </option>
                       ))}
                     </select>
-                  </div> */}
+                  </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Cari Anggota/Rekening
@@ -2103,274 +2174,267 @@ export default function BankTransactionPage() {
               </div>
 
               <div className="w-full">
-                <table className="w-full table-auto">
-                  <thead>
-                    <tr className="bg-gradient-to-r from-[#0B131E] via-[#0B131E] to-[#0B131E] shadow-md">
-                      {/* NO */}
-                      <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-[#0B131E]">
-                        No
-                      </th>
+                {loadingBalancing ? (
+                  // LOADING STATE - HANYA LOADING, TIDAK ADA DATA
+                  <div className="w-full bg-white rounded-lg border border-gray-100 p-8">
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="flex items-center space-x-2 mb-4">
+                        <div
+                          className="h-4 w-4 bg-teal-500 rounded-full animate-bounce"
+                          style={{ animationDelay: "0s" }}
+                        ></div>
+                        <div
+                          className="h-4 w-4 bg-teal-500 rounded-full animate-bounce"
+                          style={{ animationDelay: "0.2s" }}
+                        ></div>
+                        <div
+                          className="h-4 w-4 bg-teal-500 rounded-full animate-bounce"
+                          style={{ animationDelay: "0.4s" }}
+                        ></div>
+                      </div>
+                      <p className="text-gray-600 font-medium text-lg">
+                        Data sedang diproses...
+                      </p>
+                      <p className="text-gray-400 text-sm mt-2">
+                        Harap tunggu sebentar
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  // DATA STATE - TABLE DENGAN DATA
+                  <div>
+                    <table
+                      key={`table-balancing-${currentPageBalancing}`}
+                      className="w-full table-auto"
+                    >
+                      <thead>
+                        <tr className="bg-gradient-to-r from-[#0B131E] via-[#0B131E] to-[#0B131E] shadow-md">
+                          {/* NO */}
+                          <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-[#0B131E]">
+                            No
+                          </th>
 
-                      {/* CABANG */}
-                      <th
-                        onClick={() => handleSort("cabang")}
-                        className="group cursor-pointer px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider
-                 text-white border-b border-[#0B131E] hover:bg-[#101c2c] transition-colors"
-                      >
-                        <div className="flex items-center justify-center gap-1">
-                          <span>Cabang</span>
-                          <span
-                            className={`text-xs transition-all ${
-                              sortConfig.key === "cabang"
-                                ? "opacity-100"
-                                : "opacity-50 group-hover:opacity-80"
-                            }`}
+                          {/* CABANG */}
+                          <th
+                            onClick={() => handleSort("cabang")}
+                            className="group cursor-pointer px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider
+                     text-white border-b border-[#0B131E] hover:bg-[#101c2c] transition-colors"
                           >
-                            {sortConfig.key === "cabang" &&
-                            sortConfig.direction === "desc"
-                              ? "▼"
-                              : "▲"}
-                          </span>
-                        </div>
-                      </th>
+                            <div className="flex items-center justify-center gap-1">
+                              <span>Cabang</span>
+                              <span
+                                className={`text-xs transition-all ${
+                                  sortConfig.key === "cabang"
+                                    ? "opacity-100"
+                                    : "opacity-50 group-hover:opacity-80"
+                                }`}
+                              >
+                                {sortConfig.key === "cabang" &&
+                                sortConfig.direction === "desc"
+                                  ? "▼"
+                                  : "▲"}
+                              </span>
+                            </div>
+                          </th>
 
-                      {/* UNIT KERJA */}
-                      <th
-                        onClick={() => handleSort("unitKerja")}
-                        className="group cursor-pointer px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider
+                          {/* UNIT KERJA */}
+                          <th
+                            onClick={() => handleSort("unitKerja")}
+                            className="group cursor-pointer px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider
                  text-white border-b border-[#0B131E] hover:bg-[#101c2c] transition-colors"
-                      >
-                        <div className="flex items-center justify-center gap-1">
-                          <span>Unit Kerja</span>
-                          <span
-                            className={`text-xs ${
-                              sortConfig.key === "unitKerja"
-                                ? "opacity-100"
-                                : "opacity-50 group-hover:opacity-80"
-                            }`}
                           >
-                            {sortConfig.key === "unitKerja" &&
-                            sortConfig.direction === "desc"
-                              ? "▼"
-                              : "▲"}
-                          </span>
-                        </div>
-                      </th>
+                            <div className="flex items-center justify-center gap-1">
+                              <span>Unit Kerja</span>
+                              <span
+                                className={`text-xs ${
+                                  sortConfig.key === "unitKerja"
+                                    ? "opacity-100"
+                                    : "opacity-50 group-hover:opacity-80"
+                                }`}
+                              >
+                                {sortConfig.key === "unitKerja" &&
+                                sortConfig.direction === "desc"
+                                  ? "▼"
+                                  : "▲"}
+                              </span>
+                            </div>
+                          </th>
 
-                      {/* NAMA */}
-                      <th
-                        onClick={() => handleSort("nama")}
-                        className="group cursor-pointer px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider
+                          {/* NAMA */}
+                          <th
+                            onClick={() => handleSort("nama")}
+                            className="group cursor-pointer px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider
                  text-white border-b border-[#0B131E] hover:bg-[#101c2c] transition-colors"
-                      >
-                        <div className="flex items-center justify-center gap-1">
-                          <span>Nama</span>
-                          <span
-                            className={`text-xs ${
-                              sortConfig.key === "nama"
-                                ? "opacity-100"
-                                : "opacity-50 group-hover:opacity-80"
-                            }`}
                           >
-                            {sortConfig.key === "nama" &&
-                            sortConfig.direction === "desc"
-                              ? "▼"
-                              : "▲"}
-                          </span>
-                        </div>
-                      </th>
+                            <div className="flex items-center justify-center gap-1">
+                              <span>Nama</span>
+                              <span
+                                className={`text-xs ${
+                                  sortConfig.key === "nama"
+                                    ? "opacity-100"
+                                    : "opacity-50 group-hover:opacity-80"
+                                }`}
+                              >
+                                {sortConfig.key === "nama" &&
+                                sortConfig.direction === "desc"
+                                  ? "▼"
+                                  : "▲"}
+                              </span>
+                            </div>
+                          </th>
 
-                      {/* STATUS PEGAWAI (NON SORT) */}
-                      <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-[#0B131E]">
-                        Status Pegawai
-                      </th>
+                          {/* STATUS PEGAWAI (NON SORT) */}
+                          <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-[#0B131E]">
+                            Status Pegawai
+                          </th>
 
-                      {/* REKENING */}
-                      <th
-                        onClick={() => handleSort("rekening")}
-                        className="group cursor-pointer px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider
+                          {/* REKENING */}
+                          <th
+                            onClick={() => handleSort("rekening")}
+                            className="group cursor-pointer px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider
                  text-white border-b border-[#0B131E] hover:bg-[#101c2c] transition-colors"
-                      >
-                        <div className="flex items-center justify-center gap-1">
-                          <span>Rekening</span>
-                          <span
-                            className={`text-xs ${
-                              sortConfig.key === "rekening"
-                                ? "opacity-100"
-                                : "opacity-50 group-hover:opacity-80"
-                            }`}
                           >
-                            {sortConfig.key === "rekening" &&
-                            sortConfig.direction === "desc"
-                              ? "▼"
-                              : "▲"}
-                          </span>
-                        </div>
-                      </th>
+                            <div className="flex items-center justify-center gap-1">
+                              <span>Rekening</span>
+                              <span
+                                className={`text-xs ${
+                                  sortConfig.key === "rekening"
+                                    ? "opacity-100"
+                                    : "opacity-50 group-hover:opacity-80"
+                                }`}
+                              >
+                                {sortConfig.key === "rekening" &&
+                                sortConfig.direction === "desc"
+                                  ? "▼"
+                                  : "▲"}
+                              </span>
+                            </div>
+                          </th>
 
-                      {/* IURAN */}
-                      {[
-                        { key: "totalIuranAnggota", label: "Iuran" },
-                        { key: "totalIuranSanduka", label: "Sanduka" },
-                        { key: "totalIuranDaspen", label: "Daspen" },
-                        { key: "totalIuranDerap", label: "Derap" },
-                        { key: "totalIuranKalender", label: "Kalender" },
-                        { key: "totalIuranSumbangan", label: "Lain-lain" },
-                        { key: "totalIuran", label: "Total Iuran" },
-                        { key: "potongan", label: "Potongan Bank" },
-                        { key: "selisih", label: "Selisih" },
-                        { key: "keterangan", label: "Keterangan" },
-                      ].map(({ key, label }) => (
-                        <th
-                          key={key}
-                          onClick={() => handleSort(key)}
-                          className="group cursor-pointer px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider
+                          {/* IURAN */}
+                          {[
+                            { key: "totalIuranAnggota", label: "Iuran" },
+                            { key: "totalIuranSanduka", label: "Sanduka" },
+                            { key: "totalIuranDaspen", label: "Daspen" },
+                            { key: "totalIuranDerap", label: "Derap" },
+                            { key: "totalIuranKalender", label: "Kalender" },
+                            { key: "totalIuranSumbangan", label: "Lain-lain" },
+                            { key: "totalIuran", label: "Total Iuran" },
+                            { key: "potongan", label: "Potongan Bank" },
+                            { key: "selisih", label: "Selisih" },
+                            { key: "keterangan", label: "Keterangan" },
+                          ].map(({ key, label }) => (
+                            <th
+                              key={key}
+                              onClick={() => handleSort(key)}
+                              className="group cursor-pointer px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider
                    text-white border-b border-[#0B131E] hover:bg-[#101c2c] transition-colors"
-                        >
-                          <div className="flex items-center justify-center gap-1">
-                            <span>{label}</span>
-                            <span
-                              className={`text-xs ${
-                                sortConfig.key === key
-                                  ? "opacity-100"
-                                  : "opacity-50 group-hover:opacity-80"
+                            >
+                              <div className="flex items-center justify-center gap-1">
+                                <span>{label}</span>
+                                <span
+                                  className={`text-xs ${
+                                    sortConfig.key === key
+                                      ? "opacity-100"
+                                      : "opacity-50 group-hover:opacity-80"
+                                  }`}
+                                >
+                                  {sortConfig.key === key &&
+                                  sortConfig.direction === "desc"
+                                    ? "▼"
+                                    : "▲"}
+                                </span>
+                              </div>
+                            </th>
+                          ))}
+
+                          {cekRole === "SUPERADMIN" && (
+                            <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-[#0B131E]">
+                              Action
+                            </th>
+                          )}
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        {sortedData.length > 0 ? (
+                          sortedData.map((item, index) => (
+                            <tr
+                              key={item.id}
+                              ref={item.id === updatedId ? updatedRowRef : null}
+                              className={`${
+                                index % 2 === 0 ? "bg-white" : "bg-gray-100"
                               }`}
                             >
-                              {sortConfig.key === key &&
-                              sortConfig.direction === "desc"
-                                ? "▼"
-                                : "▲"}
-                            </span>
-                          </div>
-                        </th>
-                      ))}
-
-                      {cekRole === "SUPERADMIN" && (
-                        <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-[#0B131E]">
-                          Action
-                        </th>
-                      )}
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {loadingBalancing ? (
-                      <>
-                        <tr>
-                          <td colSpan="12" className="p-6 text-center">
-                            <div className="flex flex-col items-center justify-center space-y-3">
-                              <div className="flex items-center space-x-2">
-                                <div
-                                  className="h-3 w-3 bg-teal-500 rounded-full animate-bounce"
-                                  style={{ animationDelay: "0s" }}
-                                ></div>
-                                <div
-                                  className="h-3 w-3 bg-teal-500 rounded-full animate-bounce"
-                                  style={{ animationDelay: "0.2s" }}
-                                ></div>
-                                <div
-                                  className="h-3 w-3 bg-teal-500 rounded-full animate-bounce"
-                                  style={{ animationDelay: "0.4s" }}
-                                ></div>
-                              </div>
-                              <p className="text-gray-600 font-medium text-sm">
-                                Data sedang diproses...
-                              </p>
-                            </div>
-                          </td>
-                        </tr>
-
-                        {Array.from({ length: 4 }).map((_, idx) => (
-                          <tr key={`skeleton-${idx}`} className="bg-white">
-                            {Array.from({ length: 12 }).map((_, cellIdx) => (
-                              <td
-                                key={`skeleton-cell-${cellIdx}`}
-                                className="p-3 border-b"
-                              >
-                                <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                {index + 1}
                               </td>
-                            ))}
-                          </tr>
-                        ))}
-                      </>
-                    ) : sortedData.length > 0 ? (
-                      sortedData.map((item, index) => (
-                        <tr
-                          key={item.id}
-                          ref={item.id === updatedId ? updatedRowRef : null}
-                          className={`${
-                            index % 2 === 0 ? "bg-white" : "bg-gray-100"
-                          }`}
-                        >
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {index + 1}
-                          </td>
-                          <td className="text-center text-sm text-gray-900 whitespace-normal break-words max-w-[90px]">
-                            {item.cabang}
-                          </td>
-                          <td className="text-sm text-gray-900 whitespace-normal break-words max-w-[90px]">
-                            {item.unitKerja}
-                          </td>
-                          <td className="px-6 py-4 text-sm whitespace-normal">
-                            <div className="font-semibold text-gray-900 leading-tight">
-                              {item.nama}
-                            </div>
+                              <td className="text-center text-sm text-gray-900 whitespace-normal break-words max-w-[90px]">
+                                {item.cabang}
+                              </td>
+                              <td className="text-sm text-gray-900 whitespace-normal break-words max-w-[90px]">
+                                {item.unitKerja}
+                              </td>
+                              <td className="px-6 py-4 text-sm whitespace-normal">
+                                <div className="font-semibold text-gray-900 leading-tight">
+                                  {item.nama}
+                                </div>
 
-                            <div className="mt-1 text-xs text-gray-500">
-                              NPA :{" "}
-                              <span className="text-gray-600">
-                                {item.npa || "-"}
-                              </span>
-                            </div>
+                                <div className="mt-1 text-xs text-gray-500">
+                                  NPA :{" "}
+                                  <span className="text-gray-600">
+                                    {item.npa || "-"}
+                                  </span>
+                                </div>
 
-                            <div className="text-xs text-gray-500">
-                              NIP :{" "}
-                              <span className="text-gray-600">
-                                {item.nip || "-"}
-                              </span>
-                            </div>
-                          </td>
+                                <div className="text-xs text-gray-500">
+                                  NIP :{" "}
+                                  <span className="text-gray-600">
+                                    {item.nip || "-"}
+                                  </span>
+                                </div>
+                              </td>
 
-                          <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
-                            {item.statusPegawai &&
-                            item.statusPegawai.trim() !== ""
-                              ? item.statusPegawai
-                              : "-"}
-                          </td>
+                              <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
+                                {item.statusPegawai &&
+                                item.statusPegawai.trim() !== ""
+                                  ? item.statusPegawai
+                                  : "-"}
+                              </td>
 
-                          <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
-                            {item.rekening}
-                          </td>
-                          <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
-                            {formatRupiah(item.totalIuranAnggota)}
-                          </td>
-                          <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
-                            {formatRupiah(item.totalIuranSanduka)}
-                          </td>
-                          <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
-                            {formatRupiah(item.totalIuranDaspen)}
-                          </td>
-                          <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
-                            {formatRupiah(item.totalIuranDerap)}
-                          </td>
-                          <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
-                            {formatRupiah(item.totalIuranKalender)}
-                          </td>
-                          <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
-                            {formatRupiah(item.totalIuranSumbangan)}
-                          </td>
-                          <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
-                            {formatRupiah(item.totalIuran)}
-                          </td>
-                          <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
-                            {formatRupiah(item.potongan)}
-                          </td>
-                          <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
-                            {formatRupiah(item.selisih)}
-                          </td>
-                          <td className=" whitespace-nowrap text-sm text-center">
-                            <span
-                              className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                              <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
+                                {item.rekening}
+                              </td>
+                              <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
+                                {formatRupiah(item.totalIuranAnggota)}
+                              </td>
+                              <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
+                                {formatRupiah(item.totalIuranSanduka)}
+                              </td>
+                              <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
+                                {formatRupiah(item.totalIuranDaspen)}
+                              </td>
+                              <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
+                                {formatRupiah(item.totalIuranDerap)}
+                              </td>
+                              <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
+                                {formatRupiah(item.totalIuranKalender)}
+                              </td>
+                              <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
+                                {formatRupiah(item.totalIuranSumbangan)}
+                              </td>
+                              <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
+                                {formatRupiah(item.totalIuran)}
+                              </td>
+                              <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
+                                {formatRupiah(item.potongan)}
+                              </td>
+                              <td className="text-sm text-center text-gray-900 whitespace-normal break-words max-w-[60px]">
+                                {formatRupiah(item.selisih)}
+                              </td>
+                              <td className=" whitespace-nowrap text-sm text-center">
+                                <span
+                                  className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
       ${
         item.keterangan === "Sukses"
           ? "bg-green-200 text-green-800"
@@ -2378,137 +2442,144 @@ export default function BankTransactionPage() {
             ? "bg-yellow-200 text-yellow-800"
             : "bg-red-200 text-red-800"
       }`}
+                                >
+                                  {item.keterangan}
+                                </span>
+                              </td>
+                              <td className="p-3 text-center text-sm">
+                                {cekRole === "SUPERADMIN" && (
+                                  <div className="flex space-x-2 justify-center text-base">
+                                    <button
+                                      className="text-blue-500 hover:text-[#0B131E]"
+                                      onClick={() => handleEditClick(item.id)}
+                                    >
+                                      <FaEdit />
+                                    </button>
+                                    <button
+                                      className="text-red-500 hover:text-red-700"
+                                      onClick={() => {
+                                        setSelectedId(item.id);
+                                        setShowDeletePopup(true);
+                                      }}
+                                    >
+                                      <FaTrash />
+                                    </button>
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td
+                              colSpan={15}
+                              className="px-6 py-8 text-center text-sm text-gray-500 border-b"
                             >
-                              {item.keterangan}
-                            </span>
-                          </td>
-                          <td className="p-3 text-center text-sm">
-                            {cekRole === "SUPERADMIN" && (
-                              <div className="flex space-x-2 justify-center text-base">
-                                <button
-                                  className="text-blue-500 hover:text-[#0B131E]"
-                                  onClick={() => handleEditClick(item.id)}
-                                >
-                                  <FaEdit />
-                                </button>
-                                <button
-                                  className="text-red-500 hover:text-red-700"
-                                  onClick={() => {
-                                    setSelectedId(item.id);
-                                    setShowDeletePopup(true);
-                                  }}
-                                >
-                                  <FaTrash />
-                                </button>
+                              <div className="flex flex-col items-center justify-center">
+                                <FontAwesomeIcon
+                                  icon={faSearch}
+                                  className="text-gray-300 text-4xl mb-3"
+                                />
+                                <p>
+                                  Tidak ada data transaksi bank yang cocok
+                                  dengan filter Anda.
+                                </p>
                               </div>
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                      <tfoot>
+                        <tr className="bg-[#0B131E] text-white font-semibold">
+                          <td colSpan={6} className=" text-center">
+                            Total
+                          </td>
+                          <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
+                            {formatRupiah(
+                              (dataBalancing ?? []).reduce(
+                                (sum, item) =>
+                                  sum + (item.totalIuranAnggota || 0),
+                                0,
+                              ),
                             )}
                           </td>
+                          <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
+                            {formatRupiah(
+                              (dataBalancing ?? []).reduce(
+                                (sum, item) =>
+                                  sum + (item.totalIuranSanduka || 0),
+                                0,
+                              ),
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
+                            {formatRupiah(
+                              (dataBalancing ?? []).reduce(
+                                (sum, item) =>
+                                  sum + (item.totalIuranDaspen || 0),
+                                0,
+                              ),
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
+                            {formatRupiah(
+                              (dataBalancing ?? []).reduce(
+                                (sum, item) =>
+                                  sum + (item.totalIuranDerap || 0),
+                                0,
+                              ),
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
+                            {formatRupiah(
+                              (dataBalancing ?? []).reduce(
+                                (sum, item) =>
+                                  sum + (item.totalIuranKalender || 0),
+                                0,
+                              ),
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
+                            {formatRupiah(
+                              (dataBalancing ?? []).reduce(
+                                (sum, item) =>
+                                  sum + (item.totalIuranSumbangan || 0),
+                                0,
+                              ),
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
+                            {formatRupiah(
+                              (dataBalancing ?? []).reduce(
+                                (sum, item) => sum + (item.totalIuran || 0),
+                                0,
+                              ),
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
+                            {formatRupiah(
+                              (dataBalancing ?? []).reduce(
+                                (sum, item) => sum + (item.potongan || 0),
+                                0,
+                              ),
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
+                            {formatRupiah(
+                              (dataBalancing ?? []).reduce(
+                                (sum, item) => sum + (item.selisih || 0),
+                                0,
+                              ),
+                            )}
+                          </td>
+                          <td></td>
+                          <td></td>
                         </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td
-                          colSpan={15}
-                          className="px-6 py-8 text-center text-sm text-gray-500 border-b"
-                        >
-                          <div className="flex flex-col items-center justify-center">
-                            <FontAwesomeIcon
-                              icon={faSearch}
-                              className="text-gray-300 text-4xl mb-3"
-                            />
-                            <p>
-                              Tidak ada data transaksi bank yang cocok dengan
-                              filter Anda.
-                            </p>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                  <tfoot>
-                    <tr className="bg-[#0B131E] text-white font-semibold">
-                      <td colSpan={6} className=" text-center">
-                        Total
-                      </td>
-                      <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
-                        {formatRupiah(
-                          (dataBalancing ?? []).reduce(
-                            (sum, item) => sum + (item.totalIuranAnggota || 0),
-                            0,
-                          ),
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
-                        {formatRupiah(
-                          (dataBalancing ?? []).reduce(
-                            (sum, item) => sum + (item.totalIuranSanduka || 0),
-                            0,
-                          ),
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
-                        {formatRupiah(
-                          (dataBalancing ?? []).reduce(
-                            (sum, item) => sum + (item.totalIuranDaspen || 0),
-                            0,
-                          ),
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
-                        {formatRupiah(
-                          (dataBalancing ?? []).reduce(
-                            (sum, item) => sum + (item.totalIuranDerap || 0),
-                            0,
-                          ),
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
-                        {formatRupiah(
-                          (dataBalancing ?? []).reduce(
-                            (sum, item) => sum + (item.totalIuranKalender || 0),
-                            0,
-                          ),
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
-                        {formatRupiah(
-                          (dataBalancing ?? []).reduce(
-                            (sum, item) =>
-                              sum + (item.totalIuranSumbangan || 0),
-                            0,
-                          ),
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
-                        {formatRupiah(
-                          (dataBalancing ?? []).reduce(
-                            (sum, item) => sum + (item.totalIuran || 0),
-                            0,
-                          ),
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
-                        {formatRupiah(
-                          (dataBalancing ?? []).reduce(
-                            (sum, item) => sum + (item.potongan || 0),
-                            0,
-                          ),
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-center whitespace-normal break-words max-w-[110px]">
-                        {formatRupiah(
-                          (dataBalancing ?? []).reduce(
-                            (sum, item) => sum + (item.selisih || 0),
-                            0,
-                          ),
-                        )}
-                      </td>
-                      <td></td>
-                      <td></td>
-                    </tr>
-                  </tfoot>
-                </table>
-                <div className="p-4 border-t"></div>
+                      </tfoot>
+                    </table>
+                    <div className="p-4 border-t"></div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -2681,7 +2752,7 @@ export default function BankTransactionPage() {
                   </div>
                 </div>
               </div>
-              {onProses ? (
+              {loadingBalancing ? (
                 <div className="text-center animate-slide-up mt-28">
                   <p className="text-gray-600 text-2xl font-medium">
                     Sedang Proses

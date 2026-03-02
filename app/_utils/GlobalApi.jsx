@@ -1205,6 +1205,7 @@ const getTransaksiBankBalancing = async (
     if (cabang) params.append("cabang", cabang);
     if (unitKerja) params.append("unitKerja", unitKerja);
     if (tahun) params.append("tahun", tahun);
+    if (bulan) params.append("bulan", bulan);
     if (keterangan) params.append("keterangan", keterangan);
     if (search) params.append("search", search);
 
