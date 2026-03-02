@@ -12,6 +12,7 @@ import GlobalApi from "./_utils/GlobalApi";
 import News from "./_components/News";
 import LayananKami from "./_components/LayananKami";
 import BiroTravel from "./_components/BiroTravel";
+import Tentang from "./_components/Tentang";
 import Live from "./_components/Live";
 import Metsos from "./_components/Metsos";
 import SandukaHome from "./(auth)/sanduka-home/page";
@@ -155,6 +156,7 @@ export default function Home() {
         <GaleriKegiatan />
         <SandukaHome />
         <BiroTravel />
+        <Tentang />
         <Metsos />
       </div>
       <Footer />

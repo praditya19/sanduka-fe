@@ -241,10 +241,16 @@ const Page = () => {
 
   useEffect(() => {
     let dataToDisplay = [];
+
+    const dataTerimaWithStatus = (dataLaporDiterima || []).map(item => ({ ...item, isTerima: true }));
+    const dataBelumWithStatus = (dataLaporBelum || []).map(item => ({ ...item, isTerima: false }));
+
     if (filterStatus === "Terima") {
-      dataToDisplay = dataLaporDiterima;
+      dataToDisplay = dataTerimaWithStatus;
     } else if (filterStatus === "Belum") {
-      dataToDisplay = dataLaporBelum;
+      dataToDisplay = dataBelumWithStatus;
+    } else if (filterStatus === "Semua") {
+      dataToDisplay = [...dataTerimaWithStatus, ...dataBelumWithStatus];
     }
 
     const processedData = sortAndFilterData(dataToDisplay, filterStatus, searchText);
@@ -301,15 +307,15 @@ const Page = () => {
     setSelectedYear(e.target.value);
   };
 
-  useEffect(() => {
-    if (filterStatus === "Terima") {
-      setDisplayedDataLapor(dataLaporDiterima);
-    } else if (filterStatus === "Belum") {
-      setDisplayedDataLapor(dataLaporBelum);
-    } else {
-      setDisplayedDataLapor([]);
-    }
-  }, [filterStatus, dataLaporDiterima, dataLaporBelum]);
+  // useEffect(() => {
+  //   if (filterStatus === "Terima") {
+  //     setDisplayedDataLapor(dataLaporDiterima);
+  //   } else if (filterStatus === "Belum") {
+  //     setDisplayedDataLapor(dataLaporBelum);
+  //   } else {
+  //     setDisplayedDataLapor([]);
+  //   }
+  // }, [filterStatus, dataLaporDiterima, dataLaporBelum]);
 
   const handlePrint = () => {
     const tableContent = document.getElementById("table-to-print").innerHTML;
@@ -555,6 +561,7 @@ const Page = () => {
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
                   >
+                    <option value="Semua">Semua</option>
                     <option value="Terima">Terima</option>
                     <option value="Belum">Belum</option>
                   </select>
@@ -649,16 +656,16 @@ const Page = () => {
                           {item.Keterangan}
                         </td>
                         <td className="py-3 px-4 text-center">
-                          {filterStatus === "Terima"
-                            ? `Diterimakan (${item.Nama_Penerima})`
+                          {item.isTerima
+                            ? `Diterimakan (${item.Nama_Penerima || "-"})`
                             : "Belum Diterimakan"}
                         </td>
                         <td className="py-3 px-4 text-center">
-                          {filterStatus === "Terima"
+                          {item.isTerima
                             ? new Intl.NumberFormat("id-ID", {
                               style: "currency",
                               currency: "IDR",
-                            }).format(item.Nominal)
+                            }).format(item.Nominal || 0)
                             : "-"}
                         </td>
                       </tr>
