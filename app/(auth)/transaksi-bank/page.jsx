@@ -141,9 +141,12 @@ export default function BankTransactionPage() {
   const [displayCountPotongan, setDisplayCountPotongan] = useState(10);
   const [data, setData] = useState([]);
   const [dataBalancing, setDataBalancing] = useState([]);
-  const [month, setMonth] = useState(currentMonth.toString());
-  const [year, setYear] = useState(currentYear.toString());
+  const [dataRekapitulasi, setDataRekapitulasi] = useState([]);
+  const [loadingRekapitulasi, setLoadingRekapitulasi] = useState(false);
+  const [month, setMonth] = useState("all");
+  const [year, setYear] = useState("all");
   const bulanList = [
+    { label: "Semua Bulan", value: "all" },
     { label: "Januari", value: "1" },
     { label: "Februari", value: "2" },
     { label: "Maret", value: "3" },
@@ -157,9 +160,13 @@ export default function BankTransactionPage() {
     { label: "November", value: "11" },
     { label: "Desember", value: "12" },
   ];
-  const tahunList = Array.from({ length: 5 }, (_, i) =>
-    (currentYear - 2 + i).toString(),
-  );
+  const tahunList = [
+    { label: "Semua Tahun", value: "all" },
+    ...Array.from({ length: 5 }, (_, i) => ({
+      label: (currentYear - 2 + i).toString(),
+      value: (currentYear - 2 + i).toString(),
+    })),
+  ];
   const [isLoading, setIsLoading] = useState(false);
   const [onProses, setOnProses] = useState(true);
   const [progress, setProgress] = useState(0);
@@ -255,8 +262,8 @@ export default function BankTransactionPage() {
       const result = await GlobalApi.getTransaksiBankBalancing(
         cabangFilter,
         selectedUnitKerja || null,
-        year ? parseInt(year) : null,
-        month ? parseInt(month) : null,
+        year === "all" ? null : year ? parseInt(year) : null,
+        month === "all" ? null : month ? parseInt(month) : null,
         paymentNote || null,
         searchBalancing || null,
       );
@@ -296,7 +303,114 @@ export default function BankTransactionPage() {
     return Object.values(npaMap);
   };
 
-  // useEffect untuk tab potongan bank
+  const getRekapitulasiData = async () => {
+    setDataRekapitulasi([]);
+    setLoadingRekapitulasi(true);
+
+    try {
+      const storedRole = sessionStorage.getItem("role");
+      const storedCabang = sessionStorage.getItem("cabang");
+
+      let cabangFilter = "";
+      if (storedRole === "ADMIN") {
+        cabangFilter = storedCabang || "";
+      } else {
+        cabangFilter = selectedCabang || "";
+      }
+
+      const result = await GlobalApi.getTransaksiBankBalancing(
+        cabangFilter,
+        selectedUnitKerja || null,
+        year === "all" ? null : year ? parseInt(year) : null,
+        month === "all" ? null : month ? parseInt(month) : null,
+        paymentNote || null,
+        searchBalancing || null,
+      );
+
+      const safeResult = Array.isArray(result) ? result : [];
+
+      const filteredByCabang = safeResult.filter(
+        (item) => !cabangFilter || item.cabang === cabangFilter,
+      );
+
+      const filteredByUnitKerja = filteredByCabang.filter(
+        (item) => !selectedUnitKerja || item.unitKerja === selectedUnitKerja,
+      );
+
+      const npaMap = {};
+      filteredByUnitKerja.forEach((item) => {
+        const key = `${item.cabang}-${item.unitKerja}-${item.npa}`;
+
+        if (!npaMap[key] || item.id > npaMap[key].id) {
+          npaMap[key] = item;
+        }
+      });
+
+      const rekapMap = {};
+      Object.values(npaMap).forEach((item) => {
+        const key = `${item.cabang}-${item.unitKerja}`;
+
+        if (!rekapMap[key]) {
+          rekapMap[key] = {
+            cabang: item.cabang,
+            unitKerja: item.unitKerja,
+            iuran: 0,
+            sanduka: 0,
+            daspen: 0,
+            derap: 0,
+            kalender: 0,
+            lainLain: 0,
+            potonganBank: 0,
+            uniqueNPA: new Set(),
+          };
+        }
+
+        rekapMap[key].iuran += item.totalIuranAnggota || 0;
+        rekapMap[key].sanduka += item.totalIuranSanduka || 0;
+        rekapMap[key].daspen += item.totalIuranDaspen || 0;
+        rekapMap[key].derap += item.totalIuranDerap || 0;
+        rekapMap[key].kalender += item.totalIuranKalender || 0;
+        rekapMap[key].lainLain += item.totalIuranSumbangan || 0;
+        rekapMap[key].potonganBank += item.potongan || 0;
+        rekapMap[key].uniqueNPA.add(item.npa);
+      });
+
+      const rekapArray = Object.values(rekapMap).map((item, index) => {
+        const totalIuran =
+          item.iuran +
+          item.sanduka +
+          item.daspen +
+          item.derap +
+          item.kalender +
+          item.lainLain;
+        const selisih = totalIuran - item.potonganBank;
+
+        return {
+          id: index,
+          cabang: item.cabang,
+          unitKerja: item.unitKerja,
+          iuran: item.iuran,
+          sanduka: item.sanduka,
+          daspen: item.daspen,
+          derap: item.derap,
+          kalender: item.kalender,
+          lainLain: item.lainLain,
+          totalIuran: totalIuran,
+          potonganBank: item.potonganBank,
+          selisih: selisih,
+          jumlahAnggota: item.uniqueNPA.size,
+        };
+      });
+
+      setDataRekapitulasi(rekapArray);
+    } catch (err) {
+      console.error("❌ Gagal memuat rekapitulasi:", err);
+      setDataRekapitulasi([]);
+    } finally {
+      setLoadingRekapitulasi(false);
+    }
+  };
+
   useEffect(() => {
     handleFilter();
     getPotonganBank();
@@ -311,10 +425,23 @@ export default function BankTransactionPage() {
     currentPage,
   ]);
 
-  // useEffect khusus untuk balancing - akan di-trigger setiap kali ada perubahan filter balancing
   useEffect(() => {
     getBalancingdata();
   }, [
+    selectedCabang,
+    selectedUnitKerja,
+    year,
+    month,
+    paymentNote,
+    searchBalancing,
+  ]);
+
+  useEffect(() => {
+    if (activeTab === "rekapitulasi") {
+      getRekapitulasiData();
+    }
+  }, [
+    activeTab,
     selectedCabang,
     selectedUnitKerja,
     year,
@@ -1002,8 +1129,8 @@ export default function BankTransactionPage() {
       const allData = await GlobalApi.getTransaksiBankBalancing(
         selectedCabang,
         selectedUnitKerja,
-        year,
-        null,
+        year === "all" ? null : year ? parseInt(year) : null,
+        month === "all" ? null : month ? parseInt(month) : null,
         paymentNote,
         searchBalancing,
       );
@@ -1061,6 +1188,45 @@ export default function BankTransactionPage() {
     }
   };
 
+  const exportRekapitulasiToExcel = async () => {
+    try {
+      setIsLoading(true);
+
+      const formattedData = dataRekapitulasi.map((item, index) => ({
+        No: index + 1,
+        Cabang: item.cabang,
+        "Unit Kerja": item.unitKerja,
+        Iuran: item.iuran,
+        Sanduka: item.sanduka,
+        Daspen: item.daspen,
+        Derap: item.derap,
+        Kalender: item.kalender,
+        "Lain-lain": item.lainLain,
+        "Total Iuran": item.totalIuran,
+        "Potongan Bank": item.potonganBank,
+        Selisih: item.selisih,
+        "Juml. Anggota": item.jumlahAnggota,
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(formattedData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Rekap Keuangan");
+
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+      const blob = new Blob([excelBuffer], {
+        type: "application/octet-stream",
+      });
+      saveAs(blob, "rekap-data-keuangan.xlsx");
+    } catch (err) {
+      console.error("Gagal mengekspor rekapitulasi:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handlePreviousPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
@@ -1083,41 +1249,6 @@ export default function BankTransactionPage() {
     const half = Math.floor(maxPagesToShow / 2);
     let start = Math.max(currentPage - half, 1);
     let end = Math.min(start + maxPagesToShow - 1, totalPages);
-
-    if (end - start < maxPagesToShow - 1) {
-      start = Math.max(end - maxPagesToShow + 1, 1);
-    }
-
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-
-    return pages;
-  };
-
-  // ===== PAGINATION BALANCING =====
-  const handlePreviousPageBalancing = () => {
-    if (currentPageBalancing > 1) {
-      setCurrentPageBalancing(currentPageBalancing - 1);
-    }
-  };
-
-  const handleNextPageBalancing = () => {
-    if (currentPageBalancing < totalPagesBalancing) {
-      setCurrentPageBalancing(currentPageBalancing + 1);
-    }
-  };
-
-  const handlePageClickBalancing = (page) => {
-    setCurrentPageBalancing(page);
-  };
-
-  const getVisiblePagesBalancing = () => {
-    const pages = [];
-    const maxPagesToShow = 5;
-    const half = Math.floor(maxPagesToShow / 2);
-    let start = Math.max(currentPageBalancing - half, 1);
-    let end = Math.min(start + maxPagesToShow - 1, totalPagesBalancing);
 
     if (end - start < maxPagesToShow - 1) {
       start = Math.max(end - maxPagesToShow + 1, 1);
@@ -1656,8 +1787,8 @@ export default function BankTransactionPage() {
                       onChange={(e) => setYear(e.target.value)}
                     >
                       {tahunList.map((tahun) => (
-                        <option key={tahun} value={tahun}>
-                          {tahun}
+                        <option key={tahun.value} value={tahun.value}>
+                          {tahun.label}
                         </option>
                       ))}
                     </select>
@@ -2131,8 +2262,8 @@ export default function BankTransactionPage() {
                       onChange={(e) => setYear(e.target.value)}
                     >
                       {tahunList.map((tahun) => (
-                        <option key={tahun} value={tahun}>
-                          {tahun}
+                        <option key={tahun.value} value={tahun.value}>
+                          {tahun.label}
                         </option>
                       ))}
                     </select>
@@ -2175,7 +2306,6 @@ export default function BankTransactionPage() {
 
               <div className="w-full">
                 {loadingBalancing ? (
-                  // LOADING STATE - HANYA LOADING, TIDAK ADA DATA
                   <div className="w-full bg-white rounded-lg border border-gray-100 p-8">
                     <div className="flex flex-col items-center justify-center">
                       <div className="flex items-center space-x-2 mb-4">
@@ -2201,7 +2331,6 @@ export default function BankTransactionPage() {
                     </div>
                   </div>
                 ) : (
-                  // DATA STATE - TABLE DENGAN DATA
                   <div>
                     <table
                       key={`table-balancing-${currentPageBalancing}`}
@@ -2209,12 +2338,10 @@ export default function BankTransactionPage() {
                     >
                       <thead>
                         <tr className="bg-gradient-to-r from-[#0B131E] via-[#0B131E] to-[#0B131E] shadow-md">
-                          {/* NO */}
                           <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-[#0B131E]">
                             No
                           </th>
 
-                          {/* CABANG */}
                           <th
                             onClick={() => handleSort("cabang")}
                             className="group cursor-pointer px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider
@@ -2237,7 +2364,6 @@ export default function BankTransactionPage() {
                             </div>
                           </th>
 
-                          {/* UNIT KERJA */}
                           <th
                             onClick={() => handleSort("unitKerja")}
                             className="group cursor-pointer px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider
@@ -2260,7 +2386,6 @@ export default function BankTransactionPage() {
                             </div>
                           </th>
 
-                          {/* NAMA */}
                           <th
                             onClick={() => handleSort("nama")}
                             className="group cursor-pointer px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider
@@ -2283,12 +2408,10 @@ export default function BankTransactionPage() {
                             </div>
                           </th>
 
-                          {/* STATUS PEGAWAI (NON SORT) */}
                           <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-white border-b border-[#0B131E]">
                             Status Pegawai
                           </th>
 
-                          {/* REKENING */}
                           <th
                             onClick={() => handleSort("rekening")}
                             className="group cursor-pointer px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider
@@ -2311,7 +2434,6 @@ export default function BankTransactionPage() {
                             </div>
                           </th>
 
-                          {/* IURAN */}
                           {[
                             { key: "totalIuranAnggota", label: "Iuran" },
                             { key: "totalIuranSanduka", label: "Sanduka" },
@@ -2600,6 +2722,7 @@ export default function BankTransactionPage() {
                     className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${
                       isLoading ? "opacity-60 cursor-not-allowed" : ""
                     }`}
+                    onClick={exportRekapitulasiToExcel}
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -2728,8 +2851,8 @@ export default function BankTransactionPage() {
                         onChange={(e) => setYear(e.target.value)}
                       >
                         {tahunList.map((tahun) => (
-                          <option key={tahun} value={tahun}>
-                            {tahun}
+                          <option key={tahun.value} value={tahun.value}>
+                            {tahun.label}
                           </option>
                         ))}
                       </select>
@@ -2752,7 +2875,7 @@ export default function BankTransactionPage() {
                   </div>
                 </div>
               </div>
-              {loadingBalancing ? (
+              {loadingRekapitulasi ? (
                 <div className="text-center animate-slide-up mt-28">
                   <p className="text-gray-600 text-2xl font-medium">
                     Sedang Proses
@@ -2774,280 +2897,109 @@ export default function BankTransactionPage() {
               ) : (
                 <div className="w-full">
                   <div className="p-6 border-b border-gray-100">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h2 className="text-lg font-semibold text-gray-800">
-                          Rekap Data Keuangan
-                        </h2>
-                        <p className="text-gray-600 mt-1">
-                          Rekonsiliasi iuran anggota dengan data potongan bank.
-                        </p>
-                      </div>
-                      <button
-                        className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${
-                          isLoading ? "opacity-60 cursor-not-allowed" : ""
-                        }`}
-                        disabled={isLoading}
-                      >
-                        {isLoading ? (
-                          <>
-                            <svg
-                              className="animate-spin h-4 w-4 text-black"
-                              viewBox="0 0 24 24"
-                            >
-                              <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                                fill="none"
-                              />
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                              />
-                            </svg>
-                            Memproses...
-                          </>
-                        ) : (
-                          <>
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="16"
-                              height="16"
-                              fill="currentColor"
-                              viewBox="0 0 16 16"
-                              className="hover:text-white transition"
-                            >
-                              <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
-                              <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
-                            </svg>
-                            Cetak Rekap Data Keuangan
-                          </>
-                        )}
-                      </button>
-                    </div>
-
-                    <div className="p-6 bg-gray-50 border-b border-gray-100">
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Cabang
-                          </label>
-                          <div
-                            className="flex items-center relative"
-                            ref={cabangRef}
-                          >
-                            <Input
-                              type="text"
-                              value={selectedCabang}
-                              readOnly
-                              disabled={role === "ADMIN"}
-                              onClick={handleCabangClick}
-                              className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
-                              placeholder="Pilih Cabang"
-                            />
-                            {showCabangDropdown && (
-                              <div
-                                className="absolute z-50 border rounded-lg bg-white shadow-sm mt-1 w-full"
-                                style={{ top: "100%", left: 0 }}
-                              >
-                                <ul className="max-h-44 overflow-y-auto">
-                                  <li className="py-2 px-2">
-                                    <Input
-                                      type="text"
-                                      onChange={(e) =>
-                                        handleCabangSearch(e.target.value)
-                                      }
-                                      className="block w-full px-4 py-2 border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
-                                      placeholder="Cari atau ketik Cabang..."
-                                      autoFocus
-                                    />
-                                  </li>
-                                  <li
-                                    onClick={() =>
-                                      handleSelectCabang({ kecamatan: "" })
-                                    }
-                                    className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                                  >
-                                    Pilih Cabang
-                                  </li>
-                                  {[...filteredCabangList].map((cabang) => (
-                                    <li
-                                      key={cabang.id}
-                                      onClick={() => handleSelectCabang(cabang)}
-                                      className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                                    >
-                                      {cabang.kecamatan}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Bulan Transaksi
-                          </label>
-                          <select
-                            className="w-full h-10 text-base px-4 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition-all"
-                            value={month}
-                            onChange={(e) => setMonth(e.target.value)}
-                          >
-                            {bulanList.map((bulan) => (
-                              <option key={bulan.value} value={bulan.value}>
-                                {bulan.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Tahun Transaksi
-                          </label>
-                          <select
-                            className="w-full h-10 text-base px-4 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition-all"
-                            value={year}
-                            onChange={(e) => setYear(e.target.value)}
-                          >
-                            {tahunList.map((tahun) => (
-                              <option key={tahun} value={tahun}>
-                                {tahun}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Ket. Pembayaran
-                          </label>
-                          <select
-                            className="w-full h-10 text-base px-4 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition-all"
-                            value={paymentNote}
-                            onChange={(e) => setPaymentNote(e.target.value)}
-                          >
-                            <option value="">Pilih Keterangan</option>
-                            <option value="Sukses">Sukses</option>
-                            <option value="Gagal">Gagal</option>
-                            <option value="Tunai">Tunai</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="w-full">
+                    <div className="w-full overflow-x-auto">
                       <table className="min-w-full">
                         <thead>
-                          <tr className="bg-gray-50">
-                            <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                          <tr className="bg-gradient-to-r from-[#0B131E] via-[#0B131E] to-[#0B131E] shadow-md">
+                            <th className="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-wider text-white border-b border-gray-300">
                               No
                             </th>
-                            <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                            <th className="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-wider text-white border-b border-gray-300">
                               Cabang
                             </th>
-                            <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                            <th className="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-wider text-white border-b border-gray-300">
                               Unit Kerja
                             </th>
-                            <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                              Nama
-                            </th>
-                            <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                              Rekening
-                            </th>
-                            <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                            <th className="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-wider text-white border-b border-gray-300">
                               Iuran
                             </th>
-                            <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                            <th className="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-wider text-white border-b border-gray-300">
                               Sanduka
                             </th>
-                            <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                            <th className="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-wider text-white border-b border-gray-300">
                               Daspen
                             </th>
-                            <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                            <th className="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-wider text-white border-b border-gray-300">
                               Derap
                             </th>
-                            <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                            <th className="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-wider text-white border-b border-gray-300">
                               Kalender
                             </th>
-                            <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                            <th className="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-wider text-white border-b border-gray-300">
                               Lain-lain
                             </th>
-                            <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                            <th className="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-wider text-white border-b border-gray-300">
                               Total Iuran
                             </th>
-                            <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                            <th className="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-wider text-white border-b border-gray-300">
                               Potongan Bank
                             </th>
-                            <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                            <th className="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-wider text-white border-b border-gray-300">
                               Selisih
                             </th>
-                            <th className=" text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                              Keterangan
+                            <th className="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-wider text-white border-b border-gray-300">
+                              Juml. Anggota
                             </th>
                           </tr>
                         </thead>
-                        {/* Rekap (blm kepake) */}
                         <tbody>
-                          {dataBalancing.length > 0 ? (
-                            dataBalancing.map((item, index) => (
-                              <tr key={index}>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                                  {(currentPageBalancing - 1) * displayCount +
-                                    index +
-                                    1}
+                          {dataRekapitulasi.length > 0 ? (
+                            dataRekapitulasi.map((item, index) => (
+                              <tr
+                                key={index}
+                                className="hover:bg-gray-50 border-b"
+                              >
+                                <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900 text-center">
+                                  {index + 1}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900">
                                   {item.cabang}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900">
                                   {item.unitKerja}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                  {item.nama}
+                                <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900 text-right">
+                                  {formatRupiah(item.iuran)}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                                  {item.rekening}
+                                <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900 text-right">
+                                  {formatRupiah(item.sanduka)}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                                  {item.totalIuranAnggota}
+                                <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900 text-right">
+                                  {formatRupiah(item.daspen)}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                                  {item.totalIuranSanduka}
+                                <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900 text-right">
+                                  {formatRupiah(item.derap)}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                                  {item.totalIuranDaspen}
+                                <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900 text-right">
+                                  {formatRupiah(item.kalender)}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                                  {item.totalIuranDerap}
+                                <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900 text-right">
+                                  {formatRupiah(item.lainLain)}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                                  {item.totalIuranKalender}
+                                <td className="px-4 py-3 whitespace-nowrap text-xs font-semibold text-gray-900 text-right bg-blue-50">
+                                  {formatRupiah(item.totalIuran)}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                                  {item.totalIuranKalender}
+                                <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900 text-right">
+                                  {formatRupiah(item.potonganBank)}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                                  {item.totalIuran}
+                                <td
+                                  className={`px-4 py-3 whitespace-nowrap text-xs font-semibold text-right ${
+                                    item.selisih >= 0
+                                      ? "text-green-600 bg-green-50"
+                                      : "text-red-600 bg-red-50"
+                                  }`}
+                                >
+                                  {formatRupiah(item.selisih)}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                                  {item.potongan}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                                  {item.selisih}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                                  {item.keterangan}
+                                <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900 text-center">
+                                  {item.jumlahAnggota}
                                 </td>
                               </tr>
                             ))
                           ) : (
                             <tr>
                               <td
-                                colSpan={15}
+                                colSpan={13}
                                 className="px-6 py-8 text-center text-sm text-gray-500 border-b"
                               >
                                 <div className="flex flex-col items-center justify-center">
@@ -3056,7 +3008,7 @@ export default function BankTransactionPage() {
                                     className="text-gray-300 text-4xl mb-3"
                                   />
                                   <p>
-                                    Tidak ada data transaksi bank yang cocok
+                                    Tidak ada data rekapitulasi yang cocok
                                     dengan filter Anda.
                                   </p>
                                 </div>
@@ -3065,122 +3017,6 @@ export default function BankTransactionPage() {
                           )}
                         </tbody>
                       </table>
-                      <div className="p-4 border-t">
-                        <div className="flex flex-wrap justify-center gap-2">
-                          <button
-                            onClick={() => handlePageClickBalancing(1)}
-                            disabled={currentPageBalancing === 1}
-                            className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm flex items-center"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-4 w-4 mr-1"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
-                              />
-                            </svg>
-                            First
-                          </button>
-
-                          <button
-                            onClick={handlePreviousPageBalancing}
-                            disabled={currentPageBalancing === 1}
-                            className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm flex items-center"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-4 w-4 mr-1"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M15 19l-7-7 7-7"
-                              />
-                            </svg>
-                            Prev
-                          </button>
-
-                          {getVisiblePagesBalancing().map((page) => (
-                            <button
-                              key={page}
-                              onClick={() => handlePageClickBalancing(page)}
-                              className={`px-3 py-1 border rounded-md text-sm ${
-                                page === currentPageBalancing
-                                  ? "bg-teal-600 text-white border-teal-600"
-                                  : "bg-white hover:bg-gray-50"
-                              }`}
-                            >
-                              {page}
-                            </button>
-                          ))}
-
-                          {totalPagesBalancing > 3 &&
-                            currentPageBalancing < totalPagesBalancing - 3 && (
-                              <span className="px-2 py-1">...</span>
-                            )}
-
-                          <button
-                            onClick={handleNextPageBalancing}
-                            disabled={
-                              currentPageBalancing === totalPagesBalancing
-                            }
-                            className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm flex items-center"
-                          >
-                            Next
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-4 w-4 ml-1"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M9 5l7 7-7 7"
-                              />
-                            </svg>
-                          </button>
-
-                          <button
-                            onClick={() =>
-                              handlePageClickBalancing(totalPagesBalancing)
-                            }
-                            disabled={
-                              currentPageBalancing === totalPagesBalancing
-                            }
-                            className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm flex items-center"
-                          >
-                            Last
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-4 w-4 ml-1"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M13 5l7 7-7 7M5 5l7 7-7 7"
-                              />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -3227,7 +3063,6 @@ export default function BankTransactionPage() {
                   Cabang
                 </label>
 
-                {/* Trigger */}
                 <button
                   type="button"
                   className="w-full border px-3 py-2 rounded text-left bg-white"
@@ -3236,10 +3071,8 @@ export default function BankTransactionPage() {
                   {editData.cabang || "-- Pilih Cabang --"}
                 </button>
 
-                {/* Dropdown */}
                 {openCabang && (
                   <div className="absolute z-50 w-full bg-white border rounded mt-1 shadow-lg">
-                    {/* Search */}
                     <div className="p-2 border-b">
                       <input
                         type="text"
@@ -3250,7 +3083,6 @@ export default function BankTransactionPage() {
                       />
                     </div>
 
-                    {/* List */}
                     <ul className="max-h-48 overflow-y-auto text-sm">
                       <li
                         className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-gray-500"
