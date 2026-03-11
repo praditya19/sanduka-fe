@@ -171,16 +171,29 @@ const FormStep1 = ({
   }, [selectedCabang, unitKerjaOptions]);
 
   const handleCabangSelect = (cabang) => {
-    console.log("Cabang selected:", cabang);
-    setQueryCabang(cabang.kecamatan);
-    setSelectedCabang(cabang.kecamatan);
+    const selectedKecamatan = cabang ? cabang.kecamatan : "";
+    
+    setSelectedCabang(selectedKecamatan);
+    setQueryCabang("");
     setShowDropdownCabang(false);
 
     const unitsForSelectedCabang = unitKerjaOptions.filter(
-      (unit) => unit.cabang === cabang.kecamatan
+      (unit) => unit.cabang === selectedKecamatan
     );
-
     setFilteredUnitKerja(unitsForSelectedCabang);
+
+    setFormData((prev) => ({ 
+      ...prev, 
+      branch: selectedKecamatan,
+      unit: "", 
+      memberName: "", 
+      memberId: null 
+    }));
+    setQueryUnit("");
+    setTemanUnitKerjaData([]);
+    setFilteredNames([]);
+    setSearchTerm("");
+    if (selectedMemberInfo) setSelectedMemberInfo(null);
   };
 
   useEffect(() => {
@@ -233,18 +246,27 @@ const FormStep1 = ({
     setShowDropdownUnit(false);
     setQueryUnit("");
 
-    const response = await GlobalApi.getTemanUnitKerja(unitKerja);
-    setTemanUnitKerjaData(response.content);
-
     setFormData((prev) => ({
       ...prev,
       unit: unitKerja,
     }));
+
+    setTemanUnitKerjaData([]);
+    setFilteredNames([]);
+    setSearchTerm("");
+    if (selectedMemberInfo) setSelectedMemberInfo(null);
+
+    try {
+      const response = await GlobalApi.getTemanUnitKerja(unitKerja);
+      setTemanUnitKerjaData(response.content || []);
+    } catch (error) {
+      console.error("Error fetching teman unit kerja:", error);
+    }
   };
 
   const formatTanggalArray = (dateArray) => {
     if (!Array.isArray(dateArray) || dateArray.length !== 3) {
-      return dateArray || "-"; 
+      return dateArray || "-";
     }
     const [year, month, day] = dateArray;
     const formattedDay = String(day).padStart(2, "0");
@@ -253,7 +275,7 @@ const FormStep1 = ({
   };
 
   const handleSearch = (e) => {
-    const value = e.target.value; 
+    const value = e.target.value;
     setSearchTerm(value);
 
     const lowerValue = value.toLowerCase().trim();
@@ -302,8 +324,8 @@ const FormStep1 = ({
     try {
       const response = await GlobalApi.getUserById(id);
 
-      let photoUrl = "/profile.png"; 
-      
+      let photoUrl = "/profile.png";
+
       if (response && response.foto) {
         try {
           const decodedString = atob(response.foto);
@@ -312,7 +334,7 @@ const FormStep1 = ({
           console.error("Gagal decode Base64 foto:", e);
         }
       }
-      
+
       setSelectedMemberInfo({
         foto: photoUrl,
         tanggalLahir: formatTanggalArray(response?.tanggalLahir),
@@ -549,21 +571,16 @@ const FormStep1 = ({
                         type="text"
                         className="border rounded-lg p-2 w-full bg-white shadow-sm cursor-pointer"
                         placeholder="Pilih Cabang"
-                        value={
-                          sessionStorage.getItem("role") === "SUPERADMIN"
-                            ? queryCabang
-                            : selectedCabang
-                        }
+                        value={selectedCabang} 
                         disabled={
                           sessionStorage.getItem("role") !== "SUPERADMIN"
                         }
-                        readOnly={
-                          sessionStorage.getItem("role") !== "SUPERADMIN"
-                        }
+                        readOnly={true}
                         onClick={() => {
                           if (
                             sessionStorage.getItem("role") === "SUPERADMIN"
                           ) {
+                            setQueryCabang("");
                             setShowDropdownCabang(true);
                           }
                         }}
@@ -711,16 +728,25 @@ const FormStep1 = ({
                       {Array.isArray(filteredNames) &&
                         filteredNames.length > 0 &&
                         isDropdownVisible && (
-                          <ul className="absolute left-0 w-full mt-[70px] bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-60 overflow-y-auto">
+                          <ul className="absolute left-0 w-full mt-[70px] bg-white border border-gray-300 rounded-md shadow-lg z-20 max-h-60 overflow-y-auto">
                             {filteredNames.map((data) => (
                               <li
                                 key={data.id}
-                                className="py-2 px-4 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
+                                className="py-3 px-4 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 flex flex-col"
                                 onClick={() =>
                                   handleNameClick(data.namaLengkap, data.id)
                                 }
                               >
-                                {data.namaLengkap}
+                                <span className="font-bold text-gray-800 text-sm">
+                                  {data.namaLengkap}
+                                </span>
+                                <div className="text-xs text-gray-500 mt-1 flex flex-wrap items-center">
+                                  <span>TTL: {data.tempatLahir || "-"}, {formatTanggalArray(data.tanggalLahir)}</span>
+                                  <span className="mx-2 text-gray-300">•</span>
+                                  <span>NPA: {data.npaPgri || "-"}</span>
+                                  <span className="mx-2 text-gray-300">•</span>
+                                  <span>Jabatan: {data.jabatan || "-"}</span>
+                                </div>
                               </li>
                             ))}
                           </ul>
@@ -739,7 +765,7 @@ const FormStep1 = ({
                           width={60}
                           height={60}
                           className="w-16 h-16 object-cover rounded-full border border-gray-300 bg-white"
-                          unoptimized={true} 
+                          unoptimized={true}
                         />
                         <div className="flex flex-col">
                           <span className="text-sm font-bold text-gray-800">{searchTerm}</span>
