@@ -1350,6 +1350,29 @@ const deleteTransaksiBank = async (tanggal) => {
     throw error;
   }
 };
+
+const importExcelTargetIuran = async (file, tagihanUntukBulan) => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("tagihanUntukBulan", tagihanUntukBulan);
+
+    const response = await axiosClient.post(
+      "/api/target-iuran-anggota/upload-excel",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error upload excel:", error);
+    throw error;
+  }
+};
 // End
 // Sanduka
 // Pemasukan & Pengeluaran Sanduka
@@ -1668,7 +1691,7 @@ const postToBackupNew = async () => {
   try {
     const response = await axiosClient.post(
       `/api/by-nominal-new/create-from-by-nominal`,
-      {}
+      {},
     );
     return response.data;
   } catch (error) {
@@ -3520,7 +3543,7 @@ const createPaketTour = async (data) => {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-      }
+      },
     );
 
     return response.data;
@@ -3529,7 +3552,6 @@ const createPaketTour = async (data) => {
     throw error;
   }
 };
-
 
 // Export all functions
 export default {
@@ -3770,5 +3792,7 @@ export default {
   updateEditor,
   getEditorById,
   getAllEditor,
-  deleteEditor,createPaketTour,
+  deleteEditor,
+  createPaketTour,
+  importExcelTargetIuran,
 };

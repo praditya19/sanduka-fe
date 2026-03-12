@@ -9,8 +9,6 @@ import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { Input } from "@/components/ui/input";
 import {
-  FaPlusCircle,
-  FaMinusCircle,
   FaTimesCircle,
   FaCheckCircle,
   FaExclamationCircle,
@@ -21,8 +19,7 @@ import {
   FaDatabase,
 } from "react-icons/fa";
 import { FiPlus, FiSave, FiTrash } from "react-icons/fi";
-import { Button } from "@/components/ui/button";
-import { ClipLoader } from "react-spinners";
+
 import Image from "next/image";
 import * as XLSX from "xlsx";
 
@@ -117,7 +114,7 @@ function RekapAnggota() {
   const namaInputRef = useRef(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [originalRekapData, setOriginalRekapData] = useState([]);
-  const [expandedIndex, setExpandedIndex] = useState(null);
+
   const [totals, setTotals] = useState({
     jumlah: 0,
     pgri: 0,
@@ -2309,25 +2306,25 @@ function RekapAnggota() {
     }
   };
 
- const handleBackupByNominal = async () => {
-  try {
-    await GlobalApi.postToBackupNew();
+  const handleBackupByNominal = async () => {
+    try {
+      await GlobalApi.postToBackupNew();
 
-    setNotification({
-      type: "success",
-      message: "Backup berhasil!",
-    });
+      setNotification({
+        type: "success",
+        message: "Backup berhasil!",
+      });
 
-    setPopupRekapByNominal(false);
-    await fetchInitialData();
-  } catch (error) {
-    setNotification({
-      type: "error",
-      message: "Gagal melakukan backup.",
-    });
-    console.error("Backup error:", error);
-  }
-};
+      setPopupRekapByNominal(false);
+      await fetchInitialData();
+    } catch (error) {
+      setNotification({
+        type: "error",
+        message: "Gagal melakukan backup.",
+      });
+      console.error("Backup error:", error);
+    }
+  };
 
   const handleRekapClick = () => {
     setOpen((prev) => !prev);
@@ -2922,34 +2919,34 @@ function RekapAnggota() {
               </div>
             )}
             {popupBackupRekapByNominal && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-    <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md animate-fadeIn">
-      <h2 className="text-lg font-semibold mb-3 text-gray-800">
-        Konfirmasi Backup
-      </h2>
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md animate-fadeIn">
+                  <h2 className="text-lg font-semibold mb-3 text-gray-800">
+                    Konfirmasi Backup
+                  </h2>
 
-      <p className="text-sm text-gray-600 mb-6">
-        Apakah Anda yakin akan membackup data?
-      </p>
+                  <p className="text-sm text-gray-600 mb-6">
+                    Apakah Anda yakin akan membackup data?
+                  </p>
 
-      <div className="flex justify-end gap-3">
-        <button
-          onClick={() => setPopupRekapByNominal(false)}
-          className="px-4 py-2 bg-gray-400 hover:bg-gray-500 text-white rounded-md transition"
-        >
-          Batal
-        </button>
+                  <div className="flex justify-end gap-3">
+                    <button
+                      onClick={() => setPopupRekapByNominal(false)}
+                      className="px-4 py-2 bg-gray-400 hover:bg-gray-500 text-white rounded-md transition"
+                    >
+                      Batal
+                    </button>
 
-        <button
-          onClick={handleBackupByNominal}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition"
-        >
-          Ya, Backup
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+                    <button
+                      onClick={handleBackupByNominal}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition"
+                    >
+                      Ya, Backup
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
             <table className="w-full table-auto bg-white">
               <thead>
                 <tr>
