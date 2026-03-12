@@ -2,11 +2,8 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import {
   faArrowLeft,
-  faChartBar,
   faChartPie,
-  faFileAlt,
   faMoneyBillWave,
-  faPrint,
   faSearch,
   faUsers,
 } from "@fortawesome/free-solid-svg-icons";
@@ -25,7 +22,6 @@ import { Input } from "@/components/ui/input";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-import { ClipLoader } from "react-spinners";
 
 const NotificationPopup = ({ type, message, onClose }) => {
   useEffect(() => {
@@ -133,6 +129,9 @@ export default function BankTransactionPage() {
   const [openUnit, setOpenUnit] = useState(false);
   const [searchDropCabang, setSearchDropCabang] = useState("");
   const [searchDropUnit, setSearchDropUnit] = useState("");
+  const [showImportBalancing, setShowImportBalancing] = useState(false);
+  const [fileImport, setFileImport] = useState(null);
+  const [tagihanUntukBulan, setTagihanUntukBulan] = useState("");
   const today = new Date();
   const currentMonth = today.getMonth() + 1;
   const currentYear = today.getFullYear();
@@ -1262,6 +1261,22 @@ export default function BankTransactionPage() {
   };
 
   // Balancing
+  const handleImportBalancing = async () => {
+    if (!fileImport || !tagihanUntukBulan) {
+      alert("File dan tanggal harus diisi");
+      return;
+    }
+
+    try {
+      await GlobalApi.uploadExcelTargetIuran(fileImport, tagihanUntukBulan);
+
+      setShowImportBalancing(false);
+      setFileImport(null);
+      setTagihanUntukBulan("");
+    } catch (error) {
+      console.error("Import gagal:", error);
+    }
+  };
   const handleSort = (key) => {
     let direction = "asc";
     if (sortConfig.key === key && sortConfig.direction === "asc") {
@@ -1527,6 +1542,52 @@ export default function BankTransactionPage() {
                 </div>
               </div>
             </>
+          )}
+          {showImportBalancing && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+              <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+                <h2 className="text-lg font-semibold mb-4">Import Balancing</h2>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm mb-1">File Excel</label>
+                    <input
+                      type="file"
+                      className="w-full border rounded px-3 py-2"
+                      onChange={(e) => setFileImport(e.target.files[0])}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm mb-1">
+                      Tagihan Untuk Bulan
+                    </label>
+                    <input
+                      type="date"
+                      className="w-full border rounded px-3 py-2"
+                      value={tagihanUntukBulan}
+                      onChange={(e) => setTagihanUntukBulan(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-2 mt-6">
+                  <button
+                    className="px-4 py-2 border rounded"
+                    onClick={() => setShowImportBalancing(false)}
+                  >
+                    Batal
+                  </button>
+
+                  <button
+                    className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-500"
+                    onClick={handleImportBalancing}
+                  >
+                    Upload
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
           {showUploadModal && (
             <>
@@ -2118,6 +2179,7 @@ export default function BankTransactionPage() {
                         </>
                       )}
                     </button>
+
                     {typeof window !== "undefined" &&
                       sessionStorage.getItem("role") === "SUPERADMIN" && (
                         <div className="flex gap-2 ml-auto">
@@ -2126,6 +2188,13 @@ export default function BankTransactionPage() {
                             onClick={() => setShowDeleteBalancing(true)}
                           >
                             Delete Balancing
+                          </button>
+
+                          <button
+                            className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-500 transition"
+                            onClick={() => setShowImportBalancing(true)}
+                          >
+                            Import Balancing
                           </button>
                         </div>
                       )}
