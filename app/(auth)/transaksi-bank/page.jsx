@@ -1268,13 +1268,22 @@ export default function BankTransactionPage() {
     }
 
     try {
-      await GlobalApi.uploadExcelTargetIuran(fileImport, tagihanUntukBulan);
+      await GlobalApi.importExcelTargetIuran(fileImport, tagihanUntukBulan);
+
+      setNotification({
+        type: "success",
+        message: "Import Berhasil!",
+      });
 
       setShowImportBalancing(false);
       setFileImport(null);
       setTagihanUntukBulan("");
     } catch (error) {
       console.error("Import gagal:", error);
+      setNotification({
+        type: "error",
+        message: "Terjadi kesalahan saat import data.",
+      });
     }
   };
   const handleSort = (key) => {
