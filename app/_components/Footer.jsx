@@ -35,15 +35,15 @@ const Footer = () => {
               <br />
               Jl. Bata Putih, Demaan VI, Demaan,
               <br />
-              Kec. Jepara, Kabupaten Jepara, <br /> Jawa Tengah 59419 Gedung
-              Lantai II
+              Kec. Jepara, Kabupaten Jepara, <br /> Jawa Tengah 59419 Gedung Lantai II
               <br />
               <br />
-              Telp. 0291-592479
+              Telp. 0291 592479
             </address>
             <div className="mt-4 text-sm">
-              <p>Email: sanduka@gmail.com</p>
               <p>Email: pgrijepara@gmail.com</p>
+              <p>kab_jepara@pgri.or.od</p>
+              <p>official web PGRI Kabupaten Jepara</p>
             </div>
           </div>
 
@@ -88,30 +88,6 @@ const Footer = () => {
                 </Link>
               </div>
             </div>
-
-            {/* Media Section */}
-            <div className="w-full lg:w-1/3 mt-4">
-              <h3 className="font-bold mb-2 text-yellow-400">Official Kabupaten Jepara</h3>
-              <div className="flex gap-4">
-                {[
-                  { icon: FaFacebook, label: "Facebook" },
-                  { icon: FaTiktok, label: "Tiktok" },
-                  { icon: FaYoutube, label: "Youtube" },
-                  { icon: FaInstagram, label: "Instagram" },
-                ].map((item) => (
-                  <Link
-                    href="#"
-                    aria-label={item.label}
-                    key={item.label}
-                    legacyBehavior
-                  >
-                    <a className="p-3 border rounded-full shadow-lg hover:shadow-xl transition duration-300 ease-in-out bg-black flex items-center justify-center">
-                      <item.icon size={18} className="text-white" />
-                    </a>
-                  </Link>
-                ))}
-              </div>
-            </div>
           </div>
 
           {/* App Links Section */}
@@ -130,7 +106,7 @@ const Footer = () => {
               </Link>
             </div>
 
-            <div className="bg-black p-2 rounded-full flex items-center">
+            {/* <div className="bg-black p-2 rounded-full flex items-center">
               <FaWhatsapp size={20} className="text-white h-5 mr-2" />
               <Link href="https://wa.me/+6281325552982" legacyBehavior>
                 <a
@@ -141,7 +117,7 @@ const Footer = () => {
                   Konsultasi WhatsApp
                 </a>
               </Link>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
