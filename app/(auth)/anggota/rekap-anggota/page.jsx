@@ -1499,13 +1499,19 @@ function RekapAnggota() {
       let manualSumbanganTotal = 0;
       const updatedSumbanganList = [];
 
-      if (sumbanganList && Array.isArray(sumbanganList)) {
+      if (Array.isArray(sumbanganList)) {
         sumbanganList.forEach((sumbangan) => {
+          const jumlah = parseInt(sumbangan.jumlah || 0);
+
           if (sumbangan.jenis) {
             updatedSumbanganList.push({
               jenis: sumbangan.jenis,
-              jumlah: parseInt(sumbangan.jumlah || 0),
+              jumlah: jumlah,
+              cabang: payload.cabang,
+              tagihanUntukBulan: tagihanUntukBulan,
             });
+
+            manualSumbanganTotal += jumlah;
           }
         });
       }
@@ -1572,7 +1578,7 @@ function RekapAnggota() {
             updatedSumbanganList[existingIndex].jumlah = totalValue;
           }
 
-          manualSumbanganTotal += manualValue;
+          manualSumbanganTotal += totalValue;
         }
       });
 
@@ -1646,7 +1652,7 @@ function RekapAnggota() {
       } else {
         await GlobalApi.createByNominal(payload);
       }
-
+      setSumbanganList(payload.iuranSumbanganList);
       const updatedMemberData = {
         namaAnggota: payload.namaAnggota,
         nip: payload.nip,
@@ -1736,12 +1742,16 @@ function RekapAnggota() {
     let total = 0;
 
     groupedIuran.forEach((item) => {
+      if (item.key === "lainlain") return;
+
       const oldValue = parseInt(item.iuran || 0);
       const inputValue = nominalBaruList[item.key] || 0;
       total += oldValue + inputValue;
     });
 
     addedCategories.forEach((item) => {
+      if (item.key === "lainlain") return;
+
       const oldValue = newValues[item.key] ?? 0;
       const inputValue = manualInputs[item.key] ?? 0;
       total += oldValue + inputValue;
@@ -3535,19 +3545,6 @@ function RekapAnggota() {
                                       />
                                     </div>
                                   </div>
-
-                                  {/* Informasi tambahan jika ada */}
-                                  {sumbangan.keterangan && (
-                                    <p
-                                      className={`text-xs mt-1 ${
-                                        isDeleted
-                                          ? "text-gray-400"
-                                          : "text-gray-600"
-                                      }`}
-                                    >
-                                      Keterangan: {sumbangan.keterangan}
-                                    </p>
-                                  )}
                                 </div>
                               );
                             })}
