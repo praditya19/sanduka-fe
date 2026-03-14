@@ -3422,7 +3422,7 @@ function RekapAnggota() {
                         {sumbanganList.length > 0 && (
                           <div className="mt-4">
                             <h4 className="font-semibold text-purple-700 mb-2">
-                              Sumbangan Lainnya:
+                              Keuangan:
                             </h4>
                             {sumbanganList.map((sumbangan, index) => {
                               const jumlahValue = parseInt(
