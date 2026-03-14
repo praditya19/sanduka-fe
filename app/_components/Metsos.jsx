@@ -2,6 +2,7 @@
 import { Instagram, Facebook, Youtube } from "lucide-react";
 import { FaXTwitter, FaThreads, FaTiktok } from "react-icons/fa6";
 import { motion } from "framer-motion";
+import { FaTelegramPlane } from "react-icons/fa";
 
 const SocialMediaSection = () => {
   const socials = [
@@ -9,28 +10,33 @@ const SocialMediaSection = () => {
       icon: <Instagram size={22} />,
       bg: "bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500",
       link: "#",
-      label: "Instagram"
+      label: "Instagram",
     },
     {
       icon: <Facebook size={22} />,
       bg: "bg-gradient-to-br from-blue-600 to-blue-800",
       link: "#",
-      label: "Facebook"
+      label: "Facebook",
     },
-   
+
     {
       icon: <Youtube size={22} />,
       bg: "bg-gradient-to-br from-red-600 to-red-700",
       link: "#",
-      label: "Youtube"
+      label: "Youtube",
     },
     {
       icon: <FaTiktok size={20} />,
       bg: "bg-gradient-to-br from-gray-900 via-gray-800 to-black",
       link: "#",
-      label: "TikTok"
+      label: "TikTok",
     },
-    
+    {
+      icon: <FaTelegramPlane size={22} />,
+      bg: "bg-gradient-to-br from-sky-400 via-sky-500 to-blue-600",
+      link: "https://t.me/6285649590078",
+      label: "Telegram",
+    },
   ];
 
   const containerVariants = {
@@ -75,7 +81,7 @@ const SocialMediaSection = () => {
           <span className="inline-block px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full text-sm font-semibold mb-4 shadow-lg">
             #PGRIJepara
           </span>
-          
+
           <h2 className="text-3xl md:text-5xl font-bold mb-4">
             <span className="bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
               Official Media Sosial
@@ -85,13 +91,14 @@ const SocialMediaSection = () => {
               PGRI Jepara
             </span>
           </h2>
-          
+
           <p className="text-gray-600 mb-12 max-w-2xl mx-auto text-lg">
-            Ikuti kami di berbagai platform media sosial untuk mendapatkan informasi terbaru dan update kegiatan PGRI Jepara
+            Ikuti kami di berbagai platform media sosial untuk mendapatkan
+            informasi terbaru dan update kegiatan PGRI Jepara
           </p>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           className="flex justify-center items-center gap-6 flex-wrap"
           variants={containerVariants}
           initial="hidden"
@@ -108,21 +115,25 @@ const SocialMediaSection = () => {
             >
               <a
                 href={item.link}
-                className={`w-16 h-16 flex items-center justify-center rounded-full text-white ${item.bg} shadow-lg hover:shadow-2xl transition-all duration-300 relative overflow-hidden`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`w-16 h-16 flex items-center justify-center rounded-full text-white ${item.bg} shadow-lg hover:shadow-2xl hover:shadow-blue-400/40 transition-all duration-300 relative overflow-hidden`}
                 aria-label={item.label}
               >
                 {/* Shine effect */}
                 <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
-                
+
                 {/* Pulse ring */}
-                <div className={`absolute inset-0 rounded-full ${item.bg} opacity-0 group-hover:opacity-30 group-hover:scale-150 transition-all duration-500`}></div>
-                
+                <div
+                  className={`absolute inset-0 rounded-full ${item.bg} opacity-0 group-hover:opacity-30 group-hover:scale-150 transition-all duration-500`}
+                ></div>
+
                 {/* Icon */}
                 <span className="relative z-10 group-hover:rotate-12 transition-transform duration-300">
                   {item.icon}
                 </span>
               </a>
-              
+
               {/* Tooltip */}
               <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-sm font-medium text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
                 {item.label}
@@ -130,8 +141,6 @@ const SocialMediaSection = () => {
             </motion.div>
           ))}
         </motion.div>
-
-       
       </div>
     </div>
   );
