@@ -285,14 +285,14 @@ const page = () => {
   const handleCreateHistory = async () => {
     const now = new Date();
     
-    // Format date components
+
     const hari = now.toLocaleDateString("id-ID", { weekday: "long" });
     const tanggal = now.toISOString().split("T")[0];
     const jam = now.toTimeString().split(" ")[0];
     const bulan = now.toLocaleString("id-ID", { month: "long" });
     const tahun = now.getFullYear();
   
-    // Get user details
+
     const userRole = sessionStorage.getItem("role");
     const namaLengkapUser = userRole === "USER" 
       ? userData.namaLengkap 
@@ -304,10 +304,10 @@ const page = () => {
       jam,
       npa: userData.npaPgri,
       nama: userData.namaLengkap,
-      cabang: userData.cabang, // Use current cabang before mutation
+      cabang: userData.cabang,
       uraian: "Pindah Cabang",
-      masuk: cabang, // New cabang as masuk
-      keluar: userData.cabang, // Current cabang as keluar
+      masuk: cabang, 
+      keluar: userData.cabang,
       bulan,
       tahun,
       cabang_ke_2: cabang,

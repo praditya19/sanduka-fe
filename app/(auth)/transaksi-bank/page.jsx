@@ -1262,30 +1262,34 @@ export default function BankTransactionPage() {
 
   // Balancing
   const handleImportBalancing = async () => {
-    if (!fileImport || !tagihanUntukBulan) {
-      alert("File dan tanggal harus diisi");
-      return;
-    }
+  if (!fileImport || !tagihanUntukBulan) {
+    alert("File dan tanggal harus diisi");
+    return;
+  }
 
-    try {
-      await GlobalApi.importExcelTargetIuran(fileImport, tagihanUntukBulan);
+  try {
+    console.log("Tagihan Untuk Bulan yang dikirim:", tagihanUntukBulan);
+    console.log("Tipe data:", typeof tagihanUntukBulan);
 
-      setNotification({
-        type: "success",
-        message: "Import Berhasil!",
-      });
+    await GlobalApi.importExcelTargetIuran(fileImport, tagihanUntukBulan);
 
-      setShowImportBalancing(false);
-      setFileImport(null);
-      setTagihanUntukBulan("");
-    } catch (error) {
-      console.error("Import gagal:", error);
-      setNotification({
-        type: "error",
-        message: "Terjadi kesalahan saat import data.",
-      });
-    }
-  };
+    setNotification({
+      type: "success",
+      message: "Import Berhasil!",
+    });
+
+    setShowImportBalancing(false);
+    setFileImport(null);
+    setTagihanUntukBulan("");
+  } catch (error) {
+    console.error("Import gagal:", error);
+    setNotification({
+      type: "error",
+      message: "Terjadi kesalahan saat import data.",
+    });
+  }
+};
+
   const handleSort = (key) => {
     let direction = "asc";
     if (sortConfig.key === key && sortConfig.direction === "asc") {
@@ -1339,7 +1343,7 @@ export default function BankTransactionPage() {
             />
           )}
 
-          <div className="mb-8">
+          <div className="mb-4">
             <h1 className="text-2xl font-bold text-gray-800">
               Transaksi Pemotongan Bank
             </h1>
@@ -1350,22 +1354,11 @@ export default function BankTransactionPage() {
           </div>
 
           <div
-            className={`bg-white rounded-xl shadow-sm mb-8 ${
+            className={`bg-white rounded-xl shadow-sm mb-2 ${
               activeTab === "potongan" ? "w-full" : "w-[1900px]"
             }`}
           >
-            <div className="p-1 border-b border-gray-100">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-800">
-                    Ringkasan Pembayaran Anggota
-                  </h2>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Data berdasarkan filter pada tab aktif di bawah.
-                  </p>
-                </div>
-              </div>
-            </div>
+            
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-1 mt-4">
               <div className="p-4 rounded-lg bg-gradient-to-br from-teal-50 to-white border border-teal-100">
