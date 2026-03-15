@@ -3171,7 +3171,7 @@ function RekapAnggota() {
                   <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-4xl relative space-y-6  overflow-y-auto  max-h-screen">
                     <button
                       type="button"
-                      className="absolute top-2 right-2 text-gray-500 hover:text-teal-600 text-xl"
+                      className="absolute top-24 right-6 text-gray-500 hover:text-teal-600 text-xl"
                       onClick={closePopup}
                     >
                       ✕

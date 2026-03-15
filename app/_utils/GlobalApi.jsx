@@ -1329,10 +1329,9 @@ const deleteBalancingById = async (id) => {
   }
 };
 
-const deleteBalancing = async (tagihanUntukBulan, config = {}) => {
+const deleteBalancing = (tagihanUntukBulan) => {
   return axiosClient.delete(
-    `/api/target-iuran-anggota/by-bulan/${encodeURIComponent(tagihanUntukBulan)}`,
-    config,
+    `/api/target-iuran-anggota/by-bulan?tagihanUntukBulan=${tagihanUntukBulan}`
   );
 };
 
