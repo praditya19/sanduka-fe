@@ -120,6 +120,7 @@ const Page = () => {
   const [notification, setNotification] = useState(null);
   const [fetchedPages, setFetchedPages] = useState([]);
   const itemsPerPage = 10;
+  const [selectedStatus, setSelectedStatus] = useState("Aktif");
   // end
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -139,7 +140,8 @@ const Page = () => {
     cabang = "",
     searchText = "",
     month = "",
-    year = ""
+    year = "",
+    status = ""
   ) => {
     setLoading(true);
     try {
@@ -149,7 +151,8 @@ const Page = () => {
         cabang,
         month,
         year,
-        searchText
+        searchText,
+        status
       );
 
       if (fetchedData && fetchedData.data.content) {
@@ -183,11 +186,26 @@ const Page = () => {
     }
   };
 
+  const handleStatusChange = (event) => {
+    const status = event.target.value;
+    setSelectedStatus(status);
+    setCurrentPage(1);
+    fetchPensiunData(
+      0,
+      itemsPerPage,
+      selectedCabang,
+      searchText,
+      selectedMonth,
+      selectedYear,
+      status
+    );
+  };
+
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setSearchText(value);
     setCurrentPage(1);
-    fetchPensiunData(0, 10, selectedCabang, value, selectedMonth, selectedYear);
+    fetchPensiunData(0, 10, selectedCabang, value, selectedMonth, selectedYear, selectedStatus);
   };
 
   useEffect(() => {
@@ -216,9 +234,10 @@ const Page = () => {
       selectedCabang,
       searchText,
       selectedMonth,
-      selectedYear
+      selectedYear,
+      selectedStatus
     );
-  }, [selectedCabang, selectedMonth, selectedYear]);
+  }, [selectedCabang, selectedMonth, selectedYear, selectedStatus]);
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -236,7 +255,8 @@ const Page = () => {
         selectedCabang,
         searchText,
         selectedMonth,
-        selectedYear
+        selectedYear,
+        selectedStatus
       );
     }
   };
@@ -250,7 +270,8 @@ const Page = () => {
         selectedCabang,
         searchText,
         selectedMonth,
-        selectedYear
+        selectedYear,
+        selectedStatus
       );
     }
   };
@@ -279,7 +300,8 @@ const Page = () => {
         selectedCabang,
         searchText,
         selectedMonth,
-        selectedYear
+        selectedYear,
+        selectedStatus
       );
     }
   };
@@ -295,7 +317,8 @@ const Page = () => {
       cabang.kecamatan || "",
       searchText,
       selectedMonth,
-      selectedYear
+      selectedYear,
+      selectedStatus
     );
   };
 
@@ -373,7 +396,8 @@ const Page = () => {
       selectedCabang,
       searchText,
       month,
-      selectedYear
+      selectedYear,
+      selectedStatus
     );
   };
 
@@ -387,7 +411,8 @@ const Page = () => {
       selectedCabang,
       searchText,
       selectedMonth,
-      year
+      year,
+      selectedStatus
     );
   };
 
@@ -407,7 +432,7 @@ const Page = () => {
   }, []);
 
   useEffect(() => {
-    fetchPensiunData(0, itemsPerPage, "");
+    fetchPensiunData(0, itemsPerPage, "", "", "", "", "Aktif");
 
     const role = sessionStorage.getItem("role");
     if (role === "ADMIN") {
@@ -434,18 +459,21 @@ const Page = () => {
     try {
       const response = await GlobalApi.getAllPensiun(
         0,
-        500,
+        1000,
         cabang,
         bulan,
-        tahun
+        tahun,
+        searchText,
+        selectedStatus
       );
 
-      const jsonData = Array.isArray(response.data.content)
-        ? response.data.content
-        : [];
+      const jsonData = response.data?.content || [];
 
       if (jsonData.length === 0) {
-        alert("Tidak ada data untuk diunduh.");
+        setNotification({
+          type: "error",
+          message: "Tidak ada data untuk diunduh dengan filter ini.",
+        });
         return;
       }
 
@@ -460,24 +488,23 @@ const Page = () => {
         "Unit Kerja": row.unitKerja,
         Usia: row.usia,
         Cabang: row.cabang,
-        Status:
-          row.keterangan === null
-            ? row.status === "Segera"
-              ? "Segera"
-              : "Aktif"
-            : "Aktif",
+        Status: row.status,
         "Nomor HP": row.nomorHp || "-",
       }));
 
       const worksheet = XLSX.utils.json_to_sheet(filteredData);
-
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Data Pensiun");
 
-      XLSX.writeFile(workbook, `data_pensiun_${tahun}_${bulan || "all"}.xlsx`);
+      const fileName = `data_${selectedStatus.toLowerCase()}_${tahun}_${bulan || "semua"}.xlsx`;
+
+      XLSX.writeFile(workbook, fileName);
     } catch (error) {
       console.error("Gagal mendownload data:", error);
-      alert("Terjadi kesalahan saat mendownload data.");
+      setNotification({
+        type: "error",
+        message: "Terjadi kesalahan saat mengambil data untuk Excel.",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -522,8 +549,8 @@ const Page = () => {
 
   useEffect(() => {
     const currentYear = new Date().getFullYear();
-    const futureYears = Array.from({ length: 11 }, (_, i) => currentYear + i);
-    setYearOptions(futureYears);
+    const years = Array.from({ length: 21 }, (_, i) => (currentYear - 10) + i);
+    setYearOptions(years);
   }, []);
 
   useEffect(() => {
@@ -623,9 +650,8 @@ const Page = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <main
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="p-4 md:p-6 pt-20">
             <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 mb-6">
@@ -760,6 +786,26 @@ const Page = () => {
                   </select>
                 </div>
 
+                <div>
+                  <label
+                    htmlFor="statusInput"
+                    className="text-sm font-medium text-gray-600 mb-1 block"
+                  >
+                    Status Keanggotaan
+                  </label>
+                  <select
+                    id="statusInput"
+                    value={selectedStatus}
+                    onChange={handleStatusChange}
+                    className="p-2 border rounded-lg w-full bg-white shadow-sm"
+                  >
+                    {/* <option value="">Semua Status</option> */}
+                    <option value="Aktif">Aktif</option>
+                    <option value="Segera">Segera</option>
+                    <option value="Pensiun">Pensiun</option>
+                  </select>
+                </div>
+
                 {/* Filter Cari */}
                 <div>
                   <label
@@ -828,9 +874,8 @@ const Page = () => {
                   </button>
 
                   <button
-                    className={`bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center justify-center transition-colors ${
-                      isLoading ? "opacity-70 cursor-not-allowed" : ""
-                    }`}
+                    className={`bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center justify-center transition-colors ${isLoading ? "opacity-70 cursor-not-allowed" : ""
+                      }`}
                     onClick={() =>
                       !isLoading &&
                       handleDownloadExcel(
@@ -986,7 +1031,7 @@ const Page = () => {
                                   {formatDate(pensiun.tanggalLahir)}
                                 </div>
                                 <div className="text-gray-600 text-sm">
-                                  Cabang: {pensiun.cabang}
+                                  HP: {pensiun.nomorHp}
                                 </div>
                               </td>
                               <td className="py-3 px-4 hidden lg:table-cell">
@@ -997,21 +1042,25 @@ const Page = () => {
                                   {pensiun.unitKerja}
                                 </div>
                                 <div className="text-gray-600 text-sm">
+                                  {pensiun.cabang}
+                                </div>
+                                <div className="text-gray-600 text-sm">
                                   Usia: {pensiun.usia} tahun
                                 </div>
                                 <div className="mt-1">
                                   <span
-                                    className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                      pensiun.status === "Segera"
-                                        ? "bg-red-100 text-red-800"
+                                    className={`px-2 py-1 rounded-full text-xs font-medium ${pensiun.status === "Segera"
+                                      ? "bg-red-100 text-red-800"
+                                      : pensiun.status === "Pensiun"
+                                        ? "bg-gray-100 text-gray-800"
                                         : "bg-green-100 text-green-800"
-                                    }`}
+                                      }`}
                                   >
-                                    {pensiun.keterangan === null
-                                      ? pensiun.status === "Segera"
-                                        ? "Segera Pensiun"
-                                        : "Aktif"
-                                      : "Aktif"}
+                                    {pensiun.status === "Segera"
+                                      ? "Segera Pensiun"
+                                      : pensiun.status === "Pensiun"
+                                        ? "Pensiun"
+                                        : "Aktif"}
                                   </span>
                                 </div>
                               </td>
@@ -1090,11 +1139,10 @@ const Page = () => {
                                       </div>
                                       <div className="mt-1">
                                         <span
-                                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                            pensiun.status === "Segera"
-                                              ? "bg-red-100 text-red-800"
-                                              : "bg-green-100 text-green-800"
-                                          }`}
+                                          className={`px-2 py-1 rounded-full text-xs font-medium ${pensiun.status === "Segera"
+                                            ? "bg-red-100 text-red-800"
+                                            : "bg-green-100 text-green-800"
+                                            }`}
                                         >
                                           {pensiun.keterangan === null
                                             ? pensiun.status === "Segera"
@@ -1197,11 +1245,10 @@ const Page = () => {
                         <button
                           key={page}
                           onClick={() => handlePageClick(page)}
-                          className={`px-3 py-1 border rounded-md text-sm ${
-                            page === currentPage
-                              ? "bg-teal-600 text-white border-teal-600"
-                              : "bg-white hover:bg-gray-50"
-                          }`}
+                          className={`px-3 py-1 border rounded-md text-sm ${page === currentPage
+                            ? "bg-teal-600 text-white border-teal-600"
+                            : "bg-white hover:bg-gray-50"
+                            }`}
                         >
                           {page}
                         </button>
