@@ -1792,13 +1792,15 @@ const getAllPensiun = (
   bulan = null,
   tahun = null,
   keyword = null,
+  status = null
 ) => {
   const params = new URLSearchParams({ page, size });
 
   if (cabang) params.append("cabang", cabang);
   if (bulan) params.append("bulan", bulan);
   if (tahun) params.append("tahun", tahun);
-  if (keyword) params.append("keyword", encodeURIComponent(keyword));
+  if (keyword) params.append("keyword", keyword);
+  if (status) params.append("status", status);
 
   return axiosClient.get(`/api/pensiun?${params.toString()}`);
 };
@@ -3530,6 +3532,10 @@ const createPaketTour = async (data) => {
     formData.append("jumlahReview", data.jumlahReview);
     formData.append("author", data.author);
     formData.append("statusPaket", data.statusPaket);
+    
+    if (data.link) {
+      formData.append("link", data.link);
+    }
 
     if (data.gambarCover) {
       formData.append("gambarCover", data.gambarCover);
@@ -3539,15 +3545,105 @@ const createPaketTour = async (data) => {
       "/api/tour/paket/create",
       formData,
       {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      },
+        headers: { "Content-Type": "multipart/form-data" },
+      }
     );
 
     return response.data;
   } catch (error) {
-    console.error("Error create paket tour:", error);
+    console.error("Error createPaketTour:", error);
+    throw error;
+  }
+};
+
+const updatePaketTour = async (id, data) => {
+  try {
+    const formData = new FormData();
+
+    if (data.namaPaket !== undefined) formData.append("namaPaket", data.namaPaket);
+    if (data.durasi !== undefined) formData.append("durasi", data.durasi);
+    if (data.destinasi !== undefined) formData.append("destinasi", data.destinasi);
+    if (data.deskripsiPaket !== undefined) formData.append("deskripsiPaket", data.deskripsiPaket);
+    if (data.hargaNormal !== undefined) formData.append("hargaNormal", data.hargaNormal);
+    if (data.hargaDiskon !== undefined) formData.append("hargaDiskon", data.hargaDiskon);
+    if (data.persentaseDiskon !== undefined) formData.append("persentaseDiskon", data.persentaseDiskon);
+    if (data.ratingPaket !== undefined) formData.append("ratingPaket", data.ratingPaket);
+    if (data.jumlahReview !== undefined) formData.append("jumlahReview", data.jumlahReview);
+    if (data.author !== undefined) formData.append("author", data.author);
+    if (data.statusPaket !== undefined) formData.append("statusPaket", data.statusPaket);
+    if (data.link !== undefined) formData.append("link", data.link);
+
+    if (data.gambarCover) {
+      formData.append("gambarCover", data.gambarCover);
+    }
+
+    const response = await axiosClient.put(
+      `/api/tour/paket/${id}`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error updatePaketTour:", error);
+    throw error;
+  }
+};
+
+const getPaketById = async (id) => {
+  try {
+    const response = await axiosClient.get(`/api/tour/paket/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error getPaketById:", error);
+    throw error;
+  }
+};
+
+const getPaketBySlug = async (slug) => {
+  try {
+    const response = await axiosClient.get(`/api/tour/paket/slug/${slug}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error getPaketBySlug:", error);
+    throw error;
+  }
+};
+
+const getAllPaket = async (nama = "", page = 0, size = 10) => {
+  try {
+    const response = await axiosClient.get(`/api/tour/paket/all`, {
+      params: {
+        nama,
+        page,
+        size,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error getAllPaket:", error);
+    throw error;
+  }
+};
+
+const deletePaket = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/tour/paket/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error deletePaket:", error);
+    throw error;
+  }
+};
+
+const publishPaket = async (id) => {
+  try {
+    const response = await axiosClient.post(`/api/tour/paket/${id}/publish`);
+    return response.data;
+  } catch (error) {
+    console.error("Error publishPaket:", error);
     throw error;
   }
 };
@@ -3793,5 +3889,11 @@ export default {
   getAllEditor,
   deleteEditor,
   createPaketTour,
+  updatePaketTour,
+  getPaketById,
+  getPaketBySlug,
+  getAllPaket,
+  deletePaket,
+  publishPaket,
   importExcelTargetIuran,
 };

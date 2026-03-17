@@ -36,6 +36,7 @@ import {
   faImages,
   faNewspaper,
   faPenNib,
+  faEarth,
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import {
@@ -293,6 +294,12 @@ export default function IconGrid() {
       label: "Kontributor",
       href: "/berita/create-berita",
       color: "text-orange-600",
+    },
+    {
+      icon: faEarth,
+      label: "Tour & Travel",
+      href: "/biro-perjalanan/create-paket",
+      color: "text-blue-600",
     },
   ];
 
