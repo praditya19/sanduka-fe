@@ -104,12 +104,15 @@ const CreatePaket = () => {
   const initialForm = {
     namaPaket: "", durasi: "", destinasi: "", deskripsiPaket: "",
     hargaNormal: "", hargaDiskon: "", persentaseDiskon: "",
-    ratingPaket: "0", jumlahReview: "0", author: "", link: "", statusPaket: "DRAFT"
+    ratingPaket: "0", jumlahReview: "0", author: "", link: "", statusPaket: "DRAFT",
+    nomorHp: ""
   };
 
   const [formData, setFormData] = useState(initialForm);
   const [gambarCover, setGambarCover] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [galleryFiles, setGalleryFiles] = useState([]);
+  const [galleryPreviews, setGalleryPreviews] = useState([]);
 
   useEffect(() => {
     fetchPackages();
@@ -183,38 +186,42 @@ const CreatePaket = () => {
     });
   };
 
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        let width = img.width;
-        let height = img.height;
+    try {
+      const safeFile = await compressImage(file);
+      setGambarCover(safeFile);
+      setPreview(URL.createObjectURL(safeFile));
+    } catch (error) {
+      console.error("Gagal memproses gambar cover:", error);
+      setNotification({ type: "error", message: "Gagal membaca file gambar." });
+    }
+  };
 
-        const MAX_WIDTH = 1200;
-        if (width > MAX_WIDTH) {
-          height = Math.round((height * MAX_WIDTH) / width);
-          width = MAX_WIDTH;
-        }
+  const handleGalleryChange = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
 
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, width, height);
+    try {
+      const compressedFiles = await Promise.all(
+        files.map(file => compressImage(file))
+      );
 
-        canvas.toBlob((blob) => {
-          const processedFile = new File([blob], "cover.jpg", { type: "image/jpeg" });
-          setGambarCover(processedFile);
-          setPreview(URL.createObjectURL(processedFile));
-        }, "image/jpeg", 0.7);
-      };
-      img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
+      setGalleryFiles((prev) => [...prev, ...compressedFiles]);
+      
+      const newPreviews = compressedFiles.map(file => URL.createObjectURL(file));
+      setGalleryPreviews((prev) => [...prev, ...newPreviews]);
+    } catch (error) {
+      console.error("Gagal memproses gambar gallery:", error);
+      setNotification({ type: "error", message: "Gagal membaca gambar gallery." });
+    }
+  };
+
+  const removeGalleryImage = (index) => {
+    setGalleryFiles((prev) => prev.filter((_, i) => i !== index));
+    setGalleryPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const resetForm = () => {
@@ -223,49 +230,171 @@ const CreatePaket = () => {
     setPreview(null);
     setIsEditMode(false);
     setSelectedId(null);
+    setGalleryFiles([]);
+    setGalleryPreviews([]);
+  };
+
+  const compressImage = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          let width = img.width;
+          let height = img.height;
+
+          const MAX_WIDTH = 1200;
+          if (width > MAX_WIDTH) {
+            height = Math.round((height * MAX_WIDTH) / width);
+            width = MAX_WIDTH;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+
+          ctx.fillStyle = "#FFFFFF";
+          ctx.fillRect(0, 0, width, height);
+          
+          ctx.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const safeName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
+                const processedFile = new File([blob], safeName, { type: "image/jpeg" });
+                resolve(processedFile);
+              } else {
+                reject(new Error("Gagal memproses canvas"));
+              }
+            },
+            "image/jpeg",
+            0.8
+          );
+        };
+        img.onerror = (error) => reject(error);
+      };
+      reader.onerror = (error) => reject(error);
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    const dataToSend = {
-      ...formData,
-      hargaNormal: parseFloat(formData.hargaNormal) || 0,
-      hargaDiskon: parseFloat(formData.hargaDiskon) || 0,
-      ratingPaket: parseFloat(formData.ratingPaket) || 0,
-      jumlahReview: parseInt(formData.jumlahReview) || 0,
-      gambarCover: gambarCover
+    const data = new FormData();
+
+    const appendSafe = (key, value, fallback = "") => {
+      if (value !== undefined && value !== null && String(value) !== "undefined" && String(value).trim() !== "") {
+        data.append(key, value);
+      } else if (fallback !== "") {
+        data.append(key, fallback);
+      }
     };
+
+    appendSafe("namaPaket", formData.namaPaket);
+    appendSafe("destinasi", formData.destinasi);
+    appendSafe("durasi", formData.durasi);
+    appendSafe("author", formData.author);
+    appendSafe("deskripsiPaket", formData.deskripsiPaket);
+    appendSafe("persentaseDiskon", formData.persentaseDiskon);
+    appendSafe("link", formData.link);
+    appendSafe("nomorHp", formData.nomorHp);
+
+    appendSafe("hargaNormal", formData.hargaNormal, "0");
+    appendSafe("hargaDiskon", formData.hargaDiskon, "0");
+    appendSafe("ratingPaket", formData.ratingPaket, "0");
+    appendSafe("jumlahReview", formData.jumlahReview, "0");
+    appendSafe("statusPaket", formData.statusPaket, "DRAFT");
+
+    if (gambarCover) {
+      data.append("gambarCover", gambarCover);
+    }
+
+    if (galleryFiles && galleryFiles.length > 0) {
+      galleryFiles.forEach((file) => {
+        data.append("gambarTambahan", file);
+      });
+    }
 
     try {
       if (isEditMode) {
-        await GlobalApi.updatePaketTour(selectedId, dataToSend);
+        await GlobalApi.updatePaketTour(selectedId, data);
         setNotification({ type: "success", message: "Paket berhasil diperbarui!" });
       } else {
-        await GlobalApi.createPaketTour(dataToSend);
+        await GlobalApi.createPaketTour(data);
         setNotification({ type: "success", message: "Paket berhasil disimpan!" });
       }
       resetForm();
       fetchPackages();
     } catch (err) {
-      setNotification({ type: "error", message: err.response?.data?.message || "Gagal memproses data" });
+      console.error("❌ ERROR DARI SERVER:", err.response?.data || err.message);
+      
+      let errorMsg = "Gagal memproses data. Cek Console!";
+      if (err.response?.status === 413 || (err.response?.data?.message && err.response.data.message.includes("SizeLimitExceeded"))) {
+        errorMsg = "Ukuran gambar terlalu besar! Maksimal upload ditolak server.";
+      } else if (err.response?.data?.message) {
+        errorMsg = err.response.data.message;
+      }
+
+      setNotification({ type: "error", message: errorMsg });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEdit = (pkg) => {
+  const handleEdit = async (pkg) => {
     setIsEditMode(true);
     setSelectedId(pkg.id);
+    
     setFormData({
       namaPaket: pkg.namaPaket, durasi: pkg.durasi, destinasi: pkg.destinasi,
       deskripsiPaket: pkg.deskripsiPaket, hargaNormal: pkg.hargaNormal,
       hargaDiskon: pkg.hargaDiskon, persentaseDiskon: pkg.persentaseDiskon,
       ratingPaket: pkg.ratingPaket, jumlahReview: pkg.jumlahReview,
-      author: pkg.author, link: pkg.link, statusPaket: pkg.statusPaket
+      author: pkg.author, link: pkg.link, statusPaket: pkg.statusPaket,
+      nomorHp: pkg.nomorHp || ""
     });
+    
     setPreview(pkg.gambarCover ? `data:image/jpeg;base64,${pkg.gambarCover}` : null);
+    setGambarCover(null); 
+
+    if (pkg.gambarTambahan && pkg.gambarTambahan.length > 0) {
+      setLoading(true);
+      
+      try {
+        const existingPreviews = [];
+        const existingFiles = [];
+
+        for (let i = 0; i < pkg.gambarTambahan.length; i++) {
+          const base64String = pkg.gambarTambahan[i];
+          const imgSrc = `data:image/jpeg;base64,${base64String}`;
+          
+          existingPreviews.push(imgSrc);
+
+          const res = await fetch(imgSrc);
+          const blob = await res.blob();
+          const file = new File([blob], `gambar-lama-${pkg.id}-${i}.jpg`, { type: 'image/jpeg' });
+          
+          existingFiles.push(file);
+        }
+
+        setGalleryPreviews(existingPreviews);
+        setGalleryFiles(existingFiles);
+
+      } catch (err) {
+        console.error("Gagal memproses ulang gambar lama:", err);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      setGalleryPreviews([]);
+      setGalleryFiles([]);
+    }
+    
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -358,6 +487,13 @@ const CreatePaket = () => {
                 <Input label="Durasi" name="durasi" value={formData.durasi} onChange={handleChange} />
                 <Input label="Author / Penyelenggara" name="author" value={formData.author} onChange={handleChange} />
                 <Input
+                  label="Nomor WA (Customer Service)"
+                  name="nomorHp"
+                  value={formData.nomorHp}
+                  onChange={handleChange}
+                  placeholder="Contoh: 08123456789"
+                />
+                <Input
                   label="Harga Normal (Rp)"
                   name="hargaNormal"
                   type="number"
@@ -412,6 +548,37 @@ const CreatePaket = () => {
                     <input type="file" accept="image/*" onChange={handleImageChange} className="text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
                   </div>
                 </div>
+              </div>
+
+              {/* UPLOAD GALLERY (MULTIPLE) */}
+              <div className="bg-gray-50 p-6 rounded-xl border-2 border-dashed border-gray-200 mt-6">
+                <label className="text-xs font-bold text-gray-500 mb-4 block uppercase tracking-wider">Gambar Tambahan (Gallery)</label>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleGalleryChange}
+                  className="text-sm mb-4 block w-full file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+                />
+
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  {galleryPreviews.map((src, index) => (
+                    <div key={index} className="relative group aspect-video rounded-lg overflow-hidden border bg-white shadow-sm">
+                      <img src={src} className="w-full h-full object-cover" alt="Gallery" />
+                      <button
+                        type="button"
+                        onClick={() => removeGalleryImage(index)}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition shadow-md"
+                        title="Hapus Gambar"
+                      >
+                        <FaTimesCircle size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                {galleryPreviews.length === 0 && (
+                  <p className="text-center text-gray-400 text-xs italic mt-2">Belum ada gambar tambahan yang dipilih</p>
+                )}
               </div>
 
               <button type="submit" disabled={loading} className={`w-full py-4 rounded-xl font-bold text-white transition-all shadow-lg ${loading ? 'bg-gray-400' : isEditMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-green-600 hover:bg-green-700'}`}>

@@ -3517,30 +3517,9 @@ const deleteEditor = async (id) => {
 
 //Biro & Tour
 //Paket Wisata
-const createPaketTour = async (data) => {
+const createPaketTour = async (formData) => {
   try {
-    const formData = new FormData();
-
-    formData.append("namaPaket", data.namaPaket);
-    formData.append("durasi", data.durasi);
-    formData.append("destinasi", data.destinasi);
-    formData.append("deskripsiPaket", data.deskripsiPaket);
-    formData.append("hargaNormal", data.hargaNormal);
-    formData.append("hargaDiskon", data.hargaDiskon);
-    formData.append("persentaseDiskon", data.persentaseDiskon);
-    formData.append("ratingPaket", data.ratingPaket);
-    formData.append("jumlahReview", data.jumlahReview);
-    formData.append("author", data.author);
-    formData.append("statusPaket", data.statusPaket);
-    
-    if (data.link) {
-      formData.append("link", data.link);
-    }
-
-    if (data.gambarCover) {
-      formData.append("gambarCover", data.gambarCover);
-    }
-
+    // formData sudah disusun rapi dari CreatePaket.jsx, langsung kirim saja!
     const response = await axiosClient.post(
       "/api/tour/paket/create",
       formData,
@@ -3556,27 +3535,8 @@ const createPaketTour = async (data) => {
   }
 };
 
-const updatePaketTour = async (id, data) => {
+const updatePaketTour = async (id, formData) => {
   try {
-    const formData = new FormData();
-
-    if (data.namaPaket !== undefined) formData.append("namaPaket", data.namaPaket);
-    if (data.durasi !== undefined) formData.append("durasi", data.durasi);
-    if (data.destinasi !== undefined) formData.append("destinasi", data.destinasi);
-    if (data.deskripsiPaket !== undefined) formData.append("deskripsiPaket", data.deskripsiPaket);
-    if (data.hargaNormal !== undefined) formData.append("hargaNormal", data.hargaNormal);
-    if (data.hargaDiskon !== undefined) formData.append("hargaDiskon", data.hargaDiskon);
-    if (data.persentaseDiskon !== undefined) formData.append("persentaseDiskon", data.persentaseDiskon);
-    if (data.ratingPaket !== undefined) formData.append("ratingPaket", data.ratingPaket);
-    if (data.jumlahReview !== undefined) formData.append("jumlahReview", data.jumlahReview);
-    if (data.author !== undefined) formData.append("author", data.author);
-    if (data.statusPaket !== undefined) formData.append("statusPaket", data.statusPaket);
-    if (data.link !== undefined) formData.append("link", data.link);
-
-    if (data.gambarCover) {
-      formData.append("gambarCover", data.gambarCover);
-    }
-
     const response = await axiosClient.put(
       `/api/tour/paket/${id}`,
       formData,
