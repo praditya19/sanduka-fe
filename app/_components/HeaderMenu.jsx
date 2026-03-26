@@ -32,7 +32,6 @@ const HeaderMenu = () => {
   const [isIconBlinking, setIsIconBlinking] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
-  
   const fetchUserData = async () => {
     const userId = sessionStorage.getItem("userId");
     const userRole = sessionStorage.getItem("role");
@@ -326,18 +325,22 @@ const HeaderMenu = () => {
                   {/* Profile Dropdown */}
                   {isProfileMenuOpen && (
                     <div className="absolute right-0 mt-36 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50">
-                      <Link
-                        href={getEditProfilePath()}
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
-                      >
-                        Edit Profile
-                      </Link>
+                      {sessionStorage.getItem("role") !== "EDITOR" && (
+                        <Link
+                          href={getEditProfilePath()}
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
+                        >
+                          Edit Profile
+                        </Link>
+                      )}
+
                       <button
                         onClick={handleLogout}
                         className="text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
                       >
                         Logout
                       </button>
+
                       <button
                         onClick={handleMuteToggle}
                         className="text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
