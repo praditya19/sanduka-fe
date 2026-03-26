@@ -283,12 +283,14 @@ const HeaderMobile = () => {
               </button>
               {isProfileMenuOpen && (
                 <div className="absolute right-0 mt-44 w-48 bg-white shadow-md rounded-md z-10">
-                  <Link
-                    href={getEditProfilePath()}
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
-                  >
-                    Edit Profile
-                  </Link>
+                  {sessionStorage.getItem("role") !== "EDITOR" && (
+                        <Link
+                          href={getEditProfilePath()}
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
+                        >
+                          Edit Profile
+                        </Link>
+                      )}
                   <button
                     onClick={handleLogout}
                     className="text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
