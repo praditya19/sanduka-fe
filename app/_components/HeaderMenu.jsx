@@ -44,7 +44,7 @@ const HeaderMenu = () => {
     try {
       let idToFetch = userId;
 
-      if (userRole === "SUPERADMIN" && npa) {
+      if ((userRole === "SUPERADMIN" || userRole === "EDITOR") && npa) {
         const npaResponse = await GlobalApi.cekNpa(npa);
 
         if (npaResponse && npaResponse.id) {
@@ -452,14 +452,16 @@ const HeaderMenu = () => {
               </li>
 
               {/* Mobile Menu Items */}
-              <li>
-                <Link
-                  href={getEditProfilePath()}
-                  className="block px-3 py-2 text-white hover:bg-teal-700 rounded-md"
-                >
-                  Edit Profile
-                </Link>
-              </li>
+              {sessionStorage.getItem("role") !== "EDITOR" && (
+                <li>
+                  <Link
+                    href={getEditProfilePath()}
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
+                  >
+                    Edit Profile
+                  </Link>
+                </li>
+              )}
               <li>
                 <button
                   onClick={handleMuteToggle}
