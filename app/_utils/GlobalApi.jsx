@@ -1331,7 +1331,7 @@ const deleteBalancingById = async (id) => {
 
 const deleteBalancing = (tagihanUntukBulan) => {
   return axiosClient.delete(
-    `/api/target-iuran-anggota/by-bulan?tagihanUntukBulan=${tagihanUntukBulan}`
+    `/api/target-iuran-anggota/by-bulan?tagihanUntukBulan=${tagihanUntukBulan}`,
   );
 };
 
@@ -1792,7 +1792,7 @@ const getAllPensiun = (
   bulan = null,
   tahun = null,
   keyword = null,
-  status = null
+  status = null,
 ) => {
   const params = new URLSearchParams({ page, size });
 
@@ -3519,13 +3519,12 @@ const deleteEditor = async (id) => {
 //Paket Wisata
 const createPaketTour = async (formData) => {
   try {
-    // formData sudah disusun rapi dari CreatePaket.jsx, langsung kirim saja!
     const response = await axiosClient.post(
       "/api/tour/paket/create",
       formData,
       {
         headers: { "Content-Type": "multipart/form-data" },
-      }
+      },
     );
 
     return response.data;
@@ -3537,13 +3536,9 @@ const createPaketTour = async (formData) => {
 
 const updatePaketTour = async (id, formData) => {
   try {
-    const response = await axiosClient.put(
-      `/api/tour/paket/${id}`,
-      formData,
-      {
-        headers: { "Content-Type": "multipart/form-data" },
-      }
-    );
+    const response = await axiosClient.put(`/api/tour/paket/${id}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
 
     return response.data;
   } catch (error) {
@@ -3607,6 +3602,29 @@ const publishPaket = async (id) => {
     throw error;
   }
 };
+// END
+
+// LIVE
+const createLinkLive = async (data) => {
+  try {
+    const response = await axiosClient.post("/api/live-link/create", data);
+
+    return response.data;
+  } catch (error) {
+    console.error("Error createLinkLive:", error);
+    throw error;
+  }
+};
+const getLinkLive = () => axiosClient.get("/api/live-link");
+const deleteLinkLive = async () => {
+  try {
+    const response = await axiosClient.delete("/api/live-link/delete");
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+// END
 
 // Export all functions
 export default {
@@ -3856,4 +3874,7 @@ export default {
   deletePaket,
   publishPaket,
   importExcelTargetIuran,
+  createLinkLive,
+  getLinkLive,
+  deleteLinkLive,
 };

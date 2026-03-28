@@ -44,7 +44,7 @@ import {
   FaCheckCircle,
   FaExclamationCircle,
 } from "react-icons/fa";
-import { faUbuntu } from "@fortawesome/free-brands-svg-icons";
+import { faUbuntu, faYoutube } from "@fortawesome/free-brands-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import FooterMobile from "@/app/_components/FooterMobile";
@@ -863,14 +863,23 @@ export default function IconGrid() {
             return order.indexOf(a.label) - order.indexOf(b.label);
           })
       : role === "SUPERADMIN"
-        ? icons.concat({
-            icon: faNewspaper,
-            label: "Berita",
-            href: "/berita/view-berita",
-            color: "text-purple-600",
-            bgHover: "hover:bg-purple-100",
-            iconColor: "text-purple-700",
-          })
+        ? icons
+            .concat({
+              icon: faNewspaper,
+              label: "Berita",
+              href: "/berita/view-berita",
+              color: "text-purple-600",
+              bgHover: "hover:bg-purple-100",
+              iconColor: "text-purple-700",
+            })
+            .concat({
+              icon: faYoutube,
+              label: "LIVE",
+              href: "/live-link",
+              color: "text-red-600",
+              bgHover: "hover:bg-red-100",
+              iconColor: "text-red-700",
+            })
         : role === "EDITOR"
           ? [
               ...icons.filter((item) => item.label === "Kontributor"),
