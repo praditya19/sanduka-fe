@@ -1,17 +1,41 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Youtube } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
+import GlobalApi from "@/app/_utils/GlobalApi";
 
 const Live = () => {
-  const liveLink = "";
+  const [liveLink, setLiveLink] = useState("");
 
   const phoneNumber = "6285649590078";
   const whatsappLink = `https://wa.me/${phoneNumber}`;
 
+  useEffect(() => {
+    const fetchLink = async () => {
+      try {
+        const res = await GlobalApi.getLinkLive();
+
+        // Jika url tidak ada atau tulisannya "Tidak ada link live", jangan tampilkan tombol
+        if (
+          res?.data?.url &&
+          res.data.url !== "Tidak ada link live" &&
+          res.data.url.trim() !== ""
+        ) {
+          setLiveLink(res.data.url);
+        } else {
+          setLiveLink(""); // pastikan kosong
+        }
+      } catch (error) {
+        console.error("Gagal mengambil live link:", error);
+      }
+    };
+
+    fetchLink();
+  }, []);
+
   return (
     <>
-      {/* 🔴 LIVE - Kanan Atas */}
+      {/* 🔴 LIVE BUTTON */}
       {liveLink && (
         <div className="fixed top-[85px] right-2 z-50">
           <a
@@ -33,20 +57,15 @@ const Live = () => {
         </div>
       )}
 
+      {/* WhatsApp Floating Button */}
       <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
-        {/* Bubble chat */}
         <div className="bg-white rounded-2xl shadow-xl p-3 max-w-[200px] relative">
           <p className="text-xs text-gray-600">
             Hai! Ada yang bisa kami bantu? 👋
           </p>
-          {/* Segitiga pointer */}
-          <div
-            className="absolute bottom-[-6px] right-6 
-                  w-3 h-3 bg-white transform rotate-45"
-          ></div>
+          <div className="absolute bottom-[-6px] right-6 w-3 h-3 bg-white transform rotate-45"></div>
         </div>
 
-        {/* Tombol WhatsApp */}
         <a
           href={whatsappLink}
           target="_blank"
