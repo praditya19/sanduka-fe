@@ -3626,6 +3626,27 @@ const deleteLinkLive = async () => {
 };
 // END
 
+// Runging Text
+const createRunningText = async (data) => {
+  try {
+    const response = await axiosClient.post("api/running-text/create", data);
+
+    return response.data;
+  } catch (error) {
+    console.error("Error createLinkLive:", error);
+    throw error;
+  }
+};
+const getRunningText = () => axiosClient.get("api/running-text");
+const deleteRunningText = async () => {
+  try {
+    const response = await axiosClient.delete("api/running-text/delete");
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+// END
 // Export all functions
 export default {
   registerUser,
@@ -3876,5 +3897,5 @@ export default {
   importExcelTargetIuran,
   createLinkLive,
   getLinkLive,
-  deleteLinkLive,
+  deleteLinkLive,createRunningText,getRunningText,deleteRunningText,
 };
