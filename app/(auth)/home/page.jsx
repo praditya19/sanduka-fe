@@ -900,20 +900,25 @@ export default function IconGrid() {
                 iconColor: "text-purple-700",
               },
             ]
-          : icons.filter(
-              (item) =>
-                item.label !== "Galeri" &&
-                item.label !== "Eksport Foto" &&
-                item.label !== "Tour & Travel",
-            );
+          : role === "ADMIN"
+            ? icons.filter(
+                (item) =>
+                  item.label !== "Tour & Travel" &&
+                  item.label !== "Pengaturan" &&
+                  item.label !== "Keuangan",
+              )
+            : icons.filter(
+                (item) =>
+                  item.label !== "Galeri" &&
+                  item.label !== "Eksport Foto" &&
+                  item.label !== "Tour & Travel",
+              );
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      {/* Header */}
       {isMobile ? <HeaderMobile /> : <HeaderHome />}
 
       <div className="flex-1">
-        {/* Sidebar */}
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <main
@@ -928,7 +933,7 @@ export default function IconGrid() {
               onClose={() => setNotification(null)}
             />
           )}
-          {/* Hero Banner */}
+
           <div className="relative">
             <div className="h-48 md:h-64 overflow-hidden">
               <img
@@ -938,11 +943,9 @@ export default function IconGrid() {
               />
             </div>
 
-            {/* Profile Section */}
             {(role === "USER" || role === "ADMIN") && (
               <div className="relative mx-auto -mt-32 mb-12 px-4 max-w-md">
                 <div className="bg-white rounded-xl shadow-lg p-4 flex flex-col items-center gap-4 transition-all duration-300 hover:shadow-xl">
-                  {/* User Photo */}
                   <div className="flex flex-col items-center">
                     <div className="h-16 w-16 md:h-20 md:w-20 flex items-center justify-center">
                       <Image
@@ -958,7 +961,7 @@ export default function IconGrid() {
                         unoptimized={true}
                       />
                     </div>
-                    {/* User Details */}
+
                     <div className="text-center mt-2">
                       <h2 className="text-lg md:text-xl font-semibold text-gray-800">
                         {userData?.namaLengkap}
@@ -972,9 +975,7 @@ export default function IconGrid() {
                     </div>
                   </div>
 
-                  {/* User Info */}
                   <div className="flex flex-col items-center text-center flex-1 gap-2 -mt-3">
-                    {/* Membership Status */}
                     <div className="grid grid-cols-3 gap-3 w-full max-w-xs">
                       {[
                         { label: "Daspen", value: userData?.pesertaDaspen },
@@ -1038,11 +1039,9 @@ export default function IconGrid() {
               </div>
             )}
 
-            {/* Stats Cards */}
             {!isMobile && (
               <div className="px-4 mx-auto max-w-6xl -mt-10 mb-12">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {/* Card 1 */}
                   <div className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
                     <div className="flex justify-between items-center">
                       <div>
@@ -1072,7 +1071,6 @@ export default function IconGrid() {
                     </div>
                   </div>
 
-                  {/* Card 2 */}
                   <div className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
                     <div className="flex justify-between items-center">
                       <div>
@@ -1102,7 +1100,6 @@ export default function IconGrid() {
                     </div>
                   </div>
 
-                  {/* Card 3 */}
                   <div className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
                     <div className="flex justify-between items-center">
                       <div>
@@ -1133,7 +1130,6 @@ export default function IconGrid() {
             )}
           </div>
 
-          {/* Menu Icons */}
           <div className="px-4 mx-auto max-w-6xl mb-12 -mt-10">
             <div className="bg-white rounded-xl shadow-md p-6">
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 sm:gap-4">
@@ -1170,7 +1166,6 @@ export default function IconGrid() {
             </div>
           </div>
 
-          {/* Deceased Members Section */}
           <div className="px-4 mx-auto max-w-6xl mb-12 -mt-10">
             <div className="bg-white rounded-xl p-6">
               <div className="flex justify-between items-center mb-6">
@@ -1211,7 +1206,6 @@ export default function IconGrid() {
                           key={index}
                           className="border border-gray-200 rounded-xl overflow-hidden transition-all duration-300 hover:shadow-md"
                         >
-                          {/* Header */}
                           <div className="bg-gradient-to-r from-blue-500 to-blue-700 p-4 text-center">
                             <div className="mx-auto w-20 h-20 rounded-full overflow-hidden border-2 border-white mb-3">
                               <Image
@@ -1236,7 +1230,6 @@ export default function IconGrid() {
                             </p>
                           </div>
 
-                          {/* Info */}
                           <div className="p-4">
                             <div className="text-xs text-gray-600 space-y-1 mb-3">
                               <p>
@@ -1308,28 +1301,18 @@ export default function IconGrid() {
             </div>
           </div>
 
-          {/* News Section */}
           <div className="px-4 mx-auto max-w-6xl mb-12 -mt-10">
             <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 w-full max-w-md sm:max-w-full">
               <News />
             </div>
           </div>
 
-          {/* Galeri Kegiatan Section */}
           <div className="px-4 mx-auto max-w-6xl mb-12 -mt-10">
             <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 w-full max-w-md sm:max-w-full">
               <GaleriKegiatan />
             </div>
           </div>
 
-          {/* Biro Travel Section */}
-          {/* <div className="px-4 mx-auto max-w-6xl mb-12 -mt-10">
-            <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 w-full max-w-md sm:max-w-full">
-              <BiroTravel />
-            </div>
-          </div> */}
-
-          {/* Map Section */}
           <div className="px-4 mx-auto max-w-6xl mb-12 -mt-10">
             <div className="bg-white rounded-xl shadow-md p-6">
               <h2 className="text-xl font-bold text-gray-800 mb-2">
@@ -1347,7 +1330,6 @@ export default function IconGrid() {
             </div>
           </div>
 
-          {/* Metsos Section */}
           <div className="px-4 mx-auto max-w-6xl mb-12 -mt-10">
             <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 w-full max-w-md sm:max-w-full">
               <Metsos />
