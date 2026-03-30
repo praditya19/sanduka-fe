@@ -50,7 +50,7 @@ const HeaderMenu = () => {
         if (npaResponse && npaResponse.id) {
           idToFetch = npaResponse.id;
 
-          sessionStorage.setItem("userId", idToFetch);
+          // sessionStorage.setItem("userId", idToFetch);
         } else {
           console.error("NPA tidak valid atau tidak ditemukan");
           return;
