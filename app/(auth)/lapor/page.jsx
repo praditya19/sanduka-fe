@@ -546,8 +546,8 @@ const FormStep1 = ({
                   <div className="w-full flex flex-col items-start mt-2">
                     <Input
                       type="text"
-                      id="name"
-                      placeholder="Nama"
+                      id="nomorHp"
+                      placeholder="Nomor HP"
                       className="text-sm cursor-not-allowed"
                       value={silaporData?.nomorHp || silaporData?.nohp}
                       readOnly
