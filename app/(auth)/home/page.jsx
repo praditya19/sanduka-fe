@@ -905,12 +905,12 @@ export default function IconGrid() {
                 (item) =>
                   item.label !== "Tour & Travel" &&
                   item.label !== "Pengaturan" &&
+                  item.label !== "Galeri" &&
+                  item.label !== "Eksport Foto" &&
                   item.label !== "Keuangan",
               )
             : icons.filter(
                 (item) =>
-                  item.label !== "Galeri" &&
-                  item.label !== "Eksport Foto" &&
                   item.label !== "Tour & Travel",
               );
 
