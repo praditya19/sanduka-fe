@@ -61,9 +61,9 @@ const Live = () => {
       <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
         <div className="bg-white rounded-2xl shadow-xl p-3 max-w-[200px] relative">
           <p className="text-xs text-gray-600">
-            Hai! Ada yang bisa kami bantu? 👋
+            Bantuan
           </p>
-          <div className="absolute bottom-[-6px] right-6 w-3 h-3 bg-white transform rotate-45"></div>
+          <div className="absolute bottom-[-6px] right-4 w-3 h-3 bg-white transform rotate-45"></div>
         </div>
 
         <a
