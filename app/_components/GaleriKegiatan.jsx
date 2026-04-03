@@ -416,7 +416,7 @@ const GaleriKegiatan = () => {
           ></div>
           <button
             onClick={() => toggleExpand(item.id)}
-            className="text-blue-500 hover:text-blue-700 mt-1 text-sm font-medium focus:outline-none"
+            className="text-blue-500 hover:text-blue-600 mt-1 text-sm font-medium focus:outline-none"
           >
             {isExpanded ? "Lihat lebih sedikit" : "Lihat lebih banyak"}
           </button>
@@ -511,10 +511,11 @@ const GaleriKegiatan = () => {
                     ))}
                   </Swiper>
               ) : (
-                  <div className="container mx-auto px-4 md:px-12 lg:px-24">
+                  // 1. Ubah container menjadi w-full agar menyentuh ujung layar
+                  <div className="w-full">
                       <Swiper
                         modules={[Navigation, Pagination, Autoplay]}
-                        spaceBetween={30}
+                        spaceBetween={0} // 2. Hilangkan jarak antar slide
                         slidesPerView={1}
                         navigation={true}
                         pagination={{ clickable: true }}
@@ -527,21 +528,24 @@ const GaleriKegiatan = () => {
                             key={item.id}
                             className="flex flex-col items-center pb-4"
                           >
+                            {/* 3. Hapus max-w-md dan atur tinggi responsif */}
                             <div
-                              className="relative w-full max-w-md mx-auto"
-                              style={{ height: "400px" }}
+                              className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px]"
                             >
                               <Image
                                 src={item.imageUrl}
                                 alt={item.deskripsi || "Gallery image"}
                                 fill
-                                sizes="(max-width: 640px) 100vw, (max-width: 768px) 90vw, 500px"
-                                className="object-contain"
+                                sizes="100vw"
+                                className="object-cover" // 4. Ubah object-contain menjadi object-cover agar gambar memenuhi ruang
                                 priority={true}
                                 quality={90}
                               />
+                              {/* Tambahkan overlay hitam transparan agar teks deskripsi lebih terbaca (opsional) */}
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                             </div>
-                            <div className="mt-4 text-center w-full px-2 sm:px-4 md:px-8">
+                            
+                            <div className="mt-6 text-center w-full px-4 md:px-12 lg:px-24 max-w-5xl mx-auto">
                                 <div>{renderDescription(item)}</div>
                             </div>
                           </SwiperSlide>
@@ -1314,22 +1318,32 @@ const GaleriKegiatan = () => {
         />
       </div>
 
-      <div id="eventSec" className="bg-gray-50 py-8 z-10">
-        <div className="container mx-auto px-4 md:px-12 lg:px-24">
+      {/* Tambahkan background gradien bernuansa warm/amber agar selaras dengan warna judul Event */}
+      {/* Background Soft / Kalem (Tidak terlalu terang, tidak gelap) */}
+      <div id="eventSec" className="py-16 z-10 relative overflow-hidden bg-gradient-to-br from-stone-100 via-orange-50/60 to-stone-200/50 border-t border-stone-200">
+        
+        {/* Elemen Dekoratif Blob (Sangat transparan agar tidak silau) */}
+        <div className="absolute top-0 left-0 w-80 h-80 bg-amber-300 rounded-full mix-blend-multiply filter blur-[100px] opacity-20"></div>
+        <div className="absolute bottom-10 right-10 w-96 h-96 bg-orange-300 rounded-full mix-blend-multiply filter blur-[100px] opacity-20"></div>
+        
+        <div className="container relative mx-auto px-4 md:px-12 lg:px-24">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-500">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 mb-4 drop-shadow-sm tracking-tight">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600">
                 Event
               </span>
               <br className="md:hidden" /> Kami
             </h2>
-            <div className="w-24 h-1 bg-gradient-to-r from-amber-400 to-orange-400 rounded-full mx-auto mt-3"></div>
+            <div className="w-24 h-1.5 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full mx-auto mt-4 opacity-80"></div>
           </div>
         </div>
-        <GallerySwiper
-          items={eventGalleries}
-          title="Event"
-        />
+        
+        <div className="relative">
+          <GallerySwiper
+            items={eventGalleries}
+            title="Event"
+          />
+        </div>
       </div>
 
       {showPopup && <Popup setUploadFile={setUploadFile} />}

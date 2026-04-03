@@ -1314,6 +1314,12 @@ export default function IconGrid() {
           </div>
 
           <div className="px-4 mx-auto max-w-6xl mb-12 -mt-10">
+            <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 w-full max-w-md sm:max-w-full">
+              <BiroTravel />
+            </div>
+          </div>
+
+          <div className="px-4 mx-auto max-w-6xl mb-12 -mt-10">
             <div className="bg-white rounded-xl shadow-md p-6">
               <h2 className="text-xl font-bold text-gray-800 mb-2">
                 Maps Lokasi Rumah
