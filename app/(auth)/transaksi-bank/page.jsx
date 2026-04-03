@@ -142,8 +142,8 @@ export default function BankTransactionPage() {
   const [dataBalancing, setDataBalancing] = useState([]);
   const [dataRekapitulasi, setDataRekapitulasi] = useState([]);
   const [loadingRekapitulasi, setLoadingRekapitulasi] = useState(false);
-  const [month, setMonth] = useState("all");
-  const [year, setYear] = useState("all");
+  const [month, setMonth] = useState(currentMonth.toString());
+  const [year, setYear] = useState(currentYear.toString());
   const bulanList = [
     { label: "Semua Bulan", value: "all" },
     { label: "Januari", value: "1" },
@@ -1262,33 +1262,33 @@ export default function BankTransactionPage() {
 
   // Balancing
   const handleImportBalancing = async () => {
-  if (!fileImport || !tagihanUntukBulan) {
-    alert("File dan tanggal harus diisi");
-    return;
-  }
+    if (!fileImport || !tagihanUntukBulan) {
+      alert("File dan tanggal harus diisi");
+      return;
+    }
 
-  try {
-    console.log("Tagihan Untuk Bulan yang dikirim:", tagihanUntukBulan);
-    console.log("Tipe data:", typeof tagihanUntukBulan);
+    try {
+      console.log("Tagihan Untuk Bulan yang dikirim:", tagihanUntukBulan);
+      console.log("Tipe data:", typeof tagihanUntukBulan);
 
-    await GlobalApi.importExcelTargetIuran(fileImport, tagihanUntukBulan);
+      await GlobalApi.importExcelTargetIuran(fileImport, tagihanUntukBulan);
 
-    setNotification({
-      type: "success",
-      message: "Import Berhasil!",
-    });
+      setNotification({
+        type: "success",
+        message: "Import Berhasil!",
+      });
 
-    setShowImportBalancing(false);
-    setFileImport(null);
-    setTagihanUntukBulan("");
-  } catch (error) {
-    console.error("Import gagal:", error);
-    setNotification({
-      type: "error",
-      message: "Terjadi kesalahan saat import data.",
-    });
-  }
-};
+      setShowImportBalancing(false);
+      setFileImport(null);
+      setTagihanUntukBulan("");
+    } catch (error) {
+      console.error("Import gagal:", error);
+      setNotification({
+        type: "error",
+        message: "Terjadi kesalahan saat import data.",
+      });
+    }
+  };
 
   const handleSort = (key) => {
     let direction = "asc";
@@ -1358,8 +1358,6 @@ export default function BankTransactionPage() {
               activeTab === "potongan" ? "w-full" : "w-[1900px]"
             }`}
           >
-            
-
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-1 mt-4">
               <div className="p-4 rounded-lg bg-gradient-to-br from-teal-50 to-white border border-teal-100">
                 <div className="flex items-center mb-2">
