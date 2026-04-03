@@ -72,7 +72,7 @@ const BiroTravel = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-50">
-      <Header />
+      {/* <Header /> */}
 
       <div
         className="relative h-[75vh] bg-center bg-cover bg-fixed flex items-center"
