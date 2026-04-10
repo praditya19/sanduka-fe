@@ -2182,11 +2182,29 @@ function RekapAnggota() {
         "NIP",
         "NPA",
         "Nomor Rekening",
+
+        "Default PGRI",
+        "Manual PGRI",
         "PGRI",
+
+        "Default Sanduka",
+        "Manual Sanduka",
         "Sanduka",
+
+        "Default Daspen",
+        "Manual Daspen",
         "Daspen",
+
+        "Default Derap",
+        "Manual Derap",
         "Derap",
+
+        "Default Kalender",
+        "Manual Kalender",
         "Kalender",
+
+        "Default Lain-Lain",
+        "Manual Lain-Lain",
         "Lain-Lain",
         "Total",
       ]);
@@ -2209,12 +2227,31 @@ function RekapAnggota() {
           item.nip || "-",
           item.npaPgri || "-",
           item.nomorRekening || "-",
+
+          item.defaultPgri || 0,
+          item.manualPgri || 0,
           pgri,
+
+          item.defaultSanduka || 0,
+          item.manualSanduka || 0,
           sanduka,
+
+          item.defaultDaspen || 0,
+          item.manualDaspen || 0,
           daspen,
+
+          item.manualDerap || 0,
+          item.defaultDerap || 0,
           derap,
+
+          item.defaultKalender || 0,
+          item.manualKalender || 0,
           kalender,
+
+          item.defaultLainLain || 0,
+          item.manualLainLain || 0,
           lainLain,
+
           total,
         ]);
       });
