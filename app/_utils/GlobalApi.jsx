@@ -3217,7 +3217,7 @@ const deleteByNominal = async (id) => {
 
 const updateByNominal = async (id, data) => {
   try {
-    const response = await axiosClient.put(`/api/by-nominal-new/${id}`, data, {
+    const response = await axiosClient.put(`/api/by-nominal/${id}`, data, {
       headers: {
         "Content-Type": "application/json",
       },
