@@ -1644,11 +1644,7 @@ function RekapAnggota() {
       console.log("Payload Lengkap:", JSON.parse(JSON.stringify(payload)));
 
       if (idIuran) {
-        await GlobalApi.updateByNominalByBulan(
-          dataNpa.npaPgri,
-          tagihanUntukBulan,
-          payload,
-        );
+        await GlobalApi.updateByNominal(payload);
       } else {
         await GlobalApi.createByNominal(payload);
       }
