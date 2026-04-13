@@ -1542,25 +1542,25 @@ function RekapAnggota() {
 
         if (isRegularIuran) {
           if (category.key === "pgri" || category.key === "anggota") {
-            payload.iuranAnggota = oldValue;
-            payload.manualIuranAnggota = manualValue;
-            payload.totalIuranAnggota = totalValue;
+            payload.defaultPgri = oldValue;
+            payload.manualPgri = manualValue;
+            payload.pgri = totalValue;
           } else if (category.key === "sanduka") {
-            payload.iuranSanduka = oldValue;
-            payload.manualIuranSanduka = manualValue;
-            payload.totalIuranSanduka = totalValue;
+            payload.defaultSanduka = oldValue;
+            payload.manualSanduka = manualValue;
+            payload.sanduka = totalValue;
           } else if (category.key === "daspen") {
-            payload.iuranDaspen = oldValue;
-            payload.manualIuranDaspen = manualValue;
-            payload.totalIuranDaspen = totalValue;
+            payload.defaultDaspen = oldValue;
+            payload.manualDaspen = manualValue;
+            payload.daspen = totalValue;
           } else if (category.key === "derap") {
-            payload.iuranDerap = oldValue;
-            payload.manualIuranDerap = manualValue;
-            payload.totalIuranDerap = totalValue;
+            payload.defaultDerap = oldValue;
+            payload.manualDerap = manualValue;
+            payload.derap = totalValue;
           } else if (category.key === "kalender") {
-            payload.iuranKalender = oldValue;
-            payload.manualIuranKalender = manualValue;
-            payload.totalIuranKalender = totalValue;
+            payload.defaultKalender = oldValue;
+            payload.manualKalender = manualValue;
+            payload.kalender = totalValue;
           }
         } else if (jenis) {
           const existingIndex = updatedSumbanganList.findIndex(
@@ -1635,7 +1635,7 @@ function RekapAnggota() {
         }
       });
 
-      payload.manualIuranSumbangan = manualSumbanganTotal;
+      payload.manualLainLain = manualSumbanganTotal;
 
       payload.iuranSumbanganList = updatedSumbanganList.filter(
         (item) => item.jumlah > 0,
