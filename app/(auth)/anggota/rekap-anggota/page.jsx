@@ -321,6 +321,14 @@ function RekapAnggota() {
           groupedByNpa[npa] = item;
         }
       }
+
+      if (item.detailSumbangan) {
+        console.log(
+          `🔎 Raw detailSumbangan untuk ${item.namaAnggota}:`,
+          `Tipe: ${typeof item.detailSumbangan}`,
+          `Value: ${item.detailSumbangan}`,
+        );
+      }
     });
 
     const result = Object.values(groupedByNpa);
@@ -537,6 +545,28 @@ function RekapAnggota() {
         sumbangan: parseFloat(item.lainLain) || 0,
         totalIuran: parseFloat(item.totalIuran) || 0,
         lastUpdatedAtIuran: item.lastUpdatedAtIuran,
+        // ✅ Parse detailSumbangan - bisa jadi string atau array
+        detailSumbangan: (() => {
+          try {
+            if (typeof item.detailSumbangan === "string") {
+              const parsed = JSON.parse(item.detailSumbangan);
+              console.log(
+                `✅ Successfully parsed detailSumbangan for ${item.namaAnggota}:`,
+                parsed,
+              );
+              return Array.isArray(parsed) ? parsed : [];
+            }
+            return Array.isArray(item.detailSumbangan)
+              ? item.detailSumbangan
+              : [];
+          } catch (error) {
+            console.warn(
+              `⚠️ Gagal parse detailSumbangan untuk ${item.namaAnggota}:`,
+              error,
+            );
+            return [];
+          }
+        })(),
       });
 
       acc[unitKey].jumlah += 1;
@@ -1456,9 +1486,6 @@ function RekapAnggota() {
         iuranSumbanganList: [],
       };
 
-      // =============================
-      // ✅ HANDLE IURAN UTAMA
-      // =============================
       groupedIuran.forEach((item) => {
         const key = item.key;
         const isReset = resetKeys.includes(key);
@@ -1495,12 +1522,8 @@ function RekapAnggota() {
         }
       });
 
-      // =============================
-      // ✅ HANDLE SUMBANGAN
-      // =============================
       const updatedSumbanganList = [];
 
-      // dari input sumbangan manual
       if (Array.isArray(sumbanganList)) {
         sumbanganList.forEach((sumbangan) => {
           const jumlah = parseInt(sumbangan.jumlah || 0);
@@ -1516,7 +1539,6 @@ function RekapAnggota() {
         });
       }
 
-      // dari kategori tambahan
       addedCategories.forEach((category) => {
         const oldValue = parseInt(newValues[category.key] || 0);
         const manualValue = parseInt(manualInputs[category.key] || 0);
@@ -1555,9 +1577,6 @@ function RekapAnggota() {
 
       console.log("Payload Final:", payload);
 
-      // =============================
-      // ✅ HIT API
-      // =============================
       if (idByNominal) {
         await GlobalApi.updateByNominal(idByNominal, payload);
       } else {
@@ -1737,6 +1756,21 @@ function RekapAnggota() {
         npaToRekeningMap[item.npa] = item.nomorRekening;
       });
 
+      const allMembers = groupedData.flatMap((g) => g.members || []);
+      const memberWithDetail = allMembers.find(
+        (m) => m.detailSumbangan?.length > 0,
+      );
+
+      console.log("📊 Sample member with detailSumbangan:", memberWithDetail);
+      console.log(
+        "🔍 All detail sumbangan count:",
+        allMembers.flatMap((m) => m.detailSumbangan || []).length,
+      );
+      console.log("📋 Expected structure: { id, namaSumbangan, jumlah }");
+      console.log(
+        "💡 API Response harus include detailSumbangan: [{id, namaSumbangan, jumlah}] (string atau array)",
+      );
+
       const titleText = `Rekap By Nominal${
         selectedCabang ? ` Cabang ${selectedCabang}` : ""
       }${selectedUnitKerja ? ` Unit Kerja ${selectedUnitKerja}` : ""}`;
@@ -1749,10 +1783,12 @@ function RekapAnggota() {
             body { font-family: Arial, sans-serif; margin: 20px; }
             .title { text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 20px; }
             table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-            th, td { border: 1px solid #000; padding: 8px; text-align: center; }
+            th, td { border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle; }
             th { background-color: #00796b; color: white; }
             .total-row { font-weight: bold; background-color: #f5f5f5; }
             .member-list { text-align: left; padding-left: 20px; }
+            td div { line-height: 1.4; }
+            td strong { color: #333; font-weight: 600; }
             @media print {
               .no-print { display: none; }
               table { page-break-inside: auto; }
@@ -1838,9 +1874,31 @@ function RekapAnggota() {
                             <td>Rp. ${parseInt(
                               member.kalender || 0,
                             ).toLocaleString("id-ID")}</td>
-                            <td>Rp. ${parseInt(
-                              member.lainLain || 0,
-                            ).toLocaleString("id-ID")}</td>
+                            <td>
+                              ${
+                                member.detailSumbangan &&
+                                member.detailSumbangan.length > 0
+                                  ? `
+                                <div style="text-align: left; padding: 4px 0;">
+                                  ${member.detailSumbangan
+                                    .map(
+                                      (detail) => `
+                                    <div style="margin-bottom: 4px;">
+                                      <strong>${detail.namaSumbangan}</strong><br>
+                                      Rp. ${parseInt(
+                                        detail.jumlah || 0,
+                                      ).toLocaleString("id-ID")}
+                                    </div>
+                                  `,
+                                    )
+                                    .join("")}
+                                </div>
+                              `
+                                  : `Rp. ${parseInt(
+                                      member.lainLain || 0,
+                                    ).toLocaleString("id-ID")}`
+                              }
+                            </td>
                             <td>Rp. ${parseInt(
                               member.total || 0,
                             ).toLocaleString("id-ID")}</td>
@@ -1889,10 +1947,43 @@ function RekapAnggota() {
                     .toLocaleString("id-ID")}
                 </td>
                 <td>
-                  Rp. ${groupedData
-                    .flatMap((g) => g.members || [])
-                    .reduce((sum, m) => sum + parseInt(m.lainLain || 0), 0)
-                    .toLocaleString("id-ID")}
+                  ${(() => {
+                    const allDetails = groupedData
+                      .flatMap((g) => g.members || [])
+                      .flatMap((m) => m.detailSumbangan || []);
+
+                    if (allDetails.length > 0) {
+                      const detailByName = {};
+                      allDetails.forEach((d) => {
+                        if (!detailByName[d.namaSumbangan]) {
+                          detailByName[d.namaSumbangan] = 0;
+                        }
+                        detailByName[d.namaSumbangan] += parseInt(
+                          d.jumlah || 0,
+                        );
+                      });
+
+                      return `
+                        <div style="text-align: left; padding: 4px 0;">
+                          ${Object.entries(detailByName)
+                            .map(
+                              ([name, total]) => `
+                            <div style="margin-bottom: 4px;">
+                              <strong>${name}</strong><br>
+                              Rp. ${total.toLocaleString("id-ID")}
+                            </div>
+                          `,
+                            )
+                            .join("")}
+                        </div>
+                      `;
+                    }
+
+                    return `Rp. ${groupedData
+                      .flatMap((g) => g.members || [])
+                      .reduce((sum, m) => sum + parseInt(m.lainLain || 0), 0)
+                      .toLocaleString("id-ID")}`;
+                  })()}
                 </td>
                 <td>
                   Rp. ${groupedData
@@ -1923,6 +2014,26 @@ function RekapAnggota() {
     }
   };
 
+  const getTotalSumbangan = (item) => {
+    let details = item.detailSumbangan;
+
+    if (!details) return parseInt(item.lainLain || 0);
+
+    if (typeof details === "string") {
+      try {
+        details = JSON.parse(details);
+      } catch {
+        return parseInt(item.lainLain || 0);
+      }
+    }
+
+    if (Array.isArray(details)) {
+      return details.reduce((sum, d) => sum + parseInt(d.jumlah || 0), 0);
+    }
+
+    return parseInt(item.lainLain || 0);
+  };
+
   const exportToExcel = async () => {
     try {
       setIsExporting(true);
@@ -1940,8 +2051,6 @@ function RekapAnggota() {
       );
 
       allData = processApiResponse(allData, null, false);
-
-      // console.log(`📊 Jumlah data yang didapat: ${allData?.length || 0} data`);
 
       if (!allData || allData.length === 0) {
         alert("Tidak ada data anggota ditemukan untuk tahun ini.");
@@ -1983,8 +2092,6 @@ function RekapAnggota() {
         return;
       }
 
-      // console.log(`🔍 Jumlah data setelah filter: ${filteredData.length} data`);
-
       const latestPerNpa = Object.values(
         filteredData.reduce((acc, item) => {
           const npa = item.npaPgri;
@@ -2007,10 +2114,6 @@ function RekapAnggota() {
           return acc;
         }, {}),
       );
-
-      // console.log(
-      //   `✅ Jumlah data unik setelah ambil terbaru: ${latestPerNpa.length} data`
-      // );
 
       const bulanSekarang = new Date();
       const bulanBerikutnya = new Date(
@@ -2071,6 +2174,27 @@ function RekapAnggota() {
         const lainLain = parseInt(item.lainLain || 0);
         const total = parseInt(item.totalIuran || 0);
 
+        let detailSumbanganFormatted = lainLain;
+        if (item.detailSumbangan) {
+          try {
+            const detailArray =
+              typeof item.detailSumbangan === "string"
+                ? JSON.parse(item.detailSumbangan)
+                : item.detailSumbangan;
+
+            if (Array.isArray(detailArray) && detailArray.length > 0) {
+              detailSumbanganFormatted = detailArray
+                .map(
+                  (d) =>
+                    `${d.namaSumbangan}: Rp. ${parseInt(d.jumlah || 0).toLocaleString("id-ID")}`,
+                )
+                .join(" | ");
+            }
+          } catch (error) {
+            console.warn("Gagal parse detailSumbangan untuk export:", error);
+          }
+        }
+
         excelData.push([
           no++,
           item.cabang || "-",
@@ -2102,7 +2226,8 @@ function RekapAnggota() {
 
           item.defaultLainLain || 0,
           item.manualLainLain || 0,
-          lainLain,
+
+          detailSumbanganFormatted,
 
           total,
         ]);
@@ -2129,13 +2254,18 @@ function RekapAnggota() {
         0,
       );
       const totalLainLain = latestPerNpa.reduce(
-        (sum, g) => sum + parseInt(g.lainLain || 0),
+        (sum, g) => sum + getTotalSumbangan(g),
         0,
       );
       const totalIuran = latestPerNpa.reduce(
         (sum, g) => sum + parseInt(g.totalIuran || 0),
         0,
       );
+
+      console.log("📊 Sample Excel Data Row dengan Detail Sumbangan:");
+      if (excelData.length > 3) {
+        console.log("Row Sample:", excelData[3]);
+      }
 
       excelData.push([]);
       excelData.push([
@@ -3015,9 +3145,28 @@ function RekapAnggota() {
                           )}
                         </td>
                         <td className="p-3 border-b text-right text-sm">
-                          Rp.{" "}
-                          {parseInt(member.sumbangan || 0).toLocaleString(
-                            "id-ID",
+                          {member.detailSumbangan &&
+                          member.detailSumbangan.length > 0 ? (
+                            <div className="text-left">
+                              {member.detailSumbangan.map((detail, idx) => (
+                                <div
+                                  key={idx}
+                                  className="mb-2 pb-2 border-b last:border-b-0"
+                                >
+                                  <div className="font-medium text-xs">
+                                    {detail.namaSumbangan}
+                                  </div>
+                                  <div className="text-xs text-gray-700">
+                                    Rp.{" "}
+                                    {parseInt(
+                                      detail.jumlah || 0,
+                                    ).toLocaleString("id-ID")}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            `Rp. ${parseInt(member.sumbangan || 0).toLocaleString("id-ID")}`
                           )}
                         </td>
                         <td className="p-3 border-b text-right text-sm text-teal-800 font-semibold">
@@ -3974,7 +4123,32 @@ function RekapAnggota() {
                     Rp.{" "}
                     {groupedData
                       .flatMap((g) => g.members || [])
-                      .reduce((sum, m) => sum + parseInt(m.sumbangan || 0), 0)
+                      .reduce((sum, m) => {
+                        let totalSumbangan = 0;
+
+                        if (m.detailSumbangan) {
+                          let details = m.detailSumbangan;
+
+                          if (typeof details === "string") {
+                            try {
+                              details = JSON.parse(details);
+                            } catch (e) {
+                              details = [];
+                            }
+                          }
+
+                          if (Array.isArray(details)) {
+                            totalSumbangan = details.reduce(
+                              (s, d) => s + parseInt(d.jumlah || 0),
+                              0,
+                            );
+                          }
+                        } else {
+                          totalSumbangan = parseInt(m.sumbangan || 0);
+                        }
+
+                        return sum + totalSumbangan;
+                      }, 0)
                       .toLocaleString("id-ID")}
                   </td>
                   <td className="p-3 text-right text-sm font-bold">
