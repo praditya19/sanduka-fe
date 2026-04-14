@@ -995,11 +995,10 @@ function RekapAnggota() {
       }
 
       const dataIuran = await GlobalApi.getByIdByNominal(member.idByNominal);
-      console.log("📦 Data Iuran by NPA:", dataIuran);
+      // console.log("📦 Data Iuran by NPA:", dataIuran);
 
       setDataIuran(dataIuran);
-      // ✅ simpan langsung dari member
-setIdByNominal(member.idByNominal);
+      setIdByNominal(member.idByNominal);
       setIdIuran(dataIuran.id || null);
       setNomorRekening(dataIuran.nomorRekening || "");
 
@@ -1425,172 +1424,171 @@ setIdByNominal(member.idByNominal);
   };
 
   const handleUpdateClick = async () => {
-  if (!dataNpa) return;
+    if (!dataNpa) return;
 
-  try {
-    const tagihanUntukBulan = `${selectedYear}-${selectedMonth
-      .toString()
-      .padStart(2, "0")}-01`;
+    try {
+      const tagihanUntukBulan = `${selectedYear}-${selectedMonth
+        .toString()
+        .padStart(2, "0")}-01`;
 
-    const payload = {
-      defaultPgri: 0,
-      manualPgri: 0,
-      pgri: 0,
+      const payload = {
+        defaultPgri: 0,
+        manualPgri: 0,
+        pgri: 0,
 
-      defaultSanduka: 0,
-      manualSanduka: 0,
-      sanduka: 0,
+        defaultSanduka: 0,
+        manualSanduka: 0,
+        sanduka: 0,
 
-      defaultDaspen: 0,
-      manualDaspen: 0,
-      daspen: 0,
+        defaultDaspen: 0,
+        manualDaspen: 0,
+        daspen: 0,
 
-      defaultDerap: 0,
-      manualDerap: 0,
-      derap: 0,
+        defaultDerap: 0,
+        manualDerap: 0,
+        derap: 0,
 
-      defaultKalender: 0,
-      manualKalender: 0,
-      kalender: 0,
+        defaultKalender: 0,
+        manualKalender: 0,
+        kalender: 0,
 
-      tagihanUntukBulan,
-      iuranSumbanganList: [],
-    };
+        tagihanUntukBulan,
+        iuranSumbanganList: [],
+      };
 
-    // =============================
-    // ✅ HANDLE IURAN UTAMA
-    // =============================
-    groupedIuran.forEach((item) => {
-      const key = item.key;
-      const isReset = resetKeys.includes(key);
+      // =============================
+      // ✅ HANDLE IURAN UTAMA
+      // =============================
+      groupedIuran.forEach((item) => {
+        const key = item.key;
+        const isReset = resetKeys.includes(key);
 
-      const defaultValue = isReset ? 0 : parseInt(item.iuran || 0);
-      const manualValue = isReset
-        ? 0
-        : parseInt(
-            nominalBaruList[`manual${key}`] || nominalBaruList[key] || 0
-          );
+        const defaultValue = isReset ? 0 : parseInt(item.iuran || 0);
+        const manualValue = isReset
+          ? 0
+          : parseInt(
+              nominalBaruList[`manual${key}`] || nominalBaruList[key] || 0,
+            );
 
-      const totalValue = defaultValue + manualValue;
+        const totalValue = defaultValue + manualValue;
 
-      if (key === "pgri" || key === "anggota") {
-        payload.defaultPgri = defaultValue;
-        payload.manualPgri = manualValue;
-        payload.pgri = totalValue;
-      } else if (key === "sanduka") {
-        payload.defaultSanduka = defaultValue;
-        payload.manualSanduka = manualValue;
-        payload.sanduka = totalValue;
-      } else if (key === "daspen") {
-        payload.defaultDaspen = defaultValue;
-        payload.manualDaspen = manualValue;
-        payload.daspen = totalValue;
-      } else if (key === "derap") {
-        payload.defaultDerap = defaultValue;
-        payload.manualDerap = manualValue;
-        payload.derap = totalValue;
-      } else if (key === "kalender") {
-        payload.defaultKalender = defaultValue;
-        payload.manualKalender = manualValue;
-        payload.kalender = totalValue;
-      }
-    });
-
-    // =============================
-    // ✅ HANDLE SUMBANGAN
-    // =============================
-    const updatedSumbanganList = [];
-
-    // dari input sumbangan manual
-    if (Array.isArray(sumbanganList)) {
-      sumbanganList.forEach((sumbangan) => {
-        const jumlah = parseInt(sumbangan.jumlah || 0);
-
-        if (sumbangan.jenis && jumlah > 0) {
-          updatedSumbanganList.push({
-            jenis: sumbangan.jenis,
-            jumlah: jumlah,
-            cabang: dataNpa.cabang,
-            tagihanUntukBulan,
-          });
+        if (key === "pgri" || key === "anggota") {
+          payload.defaultPgri = defaultValue;
+          payload.manualPgri = manualValue;
+          payload.pgri = totalValue;
+        } else if (key === "sanduka") {
+          payload.defaultSanduka = defaultValue;
+          payload.manualSanduka = manualValue;
+          payload.sanduka = totalValue;
+        } else if (key === "daspen") {
+          payload.defaultDaspen = defaultValue;
+          payload.manualDaspen = manualValue;
+          payload.daspen = totalValue;
+        } else if (key === "derap") {
+          payload.defaultDerap = defaultValue;
+          payload.manualDerap = manualValue;
+          payload.derap = totalValue;
+        } else if (key === "kalender") {
+          payload.defaultKalender = defaultValue;
+          payload.manualKalender = manualValue;
+          payload.kalender = totalValue;
         }
       });
-    }
 
-    // dari kategori tambahan
-    addedCategories.forEach((category) => {
-      const oldValue = parseInt(newValues[category.key] || 0);
-      const manualValue = parseInt(manualInputs[category.key] || 0);
-      const totalValue = oldValue + manualValue;
+      // =============================
+      // ✅ HANDLE SUMBANGAN
+      // =============================
+      const updatedSumbanganList = [];
 
-      const isRegularIuran = [
-        "pgri",
-        "anggota",
-        "sanduka",
-        "daspen",
-        "derap",
-        "kalender",
-      ].includes(category.key);
+      // dari input sumbangan manual
+      if (Array.isArray(sumbanganList)) {
+        sumbanganList.forEach((sumbangan) => {
+          const jumlah = parseInt(sumbangan.jumlah || 0);
 
-      if (!isRegularIuran && totalValue > 0) {
-        let jenis =
-          category.keterangan || category.label || category.key;
-
-        const existingIndex = updatedSumbanganList.findIndex(
-          (item) => item.jenis === jenis
-        );
-
-        if (existingIndex === -1) {
-          updatedSumbanganList.push({
-            jenis,
-            jumlah: totalValue,
-            cabang: dataNpa.cabang,
-            tagihanUntukBulan,
-          });
-        } else {
-          updatedSumbanganList[existingIndex].jumlah = totalValue;
-        }
+          if (sumbangan.jenis && jumlah > 0) {
+            updatedSumbanganList.push({
+              jenis: sumbangan.jenis,
+              jumlah: jumlah,
+              cabang: dataNpa.cabang,
+              tagihanUntukBulan,
+            });
+          }
+        });
       }
-    });
 
-    payload.iuranSumbanganList = updatedSumbanganList;
+      // dari kategori tambahan
+      addedCategories.forEach((category) => {
+        const oldValue = parseInt(newValues[category.key] || 0);
+        const manualValue = parseInt(manualInputs[category.key] || 0);
+        const totalValue = oldValue + manualValue;
 
-    console.log("Payload Final:", payload);
+        const isRegularIuran = [
+          "pgri",
+          "anggota",
+          "sanduka",
+          "daspen",
+          "derap",
+          "kalender",
+        ].includes(category.key);
 
-    // =============================
-    // ✅ HIT API
-    // =============================
-    if (idByNominal) {
-      await GlobalApi.updateByNominal(idByNominal, payload);
-    } else {
-      await GlobalApi.createByNominal(payload);
+        if (!isRegularIuran && totalValue > 0) {
+          let jenis = category.keterangan || category.label || category.key;
+
+          const existingIndex = updatedSumbanganList.findIndex(
+            (item) => item.jenis === jenis,
+          );
+
+          if (existingIndex === -1) {
+            updatedSumbanganList.push({
+              jenis,
+              jumlah: totalValue,
+              cabang: dataNpa.cabang,
+              tagihanUntukBulan,
+            });
+          } else {
+            updatedSumbanganList[existingIndex].jumlah = totalValue;
+          }
+        }
+      });
+
+      payload.iuranSumbanganList = updatedSumbanganList;
+
+      console.log("Payload Final:", payload);
+
+      // =============================
+      // ✅ HIT API
+      // =============================
+      if (idByNominal) {
+        await GlobalApi.updateByNominal(idByNominal, payload);
+      } else {
+        await GlobalApi.createByNominal(payload);
+      }
+
+      setNotification({
+        type: "success",
+        message: `Data berhasil diupdate untuk periode ${selectedMonth
+          .toString()
+          .padStart(2, "0")}-${selectedYear}!`,
+      });
+
+      setIsPopupVisible(false);
+      setResetKeys([]);
+      setAddedCategories([]);
+      setNewValues({});
+      setManualInputs({});
+      setNominalBaruList({});
+      setSelectedKategori("");
+      setSelectedKeterangan("");
+    } catch (error) {
+      console.error("Gagal update data:", error);
+      console.error("Error details:", error.response?.data);
+
+      setNotification({
+        type: "error",
+        message: "Gagal update data. Silakan coba lagi.",
+      });
     }
-
-    setNotification({
-      type: "success",
-      message: `Data berhasil diupdate untuk periode ${selectedMonth
-        .toString()
-        .padStart(2, "0")}-${selectedYear}!`,
-    });
-
-    setIsPopupVisible(false);
-    setResetKeys([]);
-    setAddedCategories([]);
-    setNewValues({});
-    setManualInputs({});
-    setNominalBaruList({});
-    setSelectedKategori("");
-    setSelectedKeterangan("");
-  } catch (error) {
-    console.error("Gagal update data:", error);
-    console.error("Error details:", error.response?.data);
-
-    setNotification({
-      type: "error",
-      message: "Gagal update data. Silakan coba lagi.",
-    });
-  }
-};
+  };
 
   const calculateGrandTotal = () => {
     let total = 0;
