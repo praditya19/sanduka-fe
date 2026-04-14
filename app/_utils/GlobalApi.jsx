@@ -3167,7 +3167,7 @@ const getAllByNominal = async () => {
 
 const getByIdByNominal = async (id) => {
   try {
-    const response = await axiosClient.get(`/api/by-nominal-new/${id}`);
+    const response = await axiosClient.get(`/api/by-nominal/detail/${id}`);
     return response.data;
   } catch (error) {
     throw error;
@@ -3217,14 +3217,27 @@ const deleteByNominal = async (id) => {
 
 const updateByNominal = async (id, data) => {
   try {
-    const response = await axiosClient.put(`/api/by-nominal/${id}`, data, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    // 🔴 Validasi ID (biar tidak kejadian [object Object])
+    if (!id || typeof id !== "number") {
+      throw new Error("ID harus berupa number, contoh: 2804");
+    }
+
+    const response = await axiosClient.put(
+      `/api/by-nominal/${id}`,
+      data,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
     return response.data;
   } catch (error) {
-    console.error("Error updating data:", error);
+    console.error(
+      "Error updating data:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 };
