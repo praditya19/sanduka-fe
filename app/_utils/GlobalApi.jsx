@@ -3615,6 +3615,50 @@ const publishPaket = async (id) => {
     throw error;
   }
 };
+
+// Slide Paket
+const createSlidePaket = async (formData) => {
+  try {
+    const response = await axiosClient.post(
+      "/api/tour/slide/create",
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      },
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error createSlidePaket:", error);
+    throw error;
+  }
+};
+
+const getAllSlidePaket = async (nama = "", page = 0, size = 10) => {
+  try {
+    const response = await axiosClient.get(`/api/tour/slide/all`, {
+      params: {
+        nama,
+        page,
+        size,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error getAllSlidePaket:", error);
+    throw error;
+  }
+};
+
+const deleteSlidePaket = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/tour/slide/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error deleteSlidePaket:", error);
+    throw error;
+  }
+};
 // END
 
 // LIVE
@@ -3907,6 +3951,9 @@ export default {
   getAllPaket,
   deletePaket,
   publishPaket,
+  createSlidePaket,
+  getAllSlidePaket,
+  deleteSlidePaket,
   importExcelTargetIuran,
   createLinkLive,
   getLinkLive,
