@@ -18,27 +18,34 @@ const getYouTubeEmbedUrl = (url) => {
 
 const TravelPage = () => {
   const [packages, setPackages] = useState([]);
+  const [promos, setPromos] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [lightboxImage, setLightboxImage] = useState(null);
 
   useEffect(() => {
-    fetchTourPackages();
+    fetchData();
   }, []);
 
-  const fetchTourPackages = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await GlobalApi.getAllPaket("", 0, 50);
+      const [paketResponse, promoResponse] = await Promise.all([
+        GlobalApi.getAllPaket("", 0, 50),
+        GlobalApi.getAllSlidePaket("", 0, 50)
+      ]);
 
-      const publishedData = (response.content || []).filter(
+      const publishedData = (paketResponse.content || []).filter(
         (item) => item.statusPaket === "PUBLISHED" || item.statusPaket === "PUBLISH"
       );
-
       setPackages(publishedData);
+
+      const promoData = Array.isArray(promoResponse) ? promoResponse : (promoResponse?.content || []);
+      setPromos(promoData);
+
     } catch (error) {
-      console.error("Gagal mengambil data paket:", error);
+      console.error("Gagal mengambil data:", error);
     } finally {
       setLoading(false);
     }
@@ -99,6 +106,9 @@ const TravelPage = () => {
     window.open(`https://wa.me/${formattedPhone}?text=${message}`, "_blank");
   };
 
+  const promoPhotos = promos.filter(p => p.foto);
+  const promoVideos = promos.filter(p => !p.foto && p.link && getYouTubeEmbedUrl(p.link));
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-50">
       <Header />
@@ -119,7 +129,7 @@ const TravelPage = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 pb-20">
         {loading ? (
           <div className="flex justify-center items-center py-20">
             <Loader2 className="animate-spin text-blue-600" size={48} />
@@ -172,15 +182,83 @@ const TravelPage = () => {
         )}
 
         {/* Call to Action */}
-        <div className="mt-16 text-center bg-gradient-to-r from-blue-100 to-teal-100 rounded-2xl p-10">
+        <div className="mt-16 text-center bg-gradient-to-r from-blue-100 to-teal-100 rounded-2xl p-10 shadow-sm border border-blue-50">
           <h2 className="text-3xl font-bold text-gray-800 mb-4">Tidak Menemukan yang Anda Cari?</h2>
-          <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl transition-all">
+          <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-md hover:shadow-lg transform hover:-translate-y-1">
             ✨ Hubungi Pakar Perjalanan Kami
           </button>
         </div>
+
+        {!loading && promos.length > 0 && (
+          <div className="mt-24">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Dokumentasi</h2>
+              <div className="w-24 h-1.5 bg-teal-500 rounded-full mx-auto opacity-80"></div>
+            </div>
+
+            {/* --- 1. GRID FOTO BANNER --- */}
+            {promoPhotos.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+                {promoPhotos.map((promo) => (
+                  <div 
+                    key={promo.id} 
+                    className="relative rounded-xl overflow-hidden shadow-lg group cursor-pointer h-[280px] border border-gray-100"
+                    onClick={() => setLightboxImage(renderImage(promo.foto))}
+                  >
+                    <img
+                      src={renderImage(promo.foto)}
+                      alt={promo.keteranganFoto}
+                      className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                    />
+                    {/* Gradasi gelap untuk teks bawah */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-90 transition-opacity group-hover:opacity-100"></div>
+                    
+                    {/* Ikon Zoom di tengah */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <span className="bg-black/50 text-white p-3 rounded-full backdrop-blur-sm">⤢</span>
+                    </div>
+
+                    {/* Teks Keterangan di Pojok Kiri Bawah */}
+                    <div className="absolute bottom-0 left-0 right-0 p-5">
+                      <h3 className="text-white font-bold text-lg md:text-xl drop-shadow-md leading-snug line-clamp-2">
+                        {promo.keteranganFoto}
+                      </h3>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* --- 2. LIST VIDEO YOUTUBE BESAR (TIDAK GABUNG GRID) --- */}
+            {promoVideos.length > 0 && (
+              <div className="space-y-16">
+                {promoVideos.map((promo) => {
+                  const embedUrl = getYouTubeEmbedUrl(promo.link);
+                  return (
+                    <div key={promo.id} className="w-full max-w-5xl mx-auto flex flex-col">
+                      {/* Iframe Video Super Besar */}
+                      <div className="border-[6px] border-[#0d9488] rounded-2xl overflow-hidden shadow-2xl bg-white relative pt-[56.25%] transform transition-transform duration-300 hover:scale-[1.01]">
+                        <iframe
+                          className="absolute top-0 left-0 w-full h-full"
+                          src={embedUrl}
+                          title={promo.keteranganFoto || "YouTube Video"}
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        ></iframe>
+                      </div>
+                      {/* Keterangan dihapus sesuai request */}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+          </div>
+        )}
       </div>
 
-      {/* Modal Detail */}
+      {/* Modal Detail Paket */}
       {selectedPackage && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity">
           <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl relative animate-fade-in-up">
@@ -227,7 +305,6 @@ const TravelPage = () => {
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                               alt={`Gallery ${idx + 1}`}
                             />
-                            {/* Overlay icon kaca pembesar saat di-hover */}
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
                               <span className="text-white opacity-0 group-hover:opacity-100 drop-shadow-md text-2xl">⤢</span>
                             </div>
@@ -292,6 +369,8 @@ const TravelPage = () => {
           </div>
         </div>
       )}
+      
+      {/* Lightbox Popup Galeri */}
       {lightboxImage && (
         <div
           className="fixed inset-0 bg-black/90 z-[1000] flex items-center justify-center p-4 backdrop-blur-sm transition-opacity"
