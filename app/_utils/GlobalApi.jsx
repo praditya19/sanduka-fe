@@ -3661,6 +3661,64 @@ const deleteSlidePaket = async (id) => {
 };
 // END
 
+// vIDEO DASHBOARD
+const createVideoDashboard = async (data) => {
+  try {
+    const response = await axiosClient.post(
+      "/api/video-dashboard",
+      data
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error createVideoDashboard:", error);
+    throw error;
+  }
+};
+
+const getVideoDashboardById = async (id) => {
+  try {
+    const response = await axiosClient.get(`/api/video-dashboard/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error getVideoDashboardById:", error);
+    throw error;
+  }
+};
+
+const getAllVideoDashboard = async () => {
+  try {
+    const response = await axiosClient.get(`/api/video-dashboard`);
+    return response.data;
+  } catch (error) {
+    console.error("Error getAllVideoDashboard:", error);
+    throw error;
+  }
+};
+
+const updateVideoDashboard = async (id, formData) => {
+  try {
+    const response = await axiosClient.put(`/api/video-dashboard/${id}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error updateVideoDashboard:", error);
+    throw error;
+  }
+};
+
+const deleteVideoDashboard = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/video-dashboard/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error deleteVideoDashboard:", error);
+    throw error;
+  }
+};
+
 // LIVE
 const createLinkLive = async (data) => {
   try {
@@ -3954,6 +4012,11 @@ export default {
   createSlidePaket,
   getAllSlidePaket,
   deleteSlidePaket,
+  createVideoDashboard,
+  getVideoDashboardById,
+  getAllVideoDashboard,
+  updateVideoDashboard,
+  deleteVideoDashboard,
   importExcelTargetIuran,
   createLinkLive,
   getLinkLive,

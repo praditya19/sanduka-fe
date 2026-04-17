@@ -101,11 +101,12 @@ const CreatePaket = () => {
 
   const [activeField, setActiveField] = useState(null);
 
+  // 1. UBAH STATE AWAL: nomorHp menjadi array
   const initialForm = {
     namaPaket: "", durasi: "", destinasi: "", deskripsiPaket: "",
     hargaNormal: "", hargaDiskon: "", persentaseDiskon: "",
     ratingPaket: "0", jumlahReview: "0", author: "", link: "", statusPaket: "DRAFT",
-    nomorHp: ""
+    nomorHp: [""] 
   };
 
   const [formData, setFormData] = useState(initialForm);
@@ -177,12 +178,29 @@ const CreatePaket = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
     setActiveField(name);
-
     setFormData({
       ...formData,
       [name]: value,
+    });
+  };
+
+  // 2. HANDLER UNTUK DYNAMIC INPUT NOMOR HP
+  const handlePhoneChange = (index, value) => {
+    const newNomorHp = [...formData.nomorHp];
+    newNomorHp[index] = value;
+    setFormData({ ...formData, nomorHp: newNomorHp });
+  };
+
+  const addPhoneNumber = () => {
+    setFormData({ ...formData, nomorHp: [...formData.nomorHp, ""] });
+  };
+
+  const removePhoneNumber = (index) => {
+    const newNomorHp = formData.nomorHp.filter((_, i) => i !== index);
+    setFormData({ 
+      ...formData, 
+      nomorHp: newNomorHp.length > 0 ? newNomorHp : [""] 
     });
   };
 
@@ -302,7 +320,14 @@ const CreatePaket = () => {
     appendSafe("deskripsiPaket", formData.deskripsiPaket);
     appendSafe("persentaseDiskon", formData.persentaseDiskon);
     appendSafe("link", formData.link);
-    appendSafe("nomorHp", formData.nomorHp);
+
+    // 3. PROSES DATA ARRAY NOMOR HP
+    const validPhones = formData.nomorHp.filter((hp) => hp.trim() !== "");
+    if (validPhones.length > 0) {
+      validPhones.forEach((hp) => {
+        data.append("nomorHp", hp.trim());
+      });
+    }
 
     appendSafe("hargaNormal", formData.hargaNormal, "0");
     appendSafe("hargaDiskon", formData.hargaDiskon, "0");
@@ -350,13 +375,14 @@ const CreatePaket = () => {
     setIsEditMode(true);
     setSelectedId(pkg.id);
     
+    // 4. MEMASUKKAN ARRAY NOMOR HP DARI BE KE FORM
     setFormData({
       namaPaket: pkg.namaPaket, durasi: pkg.durasi, destinasi: pkg.destinasi,
       deskripsiPaket: pkg.deskripsiPaket, hargaNormal: pkg.hargaNormal,
       hargaDiskon: pkg.hargaDiskon, persentaseDiskon: pkg.persentaseDiskon,
       ratingPaket: pkg.ratingPaket, jumlahReview: pkg.jumlahReview,
       author: pkg.author, link: pkg.link, statusPaket: pkg.statusPaket,
-      nomorHp: pkg.nomorHp || ""
+      nomorHp: Array.isArray(pkg.nomorHp) && pkg.nomorHp.length > 0 ? pkg.nomorHp : [""]
     });
     
     setPreview(pkg.gambarCover ? `data:image/jpeg;base64,${pkg.gambarCover}` : null);
@@ -481,18 +507,47 @@ const CreatePaket = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid md:grid-cols-3 gap-6">
+              <div className="grid md:grid-cols-3 gap-6 items-start">
                 <Input label="Nama Paket" name="namaPaket" value={formData.namaPaket} onChange={handleChange} required />
                 <Input label="Destinasi" name="destinasi" value={formData.destinasi} onChange={handleChange} />
                 <Input label="Durasi" name="durasi" value={formData.durasi} onChange={handleChange} />
                 <Input label="Author / Penyelenggara" name="author" value={formData.author} onChange={handleChange} />
-                <Input
-                  label="Nomor WA (Customer Service)"
-                  name="nomorHp"
-                  value={formData.nomorHp}
-                  onChange={handleChange}
-                  placeholder="Contoh: 08123456789"
-                />
+                
+                {/* 5. UI DINAMIS MULTIPLE NOMOR WA */}
+                <div className="flex flex-col col-span-1">
+                  <label className="text-xs font-bold text-gray-400 mb-1 uppercase">Nomor WA (Customer Service)</label>
+                  {formData.nomorHp.map((hp, index) => (
+                    <div key={index} className="flex items-center gap-2 mb-2">
+                      <input
+                        className="w-full border p-2.5 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-blue-500 transition-all font-medium text-gray-700 placeholder:text-gray-300"
+                        value={hp}
+                        onChange={(e) => handlePhoneChange(index, e.target.value)}
+                        placeholder="Contoh: 08123456789"
+                      />
+                      {formData.nomorHp.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removePhoneNumber(index)}
+                          className="p-2.5 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition"
+                          title="Hapus Nomor"
+                        >
+                          <FaTimesCircle />
+                        </button>
+                      )}
+                      {index === formData.nomorHp.length - 1 && (
+                        <button
+                          type="button"
+                          onClick={addPhoneNumber}
+                          className="p-2.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition"
+                          title="Tambah Nomor"
+                        >
+                          <FaPlus />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
                 <Input
                   label="Harga Normal (Rp)"
                   name="hargaNormal"

@@ -13,6 +13,16 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
+const getYouTubeEmbedUrl = (url) => {
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  if (match && match[2].length === 11) {
+    return `https://www.youtube.com/embed/${match[2]}`;
+  }
+  return null;
+};
+
 const NotificationPopup = ({ type, message, onClose }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -63,6 +73,7 @@ const NotificationPopup = ({ type, message, onClose }) => {
       ></div>
       <div
         className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-full max-w-xs sm:max-w-sm md:max-w-md mx-4 text-center transform transition-all duration-300 ease-in-out`}
+        onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
@@ -107,6 +118,8 @@ const GaleriKegiatan = () => {
   const [expandedItems, setExpandedItems] = useState({});
   const [nonEventGalleries, setNonEventGalleries] = useState([]);
   const [eventGalleries, setEventGalleries] = useState([]);
+  
+  const [videoDashboards, setVideoDashboards] = useState([]);
 
   const [showAllEventsPopup, setShowAllEventsPopup] = useState(false);
   const [showEventDetailPopup, setShowEventDetailPopup] = useState(false);
@@ -117,7 +130,18 @@ const GaleriKegiatan = () => {
     fetchNonEventGalleries();
     fetchUserData();
     fetchEventParticipants();
+    fetchVideoDashboards(); 
   }, []);
+
+  const fetchVideoDashboards = async () => {
+    try {
+      const data = await GlobalApi.getAllVideoDashboard();
+      const list = Array.isArray(data) ? data : (data?.content || []);
+      setVideoDashboards(list);
+    } catch (error) {
+      console.error("Error fetching video dashboards:", error);
+    }
+  };
 
   const fetchEventParticipants = async () => {
     try {
@@ -511,11 +535,10 @@ const GaleriKegiatan = () => {
                     ))}
                   </Swiper>
               ) : (
-                  // 1. Ubah container menjadi w-full agar menyentuh ujung layar
                   <div className="w-full">
                       <Swiper
                         modules={[Navigation, Pagination, Autoplay]}
-                        spaceBetween={0} // 2. Hilangkan jarak antar slide
+                        spaceBetween={0} 
                         slidesPerView={1}
                         navigation={true}
                         pagination={{ clickable: true }}
@@ -528,7 +551,6 @@ const GaleriKegiatan = () => {
                             key={item.id}
                             className="flex flex-col items-center pb-4"
                           >
-                            {/* 3. Hapus max-w-md dan atur tinggi responsif */}
                             <div
                               className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px]"
                             >
@@ -537,11 +559,10 @@ const GaleriKegiatan = () => {
                                 alt={item.deskripsi || "Gallery image"}
                                 fill
                                 sizes="100vw"
-                                className="object-cover" // 4. Ubah object-contain menjadi object-cover agar gambar memenuhi ruang
+                                className="object-cover" 
                                 priority={true}
                                 quality={90}
                               />
-                              {/* Tambahkan overlay hitam transparan agar teks deskripsi lebih terbaca (opsional) */}
                               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                             </div>
                             
@@ -571,6 +592,7 @@ const GaleriKegiatan = () => {
         <div
           className="relative bg-white rounded-lg shadow-xl z-[1001] w-full max-w-6xl mx-4 transform transition-all duration-300 ease-in-out overflow-hidden"
           style={{ maxHeight: "90vh" }}
+          onClick={(e) => e.stopPropagation()} /* Mencegah klik di dalam popup menutup modal */
         >
           <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center z-10">
             <h3 className="text-2xl font-bold">Semua Event</h3>
@@ -814,6 +836,7 @@ const GaleriKegiatan = () => {
         <div
           className="relative bg-white rounded-lg shadow-xl z-[1001] w-full max-w-4xl mx-4 transform transition-all duration-300 ease-in-out overflow-hidden"
           style={{ maxHeight: "90vh" }}
+          onClick={(e) => e.stopPropagation()} /* Mencegah klik di dalam popup menutup modal */
         >
           <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-end items-center z-10">
             <button
@@ -1142,8 +1165,11 @@ const GaleriKegiatan = () => {
 
     return (
       <div className="fixed inset-0 flex items-center justify-center z-[1000]">
-        <div className="absolute inset-0 bg-black opacity-50"></div>
-        <div className="relative bg-white rounded-lg p-4 sm:p-6 shadow-xl z-[1001] w-full max-w-xs sm:max-w-md md:max-w-lg mx-4 transform transition-all duration-300 ease-in-out overflow-y-auto max-h-[90vh]">
+        <div className="absolute inset-0 bg-black opacity-50" onClick={() => setShowPopup(false)}></div>
+        <div 
+          className="relative bg-white rounded-lg p-4 sm:p-6 shadow-xl z-[1001] w-full max-w-xs sm:max-w-md md:max-w-lg mx-4 transform transition-all duration-300 ease-in-out overflow-y-auto max-h-[90vh]"
+          onClick={(e) => e.stopPropagation()} /* Mencegah klik di dalam popup menutup modal */
+        >
           <button
             onClick={() => setShowPopup(false)}
             className="absolute top-2 right-2 text-red-600 hover:text-red-800 transition-colors"
@@ -1318,7 +1344,6 @@ const GaleriKegiatan = () => {
         />
       </div>
 
-      {/* Tambahkan background gradien bernuansa warm/amber agar selaras dengan warna judul Event */}
       {/* Background Soft / Kalem (Tidak terlalu terang, tidak gelap) */}
       <div id="eventSec" className="py-16 z-10 relative overflow-hidden bg-gradient-to-br from-stone-100 via-orange-50/60 to-stone-200/50 border-t border-stone-200">
         
@@ -1345,6 +1370,45 @@ const GaleriKegiatan = () => {
           />
         </div>
       </div>
+
+      {/* ==========================================
+          SECTION: VIDEO DASHBOARD 
+      =========================================== */}
+      {videoDashboards.length > 0 && (
+        <div id="videoDashboardSec" className="bg-white py-16 relative overflow-hidden z-10 border-t border-gray-200">
+          <div className="container mx-auto px-4 md:px-12 lg:px-24 relative z-10">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 mb-4">
+                Video <span className="text-blue-600">Dokumentasi</span>
+              </h2>
+              <div className="w-24 h-1.5 bg-blue-600 rounded-full mx-auto opacity-80"></div>
+            </div>
+
+            {/* Logika Pintar: Jika 1 video = besar di tengah. Jika > 1 = Grid 2 Kolom */}
+            <div className={videoDashboards.length === 1 ? "max-w-4xl mx-auto" : "grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12"}>
+              {videoDashboards.map((video) => {
+                const embedUrl = getYouTubeEmbedUrl(video.link);
+                if (!embedUrl) return null;
+                return (
+                  <div key={video.id} className="w-full flex flex-col group">
+                    <div className="border-[4px] border-blue-50/80 rounded-2xl overflow-hidden shadow-xl bg-black relative pt-[56.25%] transform transition-transform duration-500 hover:scale-[1.02]">
+                      <iframe
+                        className="absolute top-0 left-0 w-full h-full"
+                        src={embedUrl}
+                        title="Video Dokumentasi"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      ></iframe>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+          </div>
+        </div>
+      )}
 
       {showPopup && <Popup setUploadFile={setUploadFile} />}
       {showAllEventsPopup && <AllEventsPopup />}

@@ -4,6 +4,8 @@ import Header from "@/app/_components/Header";
 import Link from "next/link";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { Loader2, MapPin, Clock, Video, X, Phone } from "lucide-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 
 const BiroTravel = () => {
   const [packages, setPackages] = useState([]);
@@ -11,6 +13,8 @@ const BiroTravel = () => {
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [lightboxImage, setLightboxImage] = useState(null);
+
+  const [showWaOptions, setShowWaOptions] = useState(false);
 
   useEffect(() => {
     fetchLatestPackages();
@@ -36,6 +40,7 @@ const BiroTravel = () => {
   const handleViewDetail = async (id) => {
     try {
       setDetailLoading(true);
+      setShowWaOptions(false);
       const response = await GlobalApi.getPaketById(id);
 
       setSelectedPackage(response);
@@ -59,15 +64,31 @@ const BiroTravel = () => {
     return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}` : null;
   };
 
-  const handleWhatsAppOrder = (pkg) => {
-    if (!pkg.nomorHp) {
+  const proceedToWhatsApp = (phoneStr, pkgName, authorName) => {
+    let formattedPhone = phoneStr.startsWith("0") ? "62" + phoneStr.slice(1) : phoneStr;
+
+    const sapaan = authorName ? authorName : "Admin";
+
+    const message = encodeURIComponent(`Halo ${sapaan}, saya tertarik dengan paket wisata: *${pkgName}*. Bisa minta info lebih lanjut?`);
+    window.open(`https://wa.me/${formattedPhone}?text=${message}`, "_blank");
+    setShowWaOptions(false);
+  };
+
+  const handleWhatsAppClick = (pkg) => {
+    if (!pkg.nomorHp || (Array.isArray(pkg.nomorHp) && pkg.nomorHp.length === 0)) {
       alert("Nomor WhatsApp kontak admin belum tersedia untuk paket ini.");
       return;
     }
 
-    let formattedPhone = pkg.nomorHp.startsWith("0") ? "62" + pkg.nomorHp.slice(1) : pkg.nomorHp;
-    const message = encodeURIComponent(`Halo Sanduka.id, saya tertarik dengan paket: *${pkg.namaPaket}*. Mohon informasi ketersediaan dan detailnya.`);
-    window.open(`https://wa.me/${formattedPhone}?text=${message}`, "_blank");
+    if (Array.isArray(pkg.nomorHp) && pkg.nomorHp.length > 1) {
+      setShowWaOptions(!showWaOptions);
+    }
+    else if (Array.isArray(pkg.nomorHp) && pkg.nomorHp.length === 1) {
+      proceedToWhatsApp(pkg.nomorHp[0], pkg.namaPaket, pkg.author);
+    }
+    else if (typeof pkg.nomorHp === 'string') {
+      proceedToWhatsApp(pkg.nomorHp, pkg.namaPaket, pkg.author);
+    }
   };
 
   return (
@@ -169,8 +190,14 @@ const BiroTravel = () => {
       </section>
 
       {selectedPackage && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[999] p-4 transition-opacity duration-300">
-          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative shadow-2xl animate-fade-in-up">
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[999] p-4 transition-opacity duration-300"
+          onClick={() => setSelectedPackage(null)} 
+        >
+          <div
+            className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative shadow-2xl animate-fade-in-up flex flex-col"
+            onClick={(e) => e.stopPropagation()} 
+          >
             <button
               onClick={() => setSelectedPackage(null)}
               className="absolute top-4 right-4 z-20 bg-white/90 p-2 rounded-full hover:bg-red-500 hover:text-white transition shadow-md"
@@ -178,114 +205,144 @@ const BiroTravel = () => {
               <X size={20} />
             </button>
 
-            <img
-              src={renderImage(selectedPackage.gambarCover)}
-              className="w-full h-64 object-cover"
-              alt={selectedPackage.namaPaket}
-            />
-
-            <div className="p-8">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4 tracking-tight leading-tight">{selectedPackage.namaPaket}</h2>
-
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-blue-50 p-3 rounded-xl flex items-center gap-3">
-                  <MapPin className="text-blue-600" size={20} />
-                  <div>
-                    <p className="text-[10px] text-gray-500 uppercase font-bold">Destinasi</p>
-                    <p className="text-sm font-semibold text-gray-800">{selectedPackage.destinasi}</p>
-                  </div>
-                </div>
-                <div className="bg-orange-50 p-3 rounded-xl flex items-center gap-3">
-                  <Clock className="text-orange-600" size={20} />
-                  <div>
-                    <p className="text-[10px] text-gray-500 uppercase font-bold">Durasi</p>
-                    <p className="text-sm font-semibold text-gray-800">{selectedPackage.durasi}</p>
-                  </div>
-                </div>
+            {detailLoading ? (
+              <div className="flex flex-col items-center justify-center h-64 bg-gray-50">
+                <Loader2 className="animate-spin text-blue-600 mb-2" size={32} />
+                <p className="text-gray-500 text-sm">Memuat detail paket...</p>
               </div>
+            ) : (
+              <>
+                <img
+                  src={renderImage(selectedPackage.gambarCover)}
+                  className="w-full h-64 object-cover"
+                  alt={selectedPackage.namaPaket}
+                />
 
-              {selectedPackage.gambarTambahan && selectedPackage.gambarTambahan.length > 0 && (
-                <div className="mb-8 bg-gray-50 p-5 rounded-2xl border">
-                  <h3 className="font-bold text-gray-800 mb-4 text-sm flex items-center gap-2">📸 Galeri Foto Destinasi</h3>
-                  <div className="flex gap-3 overflow-x-auto pb-2 snap-x scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-gray-50">
-                    {selectedPackage.gambarTambahan.map((base64String, idx) => (
-                      <div
-                        key={idx}
-                        onClick={() => setLightboxImage(renderImage(base64String))}
-                        className="w-32 h-24 flex-shrink-0 snap-start rounded-lg overflow-hidden shadow-sm border border-gray-200 group cursor-pointer relative"
-                      >
-                        <img
-                          src={renderImage(base64String)}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                          alt={`Gallery ${idx + 1}`}
-                        />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
-                          <span className="text-white opacity-0 group-hover:opacity-100 drop-shadow-md text-2xl">⤢</span>
-                        </div>
+                <div className="p-8">
+                  <h2 className="text-2xl font-bold text-gray-800 mb-4 tracking-tight leading-tight">{selectedPackage.namaPaket}</h2>
+
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-blue-50 p-3 rounded-xl flex items-center gap-3">
+                      <MapPin className="text-blue-600" size={20} />
+                      <div>
+                        <p className="text-[10px] text-gray-500 uppercase font-bold">Destinasi</p>
+                        <p className="text-sm font-semibold text-gray-800">{selectedPackage.destinasi}</p>
                       </div>
-                    ))}
+                    </div>
+                    <div className="bg-orange-50 p-3 rounded-xl flex items-center gap-3">
+                      <Clock className="text-orange-600" size={20} />
+                      <div>
+                        <p className="text-[10px] text-gray-500 uppercase font-bold">Durasi</p>
+                        <p className="text-sm font-semibold text-gray-800">{selectedPackage.durasi}</p>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              )}
 
-              <div className="mb-6 prose prose-sm max-w-none prose-blue">
-                <h3 className="font-bold text-gray-800 mb-2 flex items-center gap-2">📝 Deskripsi Paket</h3>
-                <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
-                  {selectedPackage.deskripsiPaket}
-                </p>
-              </div>
+                  {selectedPackage.gambarTambahan && selectedPackage.gambarTambahan.length > 0 && (
+                    <div className="mb-8 bg-gray-50 p-5 rounded-2xl border">
+                      <h3 className="font-bold text-gray-800 mb-4 text-sm flex items-center gap-2">📸 Galeri Foto Destinasi</h3>
+                      <div className="flex gap-3 overflow-x-auto pb-2 snap-x scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-gray-50">
+                        {selectedPackage.gambarTambahan.map((base64String, idx) => (
+                          <div
+                            key={idx}
+                            onClick={() => setLightboxImage(renderImage(base64String))}
+                            className="w-32 h-24 flex-shrink-0 snap-start rounded-lg overflow-hidden shadow-sm border border-gray-200 group cursor-pointer relative"
+                          >
+                            <img
+                              src={renderImage(base64String)}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                              alt={`Gallery ${idx + 1}`}
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
+                              <span className="text-white opacity-0 group-hover:opacity-100 drop-shadow-md text-2xl">⤢</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
-              {selectedPackage.link && getYouTubeEmbedUrl(selectedPackage.link) && (
-                <div className="mb-6">
-                  <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                    <Video size={18} className="text-red-600" /> Video Dokumentasi
-                  </h3>
-                  <div className="relative w-full pb-[56.25%] h-0 rounded-xl overflow-hidden shadow-md">
-                    <iframe
-                      className="absolute top-0 left-0 w-full h-full"
-                      src={getYouTubeEmbedUrl(selectedPackage.link)}
-                      allowFullScreen
-                    ></iframe>
+                  <div className="mb-6 prose prose-sm max-w-none prose-blue">
+                    <h3 className="font-bold text-gray-800 mb-2 flex items-center gap-2">📝 Deskripsi Paket</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
+                      {selectedPackage.deskripsiPaket}
+                    </p>
                   </div>
-                </div>
-              )}
 
-              <div className="flex items-center justify-between border-t pt-6 gap-4">
-                <div>
-                  <p className="text-xs text-gray-500 uppercase font-bold mb-1">Harga Spesial</p>
-                  <div className="flex flex-col">
-                    <div className="flex items-baseline gap-2">
-                      <p className="text-3xl font-bold text-blue-700">
-                        Rp. {selectedPackage.hargaDiskon?.toLocaleString('id-ID')}
-                      </p>
+                  {selectedPackage.link && getYouTubeEmbedUrl(selectedPackage.link) && (
+                    <div className="mb-6">
+                      <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                        <Video size={18} className="text-red-600" /> Video Dokumentasi
+                      </h3>
+                      <div className="relative w-full pb-[56.25%] h-0 rounded-xl overflow-hidden shadow-md">
+                        <iframe
+                          className="absolute top-0 left-0 w-full h-full"
+                          src={getYouTubeEmbedUrl(selectedPackage.link)}
+                          allowFullScreen
+                        ></iframe>
+                      </div>
+                    </div>
+                  )}
 
-                      {selectedPackage.hargaNormal > selectedPackage.hargaDiskon && (
-                        <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                          SAVE {selectedPackage.persentaseDiskon}
-                        </span>
-                      )}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-t pt-6 gap-4 relative">
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase font-bold mb-1">Harga Spesial</p>
+                      <div className="flex flex-col">
+                        <div className="flex items-baseline gap-2">
+                          <p className="text-3xl font-bold text-blue-700">
+                            Rp. {selectedPackage.hargaDiskon?.toLocaleString('id-ID')}
+                          </p>
+
+                          {selectedPackage.hargaNormal > selectedPackage.hargaDiskon && (
+                            <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                              SAVE {selectedPackage.persentaseDiskon}
+                            </span>
+                          )}
+                        </div>
+
+                        {selectedPackage.hargaNormal > selectedPackage.hargaDiskon && (
+                          <p className="text-sm text-gray-400">
+                            <span className="line-through">Rp. {selectedPackage.hargaNormal?.toLocaleString('id-ID')}</span>
+                          </p>
+                        )}
+                      </div>
                     </div>
 
-                    {selectedPackage.hargaNormal > selectedPackage.hargaDiskon && (
-                      <p className="text-sm text-gray-400">
-                        <span className="line-through">Rp. {selectedPackage.hargaNormal?.toLocaleString('id-ID')}</span>
-                      </p>
-                    )}
+                    <div className="w-full sm:w-auto relative">
+                      {/* Opsi Popup WA */}
+                      {showWaOptions && Array.isArray(selectedPackage.nomorHp) && (
+                        <div className="absolute bottom-full right-0 mb-2 p-3 bg-white rounded-xl shadow-xl border border-gray-200 animate-fade-in-up w-full sm:w-64 z-30">
+                          <p className="text-sm font-bold text-gray-700 mb-2 text-center border-b pb-2">Pilih Admin:</p>
+                          <div className="flex flex-col gap-2">
+                            {selectedPackage.nomorHp.map((hp, idx) => (
+                              <button
+                                key={idx}
+                                onClick={() => proceedToWhatsApp(hp, selectedPackage.namaPaket, selectedPackage.author)}
+                                className="w-full py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg text-sm font-semibold border border-green-200 transition-colors flex items-center justify-center gap-2"
+                              >
+                                <FontAwesomeIcon icon={faWhatsapp} /> Admin {idx + 1}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <button
+                        onClick={() => handleWhatsAppClick(selectedPackage)}
+                        className="w-full sm:w-auto bg-[#25D366] hover:bg-[#1DA851] text-white px-8 py-3 rounded-xl font-bold shadow-lg transition active:scale-95 flex justify-center items-center gap-2.5"
+                      >
+                        <Phone size={18} />
+                        Pesan via WhatsApp
+                      </button>
+                    </div>
                   </div>
                 </div>
-
-                <button
-                  onClick={() => handleWhatsAppOrder(selectedPackage)}
-                  className="bg-[#25D366] hover:bg-[#1DA851] text-white px-8 py-3 rounded-xl font-bold shadow-lg transition active:scale-95 flex items-center gap-2.5"
-                >
-                  <Phone size={18} />
-                  Pesan via WhatsApp
-                </button>
-              </div>
-            </div>
+              </>
+            )}
           </div>
         </div>
       )}
+
       {lightboxImage && (
         <div
           className="fixed inset-0 bg-black/90 z-[1000] flex items-center justify-center p-4 backdrop-blur-sm transition-opacity"
@@ -302,7 +359,7 @@ const BiroTravel = () => {
             src={lightboxImage}
             alt="Enlarged view"
             className="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl animate-zoom-in"
-            onClick={(e) => e.stopPropagation()} // Mencegah popup tertutup jika gambarnya yang diklik
+            onClick={(e) => e.stopPropagation()}
           />
         </div>
       )}
