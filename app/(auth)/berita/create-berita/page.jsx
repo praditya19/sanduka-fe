@@ -147,7 +147,7 @@ const CreateBerita = () => {
       },
     ],
   });
-
+  const role = sessionStorage.getItem("role");
   const [preview, setPreview] = useState(null);
   useEffect(() => {
     const nama = sessionStorage.getItem("nama");
@@ -471,9 +471,11 @@ const CreateBerita = () => {
                             <option value="DRAFT">
                               📝 Draft - Dalam Proses
                             </option>
-                            <option value="PUBLISH">
-                              🚀 Publish - Siap Tayang
-                            </option>
+                            {role !== "USER" && (
+                              <option value="PUBLISH">
+                                🚀 Publish - Siap Tayang
+                              </option>
+                            )}
                           </select>
 
                           {formData.status === "DRAFT" ? (
