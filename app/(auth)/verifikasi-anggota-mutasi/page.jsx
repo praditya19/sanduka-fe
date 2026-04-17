@@ -219,14 +219,13 @@ const VerifikasiAnggotaMutasi = () => {
         type: "success",
         message: `Anggota Berhasil Diverifikasi!`,
       });
-      // Add a delay before reloading
       setTimeout(() => {
         window.location.reload();
-      }, 3000); // Give users 3 seconds to see the notification
+      }, 3000); 
     } catch (error) {
       console.error("Error verifying user:", error);
       setNotification({
-        type: "error", // Change this from 'success' to 'error'
+        type: "error", 
         message: `Anggota Gagal Diverifikasi!`,
       });
     }
@@ -245,7 +244,7 @@ const VerifikasiAnggotaMutasi = () => {
     } catch (error) {
       console.error("Error rejecting user:", error);
       setNotification({
-        type: "error", // Change this from 'success' to 'error'
+        type: "error",
         message: `Gagal Menghapus Anggota!`,
       });
     }
