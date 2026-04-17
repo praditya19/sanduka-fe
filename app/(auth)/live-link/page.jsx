@@ -17,7 +17,8 @@ import {
   Upload, 
   Youtube, 
   PlayCircle,
-  AlertTriangle
+  AlertTriangle,
+  MonitorPlay
 } from "lucide-react";
 
 const getYouTubeEmbedUrl = (url) => {
@@ -94,6 +95,7 @@ const LiveLink = () => {
   });
 
   const [url, setUrl] = useState("");
+  
   const [slides, setSlides] = useState([]);
   const [slideFile, setSlideFile] = useState(null);
   const [slidePreview, setSlidePreview] = useState("");
@@ -104,12 +106,17 @@ const LiveLink = () => {
   const [videoKeterangan, setVideoKeterangan] = useState("");
   const [isSubmittingVideo, setIsSubmittingVideo] = useState(false);
 
+  const [videoDashboardList, setVideoDashboardList] = useState([]);
+  const [videoDashboardLink, setVideoDashboardLink] = useState("");
+  const [isSubmittingVideoDashboard, setIsSubmittingVideoDashboard] = useState(false);
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     handleResize();
     window.addEventListener("resize", handleResize);
     
     fetchSlides();
+    fetchVideoDashboards();
 
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -141,6 +148,44 @@ const LiveLink = () => {
       setSlides(slideList);
     } catch (error) {
       console.error("Gagal mengambil slide paket:", error);
+    }
+  };
+
+  const fetchVideoDashboards = async () => {
+    try {
+      const data = await GlobalApi.getAllVideoDashboard();
+      
+      const list = Array.isArray(data) ? data : (data?.content || []);
+      setVideoDashboardList(list);
+    } catch (error) {
+      console.error("Gagal mengambil video dashboard:", error);
+    }
+  };
+
+  const handleCreateVideoDashboard = async (e) => {
+    e.preventDefault();
+    if (!videoDashboardLink.trim()) {
+      setNotification({ type: "error", message: "Link Video Dashboard wajib diisi!" });
+      return;
+    }
+    
+    try {
+      setIsSubmittingVideoDashboard(true);
+      
+      const payload = {
+        link: videoDashboardLink
+      };
+
+      await GlobalApi.createVideoDashboard(payload);
+      setNotification({ type: "success", message: "Video Dashboard berhasil ditambahkan!" });
+      
+      setVideoDashboardLink("");
+      fetchVideoDashboards();
+    } catch (error) {
+      console.error("Error upload video dashboard:", error);
+      setNotification({ type: "error", message: "Gagal menambahkan video dashboard!" });
+    } finally {
+      setIsSubmittingVideoDashboard(false);
     }
   };
 
@@ -204,13 +249,11 @@ const LiveLink = () => {
       setNotification({ type: "error", message: "Foto dan keterangan wajib diisi!" });
       return;
     }
-
     try {
       setIsSubmittingBanner(true);
       const formData = new FormData();
       formData.append("foto", slideFile);
       formData.append("keteranganFoto", slideKeterangan);
-
       await GlobalApi.createSlidePaket(formData);
       setNotification({ type: "success", message: "Banner foto berhasil ditambahkan!" });
       
@@ -233,13 +276,11 @@ const LiveLink = () => {
       setNotification({ type: "error", message: "Link YouTube dan keterangan wajib diisi!" });
       return;
     }
-
     try {
       setIsSubmittingVideo(true);
       const formData = new FormData();
       formData.append("link", videoLink);
       formData.append("keteranganFoto", videoKeterangan);
-
       await GlobalApi.createSlidePaket(formData);
       setNotification({ type: "success", message: "Video Dokumentasi berhasil ditambahkan!" });
       
@@ -264,6 +305,10 @@ const LiveLink = () => {
         await GlobalApi.deleteSlidePaket(deleteConfig.id);
         setNotification({ type: "success", message: "Dokumentasi berhasil dihapus!" });
         fetchSlides();
+      } else if (deleteConfig.type === "VIDEO_DASHBOARD") {
+        await GlobalApi.deleteVideoDashboard(deleteConfig.id);
+        setNotification({ type: "success", message: "Video Dashboard berhasil dihapus!" });
+        fetchVideoDashboards();
       }
     } catch (error) {
       setNotification({ type: "error", message: "Gagal menghapus data tersebut." });
@@ -342,16 +387,14 @@ const LiveLink = () => {
                   Content Manager
                 </h1>
                 <p className="text-gray-500 text-sm md:text-base">
-                  Kelola Link Live, Dokumentasi Foto, dan Video YouTube untuk dokumentasi Anda
+                  Kelola Link Live, Video Dashboard, Dokumentasi Foto, dan Video YouTube Anda
                 </p>
               </div>
 
               <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
                 <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
                   <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.59 13.41a1.5 1.5 0 000 2.12l1.88 1.88a4 4 0 005.66-5.66l-1.17-1.17m-3.54-3.53L11.54 6.3a4 4 0 00-5.66 5.66l1.18 1.18" />
-                    </svg>
+                    <PlayCircle className="w-5 h-5" />
                     Create Live Link
                   </h2>
                 </div>
@@ -386,6 +429,105 @@ const LiveLink = () => {
                       Hapus Link
                     </button>
                   </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+                <div className="bg-gradient-to-r from-purple-600 to-fuchsia-600 px-6 py-4">
+                  <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+                    <MonitorPlay className="w-5 h-5" />
+                    Video Dashboard Utama
+                  </h2>
+                </div>
+
+                <div className="p-6 md:p-8">
+                  <form onSubmit={handleCreateVideoDashboard} className="mb-8">
+                    <label className="block text-gray-700 font-semibold mb-3">
+                      Link Video Dashboard (YouTube)
+                    </label>
+                    <div className="flex flex-col md:flex-row gap-4 items-start">
+                      <div className="w-full md:w-2/3 flex flex-col gap-3">
+                        <input
+                          type="text"
+                          placeholder="https://www.youtube.com/watch?v=..."
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none transition"
+                          value={videoDashboardLink}
+                          onChange={(e) => setVideoDashboardLink(e.target.value)}
+                          required
+                        />
+                        {/* Preview Iframe Langsung di bawah input */}
+                        {videoDashboardLink && getYouTubeEmbedUrl(videoDashboardLink) && (
+                          <div className="relative w-full pt-[56.25%] rounded-xl overflow-hidden shadow-sm border border-gray-200">
+                            <iframe
+                              className="absolute top-0 left-0 w-full h-full"
+                              src={getYouTubeEmbedUrl(videoDashboardLink)}
+                              frameBorder="0"
+                              allowFullScreen
+                            ></iframe>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="w-full md:w-1/3">
+                        <button
+                          type="submit"
+                          disabled={isSubmittingVideoDashboard || !videoDashboardLink}
+                          className="w-full bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-700 hover:to-fuchsia-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isSubmittingVideoDashboard ? "Menyimpan..." : "Simpan Video"}
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+
+                  {/* List Aktif Video Dashboard */}
+                  {videoDashboardList.length > 0 && (
+                    <div className="mt-8 border-t border-gray-100 pt-6">
+                      <h3 className="text-sm font-bold text-gray-800 mb-4 uppercase tracking-wider">
+                        Daftar Video Dashboard Aktif ({videoDashboardList.length})
+                      </h3>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        {videoDashboardList.map((vd) => (
+                          <div key={vd.id} className="border border-gray-200 rounded-xl p-3 flex flex-col sm:flex-row gap-4 items-center bg-gray-50/80 group hover:shadow-md transition-shadow">
+                            {/* Thumbnail Preview */}
+                            <div className="w-full sm:w-40 h-24 rounded-lg overflow-hidden bg-black shrink-0 relative">
+                              {getYouTubeEmbedUrl(vd.link) ? (
+                                <iframe
+                                  className="w-full h-full pointer-events-none"
+                                  src={getYouTubeEmbedUrl(vd.link)}
+                                  title="Video"
+                                  frameBorder="0"
+                                ></iframe>
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-gray-200"><Youtube className="text-gray-400 w-8 h-8" /></div>
+                              )}
+                            </div>
+                            
+                            {/* Detail info */}
+                            <div className="flex-1 min-w-0 w-full text-left">
+                              <a href={vd.link} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 font-medium hover:underline truncate block">
+                                {vd.link}
+                              </a>
+                              {vd.createdAt && (
+                                <p className="text-xs text-gray-400 mt-2 font-medium">
+                                  Diunggah: {`${vd.createdAt[2]}/${vd.createdAt[1]}/${vd.createdAt[0]}`}
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Tombol Hapus */}
+                            <button
+                              onClick={() => setDeleteConfig({ isOpen: true, type: "VIDEO_DASHBOARD", id: vd.id, title: "Video Dashboard" })}
+                              className="p-2.5 text-red-500 bg-white border border-red-100 hover:bg-red-500 hover:text-white rounded-lg transition-colors shadow-sm shrink-0 sm:opacity-0 group-hover:opacity-100"
+                              title="Hapus Video"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
