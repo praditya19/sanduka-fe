@@ -323,11 +323,6 @@ function RekapAnggota() {
       }
 
       if (item.detailSumbangan) {
-        console.log(
-          `🔎 Raw detailSumbangan untuk ${item.namaAnggota}:`,
-          `Tipe: ${typeof item.detailSumbangan}`,
-          `Value: ${item.detailSumbangan}`,
-        );
       }
     });
 
@@ -545,15 +540,10 @@ function RekapAnggota() {
         sumbangan: parseFloat(item.lainLain) || 0,
         totalIuran: parseFloat(item.totalIuran) || 0,
         lastUpdatedAtIuran: item.lastUpdatedAtIuran,
-        // ✅ Parse detailSumbangan - bisa jadi string atau array
         detailSumbangan: (() => {
           try {
             if (typeof item.detailSumbangan === "string") {
               const parsed = JSON.parse(item.detailSumbangan);
-              console.log(
-                `✅ Successfully parsed detailSumbangan for ${item.namaAnggota}:`,
-                parsed,
-              );
               return Array.isArray(parsed) ? parsed : [];
             }
             return Array.isArray(item.detailSumbangan)
@@ -1486,16 +1476,39 @@ function RekapAnggota() {
         iuranSumbanganList: [],
       };
 
-      groupedIuran.forEach((item) => {
+      const mergedIuran = [...groupedIuran];
+
+      addedCategories.forEach((cat) => {
+        const isIuranUtama = [
+          "pgri",
+          "anggota",
+          "sanduka",
+          "daspen",
+          "derap",
+          "kalender",
+        ].includes(cat.key);
+
+        if (isIuranUtama) {
+          const existing = mergedIuran.find((item) => item.key === cat.key);
+
+          if (!existing) {
+            mergedIuran.push({
+              key: cat.key,
+              iuran: newValues[cat.key] || 0,
+            });
+          }
+        }
+      });
+
+      mergedIuran.forEach((item) => {
         const key = item.key;
         const isReset = resetKeys.includes(key);
 
         const defaultValue = isReset ? 0 : parseInt(item.iuran || 0);
+
         const manualValue = isReset
           ? 0
-          : parseInt(
-              nominalBaruList[`manual${key}`] || nominalBaruList[key] || 0,
-            );
+          : parseInt(nominalBaruList[`manual${key}`] || manualInputs[key] || 0);
 
         const totalValue = defaultValue + manualValue;
 
@@ -1531,7 +1544,7 @@ function RekapAnggota() {
           if (sumbangan.jenis && jumlah > 0) {
             updatedSumbanganList.push({
               jenis: sumbangan.jenis,
-              jumlah: jumlah,
+              jumlah,
               cabang: dataNpa.cabang,
               tagihanUntukBulan,
             });
@@ -1540,11 +1553,7 @@ function RekapAnggota() {
       }
 
       addedCategories.forEach((category) => {
-        const oldValue = parseInt(newValues[category.key] || 0);
-        const manualValue = parseInt(manualInputs[category.key] || 0);
-        const totalValue = oldValue + manualValue;
-
-        const isRegularIuran = [
+        const isIuranUtama = [
           "pgri",
           "anggota",
           "sanduka",
@@ -1553,8 +1562,16 @@ function RekapAnggota() {
           "kalender",
         ].includes(category.key);
 
-        if (!isRegularIuran && totalValue > 0) {
-          let jenis = category.keterangan || category.label || category.key;
+        if (isIuranUtama) return;
+
+        const uniqueKey = category.key;
+
+        const oldValue = parseInt(newValues[uniqueKey] || 0);
+        const manualValue = parseInt(manualInputs[uniqueKey] || 0);
+        const totalValue = oldValue + manualValue;
+
+        if (totalValue > 0) {
+          const jenis = category.keterangan || category.label || category.key;
 
           const existingIndex = updatedSumbanganList.findIndex(
             (item) => item.jenis === jenis,
@@ -1575,14 +1592,14 @@ function RekapAnggota() {
 
       payload.iuranSumbanganList = updatedSumbanganList;
 
-      console.log("Payload Final:", payload);
+      // console.log("Payload Final:", payload);
 
       if (idByNominal) {
         await GlobalApi.updateByNominal(idByNominal, payload);
       } else {
         await GlobalApi.createByNominal(payload);
       }
-
+      await fetchInitialData();
       setNotification({
         type: "success",
         message: `Data berhasil diupdate untuk periode ${selectedMonth
@@ -1759,16 +1776,6 @@ function RekapAnggota() {
       const allMembers = groupedData.flatMap((g) => g.members || []);
       const memberWithDetail = allMembers.find(
         (m) => m.detailSumbangan?.length > 0,
-      );
-
-      console.log("📊 Sample member with detailSumbangan:", memberWithDetail);
-      console.log(
-        "🔍 All detail sumbangan count:",
-        allMembers.flatMap((m) => m.detailSumbangan || []).length,
-      );
-      console.log("📋 Expected structure: { id, namaSumbangan, jumlah }");
-      console.log(
-        "💡 API Response harus include detailSumbangan: [{id, namaSumbangan, jumlah}] (string atau array)",
       );
 
       const titleText = `Rekap By Nominal${
@@ -2262,9 +2269,7 @@ function RekapAnggota() {
         0,
       );
 
-      console.log("📊 Sample Excel Data Row dengan Detail Sumbangan:");
       if (excelData.length > 3) {
-        console.log("Row Sample:", excelData[3]);
       }
 
       excelData.push([]);
