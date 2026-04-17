@@ -405,6 +405,17 @@ const Page = () => {
     }
   };
 
+  const handleRantingClick = () => {
+    setAllRantingList(originalRantingList);
+    setShowRantingDropdown(true);
+  };
+
+  const handleUnitKerjaClick = () => {
+    const filtered = allUnitKerja.filter((uk) => uk.cabang === selectedCabang);
+    setFilteredUnitKerjaOptions(filtered);
+    setShowDropdownUnitKerja(true);
+  };
+
   const handleCabangSearch = (query) => {
     const filtered = originalCabangList.filter((cabang) =>
       cabang.kecamatan.toLowerCase().includes(query.toLowerCase())
@@ -693,24 +704,53 @@ const Page = () => {
                         Nama Ranting
                       </label>
                       <div className="relative w-full">
-                        <Select
+                        <Input
+                          type="text"
                           value={selectedRanting}
-                          onValueChange={(value) => setSelectedRanting(value)}
+                          readOnly
                           disabled={!selectedCabang}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Pilih Nama Ranting" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectGroup>
+                          onClick={handleRantingClick}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none"
+                          placeholder="Pilih Nama Ranting"
+                        />
+                        {showRantingDropdown && (
+                          <div
+                            ref={dropdownRef}
+                            className="absolute z-50 w-full border rounded-lg bg-white shadow-sm mt-1"
+                          >
+                            <ul className="max-h-44 overflow-y-auto">
+                              <li className="py-2 px-2">
+                                <Input
+                                  type="text"
+                                  onChange={(e) =>
+                                    handleRantingSearch(e.target.value)
+                                  }
+                                  className="w-full px-4 py-2 border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none"
+                                  placeholder="Cari atau ketik Nama Ranting..."
+                                  autoFocus
+                                />
+                              </li>
+
+                              <li
+                                onClick={() =>
+                                  handleSelectRanting({ namaRanting: "" })
+                                }
+                                className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                              >
+                                Pilih Nama Ranting
+                              </li>
                               {allRantingList.map((ranting) => (
-                                <SelectItem key={ranting.id} value={ranting.namaRanting}>
+                                <li
+                                  key={ranting.id}
+                                  onClick={() => handleSelectRanting(ranting)}
+                                  className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                                >
                                   {ranting.namaRanting}
-                                </SelectItem>
+                                </li>
                               ))}
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
+                            </ul>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -747,27 +787,51 @@ const Page = () => {
                         Nama Unit Kerja
                       </label>
                       <div className="relative w-full">
-                        <Select
+                        <Input
+                          type="text"
                           value={selectedUnitKerja}
-                          onValueChange={(value) => setSelectedUnitKerja(value === "ALL" ? "" : value)}
+                          readOnly
                           disabled={!selectedCabang}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Pilih Unit Kerja" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectGroup>
-                              <SelectItem value="ALL">Semua Unit Kerja</SelectItem>
-                              {allUnitKerja
-                                .filter((uk) => uk.cabang === selectedCabang)
-                                .map((item) => (
-                                  <SelectItem key={item.id} value={item.unitKerja}>
-                                    {item.unitKerja}
-                                  </SelectItem>
-                                ))}
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
+                          onClick={handleUnitKerjaClick}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
+                          placeholder="Pilih Unit Kerja"
+                        />
+                        {showDropdownUnitKerja && (
+                          <div
+                            ref={dropdownRef}
+                            className="absolute z-50 border rounded-lg bg-white shadow-sm mt-1 w-full"
+                          >
+                            <ul className="max-h-44 overflow-y-auto">
+                              <li className="py-2 px-2">
+                                <Input
+                                  type="text"
+                                  onChange={handleUnitKerjaChange}
+                                  className="w-full px-4 py-2 border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none mt-1 transition duration-150 ease-in-out"
+                                  placeholder="Cari atau ketik Unit Kerja..."
+                                  autoFocus
+                                />
+                              </li>
+
+                              <li
+                                onClick={() =>
+                                  handleUnitKerjaSelect({ unitKerja: "ALL" })
+                                }
+                                className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                              >
+                                Semua Unit Kerja
+                              </li>
+                              {filteredUnitKerjaOptions.map((item) => (
+                                <li
+                                  key={item.id}
+                                  onClick={() => handleUnitKerjaSelect(item)}
+                                  className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                                >
+                                  {item.unitKerja}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                       </div>
                     </div>
 
