@@ -1505,10 +1505,9 @@ function RekapAnggota() {
         const isReset = resetKeys.includes(key);
 
         const defaultValue = isReset ? 0 : parseInt(item.iuran || 0);
+        const manualRaw = nominalBaruList[key];
 
-        const manualValue = isReset
-          ? 0
-          : parseInt(nominalBaruList[`manual${key}`] || manualInputs[key] || 0);
+        const manualValue = isReset ? 0 : parseInt(manualRaw ?? 0);
 
         const totalValue = defaultValue + manualValue;
 
