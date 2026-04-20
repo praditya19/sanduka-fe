@@ -38,28 +38,32 @@ const HeaderMobile = () => {
     const userRole = sessionStorage.getItem("role");
     const npa = sessionStorage.getItem("npa");
 
-    if (!userId) {
+    if (!userId && userRole !== "SUPERADMIN") {
       console.error("ID tidak ditemukan di sessionStorage");
       return;
     }
 
     try {
-      let idToFetch = userId;
+      let response;
 
-      if ((userRole === "ADMIN" || userRole === "SUPERADMIN") && npa) {
+      if (userRole === "SUPERADMIN" || userRole === "ADMIN") {
+        response = await GlobalApi.getAdminById(userId);
+      } else if (userRole === "EDITOR" && npa) {
         const npaResponse = await GlobalApi.cekNpa(npa);
+
         if (npaResponse && npaResponse.id) {
-          idToFetch = npaResponse.id;
+          response = await GlobalApi.getUserById(npaResponse.id);
         } else {
           console.error("NPA tidak valid atau tidak ditemukan");
           return;
         }
+      } else {
+        response = await GlobalApi.getUserById(userId);
       }
 
-      const response = await GlobalApi.getUserById(idToFetch);
       setUserData(response);
 
-      if (response.foto) {
+      if (response?.foto) {
         try {
           const decodedString = atob(response.foto);
           setFotoBase64(decodedString);
@@ -213,7 +217,6 @@ const HeaderMobile = () => {
           </div>
           <div className="flex space-x-4 items-center ">
             <div className="flex space-x-4 items-center ml-3">
-          
               {(role === "ADMIN" || role === "SUPERADMIN") && (
                 <Link href="/pensiun">
                   <button className="relative">
@@ -284,13 +287,13 @@ const HeaderMobile = () => {
               {isProfileMenuOpen && (
                 <div className="absolute right-0 mt-44 w-48 bg-white shadow-md rounded-md z-10">
                   {sessionStorage.getItem("role") !== "EDITOR" && (
-                        <Link
-                          href={getEditProfilePath()}
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
-                        >
-                          Edit Profile
-                        </Link>
-                      )}
+                    <Link
+                      href={getEditProfilePath()}
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
+                    >
+                      Edit Profile
+                    </Link>
+                  )}
                   <button
                     onClick={handleLogout}
                     className="text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
@@ -312,7 +315,10 @@ const HeaderMobile = () => {
 
       {/* Search Modal */}
       {isSearchModalOpen && (
-        <PencarianAnggota isOpen={isSearchModalOpen} onClose={handleCloseSearchModal} />
+        <PencarianAnggota
+          isOpen={isSearchModalOpen}
+          onClose={handleCloseSearchModal}
+        />
       )}
     </>
   );
