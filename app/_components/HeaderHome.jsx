@@ -44,25 +44,26 @@ const HeaderHome = () => {
     }
 
     try {
-      let idToFetch = userId;
+      let response;
 
-      if ((userRole === "SUPERADMIN" || userRole === "ADMIN") && npa) {
+      if (userRole === "SUPERADMIN" || userRole === "ADMIN") {
+        response = await GlobalApi.getAdminById(userId);
+      } else if (userRole === "EDITOR" && npa) {
         const npaResponse = await GlobalApi.cekNpa(npa);
 
         if (npaResponse && npaResponse.id) {
-          idToFetch = npaResponse.id;
-
-          // sessionStorage.setItem("userId", idToFetch);
+          response = await GlobalApi.getUserById(npaResponse.id);
         } else {
           console.error("NPA tidak valid atau tidak ditemukan");
           return;
         }
+      } else {
+        response = await GlobalApi.getUserById(userId);
       }
 
-      const response = await GlobalApi.getUserById(idToFetch);
       setUserData(response);
 
-      if (response.foto) {
+      if (response?.foto) {
         try {
           const decodedString = atob(response.foto);
           setFotoBase64(decodedString);
