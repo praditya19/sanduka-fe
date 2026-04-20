@@ -1,6 +1,6 @@
 "use client";
 import GlobalApi from "@/app/_utils/GlobalApi";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
@@ -11,22 +11,18 @@ import {
 } from "react-icons/fa";
 import { 
   Trash2, 
-  Image as ImageIcon, 
-  Link as LinkIcon, 
-  AlignLeft, 
-  Upload, 
-  Youtube, 
   PlayCircle,
   AlertTriangle,
-  MonitorPlay
+  MonitorPlay,
+  Youtube
 } from "lucide-react";
 
 const getYouTubeEmbedUrl = (url) => {
   if (!url) return null;
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const regExp = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|live)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
   const match = url.match(regExp);
-  if (match && match[2].length === 11) {
-    return `https://www.youtube.com/embed/${match[2]}`;
+  if (match && match[1].length === 11) {
+    return `https://www.youtube.com/embed/${match[1]}`;
   }
   return null;
 };
@@ -96,16 +92,6 @@ const LiveLink = () => {
 
   const [url, setUrl] = useState("");
   
-  const [slides, setSlides] = useState([]);
-  const [slideFile, setSlideFile] = useState(null);
-  const [slidePreview, setSlidePreview] = useState("");
-  const [slideKeterangan, setSlideKeterangan] = useState("");
-  const [isSubmittingBanner, setIsSubmittingBanner] = useState(false);
-  const fileInputRef = useRef(null);
-  const [videoLink, setVideoLink] = useState("");
-  const [videoKeterangan, setVideoKeterangan] = useState("");
-  const [isSubmittingVideo, setIsSubmittingVideo] = useState(false);
-
   const [videoDashboardList, setVideoDashboardList] = useState([]);
   const [videoDashboardLink, setVideoDashboardLink] = useState("");
   const [isSubmittingVideoDashboard, setIsSubmittingVideoDashboard] = useState(false);
@@ -115,7 +101,6 @@ const LiveLink = () => {
     handleResize();
     window.addEventListener("resize", handleResize);
     
-    fetchSlides();
     fetchVideoDashboards();
 
     return () => window.removeEventListener("resize", handleResize);
@@ -141,20 +126,9 @@ const LiveLink = () => {
     }
   };
 
-  const fetchSlides = async () => {
-    try {
-      const data = await GlobalApi.getAllSlidePaket("", 0, 50);
-      const slideList = Array.isArray(data) ? data : (data?.content || []);
-      setSlides(slideList);
-    } catch (error) {
-      console.error("Gagal mengambil slide paket:", error);
-    }
-  };
-
   const fetchVideoDashboards = async () => {
     try {
       const data = await GlobalApi.getAllVideoDashboard();
-      
       const list = Array.isArray(data) ? data : (data?.content || []);
       setVideoDashboardList(list);
     } catch (error) {
@@ -189,122 +163,12 @@ const LiveLink = () => {
     }
   };
 
-  const compressImage = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = (event) => {
-        const img = new Image();
-        img.src = event.target.result;
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          let width = img.width;
-          let height = img.height;
-          const MAX_WIDTH = 1920;
-          if (width > MAX_WIDTH) {
-            height = Math.round((height * MAX_WIDTH) / width);
-            width = MAX_WIDTH;
-          }
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext("2d");
-          ctx.fillStyle = "#FFFFFF";
-          ctx.fillRect(0, 0, width, height);
-          ctx.drawImage(img, 0, 0, width, height);
-          canvas.toBlob(
-            (blob) => {
-              if (blob) {
-                const safeName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
-                const processedFile = new File([blob], safeName, { type: "image/jpeg" });
-                resolve(processedFile);
-              } else reject(new Error("Gagal memproses canvas"));
-            },
-            "image/jpeg",
-            0.85
-          );
-        };
-        img.onerror = (error) => reject(error);
-      };
-      reader.onerror = (error) => reject(error);
-    });
-  };
-
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      try {
-        const safeFile = await compressImage(file);
-        setSlideFile(safeFile);
-        setSlidePreview(URL.createObjectURL(safeFile));
-      } catch (error) {
-        console.error("Gagal memproses gambar banner:", error);
-        setNotification({ type: "error", message: "Gagal membaca file gambar." });
-      }
-    }
-  };
-
-  const handleCreateBanner = async (e) => {
-    e.preventDefault();
-    if (!slideFile || !slideKeterangan.trim()) {
-      setNotification({ type: "error", message: "Foto dan keterangan wajib diisi!" });
-      return;
-    }
-    try {
-      setIsSubmittingBanner(true);
-      const formData = new FormData();
-      formData.append("foto", slideFile);
-      formData.append("keteranganFoto", slideKeterangan);
-      await GlobalApi.createSlidePaket(formData);
-      setNotification({ type: "success", message: "Banner foto berhasil ditambahkan!" });
-      
-      setSlideFile(null);
-      setSlidePreview("");
-      setSlideKeterangan("");
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      fetchSlides();
-    } catch (error) {
-      console.error("Error upload banner:", error);
-      setNotification({ type: "error", message: "Gagal menambahkan banner foto!" });
-    } finally {
-      setIsSubmittingBanner(false);
-    }
-  };
-
-  const handleCreateVideo = async (e) => {
-    e.preventDefault();
-    if (!videoLink.trim() || !videoKeterangan.trim()) {
-      setNotification({ type: "error", message: "Link YouTube dan keterangan wajib diisi!" });
-      return;
-    }
-    try {
-      setIsSubmittingVideo(true);
-      const formData = new FormData();
-      formData.append("link", videoLink);
-      formData.append("keteranganFoto", videoKeterangan);
-      await GlobalApi.createSlidePaket(formData);
-      setNotification({ type: "success", message: "Video Dokumentasi berhasil ditambahkan!" });
-      
-      setVideoLink("");
-      setVideoKeterangan("");
-      fetchSlides();
-    } catch (error) {
-      console.error("Error upload video:", error);
-      setNotification({ type: "error", message: "Gagal menambahkan video dokumentasi!" });
-    } finally {
-      setIsSubmittingVideo(false);
-    }
-  };
-
   const confirmDeleteAction = async () => {
     try {
       if (deleteConfig.type === "LIVE_LINK") {
         await GlobalApi.deleteLinkLive();
         setNotification({ type: "success", message: "Live link berhasil dihapus!" });
         setUrl("");
-      } else if (deleteConfig.type === "SLIDE") {
-        await GlobalApi.deleteSlidePaket(deleteConfig.id);
-        setNotification({ type: "success", message: "Dokumentasi berhasil dihapus!" });
-        fetchSlides();
       } else if (deleteConfig.type === "VIDEO_DASHBOARD") {
         await GlobalApi.deleteVideoDashboard(deleteConfig.id);
         setNotification({ type: "success", message: "Video Dashboard berhasil dihapus!" });
@@ -317,12 +181,6 @@ const LiveLink = () => {
     }
   };
 
-  const renderImageBase64 = (base64String) => {
-    if (!base64String) return "/placeholder.jpg";
-    if (base64String.startsWith('data:image')) return base64String;
-    return `data:image/jpeg;base64,${base64String}`;
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {notification && (
@@ -333,7 +191,7 @@ const LiveLink = () => {
         />
       )}
 
-      {/* POPUP KONFIRMASI HAPUS (CUSTOM CONFIRM) */}
+      {/* POPUP KONFIRMASI HAPUS */}
       {deleteConfig.isOpen && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
           <div 
@@ -387,7 +245,7 @@ const LiveLink = () => {
                   Content Manager
                 </h1>
                 <p className="text-gray-500 text-sm md:text-base">
-                  Kelola Link Live, Video Dashboard, Dokumentasi Foto, dan Video YouTube Anda
+                  Kelola Live Link dan Video Dashboard Utama Anda di sini.
                 </p>
               </div>
 
@@ -461,6 +319,7 @@ const LiveLink = () => {
                             <iframe
                               className="absolute top-0 left-0 w-full h-full"
                               src={getYouTubeEmbedUrl(videoDashboardLink)}
+                              title="Preview Video"
                               frameBorder="0"
                               allowFullScreen
                             ></iframe>
@@ -526,209 +385,6 @@ const LiveLink = () => {
                           </div>
                         ))}
                       </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                
-                {/* --- KIRI: CARD TAMBAH FOTO BANNER --- */}
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
-                  <div className="bg-teal-500 px-6 py-4">
-                    <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                      <ImageIcon className="w-5 h-5" /> Tambah Dokumentasi Foto
-                    </h2>
-                  </div>
-                  <form onSubmit={handleCreateBanner} className="p-6 flex flex-col flex-1 space-y-5">
-                    <div>
-                      <label className="block text-sm text-gray-700 font-semibold mb-2">Upload Foto</label>
-                      <div 
-                        className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:bg-gray-50 transition cursor-pointer flex flex-col items-center justify-center min-h-[160px] relative overflow-hidden"
-                        onClick={() => fileInputRef.current.click()}
-                      >
-                        {slidePreview ? (
-                          <img src={slidePreview} alt="Preview" className="absolute inset-0 w-full h-full object-cover z-0" />
-                        ) : (
-                          <div className="text-gray-400 flex flex-col items-center z-10">
-                            <Upload className="w-8 h-8 mb-2 opacity-50" />
-                            <p className="text-xs font-medium">Klik untuk upload foto</p>
-                          </div>
-                        )}
-                        <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleFileChange} />
-                      </div>
-                      {slidePreview && (
-                        <button type="button" onClick={() => {setSlidePreview(""); setSlideFile(null);}} className="text-xs text-red-500 hover:underline mt-2">
-                          Hapus Foto
-                        </button>
-                      )}
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm text-gray-700 font-semibold mb-2">Keterangan Foto</label>
-                      <input
-                        type="text"
-                        placeholder="Cth: Promo Liburan Bali 2026"
-                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition"
-                        value={slideKeterangan}
-                        onChange={(e) => setSlideKeterangan(e.target.value)}
-                        required
-                      />
-                    </div>
-
-                    <div className="mt-auto pt-4">
-                      <button
-                        type="submit"
-                        disabled={isSubmittingBanner || !slideFile}
-                        className="w-full bg-teal-500 hover:bg-teal-600 text-white px-4 py-3 rounded-xl font-bold transition disabled:opacity-50 flex justify-center items-center gap-2"
-                      >
-                        {isSubmittingBanner ? "Menyimpan..." : "Simpan Dokumentasi Foto"}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-
-                {/* --- KANAN: CARD TAMBAH VIDEO YOUTUBE --- */}
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
-                  <div className="bg-red-500 px-6 py-4">
-                    <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                      <Youtube className="w-5 h-5" /> Tambah Video Dokumentasi
-                    </h2>
-                  </div>
-                  <form onSubmit={handleCreateVideo} className="p-6 flex flex-col flex-1 space-y-5">
-                    <div>
-                      <label className="block text-sm text-gray-700 font-semibold mb-2">Link Video YouTube</label>
-                      <input
-                        type="text"
-                        placeholder="https://www.youtube.com/watch?v=..."
-                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 outline-none transition"
-                        value={videoLink}
-                        onChange={(e) => setVideoLink(e.target.value)}
-                        required
-                      />
-                      {videoLink && getYouTubeEmbedUrl(videoLink) && (
-                        <div className="mt-3 relative w-full pt-[56.25%] rounded-xl overflow-hidden shadow-sm">
-                          <iframe
-                            className="absolute top-0 left-0 w-full h-full"
-                            src={getYouTubeEmbedUrl(videoLink)}
-                            title="Preview Video"
-                            frameBorder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                          ></iframe>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm text-gray-700 font-semibold mb-2">Keterangan Video</label>
-                      <input
-                        type="text"
-                        placeholder="Cth: Dokumentasi Tour Bromo"
-                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 outline-none transition"
-                        value={videoKeterangan}
-                        onChange={(e) => setVideoKeterangan(e.target.value)}
-                        required
-                      />
-                    </div>
-
-                    <div className="mt-auto pt-4">
-                      <button
-                        type="submit"
-                        disabled={isSubmittingVideo || !videoLink}
-                        className="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-xl font-bold transition disabled:opacity-50 flex justify-center items-center gap-2"
-                      >
-                        {isSubmittingVideo ? "Menyimpan..." : "Simpan Video"}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-
-              </div>
-
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="bg-slate-700 px-6 py-4 flex justify-between items-center">
-                  <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                    <AlignLeft className="w-5 h-5" /> Daftar Dokumentasi Travel
-                  </h2>
-                  <span className="bg-white/20 text-white py-1 px-3 rounded-full text-xs font-medium">
-                    {slides.length} Item
-                  </span>
-                </div>
-
-                <div className="p-6 md:p-8 bg-gray-50/50">
-                  {slides.length === 0 ? (
-                    <div className="text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
-                      <ImageIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                      <p className="text-gray-500">Belum ada dokumentasi yang ditambahkan.</p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {slides.map((item) => {
-                        const embedUrl = getYouTubeEmbedUrl(item.link);
-                        
-                        return (
-                          <div key={item.id} className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col group relative">
-                            {/* Tombol Hapus (Triggers Custom Popup) */}
-                            <button 
-                                onClick={() => setDeleteConfig({ isOpen: true, type: "SLIDE", id: item.id, title: "Dokumentasi" })}
-                                className="absolute top-2 right-2 bg-white/90 hover:bg-red-50 text-red-500 p-2 rounded-full shadow-md transition-colors z-20 opacity-0 group-hover:opacity-100"
-                                title="Hapus Item"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                            </button>
-
-                            {/* Area Visual (Foto/Video) */}
-                            <div className="relative h-48 bg-gray-100 overflow-hidden border-b border-gray-100">
-                              {item.foto ? (
-                                <img 
-                                  src={renderImageBase64(item.foto)} 
-                                  alt={item.keteranganFoto} 
-                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                                />
-                              ) : embedUrl ? (
-                                <iframe
-                                  className="w-full h-full z-10"
-                                  src={embedUrl}
-                                  title="YouTube Video"
-                                  frameBorder="0"
-                                  allowFullScreen
-                                ></iframe>
-                              ) : (
-                                <div className="flex items-center justify-center h-full text-gray-400 flex-col">
-                                  <LinkIcon className="w-8 h-8 mb-2 opacity-50" />
-                                  <span className="text-xs">Link Tidak Valid</span>
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Area Teks */}
-                            <div className="p-4 flex-1 flex flex-col">
-                              <h4 className="font-bold text-gray-800 line-clamp-2 mb-2 text-sm leading-snug">
-                                {item.keteranganFoto}
-                              </h4>
-                              
-                              <div className="mt-auto pt-3 flex justify-between items-end border-t border-gray-50">
-                                {item.foto ? (
-                                    <span className="bg-teal-50 text-teal-600 border border-teal-100 py-1 px-2.5 rounded-lg text-[10px] font-bold tracking-wide">
-                                      📸 FOTO DOKUMENTASI
-                                    </span>
-                                ) : (
-                                    <span className="bg-red-50 text-red-600 border border-red-100 py-1 px-2.5 rounded-lg text-[10px] font-bold tracking-wide flex items-center gap-1">
-                                      <Youtube className="w-3 h-3" /> VIDEO YOUTUBE
-                                    </span>
-                                )}
-
-                                {item.createdAt && (
-                                  <span className="text-[10px] text-gray-400 font-medium">
-                                    {`${item.createdAt[2]}/${item.createdAt[1]}/${item.createdAt[0]}`}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
                     </div>
                   )}
                 </div>
