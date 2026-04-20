@@ -8,10 +8,10 @@ import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 
 const getYouTubeEmbedUrl = (url) => {
   if (!url) return null;
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const regExp = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|live)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
   const match = url.match(regExp);
-  if (match && match[2].length === 11) {
-    return `https://www.youtube.com/embed/${match[2]}`;
+  if (match && match[1].length === 11) {
+    return `https://www.youtube.com/embed/${match[1]}`;
   }
   return null;
 };
