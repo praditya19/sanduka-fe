@@ -1452,6 +1452,8 @@ function RekapAnggota() {
         .padStart(2, "0")}-01`;
 
       const payload = {
+        nomorRekening: nomorRekening || "",
+        
         defaultPgri: 0,
         manualPgri: 0,
         pgri: 0,
