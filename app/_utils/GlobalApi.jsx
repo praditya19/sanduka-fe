@@ -1557,7 +1557,6 @@ const createKwitansiByIdAndNpa = async (id, npaPgri, formData) => {
       },
     );
 
-    // Mengembalikan data dari respons API
     return response.data;
   } catch (error) {
     console.error("Error uploading kwitansi data:", error);
@@ -2094,7 +2093,6 @@ const getDetailKeuangan = async ({
   cabang,
 }) => {
   try {
-    // Parameter dinamis dari komponen
     const params = {
       bulan1,
       bulan2,
@@ -3222,21 +3220,17 @@ const updateByNominal = async (id, data) => {
       throw new Error("ID harus berupa number, contoh: 2804");
     }
 
-    const response = await axiosClient.put(
-      `/api/by-nominal/${id}`,
-      data,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await axiosClient.put(`/api/by-nominal/${id}`, data, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
     return response.data;
   } catch (error) {
     console.error(
       "Error updating data:",
-      error.response?.data || error.message
+      error.response?.data || error.message,
     );
     throw error;
   }
@@ -3664,10 +3658,7 @@ const deleteSlidePaket = async (id) => {
 // vIDEO DASHBOARD
 const createVideoDashboard = async (data) => {
   try {
-    const response = await axiosClient.post(
-      "/api/video-dashboard",
-      data
-    );
+    const response = await axiosClient.post("/api/video-dashboard", data);
 
     return response.data;
   } catch (error) {
@@ -3698,9 +3689,13 @@ const getAllVideoDashboard = async () => {
 
 const updateVideoDashboard = async (id, formData) => {
   try {
-    const response = await axiosClient.put(`/api/video-dashboard/${id}`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    const response = await axiosClient.put(
+      `/api/video-dashboard/${id}`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      },
+    );
 
     return response.data;
   } catch (error) {
@@ -4020,5 +4015,8 @@ export default {
   importExcelTargetIuran,
   createLinkLive,
   getLinkLive,
-  deleteLinkLive,createRunningText,getRunningText,deleteRunningText,
+  deleteLinkLive,
+  createRunningText,
+  getRunningText,
+  deleteRunningText,
 };
