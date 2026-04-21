@@ -59,7 +59,7 @@ const News = () => {
       year: "numeric",
     });
   };
-   const stripHtml = (html) => {
+  const stripHtml = (html) => {
     if (!html) return "";
     return html.replace(/<[^>]*>?/gm, "");
   };
@@ -135,29 +135,31 @@ const News = () => {
               </div>
             )}
 
-            <div className="relative h-64 lg:h-72 overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent z-10 opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
-              <img
-                              src={
-                                news.galeri?.length > 0
-                                  ? `data:image/jpeg;base64,${news.galeri[0].gambar}`
-                                  : "/placeholder.jpg"
-                              }
-                              alt={news.judul}
-                              className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
-                            />
-              <div className="absolute top-4 right-4 z-20">
-                <span className="px-4 py-1.5 bg-white/90 backdrop-blur-sm text-gray-800 text-xs font-semibold rounded-full shadow-lg">
-                  NEWS
-                </span>
+            <Link href={`/berita/${news.id}`} className="block">
+              <div className="relative h-64 lg:h-72 overflow-hidden cursor-pointer">
+                {" "}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent z-10 opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
+                <img
+                  src={
+                    news.galeri?.length > 0
+                      ? `data:image/jpeg;base64,${news.galeri[0].gambar}`
+                      : "/placeholder.jpg"
+                  }
+                  alt={news.judul}
+                  className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                />
+                <div className="absolute top-4 right-4 z-20">
+                  <span className="px-4 py-1.5 bg-white/90 backdrop-blur-sm text-gray-800 text-xs font-semibold rounded-full shadow-lg">
+                    NEWS
+                  </span>
+                </div>
+                <h3 className="absolute bottom-4 left-4 right-4 z-20 text-white text-xl lg:text-2xl font-bold leading-tight drop-shadow-lg">
+                  {news.judul.length > 70
+                    ? news.judul.substring(0, 70) + "..."
+                    : news.judul}
+                </h3>
               </div>
-
-              <h3 className="absolute bottom-4 left-4 right-4 z-20 text-white text-xl lg:text-2xl font-bold leading-tight drop-shadow-lg">
-                {news.judul.length > 70
-                  ? news.judul.substring(0, 70) + "..."
-                  : news.judul}
-              </h3>
-            </div>
+            </Link>
 
             <div className="p-6 lg:p-8">
               <div className="flex items-center justify-between text-sm mb-4">
@@ -204,24 +206,24 @@ const News = () => {
 
               <div className="flex items-center justify-end pt-4 border-t border-gray-100">
                 <Link
-                        href={`/berita/${news.id}`}
-                        className="inline-flex items-center gap-2 text-sm font-semibold text-teal-600 hover:text-teal-700 group/link"
-                      >
-                        <span>Baca Selengkapnya</span>
-                        <svg
-                          className="w-4 h-4 transform group-hover/link:translate-x-1 transition-transform duration-300"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M17 8l4 4m0 0l-4 4m4-4H3"
-                          />
-                        </svg>
-                      </Link>
+                  href={`/berita/${news.id}`}
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-teal-600 hover:text-teal-700 group/link"
+                >
+                  <span>Baca Selengkapnya</span>
+                  <svg
+                    className="w-4 h-4 transform group-hover/link:translate-x-1 transition-transform duration-300"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 8l4 4m0 0l-4 4m4-4H3"
+                    />
+                  </svg>
+                </Link>
               </div>
             </div>
 
