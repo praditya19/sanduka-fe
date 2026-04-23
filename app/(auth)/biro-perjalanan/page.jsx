@@ -209,13 +209,10 @@ const TravelPage = () => {
           </button>
         </div>
 
-        {/* ======================================================
-                    SECTION: PROMO & DOKUMENTASI
-        ======================================================= */}
         {!loading && promos.length > 0 && (
           <div className="mt-24">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Promo & Dokumentasi</h2>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Dokumentasi Wisata</h2>
               <div className="w-24 h-1.5 bg-teal-500 rounded-full mx-auto opacity-80"></div>
             </div>
 
