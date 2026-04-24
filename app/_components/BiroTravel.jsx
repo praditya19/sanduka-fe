@@ -3,12 +3,13 @@ import React, { useState, useEffect } from "react";
 import Header from "@/app/_components/Header";
 import Link from "next/link";
 import GlobalApi from "@/app/_utils/GlobalApi";
-import { Loader2, MapPin, Clock, Video, X, Phone } from "lucide-react";
+import { Share2, Loader2, MapPin, Clock, Video, X, Phone } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 
 const BiroTravel = () => {
   const [packages, setPackages] = useState([]);
+  const [promos, setPromos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -23,15 +24,21 @@ const BiroTravel = () => {
   const fetchLatestPackages = async () => {
     try {
       setLoading(true);
-      const response = await GlobalApi.getAllPaket("", 0, 4);
+      const [paketResponse, promoResponse] = await Promise.all([
+        GlobalApi.getAllPaket("", 0, 4),
+        GlobalApi.getAllSlidePaket("", 0, 50)
+      ]);
 
-      const published = (response.content || []).filter(
+      const published = (paketResponse.content || []).filter(
         (pkg) => pkg.statusPaket === "PUBLISH" || pkg.statusPaket === "PUBLISHED"
       );
-
       setPackages(published);
+
+      const promoData = Array.isArray(promoResponse) ? promoResponse : (promoResponse?.content || []);
+      setPromos(promoData);
+
     } catch (error) {
-      console.error("Gagal mengambil paket terbaru:", error);
+      console.error("Gagal mengambil data:", error);
     } finally {
       setLoading(false);
     }
@@ -59,16 +66,44 @@ const BiroTravel = () => {
 
   const getYouTubeEmbedUrl = (url) => {
     if (!url) return null;
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const regExp = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|live)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
     const match = url.match(regExp);
-    return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}` : null;
+    if (match && match[1].length === 11) {
+      return `https://www.youtube.com/embed/${match[1]}`;
+    }
+    return null;
+  };
+
+  const getShareLinks = (pkg) => {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    const text = encodeURIComponent(pkg.namaPaket);
+
+    return {
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
+      twitter: `https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(url)}`,
+      whatsapp: `https://wa.me/?text=${text}%20${encodeURIComponent(url)}`,
+      telegram: `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${text}`,
+    };
+  };
+
+  const handleShare = (pkg) => {
+    const shareData = {
+      title: pkg.namaPaket,
+      text: pkg.destinasi,
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      navigator.share(shareData).catch((err) => console.error(err));
+    } else {
+      navigator.clipboard.writeText(`${pkg.namaPaket}\n\n${window.location.href}`);
+      alert("Link paket berhasil disalin!");
+    }
   };
 
   const proceedToWhatsApp = (phoneStr, pkgName, authorName) => {
     let formattedPhone = phoneStr.startsWith("0") ? "62" + phoneStr.slice(1) : phoneStr;
-
     const sapaan = authorName ? authorName : "Admin";
-
     const message = encodeURIComponent(`Halo ${sapaan}, saya tertarik dengan paket wisata: *${pkgName}*. Bisa minta info lebih lanjut?`);
     window.open(`https://wa.me/${formattedPhone}?text=${message}`, "_blank");
     setShowWaOptions(false);
@@ -90,6 +125,9 @@ const BiroTravel = () => {
       proceedToWhatsApp(pkg.nomorHp, pkg.namaPaket, pkg.author);
     }
   };
+
+  const promoPhotos = promos.filter(p => p.foto);
+  const promoVideos = promos.filter(p => !p.foto && p.link && getYouTubeEmbedUrl(p.link));
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-50">
@@ -119,6 +157,7 @@ const BiroTravel = () => {
         </div>
       </div>
 
+      {/* SECTION PAKET TERBARU */}
       <section className="max-w-7xl mx-auto px-4 py-14">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-3xl font-bold text-gray-800">Paket Terbaru</h2>
@@ -189,6 +228,69 @@ const BiroTravel = () => {
         )}
       </section>
 
+      {!loading && promos.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 pb-20 mt-10">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Dokumentasi Wisata</h2>
+            <div className="w-24 h-1.5 bg-teal-500 rounded-full mx-auto opacity-80"></div>
+          </div>
+
+          {/* --- 1. GRID FOTO BANNER --- */}
+          {promoPhotos.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+              {promoPhotos.map((promo) => (
+                <div
+                  key={promo.id}
+                  className="relative rounded-xl overflow-hidden shadow-lg group cursor-pointer h-[280px] border border-gray-100"
+                  onClick={() => setLightboxImage(renderImage(promo.foto))}
+                >
+                  <img
+                    src={renderImage(promo.foto)}
+                    alt={promo.keteranganFoto}
+                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-90 transition-opacity group-hover:opacity-100"></div>
+
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <span className="bg-black/50 text-white p-3 rounded-full backdrop-blur-sm">⤢</span>
+                  </div>
+
+                  <div className="absolute bottom-0 left-0 right-0 p-5">
+                    <h3 className="text-white font-bold text-lg md:text-xl drop-shadow-md leading-snug line-clamp-2">
+                      {promo.keteranganFoto}
+                    </h3>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* --- 2. LIST VIDEO YOUTUBE BESAR --- */}
+          {promoVideos.length > 0 && (
+            <div className="space-y-16">
+              {promoVideos.map((promo) => {
+                const embedUrl = getYouTubeEmbedUrl(promo.link);
+                return (
+                  <div key={promo.id} className="w-full max-w-5xl mx-auto flex flex-col group">
+                    <div className="border-[6px] border-[#0d9488] rounded-xl overflow-hidden shadow-lg bg-white relative pt-[56.25%] transform group-hover:-translate-y-1 transition-transform duration-300">
+                      <iframe
+                        className="absolute top-0 left-0 w-full h-full"
+                        src={embedUrl}
+                        title={promo.keteranganFoto || "YouTube Video"}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      ></iframe>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Modal Detail Paket */}
       {selectedPackage && (
         <div
           className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[999] p-4 transition-opacity duration-300"
@@ -284,6 +386,17 @@ const BiroTravel = () => {
                     </div>
                   )}
 
+                  {/* Share Component */}
+                  <div className="border-t border-gray-100 pt-5 mt-2 mb-4 flex items-center gap-3">
+                    <p className="text-sm font-bold text-gray-500 mr-2">Bagikan:</p>
+                    <a href={getShareLinks(selectedPackage).whatsapp} target="_blank" rel="noopener noreferrer" className="p-2.5 bg-green-500 hover:bg-green-600 transition text-white rounded-full shadow-sm">
+                      <FontAwesomeIcon icon={faWhatsapp} />
+                    </a>
+                    <button onClick={() => handleShare(selectedPackage)} className="p-2.5 bg-gray-100 hover:bg-gray-200 transition text-gray-700 rounded-full shadow-sm">
+                      <Share2 size={16} />
+                    </button>
+                  </div>
+
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-t pt-6 gap-4 relative">
                     <div>
                       <p className="text-xs text-gray-500 uppercase font-bold mb-1">Harga Spesial</p>
@@ -359,7 +472,7 @@ const BiroTravel = () => {
             src={lightboxImage}
             alt="Enlarged view"
             className="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl animate-zoom-in"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()} 
           />
         </div>
       )}
