@@ -650,7 +650,12 @@ const Page = () => {
                         <td className="py-3 px-4">
                           {item.Date_lapor || "N/A"}
                         </td>
-                        <td className="py-3 px-4">{item.Data_Meninggal}</td>
+                        <td className="py-3 px-4">{item.Data_Meninggal}
+                          <br />
+                          {item.Jabatan}
+                          <br />
+                          {item.Alamat_Rumah}
+                        </td>
                         <td className="py-3 px-4 text-center">{item.Cabang}</td>
                         <td className="py-3 px-4 text-center">
                           {item.Keterangan}
