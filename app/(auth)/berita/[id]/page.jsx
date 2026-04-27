@@ -304,7 +304,7 @@ export default function BeritaDetail() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12">
-                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight">
+                    <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-4 leading-tight">
                       {news.judul}
                     </h1>
                     <div className="flex flex-wrap items-center gap-4 text-white/90 text-sm">
