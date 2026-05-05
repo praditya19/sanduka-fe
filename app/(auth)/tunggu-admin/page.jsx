@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const Page = () => {
   const router = useRouter();
@@ -15,10 +16,6 @@ const Page = () => {
   const handleNavigation = (targetStep) => {
     router.push(`/tunggu-admin?step=${targetStep}`);
     setStep(targetStep);
-  };
-
-  const handleSignIn = () => {
-    router.push("/sign-in");
   };
 
   return (
@@ -109,12 +106,11 @@ const Page = () => {
             Menunggu Verifikasi dari Admin. Harap cek kembali secara berkala.
           </p>
 
-          <button
-            onClick={handleSignIn}
-            className="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-lg shadow-lg"
-          >
-            Pergi ke Halaman Masuk
-          </button>
+          <Link href="/">
+            <button className="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-lg shadow-lg">
+              Pergi ke Halaman Masuk
+            </button>
+          </Link>
         </div>
       </div>
     </div>

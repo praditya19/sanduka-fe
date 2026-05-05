@@ -2343,7 +2343,7 @@ const DataTable = ({
                                 <Button
                                   type="button"
                                   className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2"
-                                  title="Detail Anggota"
+                                  title="Detail"
                                   onClick={() => {
                                     sessionStorage.setItem(
                                       "anggotaId",
@@ -2352,7 +2352,7 @@ const DataTable = ({
                                     handleDetailAnggota();
                                   }}
                                 >
-                                  Detail Anggota
+                                  Detail
                                 </Button>
                               </div>
                             )}

@@ -9,26 +9,26 @@ const SocialMediaSection = () => {
     {
       icon: <Instagram size={22} />,
       bg: "bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500",
-      link: "#",
+      link: "https://www.instagram.com/pgrijepara?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==",
       label: "Instagram",
     },
     {
       icon: <Facebook size={22} />,
       bg: "bg-gradient-to-br from-blue-600 to-blue-800",
-      link: "#",
+      link: "https://www.facebook.com/share/1KWn6sYq56/",
       label: "Facebook",
     },
 
     {
       icon: <Youtube size={22} />,
       bg: "bg-gradient-to-br from-red-600 to-red-700",
-      link: "#",
+      link: "https://youtube.com/@pgrikabupatenjepara367?si=j4SlkYcnXNvFSnTY",
       label: "Youtube",
     },
     {
       icon: <FaTiktok size={20} />,
       bg: "bg-gradient-to-br from-gray-900 via-gray-800 to-black",
-      link: "#",
+      link: "https://www.tiktok.com/@pgrijepara?is_from_webapp=1&sender_device=pc",
       label: "TikTok",
     },
     {

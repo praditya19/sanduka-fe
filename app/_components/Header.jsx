@@ -35,7 +35,7 @@ const Header = () => {
             className="flex flex-col items-center group"
           >
             <Image
-              src="/logo.png"
+              src="/logo.jpeg"
               width={60}
               height={60}
               alt="Sanduka Logo"
