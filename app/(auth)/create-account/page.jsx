@@ -152,8 +152,6 @@ const Page = () => {
   const sertifikatPendidikRef = useRef();
   const golonganJabatanRef = useRef();
   const [isSubmitClicked, setIsSubmitClicked] = useState(false);
-  const [isValid, setIsValid] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState(null);
 
   const updateUnitKerja = (kecamatan) => {
@@ -589,6 +587,7 @@ const Page = () => {
       nik: response.nik || "",
       namaLengkap: response.namaLengkap || "",
       tempatLahir: response.tempatLahir || "",
+      nomorRekening: response.nomorRekening || "",
       tanggalLahir: formattedTanggalLahir,
       namaAnak: response.namaAnak || [],
       latitude: response.latitude || 0,
@@ -625,7 +624,10 @@ const Page = () => {
       const apiResponse = await GlobalApi.registerUser(finalData);
     } catch (registerError) {
       if (registerError.response?.status === 400) {
-        console.warn("Register error 400 diabaikan:", registerError.response?.data);
+        console.warn(
+          "Register error 400 diabaikan:",
+          registerError.response?.data,
+        );
       } else if (registerError.response?.status === 500) {
         return;
       } else {
@@ -648,7 +650,6 @@ const Page = () => {
         return;
       }
     } catch (npaError) {
-
       console.warn("Gagal cek NPA:", npaError);
     }
 
@@ -656,8 +657,7 @@ const Page = () => {
       type: "success",
       message: (
         <>
-          <strong>Selamat Anda Berhasil Mendaftar Di New Sanduka</strong>{" "}
-          <br />
+          <strong>Selamat Anda Berhasil Mendaftar Di New Sanduka</strong> <br />
           <span style={{ fontSize: "1.75rem" }}>
             Anda Berhasil Mendaftar Menjadi Anggota Sanduka
           </span>
@@ -752,6 +752,14 @@ const Page = () => {
       setNotification({
         type: "error",
         message: `Nama Lengkap harus diisi.`,
+      });
+      return;
+    }
+    const nomorRekening = watch("nomorRekening");
+    if (!nomorRekening) {
+      setNotification({
+        type: "error",
+        message: `Nomor Rekening harus diisi.`,
       });
       return;
     }
@@ -891,11 +899,12 @@ const Page = () => {
       <div className="w-full mx-auto overflow-x-auto">
         <div className="flex flex-row items-center justify-start space-x-2 sm:space-x-4 mb-2 whitespace-nowrap">
           <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${step === 1
-              ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-              : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-              }`}
-          // onClick={() => handleNavigation(1)}
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
+              step === 1
+                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+            }`}
+            // onClick={() => handleNavigation(1)}
           >
             1. SYARAT & KETENTUAN
           </div>
@@ -903,10 +912,11 @@ const Page = () => {
           <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
 
           <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${step === 2
-              ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-              : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-              }`}
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
+              step === 2
+                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+            }`}
             onClick={() => handleNavigation(2)}
           >
             2. DATA PRIBADI
@@ -915,10 +925,11 @@ const Page = () => {
           <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
 
           <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${step === 3
-              ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-              : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-              }`}
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
+              step === 3
+                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+            }`}
             onClick={() => handleNavigation(3)}
           >
             3. DATA PEKERJAAN
@@ -927,11 +938,12 @@ const Page = () => {
           <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
 
           <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${step === 4
-              ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-              : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-              }`}
-          // onClick={() => handleNavigation(4)}
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
+              step === 4
+                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+            }`}
+            // onClick={() => handleNavigation(4)}
           >
             4. MENUNGGU VERIFIKASI ADMIN
           </div>
@@ -939,11 +951,12 @@ const Page = () => {
           <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
 
           <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${step === 5
-              ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-              : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-              }`}
-          // onClick={() => handleNavigation(5)}
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
+              step === 5
+                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+            }`}
+            // onClick={() => handleNavigation(5)}
           >
             5. SELESAI
           </div>
@@ -1090,6 +1103,26 @@ const Page = () => {
 
                 <div className="w-full">
                   <Label className="block text-sm font-medium mb-3">
+                    Nomor Rekening
+                    <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
+                      Rekening  BPD Jateng bersumber gaji
+                    </span>
+                  </Label>
+                  <Input
+                    type="number"
+                    id="nomorRekening"
+                    placeholder="Rekening"
+                    {...register("nomorRekening", { required: true })}
+                    className="border-teal-500"
+                  />
+                  {errors.nomorRekening && (
+                    <span className="text-red-500 text-sm">
+                      REKENING is required
+                    </span>
+                  )}
+                </div>
+                <div className="w-full">
+                  <Label className="block text-sm font-medium mb-3">
                     NIP
                     <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
                       Jika Tidak Memiliki NIP isi "0"
@@ -1108,9 +1141,7 @@ const Page = () => {
                     </span>
                   )}
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
                 <div className="w-full">
                   <Label className="block text-sm font-medium mb-3">
                     NIK
@@ -1152,9 +1183,7 @@ const Page = () => {
                     </span>
                   )}
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
                 <div className="w-full">
                   <Label className="block text-sm font-medium mb-3">
                     Tempat Lahir
@@ -1190,9 +1219,7 @@ const Page = () => {
                     </span>
                   )}
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
                 <div className="w-full" ref={jenisKelaminRef}>
                   <Label className="block text-sm font-medium mb-3">
                     Jenis Kelamin
@@ -1207,10 +1234,11 @@ const Page = () => {
                         onValueChange={field.onChange}
                       >
                         <SelectTrigger
-                          className={`border ${errors.jenisKelamin
-                            ? "border-red-500"
-                            : "border-teal-500"
-                            } focus:ring-teal-500`}
+                          className={`border ${
+                            errors.jenisKelamin
+                              ? "border-red-500"
+                              : "border-teal-500"
+                          } focus:ring-teal-500`}
                         >
                           <SelectValue placeholder="Pilih Jenis Kelamin" />
                         </SelectTrigger>
@@ -1246,8 +1274,9 @@ const Page = () => {
                         onValueChange={field.onChange}
                       >
                         <SelectTrigger
-                          className={`border ${errors.agama ? "border-red-500" : "border-teal-500"
-                            } focus:ring-teal-500`}
+                          className={`border ${
+                            errors.agama ? "border-red-500" : "border-teal-500"
+                          } focus:ring-teal-500`}
                         >
                           <SelectValue placeholder="Pilih Agama" />
                         </SelectTrigger>
@@ -1271,9 +1300,7 @@ const Page = () => {
                     </span>
                   )}
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
                 <div className="w-full" ref={golonganDarahRef}>
                   <Label className="block text-sm font-medium mb-3">
                     Golongan Darah
@@ -1288,10 +1315,11 @@ const Page = () => {
                         onValueChange={field.onChange}
                       >
                         <SelectTrigger
-                          className={`border ${errors.golonganDarah
-                            ? "border-red-500"
-                            : "border-teal-500"
-                            } focus:ring-teal-500`}
+                          className={`border ${
+                            errors.golonganDarah
+                              ? "border-red-500"
+                              : "border-teal-500"
+                          } focus:ring-teal-500`}
                         >
                           <SelectValue placeholder="Pilih Golongan Darah" />
                         </SelectTrigger>
@@ -1312,48 +1340,10 @@ const Page = () => {
                     </span>
                   )}
                 </div>
-                <div>
-                  <div className="w-full">
-                    <Label className="block text-sm font-medium mb-3">
-                      Alamat
-                      <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
-                        *Sesuai Dengan KTP
-                      </span>
-                    </Label>
-                    <Controller
-                      name="alamat"
-                      control={control}
-                      render={({ field }) => (
-                        <Textarea
-                          className="border-teal-500"
-                          placeholder="JL. RT.  RW.  Desa, Kecamatan, Kabupaten"
-                          value={field.value}
-                          onChange={field.onChange}
-                        />
-                      )}
-                    />
-                  </div>
-                  <div className="flex items-center space-x-4 mt-2">
-                    <button
-                      type="button"
-                      onClick={handleGetLocation}
-                      className="p-2 bg-teal-500 text-white rounded hover:bg-teal-600"
-                    >
-                      {loading ? "Mendapatkan Lokasi..." : "Get Location"}
-                    </button>
-
-                    <p className="text-red-500">{!latitude && !longitude}</p>
-
-                    {latitude && longitude && (
-                      <p className="text-teal-500 mt-1">
-                        Lokasi berhasil ditemukan: {latitude.toFixed(4)},{" "}
-                        {longitude.toFixed(4)}
-                      </p>
-                    )}
-                  </div>
-                </div>
               </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
+               
                 <div className="w-full">
                   <Label className="block text-sm font-medium mb-3">
                     Kode Pos
@@ -1444,7 +1434,46 @@ const Page = () => {
                   </Button>
                 </div>
               </div>
+ <div>
+                  <div className="w-full gap-6 mt-6">
+                    <Label className="block text-sm font-medium mb-3">
+                      Alamat
+                      <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
+                        *Sesuai Dengan KTP
+                      </span>
+                    </Label>
+                    <Controller
+                      name="alamat"
+                      control={control}
+                      render={({ field }) => (
+                        <Textarea
+                          className="border-teal-500"
+                          placeholder="JL. RT.  RW.  Desa, Kecamatan, Kabupaten"
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
+                      )}
+                    />
+                  </div>
+                  <div className="flex items-center space-x-4 mt-2">
+                    <button
+                      type="button"
+                      onClick={handleGetLocation}
+                      className="p-2 bg-teal-500 text-white rounded hover:bg-teal-600"
+                    >
+                      {loading ? "Mendapatkan Lokasi..." : "Get Location"}
+                    </button>
 
+                    <p className="text-red-500">{!latitude && !longitude}</p>
+
+                    {latitude && longitude && (
+                      <p className="text-teal-500 mt-1">
+                        Lokasi berhasil ditemukan: {latitude.toFixed(4)},{" "}
+                        {longitude.toFixed(4)}
+                      </p>
+                    )}
+                  </div>
+                </div>
               <div className="w-full col-span-2">
                 <h2 className="text-2xl font-semibold text-gray-800">
                   Maps Lokasi Rumah
