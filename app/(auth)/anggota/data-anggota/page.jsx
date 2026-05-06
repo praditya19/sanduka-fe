@@ -38,7 +38,7 @@ const MapComponent = dynamic(
   () => import("../../../_components/MapComponent"),
   {
     ssr: false,
-  }
+  },
 );
 
 const DataAnggota = () => {
@@ -72,9 +72,12 @@ const DataAnggota = () => {
     cabang = null,
     unitKerja = null,
     keyword = null,
-    statusKeanggotaan = "Aktif"
+    statusKeanggotaan = "Aktif",
+    updateTableState = true,
   ) => {
-    setLoading(true);
+    if (updateTableState) {
+      setLoading(true);
+    }
 
     try {
       const response = await GlobalApi.getAllAnggota(
@@ -83,7 +86,7 @@ const DataAnggota = () => {
         cabang,
         unitKerja,
         keyword,
-        statusKeanggotaan
+        statusKeanggotaan,
       );
 
       const fetchedData = response.content;
@@ -92,7 +95,7 @@ const DataAnggota = () => {
 
       if (fetchedData && fetchedData.length > 0) {
         fetchedData.forEach((item) => {
-          console.log("NIP:", item.nip);
+          // console.log("NIP:", item.nip);
           if (item.foto) {
             try {
               const decodedString = atob(item.foto);
@@ -122,17 +125,23 @@ const DataAnggota = () => {
         console.warn("No data found.");
       }
 
-      setAnggotaData(fetchedData || []);
-      setFotoBase64(fotoBase64Array);
-      setTotalPages(response.totalPages || 0);
-      setTotalElements(response.totalElements || 0);
-      setFilesByNip(filesByNipArray);
+      if (updateTableState) {
+        setAnggotaData(fetchedData || []);
+        setFotoBase64(fotoBase64Array);
+        setTotalPages(response.totalPages || 0);
+        setTotalElements(response.totalElements || 0);
+        setFilesByNip(filesByNipArray);
+      }
 
-      setLoading(false);
+      if (updateTableState) {
+        setLoading(false);
+      }
       return fetchedData || [];
     } catch (error) {
       console.error("Error fetching anggota data:", error);
-      setLoading(false);
+      if (updateTableState) {
+        setLoading(false);
+      }
     }
   };
 
@@ -172,7 +181,7 @@ const DataAnggota = () => {
       selectedCabang,
       selectedUnitKerja,
       namaAnggota,
-      status
+      status,
     );
   };
 
@@ -193,7 +202,7 @@ const DataAnggota = () => {
 
   const updateUnitKerja = (kecamatan) => {
     const filteredUnitKerja = unitKerja.filter(
-      (item) => item.cabang === kecamatan
+      (item) => item.cabang === kecamatan,
     );
     setFilteredUnitKerja(filteredUnitKerja);
   };
@@ -262,7 +271,7 @@ const DataAnggota = () => {
       selectedCabang,
       selectedUnitKerja,
       nama,
-      status
+      status,
     );
     setCurrentPage(newPage);
   };
@@ -276,7 +285,7 @@ const DataAnggota = () => {
       selectedCabang,
       selectedUnitKerja,
       nama,
-      status
+      status,
     );
   };
 
@@ -288,7 +297,7 @@ const DataAnggota = () => {
       selectedCabang,
       selectedUnitKerja,
       nama,
-      status
+      status,
     );
   };
 
@@ -348,7 +357,7 @@ const DataAnggota = () => {
       selectedCabang,
       selectedUnitKerja,
       nama,
-      newStatus
+      newStatus,
     );
   };
 
@@ -358,20 +367,52 @@ const DataAnggota = () => {
   const handlePrint = async () => {
     setIsLoading(true);
     try {
-      const filteredDataForPrint = await fetchDataAnggota(
-        currentPage,
-        totalElements,
-        selectedCabang,
-        selectedUnitKerja,
-        nama
-      );
+      // Determine if we have active filters
+      const hasCabangFilter = selectedCabang && selectedCabang.trim() !== "";
+      const hasUnitKerjaFilter =
+        selectedUnitKerja && selectedUnitKerja.trim() !== "";
+      const hasNamaFilter = nama && nama.trim() !== "";
+      const hasAnyFilter =
+        hasCabangFilter || hasUnitKerjaFilter || hasNamaFilter;
+
+      let filteredDataForPrint;
+
+      if (hasAnyFilter) {
+        const printCabang = hasCabangFilter ? selectedCabang : null;
+        const printUnitKerja = hasUnitKerjaFilter ? selectedUnitKerja : null;
+        const printKeyword = hasNamaFilter ? nama : null;
+
+        filteredDataForPrint = await fetchDataAnggota(
+          0,
+          totalElements > 0 ? totalElements : 10000,
+          printCabang,
+          printUnitKerja,
+          printKeyword,
+          status,
+          false, // Don't update table state
+        );
+      } else {
+        filteredDataForPrint = anggotaData;
+      }
 
       if (!filteredDataForPrint || filteredDataForPrint.length === 0) {
         console.warn("No data available for printing.");
+        console.warn("Possible reasons:");
+        console.warn("1. No data exists in table");
+        console.warn("2. API returned empty response");
+        console.warn("3. Filters are too restrictive");
+        alert("Tidak ada data untuk dicetak.");
+        setIsLoading(false);
         return;
       }
 
       const printWindow = window.open("", "_blank", "width=800,height=600");
+
+      // Determine title based on filter
+      const titleCabang =
+        selectedCabang && selectedCabang.trim() !== ""
+          ? `Cabang ${selectedCabang}`
+          : "Semua Cabang";
 
       const htmlContent = `
         <html>
@@ -389,7 +430,7 @@ const DataAnggota = () => {
             </style>
           </head>
           <body>
-            <div class="title">Data Anggota Cabang ${selectedCabang}</div>
+            <div class="title">Data Anggota ${titleCabang}</div>
             <div class="subtitle">Jumlah Anggota: ${
               filteredDataForPrint.length
             }</div>
@@ -425,11 +466,11 @@ const DataAnggota = () => {
                         </td>
                         <td>
                           <div>${formatDate(item.tanggalLahir)} ${
-                      item.nip
-                    },</div>
+                            item.nip
+                          },</div>
                            <div>${item.jabatan}</div>
                           <div>${formatRetirementDate(
-                            item.prediksiPensiun
+                            item.prediksiPensiun,
                           )}</div>
                         </td>
                        
@@ -448,7 +489,7 @@ const DataAnggota = () => {
 </div>
                         </td>
                       </tr>
-                    `
+                    `,
                   )
                   .join("")}
               </tbody>
@@ -465,6 +506,7 @@ const DataAnggota = () => {
       };
     } catch (error) {
       console.error("Error during print process:", error);
+      alert("Terjadi kesalahan: " + error.message);
     } finally {
       setIsLoading(false);
     }
@@ -741,7 +783,7 @@ const DropdownCabang = ({ label, options, selectedCabang, handleChange }) => {
   }, []);
 
   const filteredOptions = options.filter((option) =>
-    option.kecamatan.toLowerCase().includes(filterQuery.toLowerCase())
+    option.kecamatan.toLowerCase().includes(filterQuery.toLowerCase()),
   );
 
   useEffect(() => {
@@ -851,10 +893,10 @@ const DropdownUnitKerja = ({
       selectedCabang
         ? option.cabang.trim().toLowerCase() ===
           selectedCabang.trim().toLowerCase()
-        : true
+        : true,
     )
     .filter((option) =>
-      option.unitKerja.toLowerCase().includes(filterQuery.toLowerCase())
+      option.unitKerja.toLowerCase().includes(filterQuery.toLowerCase()),
     );
 
   const handleOptionSelect = (item) => {
@@ -1006,25 +1048,25 @@ const DataTable = ({
           const formattedTanggalLahir = formatTanggal(userData.tanggalLahir);
           const formattedTahunDiangkat = formatTanggal(userData.tahunDiangkat);
           const formattedMulaiJadiAnggota = formatTanggal(
-            userData.mulaiJadiAnggotaPgri
+            userData.mulaiJadiAnggotaPgri,
           );
 
           const formData = new FormData();
 
           formData.append(
             "pesertaKtaDigital",
-            userData.pesertaKtaDigital || ""
+            userData.pesertaKtaDigital || "",
           );
           formData.append("pesertaDaspen", userData.pesertaDaspen || "");
           formData.append("mengajar", userData.mengajar || "");
           formData.append("golonganJabatan", userData.golonganJabatan || "");
           formData.append(
             "mulaiJadiAnggotaPgri",
-            formattedMulaiJadiAnggota || ""
+            formattedMulaiJadiAnggota || "",
           );
           formData.append(
             "pendidikanTerakhir",
-            userData.pendidikanTerakhir || ""
+            userData.pendidikanTerakhir || "",
           );
           formData.append("pangkatGolongan", userData.pangkatGolongan || "");
           formData.append("tahunDiangkat", formattedTahunDiangkat || "");
@@ -1057,7 +1099,6 @@ const DataTable = ({
           formData.append("email", userData.email || "");
 
           for (let pair of formData.entries()) {
-            console.log(pair[0] + ": " + pair[1]);
           }
 
           const response = await GlobalApi.updateUserById(anggotaId, formData);
@@ -1092,10 +1133,10 @@ const DataTable = ({
               },
               closeButton: true,
               closeOnClick: true,
-            }
+            },
           );
         } else {
-          console.log("Data pengguna tidak ditemukan.");
+          // console.log("Data pengguna tidak ditemukan.");
         }
       } catch (error) {
         console.error("Terjadi kesalahan:", error);
@@ -1125,11 +1166,11 @@ const DataTable = ({
             },
             closeButton: true,
             closeOnClick: true,
-          }
+          },
         );
       }
     } else {
-      console.log("Anggota ID tidak ditemukan di sessionStorage");
+      // console.log("Anggota ID tidak ditemukan di sessionStorage");
     }
   };
 
@@ -1138,7 +1179,6 @@ const DataTable = ({
     if (anggotaId) {
       try {
         const response = await GlobalApi.getUserById(anggotaId);
-        console.log(response);
 
         if (response) {
           setKategoriDaspen(response.kategoriDaspen || "Tidak tersedia");
@@ -1152,7 +1192,7 @@ const DataTable = ({
               setDaspenData(fileResponse);
               setIsPopupDaspen(true);
             } else {
-              console.log("File tidak ditemukan untuk NIP:", nip);
+              // console.log("File tidak ditemukan untuk NIP:", nip);
             }
           } else {
             toast.error(
@@ -1181,11 +1221,11 @@ const DataTable = ({
                 },
                 closeButton: true,
                 closeOnClick: true,
-              }
+              },
             );
           }
         } else {
-          console.log("Data anggota tidak ditemukan");
+          // console.log("Data anggota tidak ditemukan");
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -1215,11 +1255,11 @@ const DataTable = ({
             },
             closeButton: true,
             closeOnClick: true,
-          }
+          },
         );
       }
     } else {
-      console.log("Anggota ID tidak ditemukan di sessionStorage");
+      // console.log("Anggota ID tidak ditemukan di sessionStorage");
     }
   };
 
@@ -1255,7 +1295,7 @@ const DataTable = ({
           },
           closeButton: true,
           closeOnClick: true,
-        }
+        },
       );
       setTimeout(() => {
         window.location.reload();
@@ -1287,7 +1327,7 @@ const DataTable = ({
           },
           closeButton: true,
           closeOnClick: true,
-        }
+        },
       );
       setTimeout(() => {
         window.location.reload();
@@ -1333,7 +1373,7 @@ const DataTable = ({
             },
             closeButton: true,
             closeOnClick: true,
-          }
+          },
         );
         return;
       }
@@ -1366,7 +1406,7 @@ const DataTable = ({
           },
           closeButton: true,
           closeOnClick: true,
-        }
+        },
       );
 
       setTimeout(() => {
@@ -1404,7 +1444,7 @@ const DataTable = ({
           },
           closeButton: true,
           closeOnClick: true,
-        }
+        },
       );
     }
   };
@@ -1440,7 +1480,7 @@ const DataTable = ({
             },
             closeButton: true,
             closeOnClick: true,
-          }
+          },
         );
         return;
       }
@@ -1473,7 +1513,7 @@ const DataTable = ({
           },
           closeButton: true,
           closeOnClick: true,
-        }
+        },
       );
 
       setTimeout(() => {
@@ -1511,7 +1551,7 @@ const DataTable = ({
           },
           closeButton: true,
           closeOnClick: true,
-        }
+        },
       );
     }
   };
@@ -1601,7 +1641,7 @@ const DataTable = ({
   const updateAktivasiUser = async () => {
     try {
       const anggotaId = sessionStorage.getItem("anggotaId");
-      console.log(anggotaId);
+      // console.log(anggotaId);
 
       const response = await GlobalApi.activasiUser(anggotaId);
       toast.success(
@@ -1630,7 +1670,7 @@ const DataTable = ({
           },
           closeButton: true,
           closeOnClick: true,
-        }
+        },
       );
       setTimeout(() => {
         window.location.reload();
@@ -1663,7 +1703,7 @@ const DataTable = ({
           },
           closeButton: true,
           closeOnClick: true,
-        }
+        },
       );
     }
   };
@@ -1857,10 +1897,10 @@ const DataTable = ({
                                   const date = new Date(item.tahunDiangkat);
                                   const day = String(date.getDate()).padStart(
                                     2,
-                                    "0"
+                                    "0",
                                   );
                                   const month = String(
-                                    date.getMonth() + 1
+                                    date.getMonth() + 1,
                                   ).padStart(2, "0");
                                   const year = date.getFullYear();
                                   return `${day}-${month}-${year}`;
@@ -1881,14 +1921,15 @@ const DataTable = ({
                           <div
                             className={`text-sm mt-1 font-medium px-2 py-1 rounded-full inline-block ${
                               filesByNip.find(
-                                (file) => String(file?.nip) === String(item.nip)
+                                (file) =>
+                                  String(file?.nip) === String(item.nip),
                               )?.verifikasi === true
                                 ? "bg-green-100 text-green-700"
                                 : "bg-red-100 text-red-700"
                             }`}
                           >
                             {filesByNip.find(
-                              (file) => String(file?.nip) === String(item.nip)
+                              (file) => String(file?.nip) === String(item.nip),
                             )?.verifikasi === true
                               ? "Sudah Sinkronisasi"
                               : "Belum Sinkronisasi"}
@@ -1958,7 +1999,7 @@ const DataTable = ({
                                   onClick={() => {
                                     sessionStorage.setItem(
                                       "anggotaId",
-                                      item.id
+                                      item.id,
                                     );
                                     openModal(item);
                                   }}
@@ -1973,7 +2014,7 @@ const DataTable = ({
                                     onClick={() => {
                                       sessionStorage.setItem(
                                         "anggotaId",
-                                        item.id
+                                        item.id,
                                       );
                                       setIsPopupVisible(true);
                                     }}
@@ -2022,7 +2063,7 @@ const DataTable = ({
                                 <Link
                                   href={`https://wa.me/${item.nomorHp?.replace(
                                     /^0/,
-                                    "62"
+                                    "62",
                                   )}`}
                                   className="text-white bg-green-500 hover:bg-green-600 p-2 border rounded-md"
                                   target="_blank"
@@ -2141,8 +2182,8 @@ const DataTable = ({
                                                 year: "numeric",
                                               }).format(
                                                 new Date(
-                                                  daspenData.tanggalLahir
-                                                )
+                                                  daspenData.tanggalLahir,
+                                                ),
                                               )
                                             : "Tidak tersedia"}
                                         </p>
@@ -2151,7 +2192,7 @@ const DataTable = ({
                                         <p className="font-semibold">Usia:</p>
                                         <p>
                                           {calculateAge(
-                                            daspenData.tanggalLahir
+                                            daspenData.tanggalLahir,
                                           ) || "Tidak tersedia"}
                                         </p>
                                       </div>
@@ -2173,8 +2214,8 @@ const DataTable = ({
                                                 year: "numeric",
                                               }).format(
                                                 new Date(
-                                                  daspenData.mulaiJadiAnggotaDaspen
-                                                )
+                                                  daspenData.mulaiJadiAnggotaDaspen,
+                                                ),
                                               )
                                             : "Tidak tersedia"}
                                         </p>
@@ -2196,11 +2237,11 @@ const DataTable = ({
                                             ? (() => {
                                                 const prediksiPensiunDate =
                                                   new Date(
-                                                    daspenData.prediksiPensiun
+                                                    daspenData.prediksiPensiun,
                                                   );
                                                 prediksiPensiunDate.setMonth(
                                                   prediksiPensiunDate.getMonth() +
-                                                    1
+                                                    1,
                                                 );
                                                 return new Intl.DateTimeFormat(
                                                   "id-ID",
@@ -2208,7 +2249,7 @@ const DataTable = ({
                                                     day: "2-digit",
                                                     month: "long",
                                                     year: "numeric",
-                                                  }
+                                                  },
                                                 ).format(prediksiPensiunDate);
                                               })()
                                             : "Tidak tersedia"}
@@ -2337,7 +2378,7 @@ const DataTable = ({
                               )}
                             </div>
                             {["SUPERADMIN", "ADMIN"].includes(
-                              sessionStorage.getItem("role")
+                              sessionStorage.getItem("role"),
                             ) && (
                               <div className="flex justify-center">
                                 <Button
@@ -2347,7 +2388,7 @@ const DataTable = ({
                                   onClick={() => {
                                     sessionStorage.setItem(
                                       "anggotaId",
-                                      item.id
+                                      item.id,
                                     );
                                     handleDetailAnggota();
                                   }}
@@ -2392,10 +2433,10 @@ const DataTable = ({
                                   ? (() => {
                                       const date = new Date(item.tahunDiangkat);
                                       const day = String(
-                                        date.getDate()
+                                        date.getDate(),
                                       ).padStart(2, "0");
                                       const month = String(
-                                        date.getMonth() + 1
+                                        date.getMonth() + 1,
                                       ).padStart(2, "0");
                                       const year = date.getFullYear();
                                       return `${day}-${month}-${year}`;
@@ -2437,7 +2478,7 @@ const DataTable = ({
                                   onClick={() => {
                                     sessionStorage.setItem(
                                       "anggotaId",
-                                      item.id
+                                      item.id,
                                     );
                                     openModal(item);
                                   }}
@@ -2461,7 +2502,7 @@ const DataTable = ({
                                   onClick={() => {
                                     sessionStorage.setItem(
                                       "anggotaId",
-                                      item.id
+                                      item.id,
                                     );
                                     setIsPopupVisible(true);
                                   }}
@@ -2518,7 +2559,7 @@ const DataTable = ({
                                   onClick={() => {
                                     sessionStorage.setItem(
                                       "anggotaId",
-                                      item.id
+                                      item.id,
                                     );
                                     handleDataDaspen();
                                   }}
@@ -2580,7 +2621,7 @@ const DataTable = ({
                                               <button
                                                 onClick={() => {
                                                   setKategoriDaspen(
-                                                    previousKategoriDaspen
+                                                    previousKategoriDaspen,
                                                   );
                                                   setIsKategoriChanged(false);
                                                 }}
@@ -2603,11 +2644,11 @@ const DataTable = ({
                                                     day: "2-digit",
                                                     month: "long",
                                                     year: "numeric",
-                                                  }
+                                                  },
                                                 ).format(
                                                   new Date(
-                                                    daspenData.tanggalLahir
-                                                  )
+                                                    daspenData.tanggalLahir,
+                                                  ),
                                                 )
                                               : "Tidak tersedia"}
                                           </p>
@@ -2616,7 +2657,7 @@ const DataTable = ({
                                           <p className="font-semibold">Usia:</p>
                                           <p>
                                             {calculateAge(
-                                              daspenData.tanggalLahir
+                                              daspenData.tanggalLahir,
                                             ) || "Tidak tersedia"}
                                           </p>
                                         </div>
@@ -2638,11 +2679,11 @@ const DataTable = ({
                                                     day: "2-digit",
                                                     month: "long",
                                                     year: "numeric",
-                                                  }
+                                                  },
                                                 ).format(
                                                   new Date(
-                                                    daspenData.mulaiJadiAnggotaDaspen
-                                                  )
+                                                    daspenData.mulaiJadiAnggotaDaspen,
+                                                  ),
                                                 )
                                               : "Tidak tersedia"}
                                           </p>
@@ -2664,11 +2705,11 @@ const DataTable = ({
                                               ? (() => {
                                                   const prediksiPensiunDate =
                                                     new Date(
-                                                      daspenData.prediksiPensiun
+                                                      daspenData.prediksiPensiun,
                                                     );
                                                   prediksiPensiunDate.setMonth(
                                                     prediksiPensiunDate.getMonth() +
-                                                      1
+                                                      1,
                                                   );
                                                   return new Intl.DateTimeFormat(
                                                     "id-ID",
@@ -2676,7 +2717,7 @@ const DataTable = ({
                                                       day: "2-digit",
                                                       month: "long",
                                                       year: "numeric",
-                                                    }
+                                                    },
                                                   ).format(prediksiPensiunDate);
                                                 })()
                                               : "Tidak tersedia"}
@@ -2802,7 +2843,7 @@ const DataTable = ({
                                 )}
                               </div>
                               {["SUPERADMIN", "ADMIN"].includes(
-                                sessionStorage.getItem("role")
+                                sessionStorage.getItem("role"),
                               ) && (
                                 <div className="flex justify-center">
                                   <Button
@@ -2812,7 +2853,7 @@ const DataTable = ({
                                     onClick={() => {
                                       sessionStorage.setItem(
                                         "anggotaId",
-                                        item.id
+                                        item.id,
                                       );
                                       handleDetailAnggota();
                                     }}
@@ -3141,7 +3182,7 @@ const PopupDetail = ({
               <a
                 href={`https://wa.me/${selectedRow.nomorHp.replace(
                   /^0/,
-                  "62"
+                  "62",
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
