@@ -926,6 +926,8 @@ export default function IconGrid() {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
+          
+      
           {notification && (
             <NotificationPopup
               type={notification.type}
