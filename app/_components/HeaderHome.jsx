@@ -13,6 +13,7 @@ import {
 import GlobalApi from "../_utils/GlobalApi";
 import { useMute } from "../MuteContext";
 import PencarianAnggota from "../_components/PencarianAnggota";
+import RunningText from "./RunningText";
 
 const HeaderHome = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -386,7 +387,11 @@ const HeaderHome = () => {
             </ul>
           </div>
         </div>
+
       </nav>
+        <div className="mt-14 md:mt-12">
+    <RunningText />
+  </div>  
 
       {/* Search Modal */}
       {isSearchModalOpen && (

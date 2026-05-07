@@ -148,7 +148,9 @@ export default function Home() {
       )}
 
       <Header />
+      <div className="mt-14 md:mt-20">
       <RunningText />
+      </div>
 
       <Live />
       <div className="pt-[120px] md:pt-[140px]">
