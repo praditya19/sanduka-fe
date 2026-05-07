@@ -188,7 +188,7 @@ function KasSanduka() {
   const [tahunMeninggal, setTahunMeninggal] = useState("");
   const bulanSekarang = String(now.getMonth() + 1).padStart(2, "0");
   const tahunSekarang = now.getFullYear();
-  const tahunOptions = Array.from({ length: 5 }, (_, i) =>
+  const tahunOptions = Array.from({ length: 10 }, (_, i) =>
     (currentYear - i).toString()
   );
   const [allDataLapor, setAllDataLapor] = useState([]);
