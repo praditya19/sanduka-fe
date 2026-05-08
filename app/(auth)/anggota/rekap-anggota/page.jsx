@@ -532,14 +532,14 @@ function RekapAnggota() {
 
   // --- Template Rendering ---
   return (
-    <div className="min-h-screen bg-gradient-to-b from-teal-50 to-white p-2 md:p-4">
+    <div className="min-h-screen bg-gradient-to-b from-teal-50 to-white p-0">
       {isMobile ? <HeaderMobile /> : <HeaderMenu />}
 
       <div className="flex">
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
-        <div className={`flex-1 transition-all duration-300 mt-12 px-6 ${isSidebarOpen ? "ml-64" : "ml-0"}`}>
-          <main className="container mx-auto py-8">
+        <div className={`flex-1 transition-all duration-300 mt-12 px-8 ${isSidebarOpen ? "ml-64" : "ml-0"}`}>
+          <main className="w-full py-8">
             <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
               <h1 className="text-3xl font-extrabold flex items-center gap-3 text-gray-800">
                 Rekap Anggota

@@ -16,30 +16,41 @@ const StatCard = ({ title, value, icon: Icon, gradient, shadowColor, isLoading }
 
   return (
     <div className="relative group transition-all duration-300 hover:-translate-y-1">
-      <div className={`absolute inset-0 rounded-3xl opacity-20 blur-xl transition-opacity group-hover:opacity-40 ${gradient}`} />
-      <div className="relative bg-white/80 backdrop-blur-md border border-white rounded-3xl p-5 shadow-sm h-full flex flex-col justify-between overflow-hidden">
-        <div className={`absolute -right-4 -top-4 w-20 h-20 rounded-full opacity-10 ${gradient}`} />
+      {/* Background Glow */}
+      <div className={`absolute inset-0 rounded-2xl opacity-10 blur-lg transition-opacity group-hover:opacity-30 ${gradient}`} />
+      
+      {/* Card Body */}
+      <div className="relative bg-white/80 backdrop-blur-md border border-white/50 rounded-2xl p-4 shadow-sm h-full flex flex-col overflow-hidden min-h-[120px]">
         
-        <div className="flex items-center justify-between mb-4">
-          <div className={`w-12 h-12 rounded-2xl ${isLoading ? 'bg-gray-200 animate-pulse' : gradient} flex items-center justify-center text-white text-xl shadow-lg ${isLoading ? '' : shadowColor}`}>
-            {isLoading ? null : <Icon />}
-          </div>
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{title}</span>
+        {/* Top: Icon */}
+        <div className={`w-9 h-9 rounded-xl mb-3 flex-shrink-0 ${isLoading ? 'bg-gray-200 animate-pulse' : gradient} flex items-center justify-center text-white text-base shadow-md ${isLoading ? '' : shadowColor}`}>
+          {isLoading ? null : <Icon />}
         </div>
 
-        <div>
+        {/* Middle: Title */}
+        <div className="mb-1">
+          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-tight block truncate group-hover:text-gray-600 transition-colors">
+            {title}
+          </span>
+        </div>
+
+        {/* Bottom: Value */}
+        <div className="mt-auto">
           {isLoading ? (
-            <div className="h-7 w-24 bg-gray-200 animate-pulse rounded-lg mb-2" />
+            <div className="h-6 w-24 bg-gray-200 animate-pulse rounded-md" />
           ) : (
-            <h4 className="text-xl font-black text-gray-800 leading-tight">
+            <h4 className="text-lg font-black text-gray-800 leading-none">
               {!isCount && isCurrency ? (
-                <span className="text-sm font-medium text-gray-400 mr-1">Rp.</span>
+                <span className="text-xs font-semibold text-gray-400 mr-0.5">Rp.</span>
               ) : null}
               {typeof value === 'number' ? value.toLocaleString("id-ID") : value}
             </h4>
           )}
-          <div className={`w-8 h-1 ${isLoading ? 'bg-gray-100' : 'bg-gray-100 group-hover:w-16'} rounded-full mt-2 transition-all duration-500`} />
+          <div className={`w-6 h-1 ${isLoading ? 'bg-gray-100' : 'bg-gray-100 group-hover:w-16'} rounded-full mt-2 transition-all duration-500`} />
         </div>
+
+        {/* Decorative corner element */}
+        <div className={`absolute -right-6 -bottom-6 w-16 h-16 rounded-full opacity-5 ${gradient}`} />
       </div>
     </div>
   );
@@ -47,7 +58,7 @@ const StatCard = ({ title, value, icon: Icon, gradient, shadowColor, isLoading }
 
 const SummaryStats = ({ stats, isLoading }) => {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-4 mb-10 mt-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3 mb-8 mt-4">
       <StatCard 
         title="Anggota" 
         value={stats.memberCount} 
