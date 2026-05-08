@@ -83,6 +83,7 @@ function RekapAnggota() {
   const [dataIuran, setDataIuran] = useState(null);
   const [isBackupModalVisible, setIsBackupModalVisible] = useState(false);
   const [daspenValue, setDaspenValue] = useState(0);
+  const [provDaspenValue, setProvDaspenValue] = useState(0); // Simpan nilai prov untuk sinkronisasi otomatis
   const [nipValue, setNipValue] = useState("");
   const [idIuran, setIdIuran] = useState(null);
   const [statusPegawai, setStatusPegawai] = useState(null);
@@ -112,6 +113,23 @@ function RekapAnggota() {
 
     setGrandTotal(total);
   }, [groupedIuran, resetKeys, nominalBaruList, sumbanganList, addedCategories, manualInputs]);
+
+  // --- Fetch Keterangan Lain-Lain dari API ---
+  useEffect(() => {
+    const fetchLainLain = async () => {
+      try {
+        // Coba ambil data lengkap, jika gagal fallback ke keterangan
+        let response = await GlobalApi.getKeteranganLainlain();
+        
+        // Jika response dibungkus { data: [...] }
+        const actualData = response?.data || response || [];
+        setKeteranganLainLain(actualData);
+      } catch (error) {
+        console.error("❌ Gagal mengambil data keterangan lain-lain:", error);
+      }
+    };
+    fetchLainLain();
+  }, []);
 
   const [filesDataMap, setFilesDataMap] = useState({});
   const [open, setOpen] = useState(false);
@@ -227,26 +245,45 @@ function RekapAnggota() {
       }
 
       const apiData = Array.isArray(response) ? response : (response?.data || []);
-      const processedData = processApiResponse(apiData, null, false);
-      const regularData = processedData.filter(item => !(item.cabang === "Total" && !item.unitKerja));
-
-      setData(regularData);
-      setOriginalRekapData(regularData);
-
-      // Stop loading as soon as main data is ready
-      setLoading(false);
-
-      // Fetch secondary data without blocking
+      
+      // 1. Ambil data file (Daspen prov) lebih awal agar bisa disinkronkan
+      let fileMap = {};
       try {
         const filesResponse = await GlobalApi.getAllFiles();
         if (Array.isArray(filesResponse)) {
-          const map = {};
-          filesResponse.forEach(f => { if (f.nip) map[f.nip] = f.sumbangan; });
-          setFilesDataMap(map);
+          filesResponse.forEach(f => { if (f.nip) fileMap[f.nip] = f.sumbangan; });
+          setFilesDataMap(fileMap);
         }
       } catch (fileErr) {
         console.warn("Could not fetch secondary files data:", fileErr);
       }
+
+      const processedData = processApiResponse(apiData, null, false);
+      
+      // 2. Sinkronkan data daspen dengan data prov (fileMap) secara otomatis
+      const syncedData = processedData.map(item => {
+        if (item.nip && fileMap[item.nip]) {
+          const provValue = parseInt(fileMap[item.nip]);
+          const currentValue = parseInt(item.daspen || 0);
+          // Hanya sinkronkan jika nilainya bukan 0 (berarti belum dihapus sengaja)
+          // dan nilainya berbeda dengan data provinsi
+          if (currentValue !== 0 && currentValue !== provValue) {
+            const diff = provValue - currentValue;
+            return {
+              ...item,
+              daspen: provValue,
+              totalIuran: (parseInt(item.totalIuran || 0) + diff)
+            };
+          }
+        }
+        return item;
+      });
+
+      const regularData = syncedData.filter(item => !(item.cabang === "Total" && !item.unitKerja));
+
+      setData(regularData);
+      setOriginalRekapData(regularData);
+      setLoading(false);
     } catch (err) {
       console.error("Error fetching initial data:", err);
       setLoading(false);
@@ -428,7 +465,9 @@ function RekapAnggota() {
     try {
       const fileResponse = await GlobalApi.getFileByNip(member.nip);
       if (fileResponse?.sumbangan) {
-        setDaspenValue(parseInt(fileResponse.sumbangan));
+        const nominalProv = parseInt(fileResponse.sumbangan);
+        setProvDaspenValue(nominalProv);
+        // Jangan set daspenValue dulu di sini agar tetap tersembunyi jika database 0
       }
       setNotifDaspen(fileResponse?.dataDaspen === true);
     } catch (error) {
@@ -437,8 +476,7 @@ function RekapAnggota() {
 
     try {
       const response = await GlobalApi.cekNpaList([member.npaPgri]);
-      setSelectedMember(member);
-      setDataNpa(response[0]);
+      setDataNpa(response[0] || null);
 
       if (response[0]?.foto) {
         try {
@@ -457,29 +495,36 @@ function RekapAnggota() {
       setNomorRekening(dataIuran.nomorRekening || "");
 
       const manualValues = {};
-      const manualKeys = [
-        "Pgri",
-        "Sanduka",
-        "Daspen",
-        "Derap",
-        "Kalender",
-        "LainLain",
-      ];
-
+      const manualKeys = ["Pgri", "Sanduka", "Daspen", "Derap", "Kalender"];
       manualKeys.forEach((key) => {
         const manualKey = `manual${key}`;
         if (dataIuran[manualKey] && dataIuran[manualKey] > 0) {
-          // Sesuaikan key dengan yang digunakan di nominalBaruList (tanpa prefix 'manual')
-          manualValues[key.toLowerCase()] = dataIuran[manualKey] || 0;
+          manualValues[key.toLowerCase()] = dataIuran[manualKey];
         }
       });
-
       setNominalBaruList(manualValues);
 
-      if (
-        dataIuran?.iuranSumbanganList &&
-        Array.isArray(dataIuran.iuranSumbanganList)
-      ) {
+      // --- TRIPLE FALLBACK: Pastikan nominal tidak 0 ---
+      const profile = response[0] || {};
+      const freshMember = {
+        ...member,
+        pgri: (dataIuran.pgri && parseInt(dataIuran.pgri) > 0) ? parseInt(dataIuran.pgri) : (member.pgri > 0 ? parseInt(member.pgri) : (parseInt(profile.pgri) || 8000)),
+        sanduka: (dataIuran.sanduka && parseInt(dataIuran.sanduka) > 0) ? parseInt(dataIuran.sanduka) : (member.sanduka > 0 ? parseInt(member.sanduka) : (parseInt(profile.sanduka) || 3000)),
+        daspen: (dataIuran.daspen && parseInt(dataIuran.daspen) > 0) ? parseInt(dataIuran.daspen) : (member.daspen > 0 ? parseInt(member.daspen) : (parseInt(profile.daspen) || 0)),
+        derap: (dataIuran.derap && parseInt(dataIuran.derap) > 0) ? parseInt(dataIuran.derap) : (member.derap > 0 ? parseInt(member.derap) : (parseInt(profile.derap) || 0)),
+        kalender: (dataIuran.kalender && parseInt(dataIuran.kalender) > 0) ? parseInt(dataIuran.kalender) : (member.kalender > 0 ? parseInt(member.kalender) : (parseInt(profile.kalender) || 0)),
+      };
+
+      // Set data final sekaligus untuk memicu re-render modal yang akurat
+      setSelectedMember(freshMember);
+
+      // --- PERBAIKAN: Daspen hanya muncul jika sudah ada di database ---
+      // Jika di database 0 (Belum Input), daspenValue diset 0 agar tidak muncul di modal
+      // sesuai permintaan: "jika belom input mka pas di edit daspen gk muncul"
+      const finalDaspen = (dataIuran.daspen && parseInt(dataIuran.daspen) > 0) ? parseInt(dataIuran.daspen) : 0;
+      setDaspenValue(finalDaspen);
+
+      if (dataIuran?.iuranSumbanganList && Array.isArray(dataIuran.iuranSumbanganList)) {
         setSumbanganList(dataIuran.iuranSumbanganList);
       } else {
         setSumbanganList([]);
@@ -510,7 +555,9 @@ function RekapAnggota() {
 
   const handleUpdateIuran = async (id, payload) => {
     try {
-      await GlobalApi.updateIuranById(id, payload);
+      // Pastikan ID adalah number untuk endpoint /api/by-nominal/
+      const numericId = parseInt(id);
+      await GlobalApi.updateByNominal(numericId, payload);
       setNotification({ type: "success", message: "Data berhasil diperbarui!" });
       fetchInitialData();
       return true;
@@ -530,12 +577,49 @@ function RekapAnggota() {
     const key = selectedKategori === "lainlain" ? selectedKeterangan : selectedKategori;
     if (!key) return;
 
-    if (addedCategories.some(c => c.key === key)) {
-      alert("Kategori sudah ditambahkan!");
-      return;
+    // PENTING: Jika kategori ditambahkan kembali, pastikan dihapus dari resetKeys
+    // agar nominalnya langsung muncul (tidak dianggap sedang dihapus)
+    setResetKeys(prev => prev.filter(k => k !== key));
+
+    // Jika kategori yang dipilih adalah kategori inti (PGRI, Sanduka, Daspen, dll),
+    // kita tidak perlu menambahkannya ke addedCategories karena sudah ada di groupedIuran.
+    // Kita cukup mengeset nilainya saja.
+    const coreKeys = ["pgri", "sanduka", "daspen", "derap", "kalender"];
+    if (coreKeys.includes(key.toLowerCase())) {
+      // Jika daspen, sinkronkan nilai provinsinya
+      if (key.toLowerCase() === "daspen") {
+        setDaspenValue(provDaspenValue);
+      }
+      // Untuk kategori inti lainnya, biarkan tetap muncul di groupedIuran
+    } else {
+      // Hanya tambahkan ke addedCategories jika memang kategori baru (Lain-Lain/Tambahan)
+      if (!addedCategories.some(c => c.key === key)) {
+        setAddedCategories(prev => [...prev, { key, label: key }]);
+        // --- PERBAIKAN: Ambil nominal dari API keteranganLainLain ---
+        // --- PERBAIKAN PAMUNGKAS: Pencarian Pintar (Smart Lookup) ---
+        const listLain = Array.isArray(keteranganLainLain) ? keteranganLainLain : (keteranganLainLain?.data || []);
+        
+        const foundFromApi = listLain.find(item => {
+          const apiLabel = (item.keterangan || item.nama_iuran || item.nama || item || "").toString().trim().toLowerCase();
+          const selectedLabel = key.toString().trim().toLowerCase();
+          return apiLabel === selectedLabel;
+        });
+
+        if (foundFromApi && typeof foundFromApi === 'object') {
+          // Cari kolom mana saja yang mengandung kata kunci nominal/jumlah/tarif secara dinamis
+          const smartKey = Object.keys(foundFromApi).find(k => 
+            k.toLowerCase().includes('nominal') || 
+            k.toLowerCase().includes('jumlah') || 
+            k.toLowerCase().includes('tarif') ||
+            k.toLowerCase().includes('harga')
+          );
+          
+          const nominal = smartKey ? parseInt(foundFromApi[smartKey] || 0) : 0;
+          setManualInputs(prev => ({ ...prev, [key]: nominal }));
+        }
+      }
     }
 
-    setAddedCategories(prev => [...prev, { key, label: key }]);
     setShowDropdown(false);
     setSelectedKategori("");
     setSelectedKeterangan("");
@@ -552,6 +636,12 @@ function RekapAnggota() {
         nominalBaruList,
         resetKeys,
         sumbanganList,
+        // Sertakan iuran pokok, jika ada di resetKeys maka kirim 0 agar jadi "Belum Input"
+        pgri: resetKeys.includes("pgri") ? 0 : selectedMember.pgri,
+        sanduka: resetKeys.includes("sanduka") ? 0 : selectedMember.sanduka,
+        daspen: resetKeys.includes("daspen") ? 0 : daspenValue,
+        derap: resetKeys.includes("derap") ? 0 : selectedMember.derap,
+        kalender: resetKeys.includes("kalender") ? 0 : selectedMember.kalender,
         addedCategories: addedCategories.map(c => ({
           key: c.key,
           nominal: manualInputs[c.key] || 0

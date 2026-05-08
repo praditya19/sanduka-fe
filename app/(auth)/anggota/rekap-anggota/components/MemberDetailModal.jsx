@@ -44,7 +44,6 @@ const MemberDetailModal = ({
               <p>Tempat, Tanggal Lahir: {dataIuran.tempatTanggalLahir}</p>
               <p>Nomor Anggota PGRI: <strong>{dataIuran.npa}</strong></p>
               <p>Nomor Induk Pegawai: <em>{dataIuran.nip}</em></p>
-              <p>Nomor Induk Kependudukan: <em>{dataIuran.nik}</em></p>
             </div>
             <div className="text-sm text-center md:text-left">
               <p><strong>{dataIuran.cabang}</strong></p>

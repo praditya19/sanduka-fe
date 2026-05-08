@@ -79,7 +79,7 @@ const EditFinanceModal = ({
                 </h3>
                 <div className="space-y-1 text-sm text-gray-700">
                   <p>
-                    <span className="w-48 inline-block">Tempat, Tanggal Lahir</span>: 
+                    <span className="w-48 inline-block">Tempat, Tanggal Lahir</span>:
                     <span className="font-medium text-gray-900 uppercase">
                       {dataNpa.tempatLahir || dataNpa.tempat_lahir || dataNpa.user?.tempatLahir || dataNpa.pendaftaran?.tempatLahir || "-"}, {
                         (() => {
@@ -101,7 +101,6 @@ const EditFinanceModal = ({
                   </p>
                   <p><span className="w-48 inline-block">Nomor Anggota PGRI</span>: <span className="font-medium text-gray-900">{dataNpa.npaPgri || dataNpa.npa_pgri || dataNpa.npa || dataNpa.user?.npaPgri || "-"}</span></p>
                   <p><span className="w-48 inline-block">Nomor Induk Pegawai</span>: <span className="font-medium text-gray-900">{dataNpa.nip || dataNpa.user?.nip || dataNpa.pendaftaran?.nip || "-"}</span></p>
-                  <p><span className="w-48 inline-block">Nomor Induk Kependudukan</span>: <span className="font-medium text-gray-900">{dataNpa.nik || dataNpa.user?.nik || dataNpa.pendaftaran?.nik || "-"}</span></p>
                 </div>
               </>
             ) : (
@@ -119,7 +118,6 @@ const EditFinanceModal = ({
                 <p className="font-bold text-gray-900 uppercase">{dataNpa.cabang || dataNpa.user?.cabang || "-"}, </p>
                 <p className="font-medium">{dataNpa.jabatan || dataNpa.user?.jabatan || "Lain-Lain"}</p>
                 <p className="text-gray-600">{dataNpa.unitKerja || dataNpa.user?.unitKerja || dataNpa.unit_kerja || "-"}</p>
-                <p className="text-xs text-gray-500 mt-2">Status: {dataNpa.statusKeanggotaan || dataNpa.user?.statusKeanggotaan || "-"}</p>
               </>
             )}
           </div>
@@ -179,7 +177,20 @@ const EditFinanceModal = ({
 
           <div className="space-y-2">
             {groupedIuran
-              .filter((item) => parseInt(item.iuran || 0) + parseInt(item.manual || 0) > 0 && !item.isSumbanganDetail)
+              .filter((item) => {
+                if (item.isSumbanganDetail) return false;
+                const isReset = resetKeys.includes(item.key);
+                // Jika sedang klik 'Hapus' di sesi ini, sembunyikan sementara
+                if (isReset) return false;
+
+                // Selalu tampilkan kategori inti (PGRI & SANDUKA) meskipun nilainya 0
+                const coreKeys = ["pgri", "sanduka"];
+                if (coreKeys.includes(item.key)) return true;
+
+                // Untuk kategori lain, sembunyikan jika nilainya 0
+                const totalVal = parseInt(item.iuran || 0) + (nominalBaruList[item.key] || 0);
+                return totalVal > 0;
+              })
               .map((item, idx) => {
                 const isReset = resetKeys.includes(item.key);
                 const oldValue = isReset ? 0 : parseInt(item.iuran || 0);
@@ -359,14 +370,18 @@ const EditFinanceModal = ({
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Pilih Keterangan</label>
                       <select
-                        className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        id="keterangan-select"
+                        className="w-full border p-2 rounded"
                         value={selectedKeterangan}
                         onChange={(e) => setSelectedKeterangan(e.target.value)}
                       >
                         <option value="">-- Pilih Keterangan --</option>
                         {Array.isArray(keteranganLainLain) && keteranganLainLain.map((item, index) => (
-                          <option key={index} value={item}>{item}</option>
+                          <option key={index} value={item.keterangan || item.nama_iuran || item}>
+                            {item.keterangan || item.nama_iuran || item}
+                          </option>
                         ))}
+                        <option value="Lain-Lain (Manual)">Lain-Lain (Manual)</option>
                       </select>
                     </div>
                   )}
