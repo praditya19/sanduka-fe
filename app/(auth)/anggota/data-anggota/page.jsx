@@ -374,52 +374,71 @@ const DataAnggota = () => {
       return;
     }
 
-    printWindow.document.write("<html><head><title>Memuat Data...</title></head><body style='font-family:sans-serif; text-align:center; padding-top:20%;'><h2 id='msg' style='color:#00796b;'>Sedang menarik seluruh data dari server...</h2><p style='color:#666;'>(Mohon tunggu beberapa saat)</p></body></html>");
+    printWindow.document.write("<html><head><title>Memuat Data...</title></head><body style='font-family:sans-serif; text-align:center; padding-top:20%;'><h2 id='msg' style='color:#00796b;'>Sedang menarik data dari server...</h2><p style='color:#666;'>(Mohon tunggu, menarik data beserta foto dalam jumlah besar memakan waktu)</p></body></html>");
 
     try {
       const printCabang = selectedCabang ? selectedCabang.trim() : "";
       const printUnitKerja = selectedUnitKerja ? selectedUnitKerja.trim() : "";
       const printKeyword = nama ? nama.trim() : "";
-      
       const printStatus = typeof status !== "undefined" && status !== "Semua" ? status : "";
 
-      const fetchSize = typeof totalElements !== "undefined" && totalElements > 0 ? totalElements : 10000;
-      
-      const response = await GlobalApi.getAllAnggota(
-        0,
-        fetchSize,
-        printCabang,
-        printUnitKerja,
-        printKeyword,
-        printStatus
-      );
-
       let filteredDataForPrint = [];
-      if (Array.isArray(response)) {
-        filteredDataForPrint = response;
-      } else if (response && Array.isArray(response.content)) {
-        filteredDataForPrint = response.content;
-      } else if (response?.data && Array.isArray(response.data.content)) {
-        filteredDataForPrint = response.data.content;
+      const chunkSize = 100;
+      let currentPageFetch = 0;
+      let hasMore = true;
+      const targetElements = typeof totalElements !== "undefined" && totalElements > 0 ? totalElements : 10000;
+
+      while (hasMore && filteredDataForPrint.length < targetElements) {
+        const response = await GlobalApi.getAllAnggota(
+          currentPageFetch,
+          chunkSize,
+          printCabang,
+          printUnitKerja,
+          printKeyword,
+          printStatus
+        );
+
+        let chunk = [];
+        if (Array.isArray(response)) {
+          chunk = response;
+        } else if (response && Array.isArray(response.content)) {
+          chunk = response.content;
+        } else if (response?.data && Array.isArray(response.data.content)) {
+          chunk = response.data.content;
+        }
+
+        if (chunk.length === 0) {
+          hasMore = false;
+        } else {
+          filteredDataForPrint = filteredDataForPrint.concat(chunk);
+          currentPageFetch++;
+
+          if (printWindow && !printWindow.closed) {
+            const msgEl = printWindow.document.getElementById('msg');
+            if (msgEl) {
+              msgEl.innerText = "Sedang menarik " + filteredDataForPrint.length + " data dari server...";
+            }
+          }
+        }
       }
 
       if (!filteredDataForPrint || filteredDataForPrint.length === 0) {
         if (!printWindow.closed) {
-           printWindow.document.getElementById('msg').innerText = "Data tidak ditemukan atau kosong.";
+          printWindow.document.getElementById('msg').innerText = "Data tidak ditemukan atau kosong.";
         }
         setIsLoading(false);
         return;
       }
 
       if (!printWindow.closed) {
-        printWindow.document.getElementById('msg').innerText = "Sedang merakit " + filteredDataForPrint.length + " data beserta foto... (Browser mungkin butuh waktu)";
+        printWindow.document.getElementById('msg').innerText = "Merakit " + filteredDataForPrint.length + " baris data dan foto... (Browser mungkin agak lag, mohon ditunggu)";
       }
 
       const titleCabang = printCabang !== "" ? `Cabang ${printCabang}` : "Semua Cabang";
 
       let rowsHtml = "";
       filteredDataForPrint.forEach((item, index) => {
-        
+
         let imgTag = "";
         if (item.foto) {
           try {
@@ -433,41 +452,43 @@ const DataAnggota = () => {
         }
 
         const tglLahir = item.tanggalLahir ? formatDate(item.tanggalLahir) : "-";
-        
+
         let tglPensiun = "-";
         if (item.prediksiPensiun) {
-            try {
-                tglPensiun = typeof formatRetirementDate === "function" 
-                    ? formatRetirementDate(item.prediksiPensiun) 
-                    : item.prediksiPensiun;
-            } catch (e) {
-                tglPensiun = item.prediksiPensiun;
-            }
+          try {
+            tglPensiun = typeof formatRetirementDate === "function"
+              ? formatRetirementDate(item.prediksiPensiun)
+              : item.prediksiPensiun;
+          } catch (e) {
+            tglPensiun = item.prediksiPensiun;
+          }
         }
 
         const updateAtStr = (item.updatedAt && item.updatedAt.length >= 3) ? item.updatedAt[2] + "-" + item.updatedAt[1] + "-" + item.updatedAt[0] : "-";
 
+        const alamatStr = item.alamat ? item.alamat : "-";
+
         rowsHtml += "<tr>" +
           "<td style='text-align:center;'>" + (index + 1) + "</td>" +
           "<td>" +
-            "<div>" + (item.cabang || "-") + ",</div>" +
-            "<div>" + (item.unitKerja || "-") + "</div>" +
+          "<div>" + (item.cabang || "-") + ",</div>" +
+          "<div>" + (item.unitKerja || "-") + "</div>" +
           "</td>" +
           "<td style='text-align:center;'>" + imgTag + "</td>" +
           "<td>" +
-            "<div class='font-bold'>" + (item.namaLengkap || "-") + "</div>" +
-            "<div>NPA: " + (item.npaPgri || "-") + "</div>" +
+          "<div class='font-bold'>" + (item.namaLengkap || "-") + "</div>" +
+          "<div>NPA: " + (item.npaPgri || "-") + "</div>" +
           "</td>" +
           "<td>" +
-            "<div>" + tglLahir + " " + (item.nip || "") + ",</div>" +
-            "<div>" + (item.jabatan || "-") + "</div>" +
-            "<div>Pensiun: " + tglPensiun + "</div>" +
+          "<div>" + tglLahir + " " + (item.nip || "") + ",</div>" +
+          "<div>" + (item.jabatan || "-") + "</div>" +
+          "<div>Pensiun: " + tglPensiun + "</div>" +
           "</td>" +
           "<td>" +
-            "<div>" + (item.statusKeanggotaan ? item.statusKeanggotaan : "-") + "</div>" +
-            "<div>" + updateAtStr + "</div>" +
+          "<div style='font-weight:bold;'>" + (item.statusKeanggotaan ? item.statusKeanggotaan : "-") + "</div>" +
+          "<div style='font-size:10px; margin-top:4px;'>Alamat: " + alamatStr + "</div>" +
           "</td>" +
-        "</tr>";
+          "</tr>";
       });
 
       const htmlContent = `
@@ -492,11 +513,11 @@ const DataAnggota = () => {
               <thead>
                 <tr class="header-row">
                   <th style="width: 5%;">No</th>
-                  <th style="width: 25%;">Unit Kerja</th>
+                  <th style="width: 20%;">Unit Kerja</th>
                   <th style="width: 10%;">Foto</th>
                   <th style="width: 25%;">Nama</th>
                   <th style="width: 20%;">Tanggal Lahir</th>
-                  <th style="width: 15%;">Keterangan</th>
+                  <th style="width: 20%;">Keterangan</th>
                 </tr>
               </thead>
               <tbody>
@@ -511,7 +532,9 @@ const DataAnggota = () => {
       printWindow.document.write(htmlContent);
       printWindow.document.close();
 
-      const printDelay = Math.max(2000, (filteredDataForPrint.length / 1000) * 1500);
+      // WAKTU TUNGGU DINAMIS: Karena kita memuat ribuan foto, browser butuh waktu bernafas
+      // Delay Minimal 3 detik, ditambah 2 detik tiap kelipatan 1000 data
+      const printDelay = Math.max(3000, (filteredDataForPrint.length / 1000) * 2000);
 
       setTimeout(() => {
         printWindow.focus();
@@ -522,7 +545,7 @@ const DataAnggota = () => {
     } catch (error) {
       console.error("Error during print process:", error);
       if (!printWindow.closed) {
-         printWindow.document.body.innerHTML = "<h2 style='color:red; font-family:sans-serif; text-align:center; margin-top:20%;'>Terjadi kesalahan: " + error.message + "</h2>";
+        printWindow.document.body.innerHTML = "<h2 style='color:red; font-family:sans-serif; text-align:center; margin-top:20%;'>Terjadi kesalahan: " + error.message + "</h2>";
       }
     } finally {
       setIsLoading(false);
@@ -566,9 +589,8 @@ const DataAnggota = () => {
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="container mx-auto p-4 md:p-6">
             <FilterSection
@@ -651,9 +673,10 @@ const FilterSection = ({
   if (role === "USER") return null;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 mt-16 text-sm">
-      <div className="flex flex-col md:flex-row items-start md:items-end gap-4">
-        <div className="w-full md:w-auto">
+    <div className="mb-6 mt-16 text-sm">
+      <div className="flex flex-wrap items-end gap-4 w-full">
+
+        <div className="w-full sm:w-auto">
           <DropdownCabang
             label="Cabang"
             options={cabang}
@@ -662,7 +685,7 @@ const FilterSection = ({
           />
         </div>
 
-        <div className="w-full md:w-auto">
+        <div className="w-full sm:w-auto">
           <DropdownUnitKerja
             label="Unit Kerja"
             selectedCabang={selectedCabang}
@@ -671,54 +694,51 @@ const FilterSection = ({
           />
         </div>
 
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 w-full sm:w-auto">
           <label htmlFor="searchInput" className="font-semibold text-gray-800">
             Cari Anggota
           </label>
-          <div className="w-full">
-            <input
-              className="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0 w-44"
-              type="text"
-              placeholder="Cari Anggota"
-              value={nama}
-              onChange={handleNamaChange}
-            />
-          </div>
+          <input
+            className="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline w-full sm:w-44"
+            type="text"
+            placeholder="Cari Anggota"
+            value={nama}
+            onChange={handleNamaChange}
+          />
         </div>
 
-        <div className="flex flex-col gap-2">
-          <label htmlFor="searchInput" className="font-semibold text-gray-800">
+        <div className="flex flex-col gap-2 w-full sm:w-auto">
+          <label htmlFor="statusInput" className="font-semibold text-gray-800">
             Status Anggota
           </label>
-          <div className="w-full">
-            <select
-              className="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline w-44"
-              value={status}
-              onChange={handleStatusChange}
-            >
-              <option value="Semua">Semua</option>
-              <option value="Aktif">Aktif</option>
-              <option value="Tidak Aktif">Tidak Aktif</option>
-              <option value="Pensiun">Pensiun</option>
-              <option value="Meninggal">Meninggal</option>
-            </select>
-          </div>
+          <select
+            className="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline w-full sm:w-44"
+            value={status}
+            onChange={handleStatusChange}
+          >
+            <option value="Semua">Semua</option>
+            <option value="Aktif">Aktif</option>
+            <option value="Tidak Aktif">Tidak Aktif</option>
+            <option value="Pensiun">Pensiun</option>
+            <option value="Meninggal">Meninggal</option>
+          </select>
         </div>
 
-        <div className="flex flex-col gap-2 text-center md:ml-20 ml-0">
-          <p className="py-2 rounded focus:outline-none focus:shadow-outline w-44 text-base">
+        <div className="flex items-center h-[38px] w-full sm:w-auto">
+          <p className="font-semibold text-gray-700">
             Jumlah Anggota : {totalElements}
           </p>
         </div>
 
-        <div className="flex w-full flex-col md:flex-row justify-end md:ml-40 ml-0 gap-2">
+        <div className="flex flex-row items-center gap-4 w-full lg:w-auto lg:ml-auto mt-2 lg:mt-0">
+
           {/* Show Entries */}
-          <div className="flex flex-col sm:flex-row w-full sm:w-auto items-start sm:items-center gap-2 ml-0 sm:-ml-20">
-            <label className="text-sm text-gray-700 whitespace-nowrap">
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">
               Show
             </label>
             <select
-              className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
+              className="border shadow-sm border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={pageSize}
               onChange={(e) => handleSizeChange(Number(e.target.value))}
             >
@@ -732,7 +752,7 @@ const FilterSection = ({
 
           {/* Tombol Cetak */}
           <Button
-            className="px-8 mt-2 md:mt-0 flex items-center justify-center"
+            className="px-6 flex items-center justify-center shadow-sm"
             variant="outline"
             onClick={handlePrint}
             disabled={role === "USER" || isLoading}
@@ -763,6 +783,7 @@ const FilterSection = ({
             )}
           </Button>
         </div>
+
       </div>
     </div>
   );
@@ -910,7 +931,7 @@ const DropdownUnitKerja = ({
     .filter((option) =>
       selectedCabang
         ? option.cabang.trim().toLowerCase() ===
-          selectedCabang.trim().toLowerCase()
+        selectedCabang.trim().toLowerCase()
         : true,
     )
     .filter((option) =>
@@ -946,9 +967,8 @@ const DropdownUnitKerja = ({
       <label className="block mb-2 font-semibold text-gray-800">{label}</label>
       <input
         type="text"
-        className={`border rounded-lg p-2 w-full bg-white shadow-sm ${
-          !selectedCabang ? "bg-gray-200 cursor-not-allowed" : ""
-        }`}
+        className={`border rounded-lg p-2 w-full bg-white shadow-sm ${!selectedCabang ? "bg-gray-200 cursor-not-allowed" : ""
+          }`}
         placeholder={
           !selectedCabang ? "Pilih cabang terlebih dahulu" : `Pilih ${label}`
         }
@@ -1038,6 +1058,7 @@ const DataTable = ({
   const [previousKategoriDaspen, setPreviousKategoriDaspen] =
     useState(kategoriDaspen);
   const profileImageUrl = "/profile.png";
+  const [zoomedImage, setZoomedImage] = useState(null);
   const router = useRouter();
 
   const handleOpenPopup = () => {
@@ -1839,8 +1860,11 @@ const DataTable = ({
                     </td>
                     {isMobile ? (
                       <td className="py-2 px-4 border-b">
-                        <div className="w-16 h-16 flex flex-col items-center justify-center">
+                        <div className="w-16 h-16 flex flex-col items-center justify-center cursor-pointer hover:opacity-80 transition-opacity">
                           <Image
+                            onClick={() => setZoomedImage(
+                              fotoBase64[index] ? `data:image/jpeg;base64,${fotoBase64[index]}` : profileImageUrl
+                            )}
                             src={
                               fotoBase64[index]
                                 ? `data:image/jpeg;base64,${fotoBase64[index]}`
@@ -1849,15 +1873,18 @@ const DataTable = ({
                             width={50}
                             height={50}
                             alt="Anggota Foto"
-                            className="object-cover"
+                            className="object-cover rounded-md"
                             unoptimized={true}
                           />
                         </div>
                       </td>
                     ) : (
                       <td className="py-2 px-4 border-b">
-                        <div className="w-16 h-16 overflow-hidden">
+                        <div className="w-16 h-16 overflow-hidden flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity">
                           <Image
+                            onClick={() => setZoomedImage(
+                              fotoBase64[index] ? `data:image/jpeg;base64,${fotoBase64[index]}` : profileImageUrl
+                            )}
                             src={
                               fotoBase64[index]
                                 ? `data:image/jpeg;base64,${fotoBase64[index]}`
@@ -1866,7 +1893,7 @@ const DataTable = ({
                             width={50}
                             height={50}
                             alt="Anggota Foto"
-                            className="object-cover"
+                            className="object-cover rounded-md"
                           />
                         </div>
                       </td>
@@ -1878,11 +1905,10 @@ const DataTable = ({
                       <div className="text-sm">{item.npaPgri}</div>
                       <div className="text-sm">{item.jabatan}</div>
                       <div
-                        className={`text-sm p-1 inline-block ${
-                          item.nip && item.nip !== "0"
-                            ? "bg-green-500 text-white rounded-full px-3"
-                            : "bg-red-500 text-white rounded-full px-3"
-                        }`}
+                        className={`text-sm p-1 inline-block ${item.nip && item.nip !== "0"
+                          ? "bg-green-500 text-white rounded-full px-3"
+                          : "bg-red-500 text-white rounded-full px-3"
+                          }`}
                       >
                         {item.nip && item.nip !== "0"
                           ? item.nip
@@ -1913,17 +1939,17 @@ const DataTable = ({
                             Anggota:{" "}
                             {item.tahunDiangkat
                               ? (() => {
-                                  const date = new Date(item.tahunDiangkat);
-                                  const day = String(date.getDate()).padStart(
-                                    2,
-                                    "0",
-                                  );
-                                  const month = String(
-                                    date.getMonth() + 1,
-                                  ).padStart(2, "0");
-                                  const year = date.getFullYear();
-                                  return `${day}-${month}-${year}`;
-                                })()
+                                const date = new Date(item.tahunDiangkat);
+                                const day = String(date.getDate()).padStart(
+                                  2,
+                                  "0",
+                                );
+                                const month = String(
+                                  date.getMonth() + 1,
+                                ).padStart(2, "0");
+                                const year = date.getFullYear();
+                                return `${day}-${month}-${year}`;
+                              })()
                               : "-"}
                           </div>
 
@@ -1938,14 +1964,13 @@ const DataTable = ({
                           </div>
 
                           <div
-                            className={`text-sm mt-1 font-medium px-2 py-1 rounded-full inline-block ${
-                              filesByNip.find(
-                                (file) =>
-                                  String(file?.nip) === String(item.nip),
-                              )?.verifikasi === true
-                                ? "bg-green-100 text-green-700"
-                                : "bg-red-100 text-red-700"
-                            }`}
+                            className={`text-sm mt-1 font-medium px-2 py-1 rounded-full inline-block ${filesByNip.find(
+                              (file) =>
+                                String(file?.nip) === String(item.nip),
+                            )?.verifikasi === true
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
+                              }`}
                           >
                             {filesByNip.find(
                               (file) => String(file?.nip) === String(item.nip),
@@ -2027,7 +2052,7 @@ const DataTable = ({
                                 </Button>
 
                                 {sessionStorage.getItem("role") ===
-                                "SUPERADMIN" ? (
+                                  "SUPERADMIN" ? (
                                   <Button
                                     className="text-white bg-red-500 hover:bg-red-600 p-2 border rounded-md"
                                     onClick={() => {
@@ -2119,11 +2144,10 @@ const DataTable = ({
                                     <h2 className="text-xl font-bold flex items-center gap-2">
                                       Data Daspen
                                       <span
-                                        className={`text-lg font-semibold px-3 py-2 rounded-full ${
-                                          daspenData.verifikasi === true
-                                            ? "bg-green-100 text-green-800"
-                                            : "bg-red-100 text-red-800"
-                                        }`}
+                                        className={`text-lg font-semibold px-3 py-2 rounded-full ${daspenData.verifikasi === true
+                                          ? "bg-green-100 text-green-800"
+                                          : "bg-red-100 text-red-800"
+                                          }`}
                                       >
                                         {daspenData.verifikasi === true
                                           ? "Sudah Sinkronisasi"
@@ -2196,14 +2220,14 @@ const DataTable = ({
                                         <p>
                                           {daspenData.tanggalLahir
                                             ? new Intl.DateTimeFormat("id-ID", {
-                                                day: "2-digit",
-                                                month: "long",
-                                                year: "numeric",
-                                              }).format(
-                                                new Date(
-                                                  daspenData.tanggalLahir,
-                                                ),
-                                              )
+                                              day: "2-digit",
+                                              month: "long",
+                                              year: "numeric",
+                                            }).format(
+                                              new Date(
+                                                daspenData.tanggalLahir,
+                                              ),
+                                            )
                                             : "Tidak tersedia"}
                                         </p>
                                       </div>
@@ -2228,14 +2252,14 @@ const DataTable = ({
                                         <p>
                                           {daspenData.mulaiJadiAnggotaDaspen
                                             ? new Intl.DateTimeFormat("id-ID", {
-                                                day: "2-digit",
-                                                month: "long",
-                                                year: "numeric",
-                                              }).format(
-                                                new Date(
-                                                  daspenData.mulaiJadiAnggotaDaspen,
-                                                ),
-                                              )
+                                              day: "2-digit",
+                                              month: "long",
+                                              year: "numeric",
+                                            }).format(
+                                              new Date(
+                                                daspenData.mulaiJadiAnggotaDaspen,
+                                              ),
+                                            )
                                             : "Tidak tersedia"}
                                         </p>
                                       </div>
@@ -2254,23 +2278,23 @@ const DataTable = ({
                                         <p>
                                           {daspenData.prediksiPensiun
                                             ? (() => {
-                                                const prediksiPensiunDate =
-                                                  new Date(
-                                                    daspenData.prediksiPensiun,
-                                                  );
-                                                prediksiPensiunDate.setMonth(
-                                                  prediksiPensiunDate.getMonth() +
-                                                    1,
+                                              const prediksiPensiunDate =
+                                                new Date(
+                                                  daspenData.prediksiPensiun,
                                                 );
-                                                return new Intl.DateTimeFormat(
-                                                  "id-ID",
-                                                  {
-                                                    day: "2-digit",
-                                                    month: "long",
-                                                    year: "numeric",
-                                                  },
-                                                ).format(prediksiPensiunDate);
-                                              })()
+                                              prediksiPensiunDate.setMonth(
+                                                prediksiPensiunDate.getMonth() +
+                                                1,
+                                              );
+                                              return new Intl.DateTimeFormat(
+                                                "id-ID",
+                                                {
+                                                  day: "2-digit",
+                                                  month: "long",
+                                                  year: "numeric",
+                                                },
+                                              ).format(prediksiPensiunDate);
+                                            })()
                                             : "Tidak tersedia"}
                                         </p>
                                       </div>
@@ -2281,9 +2305,9 @@ const DataTable = ({
                                         <p>
                                           {daspenData.sumbangan
                                             ? new Intl.NumberFormat("id-ID", {
-                                                style: "currency",
-                                                currency: "IDR",
-                                              }).format(daspenData.sumbangan)
+                                              style: "currency",
+                                              currency: "IDR",
+                                            }).format(daspenData.sumbangan)
                                             : "Tidak tersedia"}
                                         </p>
                                       </div>
@@ -2399,28 +2423,29 @@ const DataTable = ({
                             {["SUPERADMIN", "ADMIN"].includes(
                               sessionStorage.getItem("role"),
                             ) && (
-                              <div className="flex justify-center">
-                                <Button
-                                  type="button"
-                                  className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2"
-                                  title="Detail"
-                                  onClick={() => {
-                                    sessionStorage.setItem(
-                                      "anggotaId",
-                                      item.id,
-                                    );
-                                    handleDetailAnggota();
-                                  }}
-                                >
-                                  Detail
-                                </Button>
-                              </div>
-                            )}
+                                <div className="flex justify-center">
+                                  <Button
+                                    type="button"
+                                    className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2"
+                                    title="Detail"
+                                    onClick={() => {
+                                      sessionStorage.setItem(
+                                        "anggotaId",
+                                        item.id,
+                                      );
+                                      handleDetailAnggota();
+                                    }}
+                                  >
+                                    Detail
+                                  </Button>
+                                </div>
+                              )}
                           </div>
                         </td>
                       </>
                     )}
                   </tr>
+
                   {expandedRow === index && (
                     <tr>
                       <td colSpan="9" className="px-4 py-4 bg-gray-50">
@@ -2450,16 +2475,16 @@ const DataTable = ({
                                 Anggota:{" "}
                                 {item.tahunDiangkat
                                   ? (() => {
-                                      const date = new Date(item.tahunDiangkat);
-                                      const day = String(
-                                        date.getDate(),
-                                      ).padStart(2, "0");
-                                      const month = String(
-                                        date.getMonth() + 1,
-                                      ).padStart(2, "0");
-                                      const year = date.getFullYear();
-                                      return `${day}-${month}-${year}`;
-                                    })()
+                                    const date = new Date(item.tahunDiangkat);
+                                    const day = String(
+                                      date.getDate(),
+                                    ).padStart(2, "0");
+                                    const month = String(
+                                      date.getMonth() + 1,
+                                    ).padStart(2, "0");
+                                    const year = date.getFullYear();
+                                    return `${day}-${month}-${year}`;
+                                  })()
                                   : "-"}
                               </div>
 
@@ -2490,7 +2515,7 @@ const DataTable = ({
 
                               {sessionStorage.getItem("role") ===
                                 "SUPERADMIN" ||
-                              sessionStorage.getItem("role") === "ADMIN" ? (
+                                sessionStorage.getItem("role") === "ADMIN" ? (
                                 <Button
                                   className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
                                   title="Mutasi"
@@ -2515,7 +2540,7 @@ const DataTable = ({
                               )}
 
                               {sessionStorage.getItem("role") ===
-                              "SUPERADMIN" ? (
+                                "SUPERADMIN" ? (
                                 <Button
                                   className="text-white bg-red-500 hover:bg-red-600 p-2 border rounded-md"
                                   onClick={() => {
@@ -2658,17 +2683,17 @@ const DataTable = ({
                                           <p>
                                             {daspenData.tanggalLahir
                                               ? new Intl.DateTimeFormat(
-                                                  "id-ID",
-                                                  {
-                                                    day: "2-digit",
-                                                    month: "long",
-                                                    year: "numeric",
-                                                  },
-                                                ).format(
-                                                  new Date(
-                                                    daspenData.tanggalLahir,
-                                                  ),
-                                                )
+                                                "id-ID",
+                                                {
+                                                  day: "2-digit",
+                                                  month: "long",
+                                                  year: "numeric",
+                                                },
+                                              ).format(
+                                                new Date(
+                                                  daspenData.tanggalLahir,
+                                                ),
+                                              )
                                               : "Tidak tersedia"}
                                           </p>
                                         </div>
@@ -2693,17 +2718,17 @@ const DataTable = ({
                                           <p>
                                             {daspenData.mulaiJadiAnggotaDaspen
                                               ? new Intl.DateTimeFormat(
-                                                  "id-ID",
-                                                  {
-                                                    day: "2-digit",
-                                                    month: "long",
-                                                    year: "numeric",
-                                                  },
-                                                ).format(
-                                                  new Date(
-                                                    daspenData.mulaiJadiAnggotaDaspen,
-                                                  ),
-                                                )
+                                                "id-ID",
+                                                {
+                                                  day: "2-digit",
+                                                  month: "long",
+                                                  year: "numeric",
+                                                },
+                                              ).format(
+                                                new Date(
+                                                  daspenData.mulaiJadiAnggotaDaspen,
+                                                ),
+                                              )
                                               : "Tidak tersedia"}
                                           </p>
                                         </div>
@@ -2722,23 +2747,23 @@ const DataTable = ({
                                           <p>
                                             {daspenData.prediksiPensiun
                                               ? (() => {
-                                                  const prediksiPensiunDate =
-                                                    new Date(
-                                                      daspenData.prediksiPensiun,
-                                                    );
-                                                  prediksiPensiunDate.setMonth(
-                                                    prediksiPensiunDate.getMonth() +
-                                                      1,
+                                                const prediksiPensiunDate =
+                                                  new Date(
+                                                    daspenData.prediksiPensiun,
                                                   );
-                                                  return new Intl.DateTimeFormat(
-                                                    "id-ID",
-                                                    {
-                                                      day: "2-digit",
-                                                      month: "long",
-                                                      year: "numeric",
-                                                    },
-                                                  ).format(prediksiPensiunDate);
-                                                })()
+                                                prediksiPensiunDate.setMonth(
+                                                  prediksiPensiunDate.getMonth() +
+                                                  1,
+                                                );
+                                                return new Intl.DateTimeFormat(
+                                                  "id-ID",
+                                                  {
+                                                    day: "2-digit",
+                                                    month: "long",
+                                                    year: "numeric",
+                                                  },
+                                                ).format(prediksiPensiunDate);
+                                              })()
                                               : "Tidak tersedia"}
                                           </p>
                                         </div>
@@ -2749,9 +2774,9 @@ const DataTable = ({
                                           <p>
                                             {daspenData.sumbangan
                                               ? new Intl.NumberFormat("id-ID", {
-                                                  style: "currency",
-                                                  currency: "IDR",
-                                                }).format(daspenData.sumbangan)
+                                                style: "currency",
+                                                currency: "IDR",
+                                              }).format(daspenData.sumbangan)
                                               : "Tidak tersedia"}
                                           </p>
                                         </div>
@@ -2864,23 +2889,23 @@ const DataTable = ({
                               {["SUPERADMIN", "ADMIN"].includes(
                                 sessionStorage.getItem("role"),
                               ) && (
-                                <div className="flex justify-center">
-                                  <Button
-                                    type="button"
-                                    className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2"
-                                    title="Detail Anggota"
-                                    onClick={() => {
-                                      sessionStorage.setItem(
-                                        "anggotaId",
-                                        item.id,
-                                      );
-                                      handleDetailAnggota();
-                                    }}
-                                  >
-                                    Detail Anggota
-                                  </Button>
-                                </div>
-                              )}
+                                  <div className="flex justify-center">
+                                    <Button
+                                      type="button"
+                                      className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2"
+                                      title="Detail Anggota"
+                                      onClick={() => {
+                                        sessionStorage.setItem(
+                                          "anggotaId",
+                                          item.id,
+                                        );
+                                        handleDetailAnggota();
+                                      }}
+                                    >
+                                      Detail Anggota
+                                    </Button>
+                                  </div>
+                                )}
                             </div>
                           </div>
                           <div className="text-center mt-4 w-full">
@@ -2916,6 +2941,29 @@ const DataTable = ({
                         </div>
                       </td>
                     </tr>
+                  )}
+                  
+                  {zoomedImage && (
+                    <div
+                      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+                      onClick={() => setZoomedImage(null)}
+                    >
+                      <div className="relative flex flex-col items-center animate-in zoom-in duration-200">
+                        <button
+                          className="absolute -top-3 -right-3 bg-white text-gray-600 hover:text-red-500 hover:bg-gray-100 shadow-md rounded-full w-8 h-8 flex items-center justify-center text-xl font-bold z-50 border border-gray-200 transition-colors"
+                          onClick={() => setZoomedImage(null)}
+                        >
+                          &times;
+                        </button>
+
+                        <img
+                          src={zoomedImage}
+                          alt="Zoomed Profil"
+                          className="max-w-[250px] md:max-w-[400px] max-h-[85vh] object-contain rounded-lg shadow-[0_20px_50px_rgba(0,0,0,0.1)] border-4 border-white bg-white"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    </div>
                   )}
                 </React.Fragment>
               );
@@ -3308,11 +3356,10 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
         <button
           key={page}
           onClick={() => onPageChange(page - 1)}
-          className={`px-3 py-1 border rounded text-sm ${
-            page - 1 === currentPage
-              ? "bg-blue-500 text-white"
-              : "bg-white hover:bg-gray-50"
-          }`}
+          className={`px-3 py-1 border rounded text-sm ${page - 1 === currentPage
+            ? "bg-blue-500 text-white"
+            : "bg-white hover:bg-gray-50"
+            }`}
         >
           {page}
         </button>

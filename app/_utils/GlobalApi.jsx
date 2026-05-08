@@ -1,8 +1,10 @@
 import axios from "axios";
 import { ReceiptEuro } from "lucide-react";
 
+export const BASE_URL = "https://sb.pgrikabupatenjepara.com";
+
 const axiosClient = axios.create({
-  baseURL: "https://sb.pgrikabupatenjepara.com",
+  baseURL: BASE_URL,
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",

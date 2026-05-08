@@ -1,400 +1,348 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { useCallback } from "react";
 import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
-import GlobalApi from "@/app/_utils/GlobalApi";
-import { Input } from "@/components/ui/input";
-import {
-  FaTimesCircle,
-  FaCheckCircle,
-  FaExclamationCircle,
-  FaEdit,
-  FaPrint,
-  FaSearch,
-  FaFileInvoiceDollar,
-  FaDatabase,
-} from "react-icons/fa";
-import { FiPlus, FiSave, FiTrash } from "react-icons/fi";
+import GlobalApi, { BASE_URL } from "@/app/_utils/GlobalApi";
 
-import Image from "next/image";
-import * as XLSX from "xlsx";
+import { FaPrint, FaFileExcel, FaRegClock } from "react-icons/fa";
 
-const NotificationPopup = ({ type, message, onClose }) => {
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      onClose();
-    }, 3000);
+// Components
+import NotificationPopup from "./components/NotificationPopup";
+import MemberRow from "./components/MemberRow";
+import EditFinanceModal from "./components/EditFinanceModal";
+import MemberDetailModal from "./components/MemberDetailModal";
+import FilterSection from "./components/FilterSection";
+import SummaryBanner from "./components/SummaryBanner";
+import BackupConfirmModal from "./components/BackupConfirmModal";
+import SummaryStats from "./components/SummaryStats";
 
-    return () => clearTimeout(timer);
-  }, [onClose]);
-
-  const getBgColor = () => {
-    switch (type) {
-      case "success":
-        return "bg-green-100";
-      case "error":
-        return "bg-red-100";
-      default:
-        return "bg-blue-100";
-    }
-  };
-
-  const getIcon = () => {
-    switch (type) {
-      case "success":
-        return <FaCheckCircle className="text-green-500 text-3xl" />;
-      case "error":
-        return <FaExclamationCircle className="text-red-500 text-3xl" />;
-      default:
-        return null;
-    }
-  };
-
-  const getTextColor = () => {
-    switch (type) {
-      case "success":
-        return "text-green-800";
-      case "error":
-        return "text-red-800";
-      default:
-        return "text-blue-800";
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div
-        className="absolute inset-0 bg-black opacity-50"
-        onClick={onClose}
-      ></div>
-      <div
-        className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
-          aria-label="Close"
-        >
-          <FaTimesCircle size={24} />
-        </button>
-
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-bounce">{getIcon()}</div>
-
-          <h3 className={`text-xl font-bold ${getTextColor()}`}>
-            {type === "success" ? "Berhasil!" : "Gagal!"}
-          </h3>
-
-          <div className={`${getTextColor()} text-center`}>{message}</div>
-        </div>
-      </div>
-    </div>
-  );
-};
+// Utils
+import { formatTanggal, processApiResponse, processData, getTotalSumbangan } from "./utils/rekapUtils";
+import { handlePrintLogic, exportToExcelLogic, exportPotonganBankLogic, exportMandiriLogic } from "./utils/exportUtils";
 
 function RekapAnggota() {
+  // --- States ---
   const [data, setData] = useState([]);
-  const { token } = useAuth();
+  const [originalRekapData, setOriginalRekapData] = useState([]);
+  const { token, loading: authLoading } = useAuth();
   const router = useRouter();
+
   const [originalCabangList, setOriginalCabangList] = useState([]);
   const [filteredCabangList, setFilteredCabangList] = useState([]);
   const [selectedCabang, setSelectedCabang] = useState("");
   const [showCabangDropdown, setShowCabangDropdown] = useState(false);
+  const [searchCabang, setSearchCabang] = useState("");
+
   const [unitKerjaList, setUnitKerjaList] = useState([]);
   const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
   const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
   const [unitKerjaInput, setUnitKerjaInput] = useState("");
   const [showUnitKerjaDropdown, setShowUnitKerjaDropdown] = useState(false);
+  const [searchUnitKerja, setSearchUnitKerja] = useState("");
+
+  const [namaAnggotaInput, setNamaAnggotaInput] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+
+  const [loading, setLoading] = useState(true);
+  const [loadButton, setLoadButton] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [notification, setNotification] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Progressive Rendering States
+  const [displayLimit, setDisplayLimit] = useState(100);
+  const loadMoreRef = useRef(null);
+
+  // Modal States
+  const [isPopupVisible, setIsPopupVisible] = useState(false);
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [dataNpa, setDataNpa] = useState(null);
+  const [fotoBase64, setFotoBase64] = useState(null);
+  const [nomorRekening, setNomorRekening] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [nominalBaruList, setNominalBaruList] = useState({});
+  const [resetKeys, setResetKeys] = useState([]);
+  const [sumbanganList, setSumbanganList] = useState([]);
+  const [addedCategories, setAddedCategories] = useState([]);
+  const [manualInputs, setManualInputs] = useState({});
+  const [newValues, setNewValues] = useState({});
+  const [grandTotal, setGrandTotal] = useState(0);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [selectedKategori, setSelectedKategori] = useState("");
+  const [selectedKeterangan, setSelectedKeterangan] = useState("");
+  const [keteranganLainLain, setKeteranganLainLain] = useState([]);
+  const [notifDaspen, setNotifDaspen] = useState(null);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [dataIuran, setDataIuran] = useState(null);
+  const [isBackupModalVisible, setIsBackupModalVisible] = useState(false);
+  const [daspenValue, setDaspenValue] = useState(0);
+  const [provDaspenValue, setProvDaspenValue] = useState(0); // Simpan nilai prov untuk sinkronisasi otomatis
+  const [nipValue, setNipValue] = useState("");
+  const [idIuran, setIdIuran] = useState(null);
+  const [statusPegawai, setStatusPegawai] = useState(null);
+  const [idByNominal, setIdByNominal] = useState(null);
+
+  // Computed values for Modal
+  const groupedIuran = useMemo(() => {
+    if (!selectedMember) return [];
+    return [
+      { key: "pgri", iuran: selectedMember.pgri },
+      { key: "sanduka", iuran: selectedMember.sanduka },
+      { key: "daspen", iuran: daspenValue }, // Menggunakan daspenValue hasil fetch NIP
+      { key: "derap", iuran: selectedMember.derap },
+      { key: "kalender", iuran: selectedMember.kalender },
+    ];
+  }, [selectedMember, daspenValue]);
+
+  useEffect(() => {
+    let total = groupedIuran.reduce((sum, item) => {
+      const isReset = resetKeys.includes(item.key);
+      const val = isReset ? 0 : (parseInt(item.iuran || 0) + (nominalBaruList[item.key] || 0));
+      return sum + val;
+    }, 0);
+
+    sumbanganList.forEach(s => total += parseInt(s.jumlah || 0));
+    addedCategories.forEach(c => total += (manualInputs[c.key] || 0));
+
+    setGrandTotal(total);
+  }, [groupedIuran, resetKeys, nominalBaruList, sumbanganList, addedCategories, manualInputs]);
+
+  // --- Fetch Keterangan Lain-Lain dari API ---
+  useEffect(() => {
+    const fetchLainLain = async () => {
+      try {
+        // Coba ambil data lengkap, jika gagal fallback ke keterangan
+        let response = await GlobalApi.getKeteranganLainlain();
+        
+        // Jika response dibungkus { data: [...] }
+        const actualData = response?.data || response || [];
+        setKeteranganLainLain(actualData);
+      } catch (error) {
+        console.error("❌ Gagal mengambil data keterangan lain-lain:", error);
+      }
+    };
+    fetchLainLain();
+  }, []);
+
+  const [filesDataMap, setFilesDataMap] = useState({});
+  const [open, setOpen] = useState(false);
+
   const cabangRef = useRef(null);
   const unitKerjaRef = useRef(null);
   const namaInputRef = useRef(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [originalRekapData, setOriginalRekapData] = useState([]);
-
-  const [totals, setTotals] = useState({
-    jumlah: 0,
-    pgri: 0,
-    sanduka: 0,
-    daspen: 0,
-    iuran: 0,
-  });
-  const [loading, setLoading] = useState(true);
-  const [loadButton, setLoadButton] = useState(false);
-  const [groupedData, setGroupedData] = useState([]);
-  const [expandedRows, setExpandedRows] = useState(new Set());
-  const [searchCabang, setSearchCabang] = useState("");
-  const [searchUnitKerja, setSearchUnitKerja] = useState("");
-  const [selectedMember, setSelectedMember] = useState(null);
-  const [isPopupVisible, setIsPopupVisible] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [selectedKategori, setSelectedKategori] = useState("");
-  const [dataNpa, setDataNpa] = useState(null);
-  const [statusPegawai, setStatusPegawai] = useState(null);
-  const [fotoBase64, setFotoBase64] = useState(null);
-  const profileImageUrl = "/profile.png";
-  const [nominalBaruList, setNominalBaruList] = useState([]);
-  const [addedCategories, setAddedCategories] = useState([]);
-  const [defaultIuran, setDefaultIuran] = useState(null);
-  const [newValues, setNewValues] = useState({});
-  const [manualInputs, setManualInputs] = useState({});
-  const [idByNominal, setIdByNominal] = useState(null);
-  const [dataIuran, setDataIuran] = useState(null);
-  const [grandTotal, setGrandTotal] = useState(0);
-  const [idIuran, setIdIuran] = useState(null);
-  const [formKetiga, setFormKetiga] = useState({
-    iuranAnggota: "",
-    iuranSanduka: "",
-    iuranDaspen: "",
-    iuranDerap: "",
-  });
-  const [totalIuranWilayah, setTotalIuranWilayah] = useState({
-    propinsi: 0,
-    kabupaten: 0,
-    cabang: 0,
-  });
-  const [notification, setNotification] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [loader, setLoader] = useState(false);
-  const [daspenValue, setDaspenValue] = useState(null);
-  const [nipValue, setNipValue] = useState(null);
-  const [namaAnggotaInput, setNamaAnggotaInput] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [nomorRekening, setNomorRekening] = useState("");
-  const [showPopup, setShowPopup] = useState(false);
-  const [keteranganLainLain, setKeteranganLainLain] = useState([]);
-  const [selectedKeterangan, setSelectedKeterangan] = useState("");
-  const [popupBackup, setPopupBackup] = useState(false);
-  const [popupBackupRekapByNominal, setPopupRekapByNominal] = useState(false);
-  const [selectedDate, setSelectedDate] = useState("");
-  const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
-  const [lastUpdatedMemberNip, setLastUpdatedMemberNip] = useState(null);
   const lastUpdatedMemberRef = useRef(null);
-  const [resetKeys, setResetKeys] = useState([]);
-  const [progress, setProgress] = useState(0);
-  const [notifDaspen, setNotifDaspen] = useState(null);
-  const [listNoRekening, setListNoRekening] = useState([]);
-  const [sumbanganList, setSumbanganList] = useState([]);
-  const [isExporting, setIsExporting] = useState(false);
-  const [filesDataMap, setFilesDataMap] = useState({});
-  const currentYear = new Date().getFullYear();
-  const years = Array.from(
-    { length: currentYear - 2025 + 6 },
-    (_, i) => 2025 + i,
-  );
+  const [lastUpdatedMemberNip, setLastUpdatedMemberNip] = useState(null);
+  const [showRekapDropdown, setShowRekapDropdown] = useState(false);
+  const rekapDropdownRef = useRef(null);
 
-  const months = [
-    "Januari",
-    "Februari",
-    "Maret",
-    "April",
-    "Mei",
-    "Juni",
-    "Juli",
-    "Agustus",
-    "September",
-    "Oktober",
-    "November",
-    "Desember",
-  ];
+  const profileImageUrl = "/profile.png";
 
-  const [selectedBulan, setSelectedBulan] = useState("");
-  const [selectedTahun, setSelectedTahun] = useState("");
-  const filteredMonths = selectedTahun === 2025 ? months.slice(4) : months;
+  // --- Derived Data ---
+  const groupedData = useMemo(() => processData(data), [data]);
 
-  const getNextMonthYear = () => {
-    const now = new Date();
-    const nextMonthDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const stats = useMemo(() => {
+    const initial = {
+      pgri: 0,
+      sanduka: 0,
+      daspen: 0,
+      derap: 0,
+      kalender: 0,
+      sumbangan: 0,
+      total: 0,
+      unitKerjaCount: new Set(),
+      memberCount: data.length
+    };
+
+    data.forEach(item => {
+      initial.pgri += parseInt(item.pgri || 0);
+      initial.sanduka += parseInt(item.sanduka || 0);
+      initial.daspen += parseInt(item.daspen || 0);
+      initial.derap += parseInt(item.derap || 0);
+      initial.kalender += parseInt(item.kalender || 0);
+      initial.sumbangan += parseInt(item.sumbangan || 0);
+      initial.total += parseInt(item.totalIuran || 0);
+      if (item.unitKerja) initial.unitKerjaCount.add(item.unitKerja);
+    });
 
     return {
-      month: nextMonthDate.getMonth() + 1,
-      year: nextMonthDate.getFullYear(),
+      ...initial,
+      unitKerjaCount: initial.unitKerjaCount.size
     };
-  };
+  }, [data]);
 
-  const [selectedMonth, setSelectedMonth] = useState(
-    () => getNextMonthYear().month,
-  );
-  const [selectedYear, setSelectedYear] = useState(
-    () => getNextMonthYear().year,
-  );
-
+  // --- Effects ---
   useEffect(() => {
-    const fetchCabangData = async () => {
-      try {
-        const response = await GlobalApi.getCabang();
-        setOriginalCabangList(response.data);
-        setFilteredCabangList(response.data);
-      } catch (error) {
-        console.error("Error fetching cabang data:", error);
-      }
-    };
-    fetchCabangData();
-  }, [unitKerjaList]);
-
-  useEffect(() => {
-    const fetchUnitKerjaData = async () => {
-      try {
-        const response = await GlobalApi.getUnitKerja();
-        setUnitKerjaList(response.data);
-      } catch (error) {
-        console.error("Error fetching unit kerja data:", error);
-      }
-    };
-    fetchUnitKerjaData();
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   useEffect(() => {
-    const fetchKeterangan = async () => {
-      if (selectedKategori === "lainlain") {
-        try {
-          const response = await GlobalApi.getKeteranganLainlain();
-          setKeteranganLainLain(response);
-          setShowPopup(true);
-        } catch (err) {
-          console.error("Gagal ambil keterangan:", err);
-          setKeteranganLainLain([]);
-        }
-      } else {
-        setShowPopup(false);
+    const handleClickOutside = (event) => {
+      if (rekapDropdownRef.current && !rekapDropdownRef.current.contains(event.target)) {
+        setShowRekapDropdown(false);
       }
     };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
-    fetchKeterangan();
-  }, [selectedKategori]);
+  useEffect(() => {
+    const fetchBaseData = async () => {
+      try {
+        const [cabangRes, unitKerjaRes] = await Promise.all([
+          GlobalApi.getCabang(),
+          GlobalApi.getUnitKerja()
+        ]);
+        const sortedCabang = cabangRes.data.sort((a, b) =>
+          (a.kecamatan || "").localeCompare(b.kecamatan || "")
+        );
+        const sortedUnitKerja = unitKerjaRes.data.sort((a, b) =>
+          (a.unitKerja || "").localeCompare(b.unitKerja || "")
+        );
+        setOriginalCabangList(sortedCabang);
+        setFilteredCabangList(sortedCabang);
+        setUnitKerjaList(sortedUnitKerja);
+      } catch (err) {
+        console.error("Error fetching base data:", err);
+      }
+    };
+    fetchBaseData();
+  }, []);
 
-  const handleUnitKerjaFocus = () => {
-    if (selectedCabang) {
-      setShowUnitKerjaDropdown(true);
+  const fetchInitialData = useCallback(async () => {
+    // Beri jeda singkat untuk memastikan session/token di browser benar-benar siap
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    const currentToken = token || sessionStorage.getItem("authToken");
+    if (!currentToken && !sessionStorage.getItem("role")) return;
+
+    setLoading(true);
+    try {
+      const storedRole = sessionStorage.getItem("role");
+      const storedCabang = sessionStorage.getItem("cabang");
+
+      let response;
+      // Kembalikan: Hanya ADMIN yang dibatasi cabangnya secara otomatis
+      // SUPERADMIN tetap melihat semua data secara default ("")
+      if (storedRole === "ADMIN" && storedCabang) {
+        setIsAdmin(true);
+        setSelectedCabang(storedCabang);
+        response = await GlobalApi.getNominalAggregatedData(storedCabang);
+      } else {
+        setIsAdmin(storedRole === "ADMIN");
+        setSelectedCabang("");
+        response = await GlobalApi.getNominalAggregatedData("");
+      }
+
+      const apiData = Array.isArray(response) ? response : (response?.data || []);
+      
+      // 1. Ambil data file (Daspen prov) lebih awal agar bisa disinkronkan
+      let fileMap = {};
+      try {
+        const filesResponse = await GlobalApi.getAllFiles();
+        if (Array.isArray(filesResponse)) {
+          filesResponse.forEach(f => { if (f.nip) fileMap[f.nip] = f.sumbangan; });
+          setFilesDataMap(fileMap);
+        }
+      } catch (fileErr) {
+        console.warn("Could not fetch secondary files data:", fileErr);
+      }
+
+      const processedData = processApiResponse(apiData, null, false);
+      
+      // 2. Sinkronkan data daspen dengan data prov (fileMap) secara otomatis
+      const syncedData = processedData.map(item => {
+        if (item.nip && fileMap[item.nip]) {
+          const provValue = parseInt(fileMap[item.nip]);
+          const currentValue = parseInt(item.daspen || 0);
+          // Hanya sinkronkan jika nilainya bukan 0 (berarti belum dihapus sengaja)
+          // dan nilainya berbeda dengan data provinsi
+          if (currentValue !== 0 && currentValue !== provValue) {
+            const diff = provValue - currentValue;
+            return {
+              ...item,
+              daspen: provValue,
+              totalIuran: (parseInt(item.totalIuran || 0) + diff)
+            };
+          }
+        }
+        return item;
+      });
+
+      const regularData = syncedData.filter(item => !(item.cabang === "Total" && !item.unitKerja));
+
+      setData(regularData);
+      setOriginalRekapData(regularData);
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching initial data:", err);
+      setLoading(false);
     }
-  };
+  }, [token]);
 
-  const handleUnitKerjaClick = () => {
-    if (!selectedCabang) return;
-    const filteredList = unitKerjaList.filter(
-      (unitKerja) =>
-        unitKerja.cabang?.toLowerCase() === selectedCabang.toLowerCase(),
+  useEffect(() => {
+    // Hanya ambil data jika AuthContext sudah selesai loading
+    if (!authLoading) {
+      fetchInitialData();
+    }
+  }, [fetchInitialData, authLoading, token]);
+
+  // Progressive Rendering Logic
+  const memoizedFlattenedMembers = useMemo(() => {
+    return [...groupedData]
+      .sort((a, b) => a.unitKerja.localeCompare(b.unitKerja))
+      .flatMap(group => group.members.map(member => ({
+        ...member,
+        cabang: group.cabang,
+        unitKerja: group.unitKerja,
+      })));
+  }, [groupedData]);
+
+  useEffect(() => {
+    if (displayLimit >= memoizedFlattenedMembers.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setDisplayLimit(prev => prev + 500);
+        }
+      },
+      { threshold: 0, rootMargin: "100px" }
     );
+    if (loadMoreRef.current) observer.observe(loadMoreRef.current);
+    return () => { if (loadMoreRef.current) observer.unobserve(loadMoreRef.current); };
+  }, [memoizedFlattenedMembers.length, displayLimit]);
 
-    setFilteredUnitKerja(filteredList);
-    setShowUnitKerjaDropdown(true);
-  };
+  // Search Debounce
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      performSearch(debouncedSearchQuery);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [debouncedSearchQuery]);
+
+  // --- Handlers ---
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   const handleCabangClick = () => {
     setFilteredCabangList(originalCabangList);
     setShowCabangDropdown(true);
   };
 
-  const processApiResponse = (
-    apiData,
-    filterByNpa = null,
-    useLatestDate = true,
-  ) => {
-    if (!apiData || !Array.isArray(apiData)) {
-      return apiData;
-    }
-
-    let filteredData = apiData;
-    if (filterByNpa) {
-      filteredData = apiData.filter((item) => item.npaPgri === filterByNpa);
-    }
-
-    const groupedByNpa = {};
-
-    filteredData.forEach((item) => {
-      const npa = item.npaPgri;
-
-      if (!groupedByNpa[npa]) {
-        groupedByNpa[npa] = item;
-      } else {
-        const shouldReplace = useLatestDate
-          ? new Date(item.lastUpdatedAtIuran || 0) >
-            new Date(groupedByNpa[npa].lastUpdatedAtIuran || 0)
-          : (item.idByNominal || 0) > (groupedByNpa[npa].idByNominal || 0);
-
-        if (shouldReplace) {
-          groupedByNpa[npa] = item;
-        }
-      }
-
-      if (item.detailSumbangan) {
-      }
-    });
-
-    const result = Object.values(groupedByNpa);
-    return result;
-  };
-
-  const handleUnitKerjaChange = (e) => {
-    const input = e.target.value;
-    setUnitKerjaInput(input);
-    setSelectedUnitKerja(input);
-
-    if (!selectedCabang) return;
-
-    const filteredList = unitKerjaList.filter(
-      (unitKerja) =>
-        unitKerja.cabang?.toLowerCase() === selectedCabang.toLowerCase() &&
-        unitKerja.unitKerja.toLowerCase().includes(input.toLowerCase()),
-    );
-
-    setShowUnitKerjaDropdown(true);
-    setFilteredUnitKerja(filteredList);
-
-    if (input === "") {
-      const cabangData = originalRekapData.filter((item) =>
-        selectedCabang
-          ? item.cabang?.toLowerCase() === selectedCabang.toLowerCase()
-          : true,
-      );
-      const processed = processData(cabangData);
-      setGroupedData(processed);
-      setData(cabangData);
-      calculateTotals(cabangData);
-    } else {
-      const filteredData = originalRekapData.filter(
-        (item) =>
-          (!selectedCabang ||
-            item.cabang?.toLowerCase() === selectedCabang.toLowerCase()) &&
-          item.unitKerja?.toLowerCase().includes(input.toLowerCase()),
-      );
-      const processed = processData(filteredData);
-      setGroupedData(processed);
-      setData(filteredData);
-      calculateTotals(filteredData);
-    }
-  };
-
   const handleCabangSearch = (query) => {
-    const filtered = originalCabangList.filter((cabang) =>
-      cabang.kecamatan.toLowerCase().includes(query.toLowerCase()),
-    );
-    setFilteredCabangList(filtered);
     setSearchCabang(query);
-  };
-
-  const handleUnitKerjaSearch = (searchTerm) => {
-    setSearchUnitKerja(searchTerm);
-    if (searchTerm === "") {
-      const allFiltered = unitKerjaList.filter(
-        (unitKerja) => unitKerja.cabang === selectedCabang,
-      );
-      setFilteredUnitKerja(allFiltered);
-    } else {
-      const filtered = unitKerjaList.filter(
-        (unitKerja) =>
-          unitKerja.unitKerja
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) &&
-          unitKerja.cabang === selectedCabang,
-      );
-      setFilteredUnitKerja(filtered);
-    }
+    const filtered = originalCabangList.filter(c => c.kecamatan.toLowerCase().includes(query.toLowerCase()));
+    setFilteredCabangList(filtered);
   };
 
   const handleSelectCabang = async (cabang) => {
@@ -402,575 +350,100 @@ function RekapAnggota() {
     setShowCabangDropdown(false);
     setSelectedUnitKerja("");
     setUnitKerjaInput("");
-    setSearchCabang("");
     setNamaAnggotaInput("");
 
-    try {
-      let response = await GlobalApi.getNominalAggregatedData(
-        cabang.kecamatan || "",
-      );
-
-      // 📌 Proses data untuk mengambil yang terbaru per npaPgri
-      // Opsional: ganti null dengan npaPgri spesifik contoh "33200806435"
-      // Ganti true dengan false jika ingin berdasarkan idByNominal terbesar
-      response = processApiResponse(response, null, false);
-
-      const totalRow = response.find(
-        (item) => item.cabang === "Total" && !item.unitKerja,
-      );
-      const regularData = response.filter(
-        (item) => !(item.cabang === "Total" && !item.unitKerja),
-      );
-
-      if (totalRow) {
-        setGrandTotals({
-          jumlah: parseInt(totalRow.jumlah) || 0,
-          pgri: parseFloat(totalRow.pgri) || 0,
-          sanduka: parseFloat(totalRow.sanduka) || 0,
-          daspen: parseFloat(totalRow.daspen) || 0,
-          derap: parseFloat(totalRow.derap) || 0,
-          kalnder: parseFloat(totalRow.kalender) || 0,
-          daspen: parseFloat(totalRow.daspen) || 0,
-          totalIuran: parseFloat(totalRow.totalIuran) || 0,
-        });
-      }
-
-      setData(regularData);
-      setOriginalRekapData(regularData);
-
-      const processed = processData(regularData);
-      setGroupedData(processed);
-
-      const filtered = unitKerjaList.filter(
-        (unitKerja) =>
-          unitKerja.cabang &&
-          unitKerja.cabang.toLowerCase() ===
-            (cabang.kecamatan || "").toLowerCase(),
-      );
-      setFilteredUnitKerja(filtered);
-    } catch (error) {
-      console.error("Error fetching rekap data:", error);
+    if (!cabang.kecamatan) {
+      setData(originalRekapData);
+      return;
     }
+
+    try {
+      setLoading(true);
+      let res = await GlobalApi.getNominalAggregatedData(cabang.kecamatan);
+      const apiData = Array.isArray(res) ? res : (res?.data || []);
+      const processed = processApiResponse(apiData, null, false);
+      const regular = processed.filter(item => !(item.cabang === "Total" && !item.unitKerja));
+      setData(regular);
+
+      const filteredUnit = unitKerjaList.filter(u => u.cabang?.toLowerCase() === cabang.kecamatan.toLowerCase());
+      setFilteredUnitKerja(filteredUnit);
+    } catch (err) {
+      console.error("Error selecting cabang:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUnitKerjaChange = (e) => {
+    const input = e.target.value;
+    setUnitKerjaInput(input);
+    setSelectedUnitKerja(input);
+    if (!selectedCabang) return;
+
+    const filtered = unitKerjaList.filter(u =>
+      u.cabang?.toLowerCase() === selectedCabang.toLowerCase() &&
+      u.unitKerja.toLowerCase().includes(input.toLowerCase())
+    );
+    setFilteredUnitKerja(filtered);
+    setShowUnitKerjaDropdown(true);
+
+    const filteredData = originalRekapData.filter(item =>
+      item.cabang?.toLowerCase() === selectedCabang.toLowerCase() &&
+      (input === "" || item.unitKerja?.toLowerCase().includes(input.toLowerCase()))
+    );
+    setData(filteredData);
+  };
+
+  const handleUnitKerjaFocus = () => { if (selectedCabang) setShowUnitKerjaDropdown(true); };
+
+  const handleUnitKerjaClick = () => {
+    if (!selectedCabang) return;
+    const filtered = unitKerjaList.filter(u => u.cabang?.toLowerCase() === selectedCabang.toLowerCase());
+    setFilteredUnitKerja(filtered);
+    setShowUnitKerjaDropdown(true);
   };
 
   const handleUnitKerjaSelect = (unitKerja) => {
-    const selectedValue = unitKerja.unitKerja;
-    setSelectedUnitKerja(selectedValue);
-    setUnitKerjaInput(selectedValue);
+    const val = unitKerja.unitKerja;
+    setSelectedUnitKerja(val);
+    setUnitKerjaInput(val);
     setShowUnitKerjaDropdown(false);
-    setSearchUnitKerja("");
-    setNamaAnggotaInput("");
 
-    if (!selectedValue) {
-      const cabangData = originalRekapData.filter((item) =>
-        selectedCabang
-          ? item.cabang?.toLowerCase() === selectedCabang.toLowerCase()
-          : true,
-      );
-      const processed = processData(cabangData);
-      setGroupedData(processed);
-      setData(cabangData);
-      calculateTotals(cabangData);
-    } else {
-      const filteredData = originalRekapData.filter(
-        (item) =>
-          (!selectedCabang ||
-            item.cabang?.toLowerCase() === selectedCabang.toLowerCase()) &&
-          item.unitKerja?.toLowerCase() === selectedValue.toLowerCase(),
-      );
-      const processed = processData(filteredData);
-      setGroupedData(processed);
-      setData(filteredData);
-      calculateTotals(filteredData);
-    }
+    const filteredData = originalRekapData.filter(item =>
+      item.cabang?.toLowerCase() === selectedCabang.toLowerCase() &&
+      (!val || item.unitKerja?.toLowerCase() === val.toLowerCase())
+    );
+    setData(filteredData);
   };
 
-  const processData = (rawData) => {
-    const uniqueMap = new Map();
-
-    rawData.forEach((item) => {
-      const key = `${item.namaAnggota}-${item.npaPgri}`;
-      if (!uniqueMap.has(key)) {
-        uniqueMap.set(key, item);
-      }
-    });
-
-    const filteredData = Array.from(uniqueMap.values());
-
-    const grouped = filteredData.reduce((acc, item) => {
-      const unitKey = item.unitKerja || "Tidak Ada Unit Kerja";
-      const cabangKey = item.cabang || "Tidak Ada Cabang";
-
-      if (!acc[unitKey]) {
-        acc[unitKey] = {
-          unitKerja: unitKey,
-          cabang: cabangKey,
-          members: [],
-          jumlah: 0,
-          pgri: 0,
-          sanduka: 0,
-          daspen: 0,
-          derap: 0,
-          kalender: 0,
-          sumbangan: 0,
-          totalIuran: 0,
-          nomorRekening: 0,
-          lastUpdatedAtIuran: "",
-          sumbanganDetail: {
-            "Cetak Kartu Biasa": 25000,
-            "IURAN HUT 80 PGRI": 30000,
-          },
-        };
-      }
-
-      acc[unitKey].members.push({
-        namaAnggota: item.namaAnggota,
-        npaPgri: item.npaPgri,
-        nomorRekening: item.nomorRekening,
-        nip: item.nip,
-        statusPegawai: item.statusPegawai,
-        idByNominal: item.idByNominal,
-        statusPotongan: item.statusPotongan,
-        potongan: item.potongan,
-        pgri: parseFloat(item.pgri) || 0,
-        sanduka: parseFloat(item.sanduka) || 0,
-        daspen: parseFloat(item.daspen) || 0,
-        derap: parseFloat(item.derap) || 0,
-        kalender: parseFloat(item.kalender) || 0,
-        sumbangan: parseFloat(item.lainLain) || 0,
-        totalIuran: parseFloat(item.totalIuran) || 0,
-        lastUpdatedAtIuran: item.lastUpdatedAtIuran,
-        detailSumbangan: (() => {
-          try {
-            if (typeof item.detailSumbangan === "string") {
-              const parsed = JSON.parse(item.detailSumbangan);
-              return Array.isArray(parsed) ? parsed : [];
-            }
-            return Array.isArray(item.detailSumbangan)
-              ? item.detailSumbangan
-              : [];
-          } catch (error) {
-            console.warn(
-              `⚠️ Gagal parse detailSumbangan untuk ${item.namaAnggota}:`,
-              error,
-            );
-            return [];
-          }
-        })(),
-      });
-
-      acc[unitKey].jumlah += 1;
-      acc[unitKey].pgri += parseFloat(item.pgri) || 0;
-      acc[unitKey].sanduka += parseFloat(item.sanduka) || 0;
-      acc[unitKey].daspen += parseFloat(item.daspen) || 0;
-      acc[unitKey].derap += parseFloat(item.derap) || 0;
-      acc[unitKey].kalender += parseFloat(item.kalender) || 0;
-      acc[unitKey].sumbangan += parseFloat(item.lainLain) || 0;
-      acc[unitKey].totalIuran += parseFloat(item.totalIuran) || 0;
-
-      if (Array.isArray(item.iuranSumbanganList)) {
-        item.iuranSumbanganList.forEach((s) => {
-          if (!acc[unitKey].sumbanganDetail[s.jenis]) {
-            acc[unitKey].sumbanganDetail[s.jenis] = 0;
-          }
-          acc[unitKey].sumbanganDetail[s.jenis] += s.jumlah;
-        });
-      }
-
-      return acc;
-    }, {});
-
-    return Object.values(grouped);
+  const handleUnitKerjaSearch = (query) => {
+    setSearchUnitKerja(query);
+    const filtered = unitKerjaList.filter(u =>
+      u.cabang?.toLowerCase() === selectedCabang.toLowerCase() &&
+      u.unitKerja.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredUnitKerja(filtered);
   };
-
-  const fetchInitialData = useCallback(async () => {
-    try {
-      const storedRole = sessionStorage.getItem("role");
-      const storedCabang = sessionStorage.getItem("cabang");
-
-      const bulan = selectedBulan;
-      const tahun = selectedTahun;
-
-      let response;
-
-      if (storedRole === "ADMIN" && storedCabang) {
-        setIsAdmin(true);
-        setSelectedCabang(storedCabang);
-        response = await GlobalApi.getNominalAggregatedData(
-          storedCabang,
-          null,
-          null,
-          bulan,
-          tahun,
-        );
-      } else {
-        response = await GlobalApi.getNominalAggregatedData(
-          "",
-          null,
-          null,
-          bulan,
-          tahun,
-        );
-      }
-
-      // 📌 Proses data untuk mengambil yang terbaru per npaPgri
-      // Opsional: ganti null dengan npaPgri spesifik contoh "33200806435"
-      // Ganti true dengan false jika ingin berdasarkan idByNominal terbesar
-      response = processApiResponse(response, null, false);
-
-      const totalRow = response.find(
-        (item) => item.cabang === "Total" && !item.unitKerja,
-      );
-      const regularData = response.filter(
-        (item) => !(item.cabang === "Total" && !item.unitKerja),
-      );
-
-      if (totalRow) {
-        setGrandTotals({
-          jumlah: parseInt(totalRow.jumlah) || 0,
-          pgri: parseFloat(totalRow.pgri) || 0,
-          sanduka: parseFloat(totalRow.sanduka) || 0,
-          daspen: parseFloat(totalRow.daspen) || 0,
-          derap: parseFloat(totalRow.derap) || 0,
-          kalender: parseFloat(totalRow.kalender) || 0,
-          lainlain: parseFloat(totalRow.lainlain) || 0,
-          totalIuran: parseFloat(totalRow.totalIuran) || 0,
-        });
-      }
-
-      const processed = processData(regularData);
-      setGroupedData(processed);
-      setData(regularData);
-      setOriginalRekapData(regularData);
-
-      try {
-        const filesResponse = await GlobalApi.getAllFiles();
-        if (filesResponse && Array.isArray(filesResponse)) {
-          const nipToSumbanganMap = {};
-          filesResponse.forEach((file) => {
-            if (file.nip) {
-              nipToSumbanganMap[file.nip] = file.sumbangan;
-            }
-          });
-          setFilesDataMap(nipToSumbanganMap);
-        }
-      } catch (filesError) {
-        console.error("Error fetching files data:", filesError);
-      }
-
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching initial data:", error);
-      setLoading(false);
-    }
-  }, [unitKerjaList, selectedBulan, selectedTahun]);
-
-  useEffect(() => {
-    fetchInitialData();
-    fetchNoRekening();
-  }, [fetchInitialData]);
-
-  const fetchNoRekening = async () => {
-    try {
-      const data = await GlobalApi.getNoRekening();
-      setListNoRekening(data);
-    } catch (error) {
-      console.error("Gagal ambil daftar nomor rekening:", error);
-    }
-  };
-
-  useEffect(() => {
-    if (lastUpdatedMemberRef.current) {
-      lastUpdatedMemberRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-    }
-  }, [lastUpdatedMemberNip]);
 
   const handleNamaAnggotaInputChange = (e) => {
     setNamaAnggotaInput(e.target.value);
-  };
-
-  const handleSearchClick = () => {
-    setSearchQuery(namaAnggotaInput);
-    performSearch(namaAnggotaInput);
+    setDebouncedSearchQuery(e.target.value);
   };
 
   const performSearch = (query) => {
-    if (query === "") {
-      let filteredData = originalRekapData;
-
-      if (selectedCabang) {
-        filteredData = filteredData.filter(
-          (item) => item.cabang?.toLowerCase() === selectedCabang.toLowerCase(),
-        );
-      }
-
-      if (selectedUnitKerja) {
-        filteredData = filteredData.filter(
-          (item) =>
-            item.unitKerja?.toLowerCase() === selectedUnitKerja.toLowerCase(),
-        );
-      }
-
-      const processed = processData(filteredData);
-      setGroupedData(processed);
-      setData(filteredData);
-      calculateTotals(filteredData);
-      setExpandedRows(new Set());
-    } else {
-      const filteredData = originalRekapData.filter(
-        (item) =>
-          (!selectedCabang ||
-            item.cabang?.toLowerCase() === selectedCabang.toLowerCase()) &&
-          (!selectedUnitKerja ||
-            item.unitKerja?.toLowerCase() ===
-              selectedUnitKerja.toLowerCase()) &&
-          item.namaAnggota?.toLowerCase().includes(query.toLowerCase()),
-      );
-
-      const processed = processData(filteredData);
-      setGroupedData(processed);
-      setData(filteredData);
-      calculateTotals(filteredData);
-
-      const unitsWithMatches = new Set(
-        filteredData.map((item) => item.unitKerja || "Tidak Ada Unit Kerja"),
-      );
-      setExpandedRows(unitsWithMatches);
-    }
+    const filtered = originalRekapData.filter(item => {
+      const matchCabang = !selectedCabang || item.cabang?.toLowerCase() === selectedCabang.toLowerCase();
+      const matchUnit = !selectedUnitKerja || item.unitKerja?.toLowerCase() === selectedUnitKerja.toLowerCase();
+      const matchName = !query || item.namaAnggota?.toLowerCase().includes(query.toLowerCase());
+      return matchCabang && matchUnit && matchName;
+    });
+    setData(filtered);
   };
 
-  useEffect(() => {
-    if (!isPopupVisible && namaInputRef.current) {
-      namaInputRef.current.focus();
-    }
-  }, [isPopupVisible]);
+  const handleSearchClick = useCallback(() => performSearch(namaAnggotaInput), [performSearch, namaAnggotaInput]);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (cabangRef.current && !cabangRef.current.contains(event.target)) {
-        setShowCabangDropdown(false);
-      }
-      if (
-        unitKerjaRef.current &&
-        !unitKerjaRef.current.contains(event.target)
-      ) {
-        setShowUnitKerjaDropdown(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        unitKerjaRef.current &&
-        !unitKerjaRef.current.contains(event.target)
-      ) {
-        setShowUnitKerjaDropdown(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  const calculateTotals = (dataArray) => {
-    const newTotals = dataArray.reduce(
-      (acc, item) => ({
-        jumlah: acc.jumlah + (parseInt(item.jumlah) || 0),
-        pgri: acc.pgri + (parseFloat(item.pgri) || 0),
-        sanduka: acc.sanduka + (parseFloat(item.sanduka) || 0),
-        daspen: acc.daspen + (parseFloat(item.daspen) || 0),
-        iuran: acc.iuran + (parseFloat(item.totalIuran) || 0),
-      }),
-      {
-        jumlah: 0,
-        pgri: 0,
-        sanduka: 0,
-        daspen: 0,
-        iuran: 0,
-      },
-    );
-    setTotals(newTotals);
-  };
-
-  const [grandTotals, setGrandTotals] = useState({
-    jumlah: 0,
-    pgri: 0,
-    sanduka: 0,
-    daspen: 0,
-    derap: 0,
-    kalender: 0,
-    lainlain: 0,
-    totalIuran: 0,
-  });
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const pgriResponse = await GlobalApi.getDefaultIuranById(2);
-      const daspenResponse = await GlobalApi.getDefaultIuranById(4);
-      const derapResponse = await GlobalApi.getDefaultIuranById(3);
-      const kalenderResponse = await GlobalApi.getDefaultIuranById(1);
-
-      sessionStorage.setItem("PGRIData", JSON.stringify(pgriResponse));
-      sessionStorage.setItem("daspenData", JSON.stringify(daspenResponse));
-      sessionStorage.setItem("derapData", JSON.stringify(derapResponse));
-      sessionStorage.setItem("kalenderData", JSON.stringify(kalenderResponse));
-
-      const response = {
-        pgri: pgriResponse,
-        daspen: daspenResponse,
-        derap: derapResponse,
-        kalender: kalenderResponse,
-      };
-
-      setDefaultIuran(response);
-
-      const total = {
-        propinsi:
-          parseInt(kalenderResponse.propinsi || 0) +
-          parseInt(derapResponse.propinsi || 0),
-        kabupaten:
-          parseInt(kalenderResponse.kabupaten || 0) +
-          parseInt(derapResponse.kabupaten || 0),
-        cabang:
-          parseInt(kalenderResponse.cabang || 0) +
-          parseInt(derapResponse.cabang || 0),
-      };
-
-      setTotalIuranWilayah(total);
-      const pgriTotal =
-        parseInt(pgriResponse.pb || 0) +
-        parseInt(pgriResponse.propinsi || 0) +
-        parseInt(pgriResponse.kabupaten || 0) +
-        parseInt(pgriResponse.cabang || 0) +
-        parseInt(pgriResponse.sanduka || 0);
-    };
-
-    const kalenderData = sessionStorage.getItem("kalenderData");
-    const derapData = sessionStorage.getItem("derapData");
-
-    if (kalenderData && derapData) {
-      const kalender = JSON.parse(kalenderData);
-      const derap = JSON.parse(derapData);
-
-      const total = {
-        propinsi:
-          parseInt(kalender.propinsi || 0) + parseInt(derap.propinsi || 0),
-        kabupaten:
-          parseInt(kalender.kabupaten || 0) + parseInt(derap.kabupaten || 0),
-        cabang: parseInt(kalender.cabang || 0) + parseInt(derap.cabang || 0),
-      };
-
-      setTotalIuranWilayah(total);
-    } else {
-      fetchData();
-    }
-  }, []);
-
-  const handlePrintClick = async (member) => {
-    const daspenFromMember = member.daspen ? parseInt(member.daspen) : 0;
-    setDaspenValue(daspenFromMember);
-    setIsModalOpen(false);
-
-    try {
-      const response = await GlobalApi.cekNpaList([member.npaPgri]);
-
-      setSelectedMember(member);
-      setDataNpa(response[0]);
-
-      if (response[0].foto) {
-        try {
-          const decodedString = atob(response[0].foto);
-          setFotoBase64(decodedString);
-        } catch (error) {
-          console.error("Error decoding Base64:", error);
-          setFotoBase64(null);
-        }
-      }
-
-      try {
-        const iuranResponse = await GlobalApi.getIuranAnggota(member.npaPgri);
-        setDataIuran(iuranResponse);
-      } catch (error) {
-        console.error("Gagal mengambil data iuran anggota:", error);
-
-        if (error.response?.status === 500) {
-          console.warn(
-            "Server error 500: menggunakan nilai default dari sessionStorage",
-          );
-
-          const pgriData = JSON.parse(sessionStorage.getItem("PGRIData"));
-          const totalIuranPGRI =
-            parseInt(pgriData.pb || 0) +
-            parseInt(pgriData.propinsi || 0) +
-            parseInt(pgriData.kabupaten || 0) +
-            parseInt(pgriData.cabang || 0);
-
-          const fallbackData = {
-            iuranAnggota: totalIuranPGRI,
-            manualIuranAnggota: 0,
-            totalIuranAnggota: totalIuranPGRI,
-            iuranSanduka: parseInt(pgriData.sanduka || 0),
-            manualIuranSanduka: 0,
-            totalIuranSanduka: parseInt(pgriData.sanduka || 0),
-            iuranDaspen: daspenFromMember,
-            manualIuranDaspen: 0,
-            totalIuranDaspen: daspenFromMember,
-          };
-
-          setDataIuran(fallbackData);
-        }
-      }
-
-      setIsModalOpen(true);
-    } catch (error) {
-      console.error("Error saat cek NPA:", error);
-      if (error.response?.status === 500) {
-        console.warn("Server error 500: data tidak akan ditampilkan.");
-      }
-    }
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setSelectedMember(null);
-  };
-  const closePopup = () => {
-    setIsPopupVisible(false);
-    setAddedCategories([]);
-    setManualInputs([]);
-    setResetKeys([]);
-    setSelectedKategori([]);
-  };
-  const handleCloseModal = () => {
-    setShowUploadModal(false);
-  };
-
-  const [formData, setFormData] = useState({
-    file: null,
-    namaFile: "",
-    tanggalUntuk: "",
-  });
-
-  const handleInputChange = (e) => {
-    const { name, value, files } = e.target;
-    if (name === "file") {
-      setFormData((prev) => ({ ...prev, file: files[0] }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const handleMemberClick = async (member) => {
+  // Modal Handlers
+  const handleMemberClick = useCallback(async (member) => {
     const daspenFromMember = member.daspen ? parseInt(member.daspen) : 0;
     setDaspenValue(daspenFromMember);
 
@@ -988,11 +461,13 @@ function RekapAnggota() {
     setAddedCategories([]);
     setManualInputs({});
     setStatusPegawai(member.statusPegawai || null);
-    // console.log("📌 Member clicked:", member);
+
     try {
       const fileResponse = await GlobalApi.getFileByNip(member.nip);
       if (fileResponse?.sumbangan) {
-        setDaspenValue(parseInt(fileResponse.sumbangan));
+        const nominalProv = parseInt(fileResponse.sumbangan);
+        setProvDaspenValue(nominalProv);
+        // Jangan set daspenValue dulu di sini agar tetap tersembunyi jika database 0
       }
       setNotifDaspen(fileResponse?.dataDaspen === true);
     } catch (error) {
@@ -1001,8 +476,7 @@ function RekapAnggota() {
 
     try {
       const response = await GlobalApi.cekNpaList([member.npaPgri]);
-      setSelectedMember(member);
-      setDataNpa(response[0]);
+      setDataNpa(response[0] || null);
 
       if (response[0]?.foto) {
         try {
@@ -1015,37 +489,42 @@ function RekapAnggota() {
       }
 
       const dataIuran = await GlobalApi.getByIdByNominal(member.idByNominal);
-      // console.log("📦 Data Iuran by NPA:", dataIuran);
-
       setDataIuran(dataIuran);
       setIdByNominal(member.idByNominal);
       setIdIuran(dataIuran.id || null);
       setNomorRekening(dataIuran.nomorRekening || "");
 
       const manualValues = {};
-      const manualKeys = [
-        "Pgri",
-        "Sanduka",
-        "Daspen",
-        "Derap",
-        "Kalender",
-        "LainLain",
-      ];
-
+      const manualKeys = ["Pgri", "Sanduka", "Daspen", "Derap", "Kalender"];
       manualKeys.forEach((key) => {
         const manualKey = `manual${key}`;
         if (dataIuran[manualKey] && dataIuran[manualKey] > 0) {
-          manualValues[`manual${key.toLowerCase()}`] =
-            dataIuran[manualKey] || 0;
+          manualValues[key.toLowerCase()] = dataIuran[manualKey];
         }
       });
-
       setNominalBaruList(manualValues);
 
-      if (
-        dataIuran?.iuranSumbanganList &&
-        Array.isArray(dataIuran.iuranSumbanganList)
-      ) {
+      // --- TRIPLE FALLBACK: Pastikan nominal tidak 0 ---
+      const profile = response[0] || {};
+      const freshMember = {
+        ...member,
+        pgri: (dataIuran.pgri && parseInt(dataIuran.pgri) > 0) ? parseInt(dataIuran.pgri) : (member.pgri > 0 ? parseInt(member.pgri) : (parseInt(profile.pgri) || 8000)),
+        sanduka: (dataIuran.sanduka && parseInt(dataIuran.sanduka) > 0) ? parseInt(dataIuran.sanduka) : (member.sanduka > 0 ? parseInt(member.sanduka) : (parseInt(profile.sanduka) || 3000)),
+        daspen: (dataIuran.daspen && parseInt(dataIuran.daspen) > 0) ? parseInt(dataIuran.daspen) : (member.daspen > 0 ? parseInt(member.daspen) : (parseInt(profile.daspen) || 0)),
+        derap: (dataIuran.derap && parseInt(dataIuran.derap) > 0) ? parseInt(dataIuran.derap) : (member.derap > 0 ? parseInt(member.derap) : (parseInt(profile.derap) || 0)),
+        kalender: (dataIuran.kalender && parseInt(dataIuran.kalender) > 0) ? parseInt(dataIuran.kalender) : (member.kalender > 0 ? parseInt(member.kalender) : (parseInt(profile.kalender) || 0)),
+      };
+
+      // Set data final sekaligus untuk memicu re-render modal yang akurat
+      setSelectedMember(freshMember);
+
+      // --- PERBAIKAN: Daspen hanya muncul jika sudah ada di database ---
+      // Jika di database 0 (Belum Input), daspenValue diset 0 agar tidak muncul di modal
+      // sesuai permintaan: "jika belom input mka pas di edit daspen gk muncul"
+      const finalDaspen = (dataIuran.daspen && parseInt(dataIuran.daspen) > 0) ? parseInt(dataIuran.daspen) : 0;
+      setDaspenValue(finalDaspen);
+
+      if (dataIuran?.iuranSumbanganList && Array.isArray(dataIuran.iuranSumbanganList)) {
         setSumbanganList(dataIuran.iuranSumbanganList);
       } else {
         setSumbanganList([]);
@@ -1055,3126 +534,389 @@ function RekapAnggota() {
     } catch (error) {
       console.error("❌ Gagal mengambil data iuran anggota:", error);
     }
-  };
+  }, []);
 
-  const handleTagihanClick = async (member) => {
-    const npa = member?.npaPgri?.trim();
+  const closePopup = useCallback(() => {
+    setIsPopupVisible(false);
+    setDataNpa(null);
+    setFotoBase64(null);
+    setNomorRekening("");
+    setResetKeys([]);
+    setNominalBaruList({});
+    setSumbanganList([]);
+    setAddedCategories([]);
+    setManualInputs({});
+    setDaspenValue(0);
+    setNipValue("");
+    setIdIuran(null);
+    setStatusPegawai(null);
+    setIdByNominal(null);
+  }, []);
 
-    if (!npa) {
-      console.error("NPA tidak ditemukan!");
-      return;
-    }
-
+  const handleUpdateIuran = async (id, payload) => {
     try {
-      const response = await GlobalApi.cekNpa(npa);
-
-      if (response?.id) {
-        sessionStorage.setItem("idTagihan", response.id);
-        router.push("/anggota/rekap-anggota/tagihanByAdmin");
-      } else {
-        console.warn("ID tidak ditemukan dalam respons.");
-      }
-    } catch (error) {
-      console.error("Gagal mendapatkan ID dari NPA:", error);
+      // Pastikan ID adalah number untuk endpoint /api/by-nominal/
+      const numericId = parseInt(id);
+      await GlobalApi.updateByNominal(numericId, payload);
+      setNotification({ type: "success", message: "Data berhasil diperbarui!" });
+      fetchInitialData();
+      return true;
+    } catch (err) {
+      console.error("Error updating iuran:", err);
+      setNotification({ type: "error", message: "Gagal memperbarui data." });
+      return false;
     }
   };
 
-  const groupIuranData = (dataIuran) => {
-    if (!dataIuran) return [];
-
-    const keyMap = [
-      { key: "anggota", apiKey: "Pgri" },
-      { key: "sanduka", apiKey: "Sanduka" },
-      { key: "daspen", apiKey: "Daspen" },
-      { key: "derap", apiKey: "Derap" },
-      { key: "kalender", apiKey: "Kalender" },
-      { key: "lainlain", apiKey: "LainLain" },
-    ];
-
-    let result = keyMap
-      .map(({ key, apiKey }) => {
-        return {
-          key,
-          iuran: dataIuran[`default${apiKey}`] || 0,
-          manual: dataIuran[`manual${apiKey}`] || 0,
-          total: dataIuran[`${apiKey.toLowerCase()}`] || 0,
-        };
-      })
-      .filter(
-        (item) =>
-          item.iuran !== undefined && (item.iuran > 0 || item.manual > 0),
-      );
-
-    if (Array.isArray(dataIuran.iuranSumbanganList)) {
-      const sumbanganItems = dataIuran.iuranSumbanganList.map((sumb) => ({
-        key: sumb.jenis,
-        iuran: sumb.jumlah,
-        manual: 0,
-        total: sumb.jumlah,
-        isSumbanganDetail: true,
-      }));
-
-      result = [...result, ...sumbanganItems];
-    }
-
-    return result;
+  const handleDeleteSumbangan = (jenis) => {
+    setSumbanganList(prev => prev.map(s => s.jenis === jenis ? { ...s, jumlah: 0 } : s));
   };
 
-  useEffect(() => {
-    if (dataIuran) {
-      const defaultNominalBaru = {};
+  const handleSave = () => {
+    if (!selectedKategori) return;
+    const key = selectedKategori === "lainlain" ? selectedKeterangan : selectedKategori;
+    if (!key) return;
 
-      const keyMap = [
-        { frontendKey: "anggota", apiKey: "Pgri" },
-        { frontendKey: "sanduka", apiKey: "Sanduka" },
-        { frontendKey: "daspen", apiKey: "Daspen" },
-        { frontendKey: "derap", apiKey: "Derap" },
-        { frontendKey: "kalender", apiKey: "Kalender" },
-        { frontendKey: "lainlain", apiKey: "LainLain" },
-      ];
+    // PENTING: Jika kategori ditambahkan kembali, pastikan dihapus dari resetKeys
+    // agar nominalnya langsung muncul (tidak dianggap sedang dihapus)
+    setResetKeys(prev => prev.filter(k => k !== key));
 
-      keyMap.forEach(({ frontendKey, apiKey }) => {
-        const manualValue = dataIuran[`manual${apiKey}`] || 0;
-        defaultNominalBaru[frontendKey] = manualValue;
-      });
-
-      setNominalBaruList(defaultNominalBaru);
-    }
-  }, [dataIuran]);
-
-  const groupedIuran = dataIuran ? groupIuranData(dataIuran) : [];
-
-  const handleSave = async () => {
-    if (selectedKategori) {
-      const uniqueKey =
-        selectedKategori === "lainlain" && selectedKeterangan
-          ? `${selectedKeterangan}`
-          : selectedKategori === "pgri"
-            ? "anggota"
-            : selectedKategori;
-
-      if (!addedCategories.find((cat) => cat.key === uniqueKey)) {
-        const labelMap = {
-          iuran: "Iuran",
-          derap: "Derap",
-          kalender: "Kalender",
-          lainlain: "Lain-Lain",
-          daspen: "Daspen",
-          pgri: "Anggota",
-          sanduka: "Sanduka",
-        };
-
-        let initialValue = 0;
-
-        if (selectedKategori === "kalender") {
-          const kalenderRaw = sessionStorage.getItem("kalenderData");
-          if (kalenderRaw) {
-            try {
-              const kalenderObj = JSON.parse(kalenderRaw);
-              const propinsi = parseInt(kalenderObj.propinsi || 0);
-              const kabupaten = parseInt(kalenderObj.kabupaten || 0);
-              const cabang = parseInt(kalenderObj.cabang || 0);
-              initialValue = propinsi + kabupaten + cabang;
-            } catch (e) {
-              console.error("Error parsing kalenderData:", e);
-            }
-          }
-        }
-
-        if (selectedKategori === "derap") {
-          const derapRaw = sessionStorage.getItem("derapData");
-          if (derapRaw) {
-            try {
-              const derapObj = JSON.parse(derapRaw);
-              const propinsi = parseInt(derapObj.propinsi || 0);
-              const kabupaten = parseInt(derapObj.kabupaten || 0);
-              const cabang = parseInt(derapObj.cabang || 0);
-              initialValue = propinsi + kabupaten + cabang;
-            } catch (e) {
-              console.error("Error parsing derapData:", e);
-            }
-          }
-        }
-
-        if (selectedKategori === "lainlain" && selectedKeterangan) {
-          try {
-            const response = await GlobalApi.getLainlain(selectedKeterangan);
-
-            const matchingItem = response.find(
-              (item) =>
-                item.keterangan.toLowerCase() ===
-                selectedKeterangan.toLowerCase(),
-            );
-
-            if (matchingItem) {
-              const jumlah = parseInt(matchingItem.jumlahNominal || 0);
-              initialValue = jumlah;
-            } else {
-              console.warn(
-                "Tidak ditemukan data dengan keterangan:",
-                selectedKeterangan,
-              );
-            }
-          } catch (error) {
-            console.error("Gagal mengambil data lain-lain:", error);
-          }
-        }
-
-        if (selectedKategori === "daspen") {
-          initialValue = parseInt(daspenValue || 0);
-        }
-        if (selectedKategori === "pgri") {
-          initialValue = 8000;
-        }
-
-        if (selectedKategori === "sanduka") {
-          initialValue = 3000;
-        }
-        setAddedCategories((prev) => [
-          ...prev,
-          {
-            label: labelMap[selectedKategori],
-            key: uniqueKey,
-            ...(selectedKategori === "lainlain" && selectedKeterangan
-              ? { keterangan: selectedKeterangan }
-              : {}),
-          },
-        ]);
-
-        setNewValues((prev) => ({
-          ...prev,
-          [uniqueKey]: initialValue,
-        }));
-
-        setFormKetiga((prev) => ({
-          ...prev,
-          [uniqueKey]: initialValue,
-        }));
+    // Jika kategori yang dipilih adalah kategori inti (PGRI, Sanduka, Daspen, dll),
+    // kita tidak perlu menambahkannya ke addedCategories karena sudah ada di groupedIuran.
+    // Kita cukup mengeset nilainya saja.
+    const coreKeys = ["pgri", "sanduka", "daspen", "derap", "kalender"];
+    if (coreKeys.includes(key.toLowerCase())) {
+      // Jika daspen, sinkronkan nilai provinsinya
+      if (key.toLowerCase() === "daspen") {
+        setDaspenValue(provDaspenValue);
       }
-
-      setSelectedKategori("");
-      setSelectedKeterangan("");
-      setShowDropdown(false);
-    }
-  };
-
-  const handleDeleteSumbangan = (sumbanganJenis) => {
-    setSumbanganList((prev) =>
-      prev.map((item) =>
-        item.jenis === sumbanganJenis ? { ...item, jumlah: 0 } : item,
-      ),
-    );
-  };
-
-  const handleSaveClick = async () => {
-    if (!dataNpa) return;
-
-    const tempatTanggalLahir = `${dataNpa.tempatLahir}, ${dataNpa.tanggalLahir?.[2]}-${dataNpa.tanggalLahir?.[1]}-${dataNpa.tanggalLahir?.[0]}`;
-
-    let otomatisValueSanduka = 0;
-    let otomatisValuePgri = 0;
-    let otomatisValueDaspen = 0;
-
-    let manualValueSanduka = 0;
-    let manualValuepgri = 0;
-    let manualValueDaspen = 0;
-
-    let iuranSanduka = 0;
-    let iuranDaspen = 0;
-    let iuranAnggota = formKetiga?.iuranAnggota || 0;
-
-    groupedIuran.forEach((item) => {
-      const autoValue = parseInt(item.iuran || 0);
-      const inputValue = nominalBaruList[item.key] ?? 0;
-
-      if ((item.key || "").toLowerCase() === "sanduka") {
-        otomatisValueSanduka = autoValue;
-        manualValueSanduka = inputValue;
-        iuranSanduka = autoValue + inputValue;
-      }
-      if ((item.key || "").toLowerCase() === "anggota") {
-        otomatisValuePgri = autoValue;
-        manualValuepgri = inputValue;
-        iuranAnggota = autoValue + inputValue;
-      }
-      if ((item.key || "").toLowerCase() === "daspen") {
-        otomatisValueDaspen = autoValue;
-        manualValueDaspen = inputValue;
-        iuranDaspen = autoValue + inputValue;
-      }
-    });
-
-    let otomatisValueKalender = 0;
-    let otomatisValueDerap = 0;
-
-    let manualValueKalender = 0;
-    let manualValueDerap = 0;
-
-    let totalKalender = 0;
-    let iuranDerap = formKetiga?.iuranDerap || 0;
-
-    let iuranSumbanganList = [];
-    let manualValueLainLain = 0;
-    let totalIuranLainLain = 0;
-
-    if (dataIuran?.iuranSumbanganList?.length > 0) {
-      iuranSumbanganList = dataIuran.iuranSumbanganList.map((item) => ({
-        jenis: item.jenis,
-        jumlah: item.jumlah,
-      }));
-      totalIuranLainLain = dataIuran.totalIuranSumbangan || 0;
-    }
-
-    addedCategories.forEach((item) => {
-      const keyLower = item.key?.toLowerCase();
-      const oldValue = parseInt(newValues[item.key] || 0);
-      const inputValue = parseInt(manualInputs[item.key] || 0);
-      const totalValue = oldValue + inputValue;
-
-      if (totalValue <= 0) return;
-
-      if (keyLower === "kalender") {
-        otomatisValueKalender = oldValue;
-        manualValueKalender = inputValue;
-        totalKalender = totalValue;
-      } else if (keyLower === "derap") {
-        otomatisValueDerap = oldValue;
-        manualValueDerap = inputValue;
-        iuranDerap = totalValue;
-      } else if (keyLower === "sanduka") {
-        if (iuranSanduka === 0) {
-          otomatisValueSanduka = oldValue;
-          manualValueSanduka = inputValue;
-          iuranSanduka = totalValue;
-        }
-      } else if (keyLower === "anggota") {
-        if (iuranAnggota === 0) {
-          otomatisValuePgri = oldValue;
-          manualValuepgri = inputValue;
-          iuranAnggota = totalValue;
-        }
-      } else if (keyLower === "daspen") {
-        if (iuranDaspen === 0) {
-          otomatisValueDaspen = oldValue;
-          manualValueDaspen = inputValue;
-          iuranDaspen = totalValue;
-        }
-      } else {
-        iuranSumbanganList.push({
-          jenis: item.keterangan || item.label,
-          jumlah: totalValue,
+      // Untuk kategori inti lainnya, biarkan tetap muncul di groupedIuran
+    } else {
+      // Hanya tambahkan ke addedCategories jika memang kategori baru (Lain-Lain/Tambahan)
+      if (!addedCategories.some(c => c.key === key)) {
+        setAddedCategories(prev => [...prev, { key, label: key }]);
+        // --- PERBAIKAN: Ambil nominal dari API keteranganLainLain ---
+        // --- PERBAIKAN PAMUNGKAS: Pencarian Pintar (Smart Lookup) ---
+        const listLain = Array.isArray(keteranganLainLain) ? keteranganLainLain : (keteranganLainLain?.data || []);
+        
+        const foundFromApi = listLain.find(item => {
+          const apiLabel = (item.keterangan || item.nama_iuran || item.nama || item || "").toString().trim().toLowerCase();
+          const selectedLabel = key.toString().trim().toLowerCase();
+          return apiLabel === selectedLabel;
         });
-        manualValueLainLain += inputValue;
-        totalIuranLainLain += totalValue;
-      }
-    });
 
-    const payload = {
-      namaAnggota: dataNpa.namaLengkap,
-      tempatTanggalLahir: tempatTanggalLahir,
-      npa: dataNpa.npa,
-      nip: dataNpa.nip || "-",
-      nik: dataNpa.nik,
-      cabang: dataNpa.cabang,
-      unitKerja: dataNpa.unitKerja,
-      jabatan: dataNpa.jabatan,
-      nomorRekening: nomorRekening,
-
-      iuranAnggota: otomatisValuePgri || 0,
-      manualIuranAnggota: manualValuepgri || 0,
-      totalIuranAnggota: iuranAnggota || 0,
-
-      iuranSanduka: otomatisValueSanduka || 0,
-      manualIuranSanduka: manualValueSanduka || 0,
-      totalIuranSanduka: iuranSanduka || 0,
-
-      iuranDaspen: otomatisValueDaspen || 0,
-      manualIuranDaspen: manualValueDaspen || 0,
-      totalIuranDaspen: iuranDaspen || 0,
-
-      iuranDerap: otomatisValueDerap || 0,
-      manualIuranDerap: manualValueDerap || 0,
-      totalIuranDerap: iuranDerap || 0,
-
-      iuranKalender: otomatisValueKalender || 0,
-      manualIuranKalender: manualValueKalender || 0,
-      totalIuranKalender: totalKalender || 0,
-
-      iuranSumbanganList: iuranSumbanganList,
-      manualIuranSumbangan: manualValueLainLain || 0,
-      totalIuranSumbangan: totalIuranLainLain || 0,
-    };
-
-    try {
-      if (nomorRekening && nomorRekening.trim() !== "") {
-        const rekeningBaru = nomorRekening.trim();
-        const rekeningLama = selectedMember?.nomorRekening?.trim();
-
-        const rekeningSudahTerdaftar = listNoRekening.includes(rekeningBaru);
-        const samaDenganYangLama = rekeningBaru === rekeningLama;
-
-        if (rekeningSudahTerdaftar && !samaDenganYangLama) {
-          setNotification({
-            type: "error",
-            message: "Nomor rekening sudah digunakan oleh anggota lain.",
-          });
-          return;
+        if (foundFromApi && typeof foundFromApi === 'object') {
+          // Cari kolom mana saja yang mengandung kata kunci nominal/jumlah/tarif secara dinamis
+          const smartKey = Object.keys(foundFromApi).find(k => 
+            k.toLowerCase().includes('nominal') || 
+            k.toLowerCase().includes('jumlah') || 
+            k.toLowerCase().includes('tarif') ||
+            k.toLowerCase().includes('harga')
+          );
+          
+          const nominal = smartKey ? parseInt(foundFromApi[smartKey] || 0) : 0;
+          setManualInputs(prev => ({ ...prev, [key]: nominal }));
         }
       }
-      const response = await GlobalApi.postIuranAnggota(payload);
-      await fetchInitialData();
-      setNotification({
-        type: "success",
-        message: "Data berhasil disimpan!",
-      });
-
-      setIsPopupVisible(false);
-      setAddedCategories([]);
-      setManualInputs([]);
-      setSelectedKategori("");
-      setLastUpdatedMemberNip(dataNpa.nip);
-    } catch (error) {
-      console.error("Gagal simpan:", error);
-
-      setNotification({
-        type: "error",
-        message: "Gagal menyimpan data. Silakan coba lagi.",
-      });
     }
+
+    setShowDropdown(false);
+    setSelectedKategori("");
+    setSelectedKeterangan("");
   };
 
   const handleUpdateClick = async () => {
-    if (!dataNpa) return;
-
+    if (!selectedMember) return;
+    setLoadButton(true);
     try {
-      const tagihanUntukBulan = `${selectedYear}-${selectedMonth
-        .toString()
-        .padStart(2, "0")}-01`;
-
       const payload = {
-        nomorRekening: nomorRekening || "",
-        
-        defaultPgri: 0,
-        manualPgri: 0,
-        pgri: 0,
-
-        defaultSanduka: 0,
-        manualSanduka: 0,
-        sanduka: 0,
-
-        defaultDaspen: 0,
-        manualDaspen: 0,
-        daspen: 0,
-
-        defaultDerap: 0,
-        manualDerap: 0,
-        derap: 0,
-
-        defaultKalender: 0,
-        manualKalender: 0,
-        kalender: 0,
-
-        tagihanUntukBulan,
-        iuranSumbanganList: [],
+        nomorRekening,
+        bulan: selectedMonth,
+        tahun: selectedYear,
+        nominalBaruList,
+        resetKeys,
+        sumbanganList,
+        // Sertakan iuran pokok, jika ada di resetKeys maka kirim 0 agar jadi "Belum Input"
+        pgri: resetKeys.includes("pgri") ? 0 : selectedMember.pgri,
+        sanduka: resetKeys.includes("sanduka") ? 0 : selectedMember.sanduka,
+        daspen: resetKeys.includes("daspen") ? 0 : daspenValue,
+        derap: resetKeys.includes("derap") ? 0 : selectedMember.derap,
+        kalender: resetKeys.includes("kalender") ? 0 : selectedMember.kalender,
+        addedCategories: addedCategories.map(c => ({
+          key: c.key,
+          nominal: manualInputs[c.key] || 0
+        }))
       };
 
-      const mergedIuran = [...groupedIuran];
-
-      addedCategories.forEach((cat) => {
-        const isIuranUtama = [
-          "pgri",
-          "anggota",
-          "sanduka",
-          "daspen",
-          "derap",
-          "kalender",
-        ].includes(cat.key);
-
-        if (isIuranUtama) {
-          const existing = mergedIuran.find((item) => item.key === cat.key);
-
-          if (!existing) {
-            mergedIuran.push({
-              key: cat.key,
-              iuran: newValues[cat.key] || 0,
-            });
-          }
-        }
-      });
-
-      mergedIuran.forEach((item) => {
-        const key = item.key;
-        const isReset = resetKeys.includes(key);
-
-        const defaultValue = isReset ? 0 : parseInt(item.iuran || 0);
-        const manualRaw = nominalBaruList[key];
-
-        const manualValue = isReset ? 0 : parseInt(manualRaw ?? 0);
-
-        const totalValue = defaultValue + manualValue;
-
-        if (key === "pgri" || key === "anggota") {
-          payload.defaultPgri = defaultValue;
-          payload.manualPgri = manualValue;
-          payload.pgri = totalValue;
-        } else if (key === "sanduka") {
-          payload.defaultSanduka = defaultValue;
-          payload.manualSanduka = manualValue;
-          payload.sanduka = totalValue;
-        } else if (key === "daspen") {
-          payload.defaultDaspen = defaultValue;
-          payload.manualDaspen = manualValue;
-          payload.daspen = totalValue;
-        } else if (key === "derap") {
-          payload.defaultDerap = defaultValue;
-          payload.manualDerap = manualValue;
-          payload.derap = totalValue;
-        } else if (key === "kalender") {
-          payload.defaultKalender = defaultValue;
-          payload.manualKalender = manualValue;
-          payload.kalender = totalValue;
-        }
-      });
-
-      const updatedSumbanganList = [];
-
-      if (Array.isArray(sumbanganList)) {
-        sumbanganList.forEach((sumbangan) => {
-          const jumlah = parseInt(sumbangan.jumlah || 0);
-
-          if (sumbangan.jenis && jumlah > 0) {
-            updatedSumbanganList.push({
-              jenis: sumbangan.jenis,
-              jumlah,
-              cabang: dataNpa.cabang,
-              tagihanUntukBulan,
-            });
-          }
-        });
-      }
-
-      addedCategories.forEach((category) => {
-        const isIuranUtama = [
-          "pgri",
-          "anggota",
-          "sanduka",
-          "daspen",
-          "derap",
-          "kalender",
-        ].includes(category.key);
-
-        if (isIuranUtama) return;
-
-        const uniqueKey = category.key;
-
-        const oldValue = parseInt(newValues[uniqueKey] || 0);
-        const manualValue = parseInt(manualInputs[uniqueKey] || 0);
-        const totalValue = oldValue + manualValue;
-
-        if (totalValue > 0) {
-          const jenis = category.keterangan || category.label || category.key;
-
-          const existingIndex = updatedSumbanganList.findIndex(
-            (item) => item.jenis === jenis,
-          );
-
-          if (existingIndex === -1) {
-            updatedSumbanganList.push({
-              jenis,
-              jumlah: totalValue,
-              cabang: dataNpa.cabang,
-              tagihanUntukBulan,
-            });
-          } else {
-            updatedSumbanganList[existingIndex].jumlah = totalValue;
-          }
-        }
-      });
-
-      payload.iuranSumbanganList = updatedSumbanganList;
-
-      // console.log("Payload Final:", payload);
-
-      if (idByNominal) {
-        await GlobalApi.updateByNominal(idByNominal, payload);
-      } else {
-        await GlobalApi.createByNominal(payload);
-      }
-      await fetchInitialData();
-      setNotification({
-        type: "success",
-        message: `Data berhasil diupdate untuk periode ${selectedMonth
-          .toString()
-          .padStart(2, "0")}-${selectedYear}!`,
-      });
-
-      setIsPopupVisible(false);
-      setResetKeys([]);
-      setAddedCategories([]);
-      setNewValues({});
-      setManualInputs({});
-      setNominalBaruList({});
-      setSelectedKategori("");
-      setSelectedKeterangan("");
-    } catch (error) {
-      console.error("Gagal update data:", error);
-      console.error("Error details:", error.response?.data);
-
-      setNotification({
-        type: "error",
-        message: "Gagal update data. Silakan coba lagi.",
-      });
+      const success = await handleUpdateIuran(selectedMember.idByNominal, payload);
+      if (success) closePopup();
+    } catch (err) {
+      console.error("Update failed:", err);
+    } finally {
+      setLoadButton(false);
     }
   };
 
-  const calculateGrandTotal = () => {
-    let total = 0;
+  const handlePrint = useCallback(() => handlePrintLogic(groupedData, selectedMonth, selectedYear), [groupedData, selectedMonth, selectedYear]);
+  const exportToExcel = useCallback(() => exportToExcelLogic(selectedCabang, selectedUnitKerja, selectedMonth, selectedYear, namaAnggotaInput, setIsExporting), [selectedCabang, selectedUnitKerja, selectedMonth, selectedYear, namaAnggotaInput]);
 
-    groupedIuran.forEach((item) => {
-      if (item.key === "lainlain") return;
+  const handleTagihanClick = useCallback((member) => {
+    sessionStorage.setItem("idTagihan", member.idByNominal);
+    sessionStorage.setItem("npa", member.npaPgri);
+    router.push(`/anggota/rekap-anggota/tagihanByAdmin`);
+  }, [router]);
 
-      const oldValue = parseInt(item.iuran || 0);
-      const inputValue = nominalBaruList[item.key] || 0;
-      total += oldValue + inputValue;
-    });
-
-    addedCategories.forEach((item) => {
-      if (item.key === "lainlain") return;
-
-      const oldValue = newValues[item.key] ?? 0;
-      const inputValue = manualInputs[item.key] ?? 0;
-      total += oldValue + inputValue;
-    });
-
-    return total;
+  const handleBackupTarget = () => {
+    setIsBackupModalVisible(true);
   };
 
-  useEffect(() => {
-    setGrandTotal(calculateGrandTotal());
-  }, [nominalBaruList, manualInputs, addedCategories, groupedIuran]);
+  const confirmBackupTarget = async () => {
+    const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    const tagihanUntukBulan = `${monthNames[selectedMonth - 1]} ${selectedYear}`;
 
-  const handleReset = async () => {
-    if (!idIuran) {
-      console.warn("ID iuran tidak ditemukan.");
-      return;
-    }
-
-    try {
-      await GlobalApi.deleteIuranAnggota(idIuran);
-      await fetchInitialData();
-
-      setNotification({
-        type: "success",
-        message: "Data berhasil direset!",
-      });
-
-      setNominalBaruList(Array(groupedIuran.length).fill(""));
-      setManualInputs({});
-      setAddedCategories([]);
-      setSelectedKategori("");
-      setShowDropdown(false);
-      setDataIuran(null);
-      setIdIuran(null);
-      setIsPopupVisible(false);
-      setLastUpdatedMemberNip(dataNpa.nip);
-    } catch (error) {
-      setNotification({
-        type: "error",
-        message: "Gagal mereset data. Silakan coba lagi.",
-      });
-      console.error("Gagal menghapus data iuran:", error);
-    }
-  };
-
-  useEffect(() => {
-    if (!token) {
-      router.push("/sign-in");
-    }
-  }, [token, router]);
-
-  useEffect(() => {
-    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
-    setIsSidebarOpen(sidebarState);
-  }, []);
-
-  const [isMobile, setIsMobile] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  const toggleSidebar = () => {
-    const newSidebarState = !isSidebarOpen;
-    setIsSidebarOpen(newSidebarState);
-    localStorage.setItem("isSidebarOpen", newSidebarState);
-  };
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
-
-  const formatTanggal = (timestamp, format = "DMY") => {
-    if (!timestamp) return "-";
-
-    const date = new Date(timestamp);
-
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-
-    if (format === "YMD") {
-      return `${year}-${month}-${day}`;
-    }
-
-    return `${day}-${month}-${year}`;
-  };
-
-  const handlePrint = async () => {
-    try {
-      if (!groupedData || groupedData.length === 0) {
-        console.error("Data kosong, tidak dapat mencetak.");
-        return;
-      }
-
-      const bulan = selectedBulan || new Date().getMonth() + 1;
-      const tahun = selectedTahun || new Date().getFullYear();
-
-      let anggotaAll = [];
-      try {
-        const allData = await GlobalApi.getAllByNominal("", bulan, tahun);
-
-        const latestPerNpa = Object.values(
-          allData.reduce((acc, item) => {
-            if (!acc[item.npa]) {
-              acc[item.npa] = item;
-            } else {
-              const existingDate = new Date(...acc[item.npa].createdAt);
-              const currentDate = new Date(...item.createdAt);
-              if (currentDate > existingDate) {
-                acc[item.npa] = item;
-              }
-            }
-            return acc;
-          }, {}),
-        );
-
-        anggotaAll = latestPerNpa;
-      } catch (err) {
-        console.error("Gagal ambil data anggota untuk nomor rekening:", err);
-      }
-
-      const npaToRekeningMap = {};
-      anggotaAll.forEach((item) => {
-        npaToRekeningMap[item.npa] = item.nomorRekening;
-      });
-
-      const allMembers = groupedData.flatMap((g) => g.members || []);
-      const memberWithDetail = allMembers.find(
-        (m) => m.detailSumbangan?.length > 0,
-      );
-
-      const titleText = `Rekap By Nominal${
-        selectedCabang ? ` Cabang ${selectedCabang}` : ""
-      }${selectedUnitKerja ? ` Unit Kerja ${selectedUnitKerja}` : ""}`;
-
-      const htmlContent = `
-      <html>
-        <head>
-          <title>Rekap By Nominal</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            .title { text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 20px; }
-            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-            th, td { border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle; }
-            th { background-color: #00796b; color: white; }
-            .total-row { font-weight: bold; background-color: #f5f5f5; }
-            .member-list { text-align: left; padding-left: 20px; }
-            td div { line-height: 1.4; }
-            td strong { color: #333; font-weight: 600; }
-            @media print {
-              .no-print { display: none; }
-              table { page-break-inside: auto; }
-              tr { page-break-inside: avoid; page-break-after: auto; }
-              thead { display: table-header-group; }
-              th { color: #00796b; }
-              tfoot { display: table-footer-group; }
-            }
-            @page { margin: 15mm; }
-          </style>
-        </head>
-        <body>
-          <div class="title">${titleText}</div>
-          <table>
-            <thead>
-              <tr>
-                <th rowspan="2">No</th>
-                <th rowspan="2">Cabang</th>
-                <th rowspan="2">Unit Kerja</th>
-                <th rowspan="2">Nama Anggota</th>
-                <th rowspan="2">Jumlah Anggota</th>
-                <th colspan="6">Jumlah</th>
-                <th rowspan="2">Total</th>
-              </tr>
-              <tr>
-                <th>PGRI</th>
-                <th>Sanduka</th>
-                <th>Daspen</th>
-                <th>Derap</th>
-                <th>Kalender</th>
-                <th>Lain-Lain</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${groupedData
-                ?.map((group, index) => {
-                  const members = group.members || [];
-                  return members
-                    ?.map((member, memberIndex) => {
-                      const nomorRekeningFinal =
-                        npaToRekeningMap[member.npa] ||
-                        member.nomorRekening ||
-                        "-";
-                      return `
-                          <tr>
-                            ${
-                              memberIndex === 0
-                                ? `
-                              <td rowspan="${members.length}">${index + 1}</td>
-                              <td rowspan="${members.length}">${
-                                group.cabang
-                              }</td>
-                              <td rowspan="${members.length}">${
-                                group.unitKerja
-                              }</td>
-                            `
-                                : ""
-                            }
-                            <td class="member-list">
-                              <div>${member.namaAnggota}</div>
-                              <div>${member.nip || "-"}</div>
-                              <div>${nomorRekeningFinal}</div>
-                            </td>
-                            ${
-                              memberIndex === 0
-                                ? `<td rowspan="${members.length}">${
-                                    group.jumlah || 0
-                                  }</td>`
-                                : ""
-                            }
-                            <td>Rp. ${parseInt(member.pgri || 0).toLocaleString(
-                              "id-ID",
-                            )}</td>
-                            <td>Rp. ${parseInt(
-                              member.sanduka || 0,
-                            ).toLocaleString("id-ID")}</td>
-                            <td>Rp. ${parseInt(
-                              member.daspen || 0,
-                            ).toLocaleString("id-ID")}</td>
-                            <td>Rp. ${parseInt(
-                              member.derap || 0,
-                            ).toLocaleString("id-ID")}</td>
-                            <td>Rp. ${parseInt(
-                              member.kalender || 0,
-                            ).toLocaleString("id-ID")}</td>
-                            <td>
-                              ${
-                                member.detailSumbangan &&
-                                member.detailSumbangan.length > 0
-                                  ? `
-                                <div style="text-align: left; padding: 4px 0;">
-                                  ${member.detailSumbangan
-                                    .map(
-                                      (detail) => `
-                                    <div style="margin-bottom: 4px;">
-                                      <strong>${detail.namaSumbangan}</strong><br>
-                                      Rp. ${parseInt(
-                                        detail.jumlah || 0,
-                                      ).toLocaleString("id-ID")}
-                                    </div>
-                                  `,
-                                    )
-                                    .join("")}
-                                </div>
-                              `
-                                  : `Rp. ${parseInt(
-                                      member.lainLain || 0,
-                                    ).toLocaleString("id-ID")}`
-                              }
-                            </td>
-                            <td>Rp. ${parseInt(
-                              member.total || 0,
-                            ).toLocaleString("id-ID")}</td>
-                          </tr>
-                        `;
-                    })
-                    .join("");
-                })
-                .join("")}
-              <tr class="total-row">
-                <td colspan="4" style="text-align: center">Total Keseluruhan :</td>
-                <td>
-                  ${groupedData.reduce(
-                    (sum, group) => sum + parseInt(group.jumlah || 0),
-                    0,
-                  )}
-                </td>
-                <td>
-                  Rp. ${groupedData
-                    .flatMap((g) => g.members || [])
-                    .reduce((sum, m) => sum + parseInt(m.pgri || 0), 0)
-                    .toLocaleString("id-ID")}
-                </td>
-                <td>
-                  Rp. ${groupedData
-                    .flatMap((g) => g.members || [])
-                    .reduce((sum, m) => sum + parseInt(m.sanduka || 0), 0)
-                    .toLocaleString("id-ID")}
-                </td>
-                <td>
-                  Rp. ${groupedData
-                    .flatMap((g) => g.members || [])
-                    .reduce((sum, m) => sum + parseInt(m.daspen || 0), 0)
-                    .toLocaleString("id-ID")}
-                </td>
-                <td>
-                  Rp. ${groupedData
-                    .flatMap((g) => g.members || [])
-                    .reduce((sum, m) => sum + parseInt(m.derap || 0), 0)
-                    .toLocaleString("id-ID")}
-                </td>
-                <td>
-                  Rp. ${groupedData
-                    .flatMap((g) => g.members || [])
-                    .reduce((sum, m) => sum + parseInt(m.kalender || 0), 0)
-                    .toLocaleString("id-ID")}
-                </td>
-                <td>
-                  ${(() => {
-                    const allDetails = groupedData
-                      .flatMap((g) => g.members || [])
-                      .flatMap((m) => m.detailSumbangan || []);
-
-                    if (allDetails.length > 0) {
-                      const detailByName = {};
-                      allDetails.forEach((d) => {
-                        if (!detailByName[d.namaSumbangan]) {
-                          detailByName[d.namaSumbangan] = 0;
-                        }
-                        detailByName[d.namaSumbangan] += parseInt(
-                          d.jumlah || 0,
-                        );
-                      });
-
-                      return `
-                        <div style="text-align: left; padding: 4px 0;">
-                          ${Object.entries(detailByName)
-                            .map(
-                              ([name, total]) => `
-                            <div style="margin-bottom: 4px;">
-                              <strong>${name}</strong><br>
-                              Rp. ${total.toLocaleString("id-ID")}
-                            </div>
-                          `,
-                            )
-                            .join("")}
-                        </div>
-                      `;
-                    }
-
-                    return `Rp. ${groupedData
-                      .flatMap((g) => g.members || [])
-                      .reduce((sum, m) => sum + parseInt(m.lainLain || 0), 0)
-                      .toLocaleString("id-ID")}`;
-                  })()}
-                </td>
-                <td>
-                  Rp. ${groupedData
-                    .flatMap((g) => g.members || [])
-                    .reduce((sum, m) => sum + parseInt(m.total || 0), 0)
-                    .toLocaleString("id-ID")}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </body>
-      </html>
-    `;
-
-      const printFrame = document.createElement("iframe");
-      printFrame.style.display = "none";
-      printFrame.srcdoc = htmlContent;
-      document.body.appendChild(printFrame);
-
-      printFrame.onload = () => {
-        printFrame.contentWindow.print();
-        setTimeout(() => {
-          document.body.removeChild(printFrame);
-        }, 1000);
-      };
-    } catch (error) {
-      console.error("Error during print process:", error);
-    }
-  };
-
-  const getTotalSumbangan = (item) => {
-    let details = item.detailSumbangan;
-
-    if (!details) return parseInt(item.lainLain || 0);
-
-    if (typeof details === "string") {
-      try {
-        details = JSON.parse(details);
-      } catch {
-        return parseInt(item.lainLain || 0);
-      }
-    }
-
-    if (Array.isArray(details)) {
-      return details.reduce((sum, d) => sum + parseInt(d.jumlah || 0), 0);
-    }
-
-    return parseInt(item.lainLain || 0);
-  };
-
-  const exportToExcel = async () => {
     try {
       setIsExporting(true);
-      const cabangParam = selectedCabang?.kecamatan || "";
-      const unitKerjaParam = selectedUnitKerja?.unitKerja || "";
-      const bulanParam = selectedBulan || null;
-      const tahunParam = selectedTahun || null;
-
-      let allData = await GlobalApi.getNominalAggregatedData(
-        cabangParam,
-        unitKerjaParam,
-        null,
-        bulanParam,
-        tahunParam,
-      );
-
-      allData = processApiResponse(allData, null, false);
-
-      if (!allData || allData.length === 0) {
-        alert("Tidak ada data anggota ditemukan untuk tahun ini.");
-        return;
-      }
-
-      let filteredData = allData;
-
-      if (selectedCabang && selectedCabang.trim() !== "") {
-        filteredData = filteredData.filter(
-          (item) =>
-            item.cabang &&
-            item.cabang.toLowerCase().includes(selectedCabang.toLowerCase()),
-        );
-      }
-
-      if (selectedUnitKerja && selectedUnitKerja.trim() !== "") {
-        filteredData = filteredData.filter(
-          (item) =>
-            item.unitKerja &&
-            item.unitKerja
-              .toLowerCase()
-              .includes(selectedUnitKerja.toLowerCase()),
-        );
-      }
-
-      if (namaAnggotaInput && namaAnggotaInput.trim() !== "") {
-        filteredData = filteredData.filter(
-          (item) =>
-            item.namaAnggota &&
-            item.namaAnggota
-              .toLowerCase()
-              .includes(namaAnggotaInput.toLowerCase()),
-        );
-      }
-
-      if (filteredData.length === 0) {
-        alert("Tidak ada data sesuai dengan filter yang dipilih.");
-        return;
-      }
-
-      const latestPerNpa = Object.values(
-        filteredData.reduce((acc, item) => {
-          const npa = item.npaPgri;
-          if (!npa) return acc;
-
-          if (!acc[npa]) {
-            acc[npa] = item;
-          } else {
-            const currentDate = item.lastUpdatedAtIuran
-              ? new Date(item.lastUpdatedAtIuran)
-              : new Date(0);
-            const existingDate = acc[npa].lastUpdatedAtIuran
-              ? new Date(acc[npa].lastUpdatedAtIuran)
-              : new Date(0);
-
-            if (currentDate > existingDate) {
-              acc[npa] = item;
-            }
-          }
-          return acc;
-        }, {}),
-      );
-
-      const bulanSekarang = new Date();
-      const bulanBerikutnya = new Date(
-        bulanSekarang.getFullYear(),
-        bulanSekarang.getMonth() + 1,
-      );
-      const namaBulan = bulanBerikutnya.toLocaleString("id-ID", {
-        month: "long",
-        year: "numeric",
+      const res = await GlobalApi.postToBackupNew();
+      setNotification({
+        type: "success",
+        message: typeof res === 'string' ? res : "Backup Target berhasil diproses!"
       });
-
-      const excelData = [];
-      excelData.push([`Tagihan Untuk Bulan ${namaBulan}`]);
-      excelData.push([]);
-
-      excelData.push([
-        "No",
-        "Cabang",
-        "Unit Kerja",
-        "Nama Anggota",
-        "NIP",
-        "NPA",
-        "Nomor Rekening",
-
-        "Default PGRI",
-        "Manual PGRI",
-        "PGRI",
-
-        "Default Sanduka",
-        "Manual Sanduka",
-        "Sanduka",
-
-        "Default Daspen",
-        "Manual Daspen",
-        "Daspen",
-
-        "Default Derap",
-        "Manual Derap",
-        "Derap",
-
-        "Default Kalender",
-        "Manual Kalender",
-        "Kalender",
-
-        "Default Lain-Lain",
-        "Manual Lain-Lain",
-        "Lain-Lain",
-        "Total",
-      ]);
-
-      let no = 1;
-      latestPerNpa.forEach((item) => {
-        const pgri = parseInt(item.pgri || 0);
-        const sanduka = parseInt(item.sanduka || 0);
-        const daspen = parseInt(item.daspen || 0);
-        const derap = parseInt(item.derap || 0);
-        const kalender = parseInt(item.kalender || 0);
-        const lainLain = parseInt(item.lainLain || 0);
-        const total = parseInt(item.totalIuran || 0);
-
-        let detailSumbanganFormatted = lainLain;
-        if (item.detailSumbangan) {
-          try {
-            const detailArray =
-              typeof item.detailSumbangan === "string"
-                ? JSON.parse(item.detailSumbangan)
-                : item.detailSumbangan;
-
-            if (Array.isArray(detailArray) && detailArray.length > 0) {
-              detailSumbanganFormatted = detailArray
-                .map(
-                  (d) =>
-                    `${d.namaSumbangan}: Rp. ${parseInt(d.jumlah || 0).toLocaleString("id-ID")}`,
-                )
-                .join(" | ");
-            }
-          } catch (error) {
-            console.warn("Gagal parse detailSumbangan untuk export:", error);
-          }
-        }
-
-        excelData.push([
-          no++,
-          item.cabang || "-",
-          item.unitKerja || "-",
-          item.namaAnggota,
-          item.nip || "-",
-          item.npaPgri || "-",
-          item.nomorRekening || "-",
-
-          item.defaultPgri || 0,
-          item.manualPgri || 0,
-          pgri,
-
-          item.defaultSanduka || 0,
-          item.manualSanduka || 0,
-          sanduka,
-
-          item.defaultDaspen || 0,
-          item.manualDaspen || 0,
-          daspen,
-
-          item.manualDerap || 0,
-          item.defaultDerap || 0,
-          derap,
-
-          item.defaultKalender || 0,
-          item.manualKalender || 0,
-          kalender,
-
-          item.defaultLainLain || 0,
-          item.manualLainLain || 0,
-
-          detailSumbanganFormatted,
-
-          total,
-        ]);
+      setIsBackupModalVisible(false);
+    } catch (err) {
+      console.error("Backup Target error:", err);
+      const errorMsg = err.response?.data || err.message || "Gagal memproses Backup Target.";
+      setNotification({
+        type: "error",
+        message: typeof errorMsg === 'string' ? errorMsg : "Gagal memproses Backup Target."
       });
-
-      const totalPgri = latestPerNpa.reduce(
-        (sum, g) => sum + parseInt(g.pgri || 0),
-        0,
-      );
-      const totalSanduka = latestPerNpa.reduce(
-        (sum, g) => sum + parseInt(g.sanduka || 0),
-        0,
-      );
-      const totalDaspen = latestPerNpa.reduce(
-        (sum, g) => sum + parseInt(g.daspen || 0),
-        0,
-      );
-      const totalDerap = latestPerNpa.reduce(
-        (sum, g) => sum + parseInt(g.derap || 0),
-        0,
-      );
-      const totalKalender = latestPerNpa.reduce(
-        (sum, g) => sum + parseInt(g.kalender || 0),
-        0,
-      );
-      const totalLainLain = latestPerNpa.reduce(
-        (sum, g) => sum + getTotalSumbangan(g),
-        0,
-      );
-      const totalIuran = latestPerNpa.reduce(
-        (sum, g) => sum + parseInt(g.totalIuran || 0),
-        0,
-      );
-
-      if (excelData.length > 3) {
-      }
-
-      excelData.push([]);
-      excelData.push([
-        "",
-        "",
-        "",
-        "Total Keseluruhan:",
-        "",
-        "",
-        "",
-        totalPgri,
-        totalSanduka,
-        totalDaspen,
-        totalDerap,
-        totalKalender,
-        totalLainLain,
-        totalIuran,
-      ]);
-
-      const ws = XLSX.utils.aoa_to_sheet(excelData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "RekapData");
-
-      const waktuDownload = new Date().toLocaleString("id-ID", {
-        dateStyle: "short",
-        timeStyle: "medium",
-      });
-
-      const safeWaktuDownload = waktuDownload
-        .replace(/[/:]/g, "-")
-        .replace(/[ ]/g, "_");
-
-      const fileName = `Backupbynominal_${namaBulan}_${safeWaktuDownload}${
-        selectedCabang ? `_Cabang_${selectedCabang}` : ""
-      }${selectedUnitKerja ? `_Unit_Kerja_${selectedUnitKerja}` : ""}.xlsx`;
-
-      XLSX.writeFile(wb, fileName);
-    } catch (error) {
-      console.error("❌ Gagal ekspor data:", error);
-      alert("Terjadi kesalahan saat mengekspor data ke Excel.");
     } finally {
       setIsExporting(false);
     }
   };
 
-  const handleBackupData = async () => {
-    if (!selectedDate) {
-      alert("Silakan pilih bulan tagihan terlebih dahulu.");
-      return;
-    }
-
-    try {
-      const result = await GlobalApi.postToBackup(selectedDate);
-
-      setNotification({
-        type: "success",
-        message: "Backup berhasil!",
-      });
-      setPopupBackup(false);
-      exportToExcel();
-    } catch (error) {
-      setNotification({
-        type: "error",
-        message: "Gagal backup dan export.",
-      });
-      console.error("Gagal backup dan export:", error);
-    }
+  const handleRekap = () => {
+    setShowRekapDropdown(!showRekapDropdown);
   };
 
-  const handleBackupByNominal = async () => {
-    try {
-      await GlobalApi.postToBackupNew();
-
-      setNotification({
-        type: "success",
-        message: "Backup berhasil!",
-      });
-
-      setPopupRekapByNominal(false);
-      await fetchInitialData();
-    } catch (error) {
-      setNotification({
-        type: "error",
-        message: "Gagal melakukan backup.",
-      });
-      console.error("Backup error:", error);
-    }
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setDataIuran(null);
+    setFotoBase64(null);
   };
 
-  const handleRekapClick = () => {
-    setOpen((prev) => !prev);
-  };
-
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setOpen(false);
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  const handleExport = (type) => {
-    if (type === "bank") {
-      NorekExcel();
-    } else if (type === "mandiri") {
-      MandiriExcel();
-    }
-    setOpen(false);
-  };
-
-  const NorekExcel = async () => {
-    if (!groupedData || groupedData.length === 0) {
-      console.error("Data kosong, tidak dapat export ke Excel");
-      return;
-    }
-
-    const bulan = selectedBulan || new Date().getMonth() + 1;
-    const tahun = selectedTahun || new Date().getFullYear();
-
-    let anggotaAll = [];
-    try {
-      const allData = await GlobalApi.getIuranAnggotaAll(bulan, tahun);
-
-      const latestPerNpa = Object.values(
-        allData.reduce((acc, item) => {
-          if (!acc[item.npa]) {
-            acc[item.npa] = item;
-          } else {
-            const existingDate = new Date(...acc[item.npa].createdAt);
-            const currentDate = new Date(...item.createdAt);
-            if (currentDate > existingDate) {
-              acc[item.npa] = item;
-            }
-          }
-          return acc;
-        }, {}),
-      );
-
-      anggotaAll = latestPerNpa;
-    } catch (err) {
-      console.error("Gagal ambil data anggota untuk nomor rekening:", err);
-    }
-
-    const npaToRekeningMap = {};
-    anggotaAll.forEach((item) => {
-      npaToRekeningMap[item.npa] = item.nomorRekening;
-    });
-
-    const excelData = [];
-    const today = new Date();
-    const bulanNama = today.toLocaleDateString("id-ID", {
-      month: "long",
-      year: "numeric",
-    });
-    const tanggalDownload = today.toLocaleDateString("id-ID", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-
-    const semuaCabangUnik = [...new Set(groupedData.map((g) => g.cabang))];
-    const namaCabang =
-      semuaCabangUnik.length > 1 ? "Semua Cabang" : semuaCabangUnik[0];
-
-    excelData.push(["Rekap Laporan Potongan Bank"]);
-    excelData.push([`Cabang: ${namaCabang}`]);
-    excelData.push([`Bulan: ${bulanNama}`]);
-    excelData.push([`Tanggal Download: ${tanggalDownload}`]);
-    excelData.push([]);
-    excelData.push(["Pgri Kabupaten Jepara"]);
-    excelData.push(["No Rekening : 2.015.15169.5 (PGRI Kabupaten Jepara)"]);
-    excelData.push([]);
-    excelData.push([
-      "No",
-      "Cabang",
-      "Nama",
-      "No Rekening",
-      "Total Tagihan",
-      "Keterangan",
-    ]);
-
-    let rowNumber = 1;
-    let hasValidData = false;
-    let totalTagihanSemua = 0;
-
-    groupedData.forEach((group) => {
-      if (group.members && group.members.length > 0) {
-        group.members.forEach((member) => {
-          const nomorRekeningFinal =
-            npaToRekeningMap[member.npa] || member.nomorRekening || "";
-          if (nomorRekeningFinal && nomorRekeningFinal.trim() !== "") {
-            const tagihan = parseInt(member.totalIuran || 0);
-            totalTagihanSemua += tagihan;
-            hasValidData = true;
-            excelData.push([
-              rowNumber++,
-              group.cabang,
-              member.namaAnggota,
-              nomorRekeningFinal,
-              tagihan,
-              "",
-            ]);
-          }
-        });
-      }
-    });
-
-    if (!hasValidData) {
-      console.warn("Tidak ada data dengan nomor rekening, file tidak dibuat.");
-      return;
-    }
-
-    excelData.push([]);
-    excelData.push(["", "", "", "Total Keseluruhan", totalTagihanSemua]);
-    excelData.push([]);
-    excelData.push(["", "", "", "", tanggalDownload]);
-    excelData.push(["", "", "", "", "TTD"]);
-
-    const ws = XLSX.utils.aoa_to_sheet(excelData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Laporan Rekening");
-
-    XLSX.writeFile(wb, "Rekap_Laporan_Potongan_Bank.xlsx");
-  };
-
-  const MandiriExcel = () => {
-    if (!groupedData || groupedData.length === 0) {
-      console.error("Data kosong, tidak dapat export ke Excel");
-      return;
-    }
-
-    const semuaCabangUnik = [...new Set(groupedData.map((g) => g.cabang))];
-    const namaCabang =
-      semuaCabangUnik.length > 1 ? "Semua Cabang" : semuaCabangUnik[0];
-
-    const bulanNama = new Date().toLocaleString("id-ID", {
-      month: "long",
-      year: "numeric",
-    });
-    const tanggalDownload = new Date().toLocaleDateString("id-ID", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-
-    const excelData = [];
-
-    excelData.push(["Rekap Data Anggota Tanpa No Rekening"]);
-    excelData.push([`Cabang: ${namaCabang}`]);
-    excelData.push([`Bulan: ${bulanNama}`]);
-    excelData.push([`Tanggal Download: ${tanggalDownload}`]);
-    excelData.push([]);
-    excelData.push(["Pgri Kabupaten Jepara"]);
-    excelData.push(["No Rekening : 2.015.15169.5 (PGRI Kabupaten Jepara)"]);
-    excelData.push([]);
-    excelData.push([
-      "No",
-      "Cabang",
-      "Nama",
-      "No Rekening",
-      "Total Tagihan",
-      "Keterangan",
-    ]);
-
-    let rowNumber = 1;
-    let hasMissingData = false;
-    let totalTagihanSemua = 0;
-
-    groupedData.forEach((group) => {
-      if (group.members && group.members.length > 0) {
-        group.members.forEach((member) => {
-          if (!member.nomorRekening || member.nomorRekening.trim() === "") {
-            const tagihan = parseInt(member.totalIuran || 0);
-            totalTagihanSemua += tagihan;
-            hasMissingData = true;
-            excelData.push([
-              rowNumber++,
-              group.cabang,
-              member.namaAnggota,
-              "",
-              tagihan,
-              "",
-            ]);
-          }
-        });
-      }
-    });
-
-    if (!hasMissingData) {
-      console.warn("Semua data memiliki nomor rekening, file tidak dibuat.");
-      return;
-    }
-
-    excelData.push([]);
-    excelData.push(["", "", "", "Total Keseluruhan", totalTagihanSemua]);
-    excelData.push([]);
-    excelData.push(["", "", "", "", tanggalDownload]);
-    excelData.push(["", "", "", "", "TTD"]);
-
-    const ws = XLSX.utils.aoa_to_sheet(excelData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Data Tanpa No Rekening");
-
-    XLSX.writeFile(wb, "Rekap_Laporan_Mandiri.xlsx");
-  };
-
-  const getNextPotonganBulan = () => {
-    const today = new Date();
-    let bulan = today.getMonth() + 1;
-    let tahun = today.getFullYear();
-
-    if (bulan > 11) {
-      bulan = 0;
-      tahun += 1;
-    }
-
-    const namaBulan = [
-      "Januari",
-      "Februari",
-      "Maret",
-      "April",
-      "Mei",
-      "Juni",
-      "Juli",
-      "Agustus",
-      "September",
-      "Oktober",
-      "November",
-      "Desember",
-    ];
-
-    return `${namaBulan[bulan]} ${tahun}`;
-  };
-
+  // --- Template Rendering ---
   return (
-    <div className="min-h-screen bg-gradient-to-b from-teal-50 to-white p-2 md:p-4 w-[110%]">
+    <div className="min-h-screen bg-gradient-to-b from-teal-50 to-white p-0">
       {isMobile ? <HeaderMobile /> : <HeaderMenu />}
-      <div>
+
+      <div className="flex">
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-        {notification && (
-          <NotificationPopup
-            type={notification.type}
-            message={notification.message}
-            onClose={() => setNotification(null)}
-          />
-        )}
-        <div className="mt-8"></div>
-        <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
-        >
-          <div className="mb-6 mx-4 md:mx-4">
-            <div className="flex flex-wrap items-start mt-8 justify-between">
-              {!isMobile && (
-                <div className="flex justify-between items-end mt-2 md:mt-2 p-4 w-full">
-                  <div className="flex items-center gap-2">
-                    <FaDatabase className="text-2xl text-gray-700" />
-                    <h1 className="font-semibold text-2xl">By Nominal</h1>
-                  </div>
 
-                  <div className="flex gap-4">
-                    <button
-                      onClick={handlePrint}
-                      className="py-2 px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-3"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        fill="currentColor"
-                        viewBox="0 0 16 16"
-                      >
-                        <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
-                        <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
-                      </svg>
-                      <span>Cetak</span>
-                    </button>
+        <div className={`flex-1 transition-all duration-300 mt-12 px-8 ${isSidebarOpen ? "ml-64" : "ml-0"}`}>
+          <main className="w-full py-8">
+            <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+              <h1 className="text-3xl font-extrabold flex items-center gap-3 text-gray-800">
+                By Nominal
+              </h1>
 
-                    <button
-                      className="py-2 px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-2 disabled:bg-teal-400 disabled:cursor-not-allowed"
-                      onClick={exportToExcel}
-                      disabled={isExporting}
-                      title={
-                        isExporting ? "Sedang mengekspor..." : "Export to Excel"
-                      }
-                    >
-                      {isExporting ? (
-                        <svg
-                          className="animate-spin h-4 w-4 text-white"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
-                      ) : (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          fill="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path d="M4 2h10a2 2 0 0 1 2 2v4h4a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm0 2v16h16V10h-6a2 2 0 0 1-2-2V4H4zm5.5 5 1.7 2.5L9.5 12l1.7 2.5H9.5L8 13.3 6.5 14.5H5.8l1.7-2.5L5.8 9.5h.7L8 10.7 9.5 9H10.2z" />
-                        </svg>
-                      )}
+              <div className="flex flex-wrap gap-2">
+                <button onClick={handlePrint} className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors flex items-center gap-2 text-sm shadow-sm">
+                  <FaPrint /> Cetak
+                </button>
+                <button onClick={exportToExcel} disabled={isExporting} className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors flex items-center gap-2 text-sm shadow-sm">
+                  <FaFileExcel /> {isExporting ? "Exporting..." : "Excel"}
+                </button>
 
-                      <span>{isExporting ? "Exporting..." : "Excel"}</span>
-                    </button>
-
-                    {sessionStorage.getItem("role") === "SUPERADMIN" && (
-                      <button
-                        className="py-2 px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-3"
-                        onClick={() => setPopupBackup(true)}
-                      >
-                        <span>Potongan Gaji</span>
-                      </button>
-                    )}
-
-                    <div
-                      className="relative inline-block text-left"
-                      ref={dropdownRef}
-                    >
-                      <button
-                        className="py-2 px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-2"
-                        onClick={handleRekapClick}
-                        title="Rekap Data"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          fill="currentColor"
-                          viewBox="0 0 16 16"
-                        >
-                          <path d="M8 3.5a.5.5 0 0 1 .5.5v4h3a.5.5 0 0 1 0 1H8a.5.5 0 0 1-.5-.5V4a.5.5 0 0 1 .5-.5z" />
-                          <path d="M8 16A8 8 0 1 1 16 8a8 8 0 0 1-8 8zm0-1A7 7 0 1 0 1 8a7 7 0 0 0 7 7z" />
-                        </svg>
-                        <span>Rekap</span>
-                      </button>
-
-                      {open && (
-                        <div className="absolute mt-2 w-48 bg-white rounded-lg shadow-lg z-10">
-                          <button
-                            className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                            onClick={() => handleExport("bank")}
-                          >
-                            Potongan Bank
-                          </button>
-                          <button
-                            className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                            onClick={() => handleExport("mandiri")}
-                          >
-                            Potongan Mandiri
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                    {sessionStorage.getItem("role") === "SUPERADMIN" && (
-                      <button
-                        className="py-2 px-4 bg-teal-600 text-white rounded-lg shadow-md flex items-center gap-3"
-                        onClick={() => setPopupRekapByNominal(true)}
-                      >
-                        <span>Backup Target</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="rounded-lg shadow-lg mx-4 md:mx-0">
-            <div className="flex gap-4">
-              <div className="flex flex-col relative w-64" ref={cabangRef}>
-                <p>Cabang</p>
-                <Input
-                  type="text"
-                  value={selectedCabang}
-                  readOnly
-                  onClick={!isAdmin ? handleCabangClick : undefined}
-                  className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${
-                    isAdmin ? "bg-gray-100" : ""
-                  }`}
-                  placeholder="Pilih Cabang"
-                  disabled={isAdmin}
-                />
-                {!isAdmin && showCabangDropdown && (
-                  <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-16 w-full">
-                    <ul className="max-h-44 overflow-y-auto">
-                      <li className="py-2 px-2">
-                        <Input
-                          type="text"
-                          value={searchCabang}
-                          onChange={(e) => handleCabangSearch(e.target.value)}
-                          className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
-                          placeholder="Cari Cabang..."
-                          autoFocus
-                        />
-                      </li>
-                      <li
-                        onClick={() => handleSelectCabang({ kecamatan: "" })}
-                        className="px-4 py-2 cursor-pointer hover:bg-gray-100"
-                      >
-                        Pilih Cabang
-                      </li>
-                      {filteredCabangList.map((cabang) => (
-                        <li
-                          key={cabang.id}
-                          onClick={() => handleSelectCabang(cabang)}
-                          className="px-4 py-2 cursor-pointer hover:bg-gray-100"
-                        >
-                          {cabang.kecamatan}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-              <div className="flex flex-col relative w-64" ref={unitKerjaRef}>
-                <p>Unit Kerja</p>
-                <Input
-                  type="text"
-                  value={unitKerjaInput}
-                  onChange={handleUnitKerjaChange}
-                  onFocus={handleUnitKerjaFocus}
-                  placeholder="Pilih Unit Kerja"
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200"
-                  disabled={!selectedCabang}
-                  onClick={handleUnitKerjaClick}
-                />
-                {showUnitKerjaDropdown && (
-                  <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-16 w-full">
-                    <ul className="max-h-44 overflow-y-auto">
-                      <li className="py-2 px-2">
-                        <Input
-                          type="text"
-                          value={searchUnitKerja}
-                          onChange={(e) =>
-                            handleUnitKerjaSearch(e.target.value)
-                          }
-                          className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
-                          placeholder="Cari Unit Kerja..."
-                          autoFocus
-                        />
-                      </li>
-                      <li
-                        onClick={() => handleUnitKerjaSelect({ unitKerja: "" })}
-                        className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                      >
-                        Pilih Unit Kerja
-                      </li>
-                      {filteredUnitKerja.map((unitKerja) => (
-                        <li
-                          key={unitKerja.id}
-                          onClick={() => handleUnitKerjaSelect(unitKerja)}
-                          className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                        >
-                          {unitKerja.unitKerja}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-              <div className="flex flex-col relative w-64">
-                <div className="relative">
-                  <p>Nama Anggota</p>
-                  <Input
-                    type="text"
-                    value={namaAnggotaInput}
-                    onChange={handleNamaAnggotaInputChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm p-2 border pr-10"
-                    placeholder="Nama anggota..."
-                  />
+                <div className="relative" ref={rekapDropdownRef}>
                   <button
-                    onClick={handleSearchClick}
-                    className="absolute right-2 top-12 transform -translate-y-1/2 text-teal-600 hover:text-teal-800"
+                    onClick={handleRekap}
+                    className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors flex items-center gap-2 text-sm shadow-sm"
                   >
-                    <FaSearch />
+                    <FaRegClock /> Rekap
                   </button>
+                  {showRekapDropdown && (
+                    <div className="absolute left-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-xl z-50 py-1 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200">
+                      <button
+                        onClick={() => {
+                          exportPotonganBankLogic(groupedData, selectedMonth, selectedYear);
+                          setShowRekapDropdown(false);
+                        }}
+                        className="w-full text-left px-4 py-3 text-gray-800 hover:bg-gray-100 transition-colors text-sm font-medium border-b border-gray-50"
+                      >
+                        Potongan Bank
+                      </button>
+                      <button
+                        onClick={() => {
+                          exportMandiriLogic(groupedData, selectedMonth, selectedYear);
+                          setShowRekapDropdown(false);
+                        }}
+                        className="w-full text-left px-4 py-3 text-gray-800 hover:bg-gray-100 transition-colors text-sm font-medium"
+                      >
+                        Potongan Mandiri
+                      </button>
+                    </div>
+                  )}
                 </div>
+                <button
+                  onClick={handleBackupTarget}
+                  disabled={isExporting}
+                  className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm shadow-sm"
+                >
+                  Backup Target
+                </button>
               </div>
             </div>
-            <div className="bg-teal-700 p-4 rounded-t-lg mt-2">
-              <div className="flex items-start justify-between w-full">
-                <div>
-                  <h2 className="text-white text-xl font-semibold">
-                    Laporan Tagihan
-                  </h2>
-                  <p className="text-teal-100 text-sm">
-                    Daftar iuran anggota per unit kerja
-                  </p>
-                </div>
 
-                <div className="text-right text-white font-semibold">
-                  Total anggota:{" "}
-                  {groupedData.reduce((sum, g) => sum + parseInt(g.jumlah), 0)}
-                </div>
-                {/* <div className="flex gap-2 items-center">
-                  <select
-                    value={selectedBulan}
-                    onChange={(e) => setSelectedBulan(Number(e.target.value))}
-                    className="p-2 rounded bg-white text-black border"
-                  >
-                    <option value="">-- Pilih Bulan --</option>
-                    {filteredMonths.map((month, index) => {
-                      const monthValue =
-                        selectedTahun === 2025 ? index + 5 : index + 1;
-                      return (
-                        <option key={monthValue} value={monthValue}>
-                          {month}
-                        </option>
-                      );
-                    })}
-                  </select>
+            <FilterSection
+              isAdmin={isAdmin}
+              selectedCabang={selectedCabang}
+              handleCabangClick={handleCabangClick}
+              cabangRef={cabangRef}
+              showCabangDropdown={showCabangDropdown}
+              searchCabang={searchCabang}
+              handleCabangSearch={handleCabangSearch}
+              handleSelectCabang={handleSelectCabang}
+              filteredCabangList={filteredCabangList}
+              unitKerjaRef={unitKerjaRef}
+              unitKerjaInput={unitKerjaInput}
+              handleUnitKerjaChange={handleUnitKerjaChange}
+              handleUnitKerjaFocus={handleUnitKerjaFocus}
+              handleUnitKerjaClick={handleUnitKerjaClick}
+              showUnitKerjaDropdown={showUnitKerjaDropdown}
+              searchUnitKerja={searchUnitKerja}
+              handleUnitKerjaSearch={handleUnitKerjaSearch}
+              handleUnitKerjaSelect={handleUnitKerjaSelect}
+              filteredUnitKerja={filteredUnitKerja}
+              namaAnggotaInput={namaAnggotaInput}
+              handleNamaAnggotaInputChange={handleNamaAnggotaInputChange}
+              handleSearchClick={handleSearchClick}
+            />
 
-                  <select
-                    value={selectedTahun}
-                    onChange={(e) => setSelectedTahun(Number(e.target.value))}
-                    className="p-2 rounded bg-white text-black border"
-                  >
-                    <option value="">-- Pilih Tahun --</option>
-                    {years.map((year) => (
-                      <option key={year} value={year}>
-                        {year}
-                      </option>
-                    ))}
-                  </select>
-                </div> */}
-              </div>
-            </div>
-            {popupBackup && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-                  <h2 className="text-lg font-semibold mb-4">
-                    Pilih Bulan Tagihan Untuk Potongan Gaji
-                  </h2>
+            <SummaryStats stats={stats} isLoading={loading} />
 
-                  <input
-                    type="month"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    className="w-full mb-4 p-2 border border-gray-300 rounded"
-                  />
+            <SummaryBanner
+              totalAnggota={groupedData.reduce((sum, g) => sum + parseInt(g.jumlah), 0)}
+              unitKerjaCount={groupedData.length}
+            />
 
-                  <div className="flex justify-end gap-2">
-                    <button
-                      onClick={() => setPopupBackup(false)}
-                      className="px-4 py-2 bg-gray-400 hover:bg-gray-500 text-white rounded"
-                    >
-                      Batal
-                    </button>
-                    <button
-                      onClick={handleBackupData}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
-                    >
-                      Konfirmasi
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-            {popupBackupRekapByNominal && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md animate-fadeIn">
-                  <h2 className="text-lg font-semibold mb-3 text-gray-800">
-                    Konfirmasi Backup
-                  </h2>
-
-                  <p className="text-sm text-gray-600 mb-6">
-                    Apakah Anda yakin akan membackup data?
-                  </p>
-
-                  <div className="flex justify-end gap-3">
-                    <button
-                      onClick={() => setPopupRekapByNominal(false)}
-                      className="px-4 py-2 bg-gray-400 hover:bg-gray-500 text-white rounded-md transition"
-                    >
-                      Batal
-                    </button>
-
-                    <button
-                      onClick={handleBackupByNominal}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition"
-                    >
-                      Ya, Backup
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-            <table className="w-full table-auto bg-white">
-              <thead>
-                <tr>
-                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 rounded-tl-lg">
-                    No
-                  </th>
-                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600">
-                    Cabang
-                  </th>
-                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600">
-                    Unit Kerja
-                  </th>
-                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600">
-                    Nama Anggota
-                  </th>
-                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 text-center">
-                    PGRI
-                  </th>
-                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 text-center">
-                    Sanduka
-                  </th>
-                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 text-center">
-                    Daspen
-                  </th>
-                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 text-center">
-                    Derap
-                  </th>
-                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 text-center">
-                    Kalender
-                  </th>
-                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 text-center">
-                    Lain-lain
-                  </th>
-                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 text-center">
-                    Total
-                  </th>
-                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 rounded-tr-lg w-28 text-center">
-                    Aksi
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <>
-                    {/* Loading message */}
+            <div className="overflow-x-auto bg-white rounded-b-lg shadow-xl border border-teal-100">
+              <table className="w-full text-left border-collapse min-w-[1200px]">
+                <thead className="bg-teal-600 text-white text-sm uppercase sticky top-0 z-10">
+                  <tr>
+                    <th className="p-3 border-b border-teal-500 text-center w-12">No</th>
+                    <th className="p-3 border-b border-teal-500">Cabang</th>
+                    <th className="p-3 border-b border-teal-500">Unit Kerja</th>
+                    <th className="p-3 border-b border-teal-500">Nama Anggota</th>
+                    <th className="p-3 border-b border-teal-500 text-right">PGRI</th>
+                    <th className="p-3 border-b border-teal-500 text-right">Sanduka</th>
+                    <th className="p-3 border-b border-teal-500 text-right">Daspen</th>
+                    <th className="p-3 border-b border-teal-500 text-right">Derap</th>
+                    <th className="p-3 border-b border-teal-500 text-right">Kalender</th>
+                    <th className="p-3 border-b border-teal-500 text-right">Lain - Lain</th>
+                    <th className="p-3 border-b border-teal-500 text-right">Total</th>
+                    <th className="p-3 border-b border-teal-500 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? (
                     <tr>
-                      <td colSpan="12" className="p-6 text-center">
-                        <div className="flex flex-col items-center justify-center space-y-3">
-                          <div className="flex items-center space-x-2">
-                            <div
-                              className="h-3 w-3 bg-teal-500 rounded-full animate-bounce"
-                              style={{ animationDelay: "0s" }}
-                            ></div>
-                            <div
-                              className="h-3 w-3 bg-teal-500 rounded-full animate-bounce"
-                              style={{ animationDelay: "0.2s" }}
-                            ></div>
-                            <div
-                              className="h-3 w-3 bg-teal-500 rounded-full animate-bounce"
-                              style={{ animationDelay: "0.4s" }}
-                            ></div>
-                          </div>
-                          <p className="text-gray-600 font-medium text-sm">
-                            Data sedang diproses...
-                          </p>
-                        </div>
+                      <td colSpan={12} className="p-10 text-center text-teal-600 font-medium">
+                        Loading data...
                       </td>
                     </tr>
-
-                    {Array.from({ length: 4 }).map((_, idx) => (
-                      <tr key={`skeleton-${idx}`} className="bg-white">
-                        {Array.from({ length: 12 }).map((_, cellIdx) => (
-                          <td
-                            key={`skeleton-cell-${cellIdx}`}
-                            className="p-3 border-b"
-                          >
-                            <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                  ) : (
+                    <>
+                      {memoizedFlattenedMembers.slice(0, displayLimit).map((member, rowIndex) => (
+                        <MemberRow
+                          key={`${member.unitKerja}-${member.npaPgri}`}
+                          member={member}
+                          rowIndex={rowIndex}
+                          filesDataMap={filesDataMap}
+                          formatTanggal={formatTanggal}
+                          handleMemberClick={handleMemberClick}
+                          handlePrintClick={handlePrint}
+                          handleTagihanClick={handleTagihanClick}
+                        />
+                      ))}
+                      {displayLimit < memoizedFlattenedMembers.length && (
+                        <tr ref={loadMoreRef}>
+                          <td colSpan={12} className="p-4 text-center text-gray-400 italic">
+                            Memuat lebih banyak ({memoizedFlattenedMembers.length - displayLimit} data lagi)...
                           </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </>
-                ) : (
-                  [...groupedData]
-                    .sort((a, b) => a.unitKerja.localeCompare(b.unitKerja))
-                    .flatMap((group) =>
-                      group.members.map((member) => ({
-                        ...member,
-                        cabang: group.cabang,
-                        unitKerja: group.unitKerja,
-                      })),
-                    )
-                    .map((member, rowIndex) => (
-                      <tr
-                        key={`${member.unitKerja}-${member.npaPgri}-${member.namaAnggota}`}
-                        className={
-                          rowIndex % 2 === 0 ? "bg-white" : "bg-teal-50"
-                        }
-                        ref={
-                          member.nip === lastUpdatedMemberNip
-                            ? lastUpdatedMemberRef
-                            : null
-                        }
-                      >
-                        <td className="p-3 border-b text-center">
-                          <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-teal-100 text-teal-700 font-semibold text-xs">
-                            {rowIndex + 1}
-                          </div>
-                        </td>
-                        <td className="p-3 border-b">{member.cabang}</td>
-                        <td className="p-3 border-b font-medium">
-                          {member.unitKerja}
-                        </td>
-                        <td className="p-3 border-b text-sm">
-                          <div className="font-medium">
-                            {member.namaAnggota}
-                          </div>
-                          <div className="text-xs text-gray-600">
-                            {member.nip}
-                          </div>
-                          <div className="text-xs text-gray-600">
-                            {member.nomorRekening}
-                          </div>
-                          <div className="text-xs text-gray-600">
-                            Update iuran:{" "}
-                            {formatTanggal(member.lastUpdatedAtIuran, "DMY")}
-                          </div>
-                        </td>
-                        <td className="p-3 border-b text-right text-sm">
-                          Rp.{" "}
-                          {parseInt(member.pgri || 0).toLocaleString("id-ID")}
-                        </td>
-                        <td className="p-3 border-b text-right text-sm">
-                          Rp.{" "}
-                          {parseInt(member.sanduka || 0).toLocaleString(
-                            "id-ID",
-                          )}
-                        </td>
-                        <td className="p-3 border-b text-right text-sm">
-                          <div>
-                            {parseInt(member.daspen || 0) === 0 ? (
-                              <span className=" text-red-800 py-1 px-2 rounded text-xs font-medium">
-                                Belum Input
-                              </span>
-                            ) : (
-                              `Rp. ${parseInt(
-                                member.daspen || 0,
-                              ).toLocaleString("id-ID")}`
-                            )}
-                          </div>
-                          <div className="text-xs text-blue-500 mt-1">
-                            {member.nip
-                              ? filesDataMap[member.nip]
-                                ? `Daspen prov: Rp. ${parseInt(filesDataMap[member.nip]).toLocaleString("id-ID")}`
-                                : "-"
-                              : "-"}
-                          </div>
-                        </td>
-                        <td className="p-3 border-b text-right text-sm">
-                          Rp.{" "}
-                          {parseInt(member.derap || 0).toLocaleString("id-ID")}
-                        </td>
-                        <td className="p-3 border-b text-right text-sm">
-                          Rp.{" "}
-                          {parseInt(member.kalender || 0).toLocaleString(
-                            "id-ID",
-                          )}
-                        </td>
-                        <td className="p-3 border-b text-right text-sm">
-                          {member.detailSumbangan &&
-                          member.detailSumbangan.length > 0 ? (
-                            <div className="text-left">
-                              {member.detailSumbangan.map((detail, idx) => (
-                                <div
-                                  key={idx}
-                                  className="mb-2 pb-2 border-b last:border-b-0"
-                                >
-                                  <div className="font-medium text-xs">
-                                    {detail.namaSumbangan}
-                                  </div>
-                                  <div className="text-xs text-gray-700">
-                                    Rp.{" "}
-                                    {parseInt(
-                                      detail.jumlah || 0,
-                                    ).toLocaleString("id-ID")}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            `Rp. ${parseInt(member.sumbangan || 0).toLocaleString("id-ID")}`
-                          )}
-                        </td>
-                        <td className="p-3 border-b text-right text-sm text-teal-800 font-semibold">
-                          Rp.{" "}
-                          {parseInt(member.totalIuran || 0).toLocaleString(
-                            "id-ID",
-                          )}
-                        </td>
-                        <td className="p-3 border-b text-center">
-                          <div className="flex justify-center gap-2">
-                            <button
-                              className="text-teal-600 hover:text-teal-800 text-lg p-1 hover:bg-teal-50 rounded transition-colors"
-                              onClick={() => handleMemberClick(member)}
-                              title="Edit Iuran"
-                            >
-                              <FaEdit />
-                            </button>
-                            <button
-                              className="text-teal-600 hover:text-teal-800 text-lg p-1 hover:bg-teal-50 rounded transition-colors"
-                              onClick={() => handlePrintClick(member)}
-                              title="Cetak Kartu Iuran"
-                            >
-                              <FaPrint />
-                            </button>
-                            <button
-                              className="text-teal-600 hover:text-teal-800 text-lg p-1 hover:bg-teal-50 rounded transition-colors"
-                              onClick={() => handleTagihanClick(member)}
-                              title="Lihat Tagihan"
-                            >
-                              <FaFileInvoiceDollar />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                )}
-              </tbody>
-              {isPopupVisible && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40">
-                  <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-4xl relative space-y-6  overflow-y-auto  max-h-screen">
-                    <button
-                      type="button"
-                      className="absolute top-24 right-6 text-gray-500 hover:text-teal-600 text-xl"
-                      onClick={closePopup}
-                    >
-                      ✕
-                    </button>
-                    <h2 className="text-center text-2xl font-bold text-white bg-red-700 py-2 rounded">
-                      Form Keuangan
-                    </h2>
-
-                    <div className="flex flex-col md:flex-row gap-4 items-start">
-                      <div className="flex gap-4 w-full md:w-2/3">
-                        <Image
-                          src={
-                            fotoBase64
-                              ? `data:image/jpeg;base64,${fotoBase64}`
-                              : profileImageUrl
-                          }
-                          width={100}
-                          height={100}
-                          alt="Foto User"
-                          className="w-24 h-28 object-cover rounded-lg border"
-                          unoptimized={true}
-                        />
-
-                        <div className="text-sm space-y-1">
-                          {dataNpa ? (
-                            <>
-                              <p>
-                                <strong>{dataNpa.namaLengkap}</strong>
-                              </p>
-                              <p>
-                                Tempat, Tanggal Lahir: {dataNpa.tempatLahir},
-                                {dataNpa.tanggalLahir?.[2]}-
-                                {dataNpa.tanggalLahir?.[1]}-
-                                {dataNpa.tanggalLahir?.[0]}
-                              </p>
-                              <p>Nomor Anggota PGRI: {dataNpa.npaPgri}</p>
-                              <p>Nomor Induk Pegawai: {dataNpa.nip}</p>
-                              <p>Nomor Induk Kependudukan: {dataNpa.nik}</p>
-                            </>
-                          ) : (
-                            <p>Loading data anggota...</p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="w-full md:w-1/3 text-sm">
-                        {dataNpa && (
-                          <>
-                            <p>
-                              <strong>{dataNpa.cabang}</strong>,{" "}
-                            </p>
-                            <p>{dataNpa.jabatan}</p>
-                            <p>{dataNpa.unitKerja}</p>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Form Input Data */}
-                    <div className="gap-6">
-                      {/* Nomor Rekening */}
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Nomor Rekening
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="Masukkan Nomor Rekening"
-                          value={nomorRekening}
-                          onChange={(e) => setNomorRekening(e.target.value)}
-                          className="w-full border border-black px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                        />
-                      </div>
-
-                      {/* Tagihan Untuk Bulan */}
-                      <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
-                        <label className="block text-sm font-medium text-gray-700 mb-3">
-                          Tagihan Untuk Bulan
-                        </label>
-                        <div className="flex gap-4">
-                          {/* Select Bulan */}
-                          <div className="flex-1">
-                            <label className="block text-xs text-gray-600 mb-1">
-                              Bulan
-                            </label>
-                            <select
-                              value={selectedMonth}
-                              onChange={(e) =>
-                                setSelectedMonth(parseInt(e.target.value))
-                              }
-                              className="w-full border border-gray-300 px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                            >
-                              <option value={1}>Januari</option>
-                              <option value={2}>Februari</option>
-                              <option value={3}>Maret</option>
-                              <option value={4}>April</option>
-                              <option value={5}>Mei</option>
-                              <option value={6}>Juni</option>
-                              <option value={7}>Juli</option>
-                              <option value={8}>Agustus</option>
-                              <option value={9}>September</option>
-                              <option value={10}>Oktober</option>
-                              <option value={11}>November</option>
-                              <option value={12}>Desember</option>
-                            </select>
-                          </div>
-
-                          {/* Select Tahun */}
-                          <div className="flex-1">
-                            <label className="block text-xs text-gray-600 mb-1">
-                              Tahun
-                            </label>
-                            <select
-                              value={selectedYear}
-                              onChange={(e) =>
-                                setSelectedYear(parseInt(e.target.value))
-                              }
-                              className="w-full border border-gray-300 px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                            >
-                              {Array.from({ length: 10 }, (_, i) => {
-                                const year = new Date().getFullYear() + i - 5;
-                                return (
-                                  <option key={year} value={year}>
-                                    {year}
-                                  </option>
-                                );
-                              })}
-                            </select>
-                          </div>
-
-                          {/* Display Current Selection */}
-                          <div className="flex-1">
-                            <label className="block text-xs text-gray-600 mb-1">
-                              Dipilih
-                            </label>
-                            <div className="w-full border border-gray-300 bg-white px-3 py-2 rounded text-sm font-medium">
-                              {selectedMonth.toString().padStart(2, "0")}-
-                              {selectedYear}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Informasi */}
-                        <p className="text-xs text-gray-500 mt-2">
-                          Data akan diupdate untuk bulan dan tahun yang dipilih
-                        </p>
-                      </div>
-
-                      <div className="space-y-2">
-                        {groupedIuran
-                          .filter(
-                            (item) =>
-                              parseInt(item.iuran || 0) +
-                                parseInt(item.manual || 0) >
-                                0 && !item.isSumbanganDetail,
-                          )
-                          .map((item, idx) => {
-                            const isReset = resetKeys.includes(item.key);
-                            const oldValue = isReset
-                              ? 0
-                              : parseInt(item.iuran || 0);
-                            const inputValue = isReset
-                              ? 0
-                              : nominalBaruList[item.key] || 0;
-                            const totalValue = oldValue + inputValue;
-
-                            return (
-                              <div
-                                key={idx}
-                                className="space-y-2 p-3 rounded-lg bg-white border border-gray-200 hover:border-blue-300 transition-colors"
-                              >
-                                <div className="flex items-center justify-between">
-                                  <span className="font-semibold text-gray-800 text-sm uppercase tracking-wide">
-                                    {item.key}
-                                  </span>
-                                  <button
-                                    type="button"
-                                    className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition-colors"
-                                    onClick={() => {
-                                      setResetKeys((prev) => [
-                                        ...prev,
-                                        item.key,
-                                      ]);
-                                      setNominalBaruList((prev) => ({
-                                        ...prev,
-                                        [item.key]: 0,
-                                      }));
-                                    }}
-                                  >
-                                    <FiTrash size={16} />
-                                  </button>
-                                </div>
-
-                                <div className="grid grid-cols-3 gap-3">
-                                  <div>
-                                    <label className="block text-xs text-gray-500 mb-1">
-                                      Default
-                                    </label>
-                                    <input
-                                      type="text"
-                                      readOnly
-                                      value={`Rp. ${oldValue.toLocaleString(
-                                        "id-ID",
-                                      )}`}
-                                      className="w-full border border-gray-300 px-3 py-2 rounded text-center bg-gray-50 text-gray-700 font-medium"
-                                    />
-                                  </div>
-
-                                  <div>
-                                    <label className="block text-xs text-gray-500 mb-1">
-                                      Tambahan Cabang
-                                    </label>
-                                    <input
-                                      type="text"
-                                      placeholder="Rp. 0"
-                                      value={
-                                        inputValue === 0
-                                          ? ""
-                                          : `Rp. ${inputValue.toLocaleString(
-                                              "id-ID",
-                                            )}`
-                                      }
-                                      onChange={(e) => {
-                                        const angka =
-                                          parseInt(
-                                            e.target.value.replace(
-                                              /[^\d]/g,
-                                              "",
-                                            ),
-                                          ) || 0;
-                                        setNominalBaruList((prev) => ({
-                                          ...prev,
-                                          [item.key]: angka,
-                                        }));
-                                      }}
-                                      className="w-full border border-blue-300 px-3 py-2 rounded text-center bg-white text-blue-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                  </div>
-
-                                  <div>
-                                    <label className="block text-xs text-gray-500 mb-1">
-                                      Total
-                                    </label>
-                                    <input
-                                      type="text"
-                                      readOnly
-                                      value={`Rp. ${totalValue.toLocaleString(
-                                        "id-ID",
-                                      )}`}
-                                      className="w-full border border-green-300 px-3 py-2 rounded text-center bg-green-50 text-green-700 font-medium"
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-
-                        {/* Tampilkan iuranSumbanganList dari API */}
-                        {sumbanganList.length > 0 && (
-                          <div className="mt-4">
-                            <h4 className="font-semibold text-purple-700 mb-2">
-                              Keuangan:
-                            </h4>
-                            {sumbanganList.map((sumbangan, index) => {
-                              const jumlahValue = parseInt(
-                                sumbangan.jumlah || 0,
-                              );
-                              const isDeleted = jumlahValue === 0;
-
-                              return (
-                                <div
-                                  key={index}
-                                  className={`space-y-1 px-3 py-2 rounded-md border-l-4 mb-2 ${
-                                    isDeleted
-                                      ? "bg-gray-100 border-gray-400 opacity-60"
-                                      : "bg-purple-50 border-purple-400"
-                                  }`}
-                                >
-                                  <div className="flex items-center justify-between">
-                                    <span
-                                      className={`font-medium ${
-                                        isDeleted
-                                          ? "text-gray-500"
-                                          : "text-purple-800"
-                                      }`}
-                                    >
-                                      {sumbangan.jenis}
-                                      {isDeleted && (
-                                        <span className="text-red-500 ml-2 text-sm">
-                                          (Dihapus)
-                                        </span>
-                                      )}
-                                    </span>
-
-                                    {/* Tombol Trash - selalu tampil, bahkan untuk yang sudah di-delete */}
-                                    <button
-                                      type="button"
-                                      className={`p-1 rounded-full transition-colors ${
-                                        isDeleted
-                                          ? "text-gray-400 cursor-not-allowed"
-                                          : "text-red-500 hover:text-red-700 hover:bg-red-50"
-                                      }`}
-                                      onClick={() =>
-                                        !isDeleted &&
-                                        handleDeleteSumbangan(sumbangan.jenis)
-                                      }
-                                      disabled={isDeleted}
-                                      title={
-                                        isDeleted
-                                          ? "Sudah dihapus"
-                                          : "Hapus item"
-                                      }
-                                    >
-                                      <FiTrash size={16} />
-                                    </button>
-                                  </div>
-
-                                  <div className="grid grid-cols-3 gap-2 mt-2">
-                                    <div>
-                                      <label className="block text-xs text-gray-500 mb-1">
-                                        Nilai Sumbangan
-                                      </label>
-                                      <input
-                                        type="text"
-                                        readOnly
-                                        value={`Rp. ${jumlahValue.toLocaleString(
-                                          "id-ID",
-                                        )}`}
-                                        className={`w-full border px-2 py-1 rounded text-center font-medium ${
-                                          isDeleted
-                                            ? "bg-gray-200 text-gray-500"
-                                            : "bg-purple-100 text-purple-700"
-                                        }`}
-                                      />
-                                    </div>
-
-                                    <div>
-                                      <label className="block text-xs text-gray-500 mb-1">
-                                        Tambahan Cabang
-                                      </label>
-                                      <input
-                                        type="text"
-                                        readOnly
-                                        value={
-                                          isDeleted
-                                            ? "Dihapus"
-                                            : "Tidak bisa diubah"
-                                        }
-                                        className={`w-full border px-2 py-1 rounded text-center ${
-                                          isDeleted
-                                            ? "bg-gray-200 text-gray-500"
-                                            : "bg-gray-100 text-gray-500"
-                                        }`}
-                                      />
-                                    </div>
-
-                                    <div>
-                                      <label className="block text-xs text-gray-500 mb-1">
-                                        Total
-                                      </label>
-                                      <input
-                                        type="text"
-                                        readOnly
-                                        value={`Rp. ${jumlahValue.toLocaleString(
-                                          "id-ID",
-                                        )}`}
-                                        className={`w-full border px-2 py-1 rounded text-center font-medium ${
-                                          isDeleted
-                                            ? "bg-gray-200 text-gray-500"
-                                            : "bg-purple-100 text-purple-700"
-                                        }`}
-                                      />
-                                    </div>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-
-                        {addedCategories.map((item, idx) => {
-                          const oldValue = newValues[item.key] ?? 0;
-                          const inputValue = manualInputs[item.key] ?? 0;
-                          const totalValue = oldValue + inputValue;
-
-                          const displayName =
-                            item.keterangan || item.label || item.key;
-
-                          return (
-                            <div
-                              key={`added-${idx}`}
-                              className="space-y-2 p-3 rounded-lg bg-yellow-50 border-l-4 border-yellow-400 hover:border-yellow-500 transition-colors"
-                            >
-                              <div className="flex items-center justify-between">
-                                <span className="font-semibold text-yellow-800">
-                                  {displayName}
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    const updatedCategories =
-                                      addedCategories.filter(
-                                        (_, i) => i !== idx,
-                                      );
-                                    setAddedCategories(updatedCategories);
-                                    setManualInputs((prev) => {
-                                      const newInputs = { ...prev };
-                                      delete newInputs[item.key];
-                                      return newInputs;
-                                    });
-                                    setNewValues((prev) => {
-                                      const newValues = { ...prev };
-                                      delete newValues[item.key];
-                                      return newValues;
-                                    });
-                                  }}
-                                  className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition-colors"
-                                >
-                                  <FiTrash size={16} />
-                                </button>
-                              </div>
-
-                              <div className="grid grid-cols-3 gap-3">
-                                <div>
-                                  <label className="block text-xs text-yellow-600 mb-1">
-                                    Default
-                                  </label>
-                                  <input
-                                    type="text"
-                                    readOnly
-                                    value={`Rp. ${oldValue.toLocaleString(
-                                      "id-ID",
-                                    )}`}
-                                    className="w-full border border-yellow-300 px-3 py-2 rounded text-center bg-yellow-100 text-yellow-700 font-medium"
-                                  />
-                                </div>
-
-                                <div>
-                                  <label className="block text-xs text-yellow-600 mb-1">
-                                    Tambahan
-                                  </label>
-                                  <input
-                                    type="text"
-                                    placeholder="Rp. 0"
-                                    value={
-                                      inputValue === 0
-                                        ? ""
-                                        : `Rp. ${inputValue.toLocaleString(
-                                            "id-ID",
-                                          )}`
-                                    }
-                                    onChange={(e) => {
-                                      const angka =
-                                        parseInt(
-                                          e.target.value.replace(/[^\d]/g, ""),
-                                        ) || 0;
-                                      setManualInputs((prev) => ({
-                                        ...prev,
-                                        [item.key]: angka,
-                                      }));
-                                    }}
-                                    className="w-full border border-yellow-300 px-3 py-2 rounded text-center bg-white text-yellow-700 font-medium focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                                  />
-                                </div>
-
-                                <div>
-                                  <label className="block text-xs text-yellow-600 mb-1">
-                                    Total
-                                  </label>
-                                  <input
-                                    type="text"
-                                    readOnly
-                                    value={`Rp. ${totalValue.toLocaleString(
-                                      "id-ID",
-                                    )}`}
-                                    className="w-full border border-yellow-300 px-3 py-2 rounded text-center bg-yellow-100 text-yellow-700 font-medium"
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-
-                        {/* Total */}
-                        <div className="flex items-center justify-between bg-purple-200 px-3 py-2 rounded-md font-bold mt-4">
-                          <span>Total</span>
-                          <span>Rp. {grandTotal.toLocaleString("id-ID")}</span>
-                        </div>
-
-                        {/* Form Tambah Kategori */}
-                        <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg border border-gray-300 p-4 mt-6">
-                          <h3 className="text-lg font-semibold text-purple-800 mb-3 flex items-center">
-                            <span className="bg-purple-600 text-white p-2 rounded-full mr-3">
-                              <FiPlus size={18} />
-                            </span>
-                            Tambah Keuangan
-                          </h3>
-
-                          <button
-                            onClick={() => setShowDropdown(!showDropdown)}
-                            className="flex items-center text-blue-600 hover:text-blue-800 mb-4 p-3 bg-white rounded-lg border border-blue-200 hover:border-blue-300 transition-colors w-full"
-                          >
-                            <span className="bg-blue-100 text-blue-600 p-2 rounded-full mr-3">
-                              <FiPlus size={16} />
-                            </span>
-                            <span className="font-medium">
-                              Tambah Kategori Baru
-                            </span>
-                          </button>
-
-                          {showDropdown && (
-                            <div className="space-y-4 bg-white p-4 rounded-lg border border-blue-200">
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                  Pilih Kategori Tambahan
-                                </label>
-                                <select
-                                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  value={selectedKategori}
-                                  onChange={(e) =>
-                                    setSelectedKategori(e.target.value)
-                                  }
-                                >
-                                  <option value="">-- Pilih Kategori --</option>
-                                  <option value="pgri">PGRI</option>
-                                  <option value="sanduka">Sanduka</option>
-                                  <option value="daspen">
-                                    Daspen{" "}
-                                    {notifDaspen === true
-                                      ? " (✓ Sinkron)"
-                                      : notifDaspen === false
-                                        ? " (× Tidak Sinkron)"
-                                        : " (× Tidak Sinkron)"}
-                                  </option>
-                                  <option value="kalender">Kalender</option>
-                                  <option value="derap">Derap</option>
-                                  <option value="lainlain">Lain-Lain</option>
-                                </select>
-                              </div>
-
-                              {selectedKategori === "lainlain" && (
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Pilih Keterangan
-                                  </label>
-                                  <select
-                                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                    value={selectedKeterangan}
-                                    onChange={(e) =>
-                                      setSelectedKeterangan(e.target.value)
-                                    }
-                                  >
-                                    <option value="">
-                                      -- Pilih Keterangan --
-                                    </option>
-                                    {Array.isArray(keteranganLainLain) &&
-                                    keteranganLainLain.length > 0 ? (
-                                      keteranganLainLain.map((item, index) => (
-                                        <option key={index} value={item}>
-                                          {item}
-                                        </option>
-                                      ))
-                                    ) : (
-                                      <option disabled>
-                                        Tidak ada data keterangan
-                                      </option>
-                                    )}
-                                  </select>
-                                </div>
-                              )}
-
-                              {selectedKategori && (
-                                <div className="flex justify-end space-x-3 pt-2">
-                                  <button
-                                    onClick={() => setShowDropdown(false)}
-                                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                                  >
-                                    Batal
-                                  </button>
-                                  <button
-                                    onClick={handleSave}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center"
-                                  >
-                                    <FiSave className="mr-2" size={16} />
-                                    Simpan Kategori
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end gap-4 pt-4">
-                      <button
-                        className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-                        onClick={closePopup}
-                      >
-                        Batal
-                      </button>
-                      <button
-                        type="button"
-                        className={`flex items-center justify-center bg-blue-600 text-white font-bold py-2 px-4 rounded ${
-                          loadButton
-                            ? "opacity-60 cursor-not-allowed"
-                            : "hover:bg-blue-700"
-                        }`}
-                        onClick={async () => {
-                          if (loadButton) return;
-                          setLoadButton(true);
-                          try {
-                            await handleUpdateClick();
-                          } finally {
-                            setLoadButton(false);
-                          }
-                        }}
-                        disabled={loadButton}
-                      >
-                        {loadButton ? (
-                          <>
-                            <svg
-                              className="animate-spin h-5 w-5 mr-2"
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                            >
-                              <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                              />
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                              />
-                            </svg>
-                            Loading...
-                          </>
-                        ) : (
-                          "Update"
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {isModalOpen && selectedMember && dataIuran && (
-                <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-                  <div className="bg-white p-6 rounded-lg w-[800px] relative shadow-lg">
-                    <button
-                      className="absolute top-2 right-2 text-gray-500 hover:text-teal-600 text-xl"
-                      onClick={closeModal}
-                    >
-                      ✕
-                    </button>
-
-                    <div className="bg-blue-100 p-5 rounded-lg">
-                      <h2 className="text-center text-blue-900 font-bold text-xl mb-3">
-                        Data KEUANGAN ANGGOTA
-                      </h2>
-
-                      <div className="flex gap-4">
-                        <Image
-                          src={
-                            fotoBase64
-                              ? `data:image/jpeg;base64,${fotoBase64}`
-                              : profileImageUrl
-                          }
-                          width={100}
-                          height={100}
-                          alt="Foto User"
-                          className="w-24 h-28 object-cover rounded-lg border"
-                          unoptimized={true}
-                        />
-                        <div className="flex-1 text-sm">
-                          <p>
-                            <span className="font-bold text-green-800 text-lg uppercase">
-                              {dataIuran.namaAnggota}
-                            </span>
-                          </p>
-                          <p>
-                            Tempat, Tanggal Lahir:{" "}
-                            {dataIuran.tempatTanggalLahir}
-                          </p>
-                          <p>
-                            Nomor Anggota PGRI: <strong>{dataIuran.npa}</strong>
-                          </p>
-                          <p>
-                            Nomor Induk Pegawai: <em>{dataIuran.nip}</em>
-                          </p>
-                          <p>
-                            Nomor Induk Kependudukan: <em>{dataIuran.nik}</em>
-                          </p>
-                        </div>
-                        <div className="text-sm text-left">
-                          <p>{dataIuran.cabang}</p>
-                          <p>{dataIuran.jabatan}</p>
-                          <p>{dataIuran.unitKerja}</p>
-                        </div>
-                      </div>
-
-                      <div className="mt-5 text-sm">
-                        <p>
-                          Nomor Rekening: <em>{dataIuran.nomorRekening}</em>
-                        </p>
-                        <p>
-                          <span className="inline-block min-w-[140px]">
-                            Iuran Anggota
-                          </span>
-                          : Rp.{" "}
-                          {(dataIuran.totalIuranAnggota || 0).toLocaleString(
-                            "id-ID",
-                          )}
-                        </p>
-                        <p>
-                          <span className="inline-block min-w-[140px]">
-                            Sanduka
-                          </span>
-                          : Rp.{" "}
-                          {(dataIuran.totalIuranSanduka || 0).toLocaleString(
-                            "id-ID",
-                          )}
-                        </p>
-                        <p>
-                          <span className="inline-block min-w-[140px]">
-                            Daspen
-                          </span>
-                          : Rp.{" "}
-                          {(dataIuran.totalIuranDaspen || 0).toLocaleString(
-                            "id-ID",
-                          )}
-                        </p>
-                        <p>
-                          <span className="inline-block min-w-[140px]">
-                            Derap
-                          </span>
-                          : Rp.{" "}
-                          {(dataIuran.totalIuranDerap || 0).toLocaleString(
-                            "id-ID",
-                          )}
-                        </p>
-                        <p>
-                          <span className="inline-block min-w-[140px]">
-                            Kalender
-                          </span>
-                          : Rp.{" "}
-                          {(dataIuran.totalIuranKalender || 0).toLocaleString(
-                            "id-ID",
-                          )}
-                        </p>
-                        <p>
-                          <span className="inline-block min-w-[140px]">
-                            Sumbangan
-                          </span>
-                          : Rp.{" "}
-                          {(dataIuran.lainLain || 0).toLocaleString("id-ID")}
-                        </p>
-
-                        <hr className="my-2 border-t-2 border-gray-300" />
-
-                        <p className="font-bold mt-2">
-                          <span className="inline-block min-w-[140px]">
-                            Total Keseluruhan
-                          </span>
-                          : Rp.{" "}
-                          {(
-                            (dataIuran.totalIuranAnggota || 0) +
-                            (dataIuran.totalIuranSanduka || 0) +
-                            (dataIuran.totalIuranDaspen || 0) +
-                            (dataIuran.totalIuranDerap || 0) +
-                            (dataIuran.totalIuranKalender || 0) +
-                            (dataIuran.lainLain || 0)
-                          ).toLocaleString("id-ID")}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {showUploadModal && (
-                <>
-                  <div
-                    className="fixed inset-0 bg-black opacity-50 z-40"
-                    onClick={handleCloseModal}
-                  ></div>
-                  <div className="fixed inset-0 flex items-center justify-center z-50">
-                    <div className="bg-white shadow-lg rounded-lg p-6 w-11/12 md:w-1/2 relative">
-                      <button
-                        className="absolute top-2 right-2 text-gray-500"
-                        onClick={handleCloseModal}
-                      >
-                        <svg
-                          className="w-6 h-6"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-                      <h2 className="text-xl font-bold mb-4">Upload Data</h2>
-                      <form onSubmit={handleSubmitUpload}>
-                        <div className="mb-4">
-                          <label className="block text-gray-700 text-sm font-bold mb-2">
-                            Upload File
-                          </label>
-                          <input
-                            type="file"
-                            name="file"
-                            onChange={handleInputChange}
-                            className="block w-full mt-1"
-                          />
-                        </div>
-                        <div className="mb-4">
-                          <label className="block text-gray-700 text-sm font-bold mb-2">
-                            Nama File
-                          </label>
-                          <input
-                            type="text"
-                            name="namaFile"
-                            onChange={handleInputChange}
-                            className="form-input block w-full mt-1 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent"
-                            placeholder="Contoh: Potongan Bank Bulan Mei"
-                          />
-                        </div>
-                        <div className="mb-4">
-                          <label className="block text-gray-700 text-sm font-bold mb-2">
-                            Tanggal Untuk
-                          </label>
-                          <input
-                            type="date"
-                            name="tanggalUntuk"
-                            onChange={handleInputChange}
-                            className="form-input block w-full mt-1 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent"
-                          />
-                        </div>
-                        <div className="flex justify-end">
-                          <button
-                            type="button"
-                            onClick={handleCloseModal}
-                            className="bg-gray-500 hover:bg-gray-700 text-white py-2 px-4 rounded-lg mr-2"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            type="submit"
-                            className="bg-green-600 hover:bg-green-800 text-white py-2 px-4 rounded-lg"
-                            disabled={loader}
-                          >
-                            {loader ? `Uploading... ${progress}%` : "Submit"}
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                </>
-              )}
-              <tfoot>
-                <tr className="bg-teal-700 text-white font-bold">
-                  <td colSpan={2} className="p-3 text-center">
-                    Total Keseluruhan:
-                  </td>
-                  <td className="p-3 text-center"></td>
-                  <td className="p-3 text-center"></td>
-                  <td className="p-3 text-right text-sm">
-                    Rp.{" "}
-                    {groupedData
-                      .flatMap((g) => g.members || [])
-                      .reduce((sum, m) => sum + parseInt(m.pgri || 0), 0)
-                      .toLocaleString("id-ID")}
-                  </td>
-                  <td className="p-3 text-right text-sm">
-                    Rp.{" "}
-                    {groupedData
-                      .flatMap((g) => g.members || [])
-                      .reduce((sum, m) => sum + parseInt(m.sanduka || 0), 0)
-                      .toLocaleString("id-ID")}
-                  </td>
-                  <td className="p-3 text-right text-sm">
-                    Rp.{" "}
-                    {groupedData
-                      .flatMap((g) => g.members || [])
-                      .reduce((sum, m) => sum + parseInt(m.daspen || 0), 0)
-                      .toLocaleString("id-ID")}
-                  </td>
-                  <td className="p-3 text-right text-sm">
-                    Rp.{" "}
-                    {groupedData
-                      .flatMap((g) => g.members || [])
-                      .reduce((sum, m) => sum + parseInt(m.derap || 0), 0)
-                      .toLocaleString("id-ID")}
-                  </td>
-                  <td className="p-3 text-right text-sm">
-                    Rp.{" "}
-                    {groupedData
-                      .flatMap((g) => g.members || [])
-                      .reduce((sum, m) => sum + parseInt(m.kalender || 0), 0)
-                      .toLocaleString("id-ID")}
-                  </td>
-                  <td className="p-3 text-right text-sm">
-                    Rp.{" "}
-                    {groupedData
-                      .flatMap((g) => g.members || [])
-                      .reduce((sum, m) => {
-                        let totalSumbangan = 0;
-
-                        if (m.detailSumbangan) {
-                          let details = m.detailSumbangan;
-
-                          if (typeof details === "string") {
-                            try {
-                              details = JSON.parse(details);
-                            } catch (e) {
-                              details = [];
-                            }
-                          }
-
-                          if (Array.isArray(details)) {
-                            totalSumbangan = details.reduce(
-                              (s, d) => s + parseInt(d.jumlah || 0),
-                              0,
-                            );
-                          }
-                        } else {
-                          totalSumbangan = parseInt(m.sumbangan || 0);
-                        }
-
-                        return sum + totalSumbangan;
-                      }, 0)
-                      .toLocaleString("id-ID")}
-                  </td>
-                  <td className="p-3 text-right text-sm font-bold">
-                    Rp.{" "}
-                    {groupedData
-                      .flatMap((g) => g.members || [])
-                      .reduce((sum, m) => sum + parseInt(m.totalIuran || 0), 0)
-                      .toLocaleString("id-ID")}
-                  </td>
-                  <td className="p-3 text-center"></td>
-                </tr>
-              </tfoot>
-            </table>
-
-            <div className="bg-white p-4 rounded-b-lg border-t border-gray-200 text-sm text-gray-500 flex justify-between">
-              <div>Menampilkan {groupedData.length} unit kerja</div>
+                        </tr>
+                      )}
+                    </>
+                  )}
+                </tbody>
+              </table>
             </div>
-          </div>
+          </main>
         </div>
       </div>
+
+      {/* Modals */}
+      {notification && (
+        <NotificationPopup
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+        />
+      )}
+
+      <EditFinanceModal
+        isPopupVisible={isPopupVisible}
+        closePopup={closePopup}
+        dataNpa={dataNpa}
+        fotoBase64={fotoBase64}
+        profileImageUrl={profileImageUrl}
+        nomorRekening={nomorRekening}
+        setNomorRekening={setNomorRekening}
+        selectedMonth={selectedMonth}
+        setSelectedMonth={setSelectedMonth}
+        selectedYear={selectedYear}
+        setSelectedYear={setSelectedYear}
+        groupedIuran={groupedIuran}
+        resetKeys={resetKeys}
+        setResetKeys={setResetKeys}
+        nominalBaruList={nominalBaruList}
+        setNominalBaruList={setNominalBaruList}
+        sumbanganList={sumbanganList}
+        handleDeleteSumbangan={handleDeleteSumbangan}
+        addedCategories={addedCategories}
+        setAddedCategories={setAddedCategories}
+        manualInputs={manualInputs}
+        setManualInputs={setManualInputs}
+        newValues={newValues}
+        setNewValues={setNewValues}
+        grandTotal={grandTotal}
+        showDropdown={showDropdown}
+        setShowDropdown={setShowDropdown}
+        selectedKategori={selectedKategori}
+        setSelectedKategori={setSelectedKategori}
+        selectedKeterangan={selectedKeterangan}
+        setSelectedKeterangan={setSelectedKeterangan}
+        keteranganLainLain={keteranganLainLain}
+        notifDaspen={notifDaspen}
+        handleSave={handleSave}
+        handleUpdateClick={handleUpdateClick}
+        loadButton={loadButton}
+      />
+
+      <MemberDetailModal
+        isModalOpen={isModalOpen}
+        closeModal={closeModal}
+        selectedMember={selectedMember}
+        dataIuran={dataIuran}
+        fotoBase64={fotoBase64}
+        profileImageUrl={profileImageUrl}
+      />
+
+      <BackupConfirmModal
+        isVisible={isBackupModalVisible}
+        onClose={() => setIsBackupModalVisible(false)}
+        onConfirm={confirmBackupTarget}
+        isProcessing={isExporting}
+      />
     </div>
   );
 }

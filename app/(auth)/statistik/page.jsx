@@ -249,24 +249,11 @@ const Page = () => {
   }, []);
 
   const handlePrint = () => {
-    const printWindow = window.open("", "", "width=800,height=600");
-    printWindow.document.write("<html><head><title>Data Statistik</title>");
-    printWindow.document.write(
-      "<style>@media print { .no-print { display: none; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #000; padding: 8px; text-align: center; } }</style>"
-    );
-    printWindow.document.write("</head><body>");
-    printWindow.document.write(
-      '<button class="no-print" onclick="window.print()">Print</button>'
-    );
-    printWindow.document.write(
-      '<table class="table-auto w-full border-collapse border border-gray-300 text-sm">'
-    );
-    printWindow.document.write('<thead class="bg-gray-100">');
-    printWindow.document.write(
-      "<tr><th>No</th><th>Cabang</th><th>Data Lalu</th><th>Mutasi Baru</th><th>Pensiun</th><th>Meninggal</th><th>Keluar Anggota</th><th>Masuk</th><th>Keluar</th><th>Data Sekarang</th></tr>"
-    );
-    printWindow.document.write("</thead>");
-    printWindow.document.write('<tbody class="divide-y divide-gray-200">');
+    const printWindow = window.open("", "", "width=1000,height=800");
+    if (!printWindow) {
+      alert("Mohon izinkan pop-up browser untuk mencetak dokumen.");
+      return;
+    }
 
     let totalDataLalu = 0,
       totalBaru = 0,
@@ -276,6 +263,8 @@ const Page = () => {
       totalMasuk = 0,
       totalKeluar = 0,
       totalDataSekarang = 0;
+
+    let rowsHtml = "";
 
     tableData.forEach((item, index) => {
       totalDataLalu += item.dataLalu;
@@ -287,40 +276,157 @@ const Page = () => {
       totalKeluar += item.pindahCabangKeluar;
       totalDataSekarang += item.dataSekarang;
 
-      printWindow.document.write("<tr>");
-      printWindow.document.write(`<td>${index + 1}</td>`);
-      printWindow.document.write(`<td>${item.cabang}</td>`);
-      printWindow.document.write(`<td>${item.dataLalu}</td>`);
-      printWindow.document.write(`<td>${item.baru}</td>`);
-      printWindow.document.write(`<td>${item.pensiun}</td>`);
-      printWindow.document.write(`<td>${item.meninggal}</td>`);
-      printWindow.document.write(`<td>${item.keluarAnggota}</td>`);
-      printWindow.document.write(`<td>${item.pindahCabangMasuk}</td>`);
-      printWindow.document.write(`<td>${item.pindahCabangKeluar}</td>`);
-      printWindow.document.write(`<td>${item.dataSekarang}</td>`);
-      printWindow.document.write("</tr>");
+      rowsHtml += `
+        <tr>
+          <td>${index + 1}</td>
+          <td style="text-align: left; font-weight: bold; color: #374151;">${item.cabang}</td>
+          <td>${item.dataLalu}</td>
+          <td><span class="badge bg-green">${item.baru}</span></td>
+          <td><span class="badge bg-yellow">${item.pensiun}</span></td>
+          <td><span class="badge bg-red">${item.meninggal}</span></td>
+          <td><span class="badge bg-red">${item.keluarAnggota}</span></td>
+          <td><span class="badge bg-blue">${item.pindahCabangMasuk}</span></td>
+          <td><span class="badge bg-purple">${item.pindahCabangKeluar}</span></td>
+          <td style="font-weight: 800; font-size: 13px;">${item.dataSekarang}</td>
+        </tr>
+      `;
     });
 
-    // Menambahkan baris total
-    printWindow.document.write(
-      "<tr style='font-weight: bold; background-color: #f8f8f8;'>"
-    );
-    printWindow.document.write("<td colspan='2'>Total</td>");
-    printWindow.document.write(`<td>${totalDataLalu}</td>`);
-    printWindow.document.write(`<td>${totalBaru}</td>`);
-    printWindow.document.write(`<td>${totalPensiun}</td>`);
-    printWindow.document.write(`<td>${totalMeninggal}</td>`);
-    printWindow.document.write(`<td>${totalKeluarAnggota}</td>`);
-    printWindow.document.write(`<td>${totalMasuk}</td>`);
-    printWindow.document.write(`<td>${totalKeluar}</td>`);
-    printWindow.document.write(`<td>${totalDataSekarang}</td>`);
-    printWindow.document.write("</tr>");
+    const htmlContent = `
+      <html>
+        <head>
+          <title>Cetak Data Mutasi Anggota</title>
+          <style>
+            body { 
+              font-family: 'Segoe UI', Arial, sans-serif; 
+              color: #333; 
+              margin: 20px; 
+            }
+            .header { 
+              text-align: center; 
+              margin-bottom: 25px; 
+            }
+            .header h2 { 
+              color: #0f766e; /* Teal-700 */
+              margin: 0 0 5px 0; 
+              font-size: 24px;
+            }
+            .header p { 
+              color: #666; 
+              margin: 0; 
+              font-size: 14px; 
+            }
+            table { 
+              width: 100%; 
+              border-collapse: collapse; 
+              font-size: 12px; 
+            }
+            th, td { 
+              border: 1px solid #d1d5db; /* Gray-300 */
+              padding: 10px 6px; 
+              text-align: center; 
+            }
+            /* Style Header Tabel Bertingkat */
+            thead th { 
+              background-color: #0f766e; /* Teal-700 */
+              color: white; 
+              border-color: #115e59; /* Teal-800 */
+            }
+            .sub-header th {
+              background-color: #0d9488; /* Teal-600 */
+              font-size: 11px;
+            }
+            /* Efek Baris Zebra */
+            tbody tr:nth-child(even) { 
+              background-color: #f9fafb; /* Gray-50 */
+            }
+            tbody tr:hover {
+              background-color: #f3f4f6;
+            }
+            /* Style Badge Angka (Mirip di Web) */
+            .badge { 
+              display: inline-block; 
+              padding: 4px 10px; 
+              border-radius: 9999px; 
+              font-weight: 600; 
+              font-size: 11px; 
+            }
+            .bg-green { background-color: #dcfce7; color: #166534; }
+            .bg-yellow { background-color: #fef9c3; color: #854d0e; }
+            .bg-red { background-color: #fee2e2; color: #991b1b; }
+            .bg-blue { background-color: #dbeafe; color: #1e40af; }
+            .bg-purple { background-color: #f3e8ff; color: #6b21a8; }
+            
+            /* Style Baris Total Bawah */
+            .total-row { 
+              font-weight: bold; 
+              background-color: #f0fdf4 !important; /* Green-50 */
+              color: #115e59; /* Teal-800 */
+            }
+            .total-row td { 
+              border-top: 2px solid #0f766e; 
+              font-size: 13px;
+            }
+            
+            @media print {
+              body { margin: 0; padding: 15px; }
+              * { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h2>Laporan Data Mutasi Anggota PGRI</h2>
+            <p>Bulan: ${selectedBulan} | Tahun: ${selectedTahun}</p>
+          </div>
+          
+          <table>
+            <thead>
+              <tr>
+                <th rowspan="2" style="width: 4%;">No</th>
+                <th rowspan="2" style="width: 16%;">Cabang</th>
+                <th rowspan="2" style="width: 10%;">Data Lalu</th>
+                <th colspan="4">Mutasi</th>
+                <th colspan="2">Pindah Cabang</th>
+                <th rowspan="2" style="width: 10%;">Data Sekarang</th>
+              </tr>
+              <tr class="sub-header">
+                <th style="width: 9%;">Baru</th>
+                <th style="width: 9%;">Pensiun</th>
+                <th style="width: 9%;">Meninggal</th>
+                <th style="width: 9%;">Keluar Angg.</th>
+                <th style="width: 9%;">Masuk</th>
+                <th style="width: 9%;">Keluar</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+              <tr class="total-row">
+                <td colspan="2" style="text-align: right; padding-right: 15px;">TOTAL KESELURUHAN</td>
+                <td>${totalDataLalu}</td>
+                <td>${totalBaru}</td>
+                <td>${totalPensiun}</td>
+                <td>${totalMeninggal}</td>
+                <td>${totalKeluarAnggota}</td>
+                <td>${totalMasuk}</td>
+                <td>${totalKeluar}</td>
+                <td style="font-size: 14px;">${totalDataSekarang}</td>
+              </tr>
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
 
-    printWindow.document.write("</tbody>");
-    printWindow.document.write("</table>");
-    printWindow.document.write("</body></html>");
+    printWindow.document.open();
+    printWindow.document.write(htmlContent);
     printWindow.document.close();
-    printWindow.print();
+
+    setTimeout(() => {
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
+    }, 500);
   };
 
   useEffect(() => {
