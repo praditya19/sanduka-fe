@@ -506,29 +506,29 @@ const StatusAnggota = () => {
           "<td style='text-align:center;'>" + (index + 1) + "</td>" +
           "<td style='text-align:center;'>" + imgTag + "</td>" +
           "<td>" +
-            "<div class='font-bold'>" + (item.namaLengkap || "-") + "</div>" +
-            "<div>NPA: " + (item.npaPgri || "-") + "</div>" +
-            "<div>" + (item.jabatan || "-") + "</div>" +
+          "<div class='font-bold'>" + (item.namaLengkap || "-") + "</div>" +
+          "<div>NPA: " + (item.npaPgri || "-") + "</div>" +
+          "<div>" + (item.jabatan || "-") + "</div>" +
           "</td>" +
           "<td>" +
-            "<div>" + (item.tempatLahir || "-") + ",</div>" +
-            "<div>" + tglLahir + "</div>" +
-            "<div>Usia: " + usia + "</div>" +
-            "<div>Pensiun: " + tglPensiun + "</div>" +
+          "<div>" + (item.tempatLahir || "-") + ",</div>" +
+          "<div>" + tglLahir + "</div>" +
+          "<div>Usia: " + usia + "</div>" +
+          "<div>Pensiun: " + tglPensiun + "</div>" +
           "</td>" +
           "<td>" +
-            "<div>" + (item.cabang || "-") + ",</div>" +
-            "<div>" + (item.unitKerja || "-") + "</div>" +
-            "<div>Anggota: " + (item.tahunDiangkat || "-") + "</div>" +
-            "<div>" + (item.pangkatGolongan || "-") + " || " + iuran + "</div>" +
+          "<div>" + (item.cabang || "-") + ",</div>" +
+          "<div>" + (item.unitKerja || "-") + "</div>" +
+          "<div>Anggota: " + (item.tahunDiangkat || "-") + "</div>" +
+          "<div>" + (item.pangkatGolongan || "-") + " || " + iuran + "</div>" +
           "</td>" +
           "<td>" +
-            "<div style='font-weight:bold;'>" + tkSekolah + "</div>" +
+          "<div style='font-weight:bold;'>" + tkSekolah + "</div>" +
           "</td>" +
           "<td style='text-align:center;'>" +
-            "<div>" + (item.statusKeanggotaan || "-") + "</div>" +
+          "<div>" + (item.statusKeanggotaan || "-") + "</div>" +
           "</td>" +
-        "</tr>";
+          "</tr>";
       });
 
       const htmlContent = `
@@ -577,7 +577,7 @@ const StatusAnggota = () => {
         printWindow.focus();
         printWindow.print();
         printWindow.close();
-      }, 3000); 
+      }, 3000);
 
     } catch (error) {
       console.error("Print Error:", error);
@@ -1446,6 +1446,7 @@ const DataTable = ({
   const [previousKategoriDaspen, setPreviousKategoriDaspen] =
     useState(kategoriDaspen);
   const profileImageUrl = "/profile.png";
+  const [zoomedImage, setZoomedImage] = useState(null);
   const router = useRouter();
 
   const filteredData = useMemo(() => {
@@ -2191,8 +2192,11 @@ const DataTable = ({
                     </td>
                     {isMobile ? (
                       <td className="py-2 px-4 border-b">
-                        <div className="w-16 h-16 flex flex-col items-center justify-center">
+                        <div className="w-16 h-16 flex flex-col items-center justify-center cursor-pointer hover:opacity-80 transition-opacity">
                           <Image
+                            onClick={() => setZoomedImage(
+                              fotoBase64[index] ? `data:image/jpeg;base64,${fotoBase64[index]}` : profileImageUrl
+                            )}
                             src={
                               fotoBase64[index]
                                 ? `data:image/jpeg;base64,${fotoBase64[index]}`
@@ -2201,15 +2205,18 @@ const DataTable = ({
                             width={50}
                             height={50}
                             alt="Anggota Foto"
-                            className="object-cover"
+                            className="object-cover rounded-md"
                             unoptimized={true}
                           />
                         </div>
                       </td>
                     ) : (
                       <td className="py-2 px-4 border-b">
-                        <div className="w-16 h-16 overflow-hidden">
+                        <div className="w-16 h-16 overflow-hidden flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity">
                           <Image
+                            onClick={() => setZoomedImage(
+                              fotoBase64[index] ? `data:image/jpeg;base64,${fotoBase64[index]}` : profileImageUrl
+                            )}
                             src={
                               fotoBase64[index]
                                 ? `data:image/jpeg;base64,${fotoBase64[index]}`
@@ -2218,7 +2225,7 @@ const DataTable = ({
                             width={50}
                             height={50}
                             alt="Anggota Foto"
-                            className="object-cover"
+                            className="object-cover rounded-md"
                           />
                         </div>
                       </td>
@@ -3082,6 +3089,29 @@ const DataTable = ({
                         </div>
                       </td>
                     </tr>
+                  )}
+
+                  {zoomedImage && (
+                    <div
+                      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+                      onClick={() => setZoomedImage(null)}
+                    >
+                      <div className="relative flex flex-col items-center animate-in zoom-in duration-200">
+                        <button
+                          className="absolute -top-3 -right-3 bg-white text-gray-600 hover:text-red-500 hover:bg-gray-100 shadow-md rounded-full w-8 h-8 flex items-center justify-center text-xl font-bold z-50 border border-gray-200 transition-colors"
+                          onClick={() => setZoomedImage(null)}
+                        >
+                          &times;
+                        </button>
+
+                        <img
+                          src={zoomedImage}
+                          alt="Zoomed Profil"
+                          className="max-w-[250px] md:max-w-[400px] max-h-[85vh] object-contain rounded-lg shadow-[0_20px_50px_rgba(0,0,0,0.1)] border-4 border-white bg-white"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    </div>
                   )}
                 </React.Fragment>
               );
