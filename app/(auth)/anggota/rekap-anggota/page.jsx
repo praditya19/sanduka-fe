@@ -27,7 +27,7 @@ function RekapAnggota() {
   // --- States ---
   const [data, setData] = useState([]);
   const [originalRekapData, setOriginalRekapData] = useState([]);
-  const { token } = useAuth();
+  const { token, loading: authLoading } = useAuth();
   const router = useRouter();
 
   const [originalCabangList, setOriginalCabangList] = useState([]);
@@ -82,18 +82,23 @@ function RekapAnggota() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [dataIuran, setDataIuran] = useState(null);
   const [isBackupModalVisible, setIsBackupModalVisible] = useState(false);
+  const [daspenValue, setDaspenValue] = useState(0);
+  const [nipValue, setNipValue] = useState("");
+  const [idIuran, setIdIuran] = useState(null);
+  const [statusPegawai, setStatusPegawai] = useState(null);
+  const [idByNominal, setIdByNominal] = useState(null);
 
   // Computed values for Modal
   const groupedIuran = useMemo(() => {
     if (!selectedMember) return [];
     return [
-      { key: "pgri", iuran: selectedMember.pgri, manual: selectedMember.manualPgri || 0 },
-      { key: "sanduka", iuran: selectedMember.sanduka, manual: selectedMember.manualSanduka || 0 },
-      { key: "daspen", iuran: selectedMember.daspen, manual: selectedMember.manualDaspen || 0 },
-      { key: "derap", iuran: selectedMember.derap, manual: selectedMember.manualDerap || 0 },
-      { key: "kalender", iuran: selectedMember.kalender, manual: selectedMember.manualKalender || 0 },
+      { key: "pgri", iuran: selectedMember.pgri },
+      { key: "sanduka", iuran: selectedMember.sanduka },
+      { key: "daspen", iuran: daspenValue }, // Menggunakan daspenValue hasil fetch NIP
+      { key: "derap", iuran: selectedMember.derap },
+      { key: "kalender", iuran: selectedMember.kalender },
     ];
-  }, [selectedMember]);
+  }, [selectedMember, daspenValue]);
 
   useEffect(() => {
     let total = groupedIuran.reduce((sum, item) => {
@@ -197,17 +202,27 @@ function RekapAnggota() {
   }, []);
 
   const fetchInitialData = useCallback(async () => {
+    // Beri jeda singkat untuk memastikan session/token di browser benar-benar siap
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    const currentToken = token || sessionStorage.getItem("authToken");
+    if (!currentToken && !sessionStorage.getItem("role")) return;
+
     setLoading(true);
     try {
       const storedRole = sessionStorage.getItem("role");
       const storedCabang = sessionStorage.getItem("cabang");
 
       let response;
+      // Kembalikan: Hanya ADMIN yang dibatasi cabangnya secara otomatis
+      // SUPERADMIN tetap melihat semua data secara default ("")
       if (storedRole === "ADMIN" && storedCabang) {
         setIsAdmin(true);
         setSelectedCabang(storedCabang);
         response = await GlobalApi.getNominalAggregatedData(storedCabang);
       } else {
+        setIsAdmin(storedRole === "ADMIN");
+        setSelectedCabang("");
         response = await GlobalApi.getNominalAggregatedData("");
       }
 
@@ -236,11 +251,14 @@ function RekapAnggota() {
       console.error("Error fetching initial data:", err);
       setLoading(false);
     }
-  }, []);
+  }, [token]);
 
   useEffect(() => {
-    fetchInitialData();
-  }, [fetchInitialData]);
+    // Hanya ambil data jika AuthContext sudah selesai loading
+    if (!authLoading) {
+      fetchInitialData();
+    }
+  }, [fetchInitialData, authLoading, token]);
 
   // Progressive Rendering Logic
   const memoizedFlattenedMembers = useMemo(() => {
@@ -389,27 +407,87 @@ function RekapAnggota() {
 
   // Modal Handlers
   const handleMemberClick = useCallback(async (member) => {
-    setSelectedMember(member);
-    setIsPopupVisible(true);
+    const daspenFromMember = member.daspen ? parseInt(member.daspen) : 0;
+    setDaspenValue(daspenFromMember);
+
+    setNipValue(member.nip);
+    setSelectedMember(null);
     setDataNpa(null);
     setFotoBase64(null);
+    setDataIuran(null);
+    setIsPopupVisible(false);
+    setIdIuran(null);
+    setNotifDaspen(null);
+    setNomorRekening("");
+    setNominalBaruList({});
+    setResetKeys([]);
+    setAddedCategories([]);
+    setManualInputs({});
+    setStatusPegawai(member.statusPegawai || null);
+
     try {
-      const [resNpa, resFoto] = await Promise.all([
-        GlobalApi.cekNpaList([member.npaPgri]),
-        GlobalApi.downloadFotoByNpa(member.npaPgri).catch(() => null)
-      ]);
+      const fileResponse = await GlobalApi.getFileByNip(member.nip);
+      if (fileResponse?.sumbangan) {
+        setDaspenValue(parseInt(fileResponse.sumbangan));
+      }
+      setNotifDaspen(fileResponse?.dataDaspen === true);
+    } catch (error) {
+      console.error("❌ Gagal mengambil file by NIP:", error);
+    }
 
-      const npaData = Array.isArray(resNpa) ? resNpa[0] : (resNpa?.data?.[0] || resNpa?.[0]);
-      setDataNpa(npaData);
+    try {
+      const response = await GlobalApi.cekNpaList([member.npaPgri]);
+      setSelectedMember(member);
+      setDataNpa(response[0]);
 
-      if (resFoto && resFoto.data) {
-        const url = URL.createObjectURL(resFoto.data);
-        setFotoBase64(url);
+      if (response[0]?.foto) {
+        try {
+          const decodedString = atob(response[0].foto);
+          setFotoBase64(decodedString);
+        } catch (error) {
+          console.error("❌ Error decoding Base64:", error);
+          setFotoBase64(null);
+        }
       }
 
-      setNomorRekening(member.nomorRekening || "");
-    } catch (err) {
-      console.error("Error loading member details:", err);
+      const dataIuran = await GlobalApi.getByIdByNominal(member.idByNominal);
+      setDataIuran(dataIuran);
+      setIdByNominal(member.idByNominal);
+      setIdIuran(dataIuran.id || null);
+      setNomorRekening(dataIuran.nomorRekening || "");
+
+      const manualValues = {};
+      const manualKeys = [
+        "Pgri",
+        "Sanduka",
+        "Daspen",
+        "Derap",
+        "Kalender",
+        "LainLain",
+      ];
+
+      manualKeys.forEach((key) => {
+        const manualKey = `manual${key}`;
+        if (dataIuran[manualKey] && dataIuran[manualKey] > 0) {
+          // Sesuaikan key dengan yang digunakan di nominalBaruList (tanpa prefix 'manual')
+          manualValues[key.toLowerCase()] = dataIuran[manualKey] || 0;
+        }
+      });
+
+      setNominalBaruList(manualValues);
+
+      if (
+        dataIuran?.iuranSumbanganList &&
+        Array.isArray(dataIuran.iuranSumbanganList)
+      ) {
+        setSumbanganList(dataIuran.iuranSumbanganList);
+      } else {
+        setSumbanganList([]);
+      }
+
+      setIsPopupVisible(true);
+    } catch (error) {
+      console.error("❌ Gagal mengambil data iuran anggota:", error);
     }
   }, []);
 
@@ -422,6 +500,12 @@ function RekapAnggota() {
     setNominalBaruList({});
     setSumbanganList([]);
     setAddedCategories([]);
+    setManualInputs({});
+    setDaspenValue(0);
+    setNipValue("");
+    setIdIuran(null);
+    setStatusPegawai(null);
+    setIdByNominal(null);
   }, []);
 
   const handleUpdateIuran = async (id, payload) => {
@@ -542,7 +626,7 @@ function RekapAnggota() {
           <main className="w-full py-8">
             <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
               <h1 className="text-3xl font-extrabold flex items-center gap-3 text-gray-800">
-                Rekap Anggota
+                By Nominal
               </h1>
 
               <div className="flex flex-wrap gap-2">
