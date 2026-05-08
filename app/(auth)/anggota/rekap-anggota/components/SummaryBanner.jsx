@@ -8,9 +8,6 @@ const SummaryBanner = ({ totalAnggota, unitKerjaCount }) => {
           <h2 className="text-white text-xl font-semibold">Laporan Tagihan</h2>
           <p className="text-teal-100 text-sm">Daftar iuran anggota per unit kerja</p>
         </div>
-        <div className="text-right text-white font-semibold">
-          Total anggota: {totalAnggota}
-        </div>
       </div>
     </div>
   );

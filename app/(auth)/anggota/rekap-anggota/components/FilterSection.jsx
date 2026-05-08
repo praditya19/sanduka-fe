@@ -27,8 +27,8 @@ const FilterSection = ({
   handleSearchClick
 }) => {
   return (
-    <div className="flex gap-4">
-      <div className="flex flex-col relative w-64" ref={cabangRef}>
+    <div className="flex gap-4 mb-6">
+      <div className="flex flex-col relative w-80" ref={cabangRef}>
         <p>Cabang</p>
         <Input
           type="text"
@@ -73,7 +73,7 @@ const FilterSection = ({
           </div>
         )}
       </div>
-      <div className="flex flex-col relative w-64" ref={unitKerjaRef}>
+      <div className="flex flex-col relative w-80" ref={unitKerjaRef}>
         <p>Unit Kerja</p>
         <Input
           type="text"
@@ -119,7 +119,7 @@ const FilterSection = ({
           </div>
         )}
       </div>
-      <div className="flex flex-col relative w-64">
+      <div className="flex flex-col relative w-80">
         <div className="relative">
           <p>Nama Anggota</p>
           <Input
