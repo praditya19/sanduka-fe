@@ -1950,8 +1950,8 @@ const DataTable = ({
                             {filesByNip.find(
                               (file) => String(file?.nip) === String(item.nip),
                             )?.verifikasi === true
-                              ? "Sudah Sinkronisasi"
-                              : "Belum Sinkronisasi"}
+                              ? "Terdaftar Daspen"
+                              : "Belum Terdaftar Daspen"}
                           </div>
                         </td>
                         <td className="py-2 px-4 border text-center">
