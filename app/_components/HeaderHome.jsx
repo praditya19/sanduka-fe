@@ -387,11 +387,7 @@ const HeaderHome = () => {
             </ul>
           </div>
         </div>
-
       </nav>
-        <div className="mt-14 md:mt-12">
-    <RunningText />
-  </div>  
 
       {/* Search Modal */}
       {isSearchModalOpen && (
