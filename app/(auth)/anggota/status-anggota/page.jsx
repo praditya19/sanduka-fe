@@ -412,132 +412,182 @@ const StatusAnggota = () => {
 
   const handlePrint = async () => {
     setIsLoading(true);
-    try {
-      const response = await GlobalApi.getAllAnggota(
-        0,
-        totalElements,
-        currentFilters.cabang,
-        currentFilters.unitKerja,
-        currentFilters.keyword,
-        currentFilters.status,
-        currentFilters.tingkatSekolah
-      );
 
-      const fetchedData = response.content;
+    const printWindow = window.open("", "_blank", "width=1000,height=800");
+    if (!printWindow) {
+      alert("Mohon izinkan pop-up browser (matikan Popup Blocker) untuk mencetak dokumen.");
+      setIsLoading(false);
+      return;
+    }
 
-      const fotoBase64Array = [];
-
-      if (fetchedData && fetchedData.length > 0) {
-        fetchedData.forEach((item, index) => {
-          if (item.foto) {
-            try {
-              const decodedString = atob(item.foto);
-              fotoBase64Array.push(decodedString);
-            } catch (error) {
-              console.error("Error decoding Base64:", error);
-              fotoBase64Array.push(null);
-            }
-          } else {
-            fotoBase64Array.push(null);
-          }
-        });
-      } else {
-        console.warn("No data found.");
-      }
-
-      const printWindow = window.open("", "_blank", "width=800,height=600");
-
-      const htmlContent = `
+    printWindow.document.write(`
       <html>
-        <head>
-          <title>Status Anggota</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            .title, .subtitle { text-align: center; margin-bottom: 10px; }
-            .title { font-size: 28px; font-weight: bold; color: #00796b; }
-            .subtitle { font-size: 20px; font-weight: normal; color: #555; }
-            table { width: 100%; border-collapse: collapse; border: 1px solid #ccc; }
-            th, td { padding: 8px; border: 1px solid #ccc; }
-            .header-row th[colspan="2"] { text-align: center; }
-            .total-row { font-weight: bold; background-color: #e0f2f1; }
-          </style>
-        </head>
-        <body>
-          <div class="title">Data Anggota</div>
-          <div class="subtitle">Jumlah Anggota: ${totalElements}</div>
-          <table>
-            <thead>
-              <tr class="header-row">
-                <th>No</th>
-                <th>Foto</th>
-                <th>Nama</th>
-                <th>Tanggal Lahir</th>
-                <th>Unit Kerja</th>
-                <th>Tingkat Sekolah</th>
-                <th>Keterangan</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${fetchedData
-          .map(
-            (item, index) => `
-                    <tr>
-                      <td>${index + 1}</td>
-                      <td>${fotoBase64Array[index]
-                ? `<img src="data:image/png;base64,${fotoBase64Array[index]}" alt="foto" width="50" height="80"/>`
-                : ""
-              }</td>
-                      <td>
-                        <div class="font-bold">${item.namaLengkap}</div>
-                        <div>${item.npaPgri}</div>
-                        <div>${item.jabatan}</div>
-                      </td>
-                      <td>
-                        <div>${item.tempatLahir},</div>
-                        <div>${formatDate(item.tanggalLahir)}</div>
-                        <div>${calculateAge(item.tanggalLahir)} Tahun</div>
-                        <div>${formatRetirementDate(
-                item.prediksiPensiun,
-                item.statusPegawai
-              )}</div>
-                      </td>
-                      <td>
-                        <div>${item.cabang},</div>
-                        <div>${item.unitKerja}</div>
-                        <div>Anggota: ${item.tahunDiangkat ? item.tahunDiangkat : "-"
-              }</div>
-                        <div>
-                          ${item.pangkatGolongan} || ${formatCurrency(
-                item.iuran
-              )}
-                        </div>
-                      </td>
-                      <td>
-                        <div>${formatTingkatSekolah(item.tingkatSekolah)}</div>
-                      </td>
-                      <td>
-                        <div>${item.statusKeanggotaan ? item.statusKeanggotaan : "-"
-              }</div>
-                      </td>
-                    </tr>
-                  `
-          )
-          .join("")}
-            </tbody>
-          </table>
+        <head><title>Memuat Data...</title></head>
+        <body style="font-family:sans-serif; text-align:center; padding-top:20%;">
+          <h2 id="msg" style="color:#00796b;">Sedang menyiapkan 0 / ${totalElements} data beserta foto, mohon tunggu...</h2>
+          <p style="color:#666;">(Proses ini memakan memori, jangan tutup jendela ini)</p>
         </body>
       </html>
-    `;
+    `);
 
+    try {
+      let allData = [];
+      const chunkSize = 100;
+      let currentPageFetch = 0;
+      let hasMore = true;
+
+      while (hasMore && allData.length < totalElements) {
+        const response = await GlobalApi.getAllAnggota(
+          currentPageFetch,
+          chunkSize,
+          currentFilters.cabang,
+          currentFilters.unitKerja,
+          currentFilters.keyword,
+          currentFilters.status,
+          currentFilters.tingkatSekolah
+        );
+
+        let chunk = [];
+        if (Array.isArray(response)) {
+          chunk = response;
+        } else if (response && Array.isArray(response.content)) {
+          chunk = response.content;
+        } else if (response?.data && Array.isArray(response.data.content)) {
+          chunk = response.data.content;
+        }
+
+        if (chunk.length === 0) {
+          hasMore = false;
+        } else {
+          allData = allData.concat(chunk);
+          currentPageFetch++;
+
+          if (printWindow && !printWindow.closed) {
+            const msgEl = printWindow.document.getElementById('msg');
+            if (msgEl) {
+              msgEl.innerText = "Sedang menarik data " + allData.length + " / " + totalElements + " ...";
+            }
+          }
+        }
+      }
+
+      if (allData.length === 0) {
+        if (printWindow && !printWindow.closed) {
+          printWindow.document.getElementById('msg').innerText = "Data tidak ditemukan atau kosong.";
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      if (printWindow && !printWindow.closed) {
+        const msgEl = printWindow.document.getElementById('msg');
+        if (msgEl) msgEl.innerText = "Merender tabel dan merakit foto... (Mungkin memakan waktu)";
+      }
+
+      let rowsHtml = "";
+      allData.forEach((item, index) => {
+        let imgTag = "-";
+        if (item.foto) {
+          try {
+            const decodedString = atob(item.foto);
+            imgTag = "<img src='data:image/jpeg;base64," + decodedString + "' alt='foto' width='45' height='55' decoding='async' style='object-fit:cover; border-radius:4px; border:1px solid #ddd;'/>";
+          } catch (e) {
+            imgTag = "-";
+          }
+        }
+
+        const tglLahir = item.tanggalLahir ? formatDate(item.tanggalLahir) : "-";
+        const usia = item.tanggalLahir ? calculateAge(item.tanggalLahir) : "-";
+        const tglPensiun = item.prediksiPensiun ? formatRetirementDate(item.prediksiPensiun, item.statusPegawai) : "-";
+        const tkSekolah = item.tingkatSekolah ? formatTingkatSekolah(item.tingkatSekolah) : "-";
+        const iuran = item.iuran ? formatCurrency(item.iuran) : "-";
+
+        rowsHtml += "<tr>" +
+          "<td style='text-align:center;'>" + (index + 1) + "</td>" +
+          "<td style='text-align:center;'>" + imgTag + "</td>" +
+          "<td>" +
+            "<div class='font-bold'>" + (item.namaLengkap || "-") + "</div>" +
+            "<div>NPA: " + (item.npaPgri || "-") + "</div>" +
+            "<div>" + (item.jabatan || "-") + "</div>" +
+          "</td>" +
+          "<td>" +
+            "<div>" + (item.tempatLahir || "-") + ",</div>" +
+            "<div>" + tglLahir + "</div>" +
+            "<div>Usia: " + usia + "</div>" +
+            "<div>Pensiun: " + tglPensiun + "</div>" +
+          "</td>" +
+          "<td>" +
+            "<div>" + (item.cabang || "-") + ",</div>" +
+            "<div>" + (item.unitKerja || "-") + "</div>" +
+            "<div>Anggota: " + (item.tahunDiangkat || "-") + "</div>" +
+            "<div>" + (item.pangkatGolongan || "-") + " || " + iuran + "</div>" +
+          "</td>" +
+          "<td>" +
+            "<div style='font-weight:bold;'>" + tkSekolah + "</div>" +
+          "</td>" +
+          "<td style='text-align:center;'>" +
+            "<div>" + (item.statusKeanggotaan || "-") + "</div>" +
+          "</td>" +
+        "</tr>";
+      });
+
+      const htmlContent = `
+        <html>
+          <head>
+            <title>Laporan Status Anggota</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              .title, .subtitle { text-align: center; margin-bottom: 5px; }
+              .title { font-size: 22px; font-weight: bold; color: #00796b; }
+              .subtitle { font-size: 14px; color: #555; margin-bottom: 20px;}
+              table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+              th, td { padding: 6px; border: 1px solid #000; font-size: 11px; vertical-align: top; }
+              th { background-color: #f3f4f6; font-size: 12px;}
+              .font-bold { font-weight: bold; }
+            </style>
+          </head>
+          <body>
+            <div class="title">Laporan Data Anggota</div>
+            <div class="subtitle">Jumlah Anggota: ${allData.length}</div>
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 5%;">No</th>
+                  <th style="width: 8%;">Foto</th>
+                  <th style="width: 22%;">Nama & Identitas</th>
+                  <th style="width: 20%;">Tanggal Lahir</th>
+                  <th style="width: 22%;">Unit Kerja</th>
+                  <th style="width: 13%;">Tk. Sekolah</th>
+                  <th style="width: 10%;">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rowsHtml}
+              </tbody>
+            </table>
+          </body>
+        </html>
+      `;
+
+      printWindow.document.open();
       printWindow.document.write(htmlContent);
       printWindow.document.close();
-      printWindow.onload = () => {
+
+      setTimeout(() => {
+        printWindow.focus();
         printWindow.print();
         printWindow.close();
-        fetchDataAnggota(currentPage, pageSize, currentFilters);
-      };
+      }, 3000); 
+
     } catch (error) {
-      console.error("Error during print process:", error);
+      console.error("Print Error:", error);
+      if (printWindow && !printWindow.closed) {
+        const errorMsg = printWindow.document.getElementById('msg');
+        if (errorMsg) {
+          errorMsg.innerText = "Gagal memuat data laporan. (Server Error/Timeout)";
+          errorMsg.style.color = "red";
+        }
+      }
     } finally {
       setIsLoading(false);
     }

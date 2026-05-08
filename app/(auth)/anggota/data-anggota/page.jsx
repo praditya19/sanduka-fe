@@ -366,53 +366,109 @@ const DataAnggota = () => {
 
   const handlePrint = async () => {
     setIsLoading(true);
+
+    const printWindow = window.open("", "_blank", "width=1000,height=800");
+    if (!printWindow) {
+      alert("Mohon izinkan pop-up browser untuk mencetak dokumen.");
+      setIsLoading(false);
+      return;
+    }
+
+    printWindow.document.write("<html><head><title>Memuat Data...</title></head><body style='font-family:sans-serif; text-align:center; padding-top:20%;'><h2 id='msg' style='color:#00796b;'>Sedang menarik seluruh data dari server...</h2><p style='color:#666;'>(Mohon tunggu beberapa saat)</p></body></html>");
+
     try {
-      // Determine if we have active filters
-      const hasCabangFilter = selectedCabang && selectedCabang.trim() !== "";
-      const hasUnitKerjaFilter =
-        selectedUnitKerja && selectedUnitKerja.trim() !== "";
-      const hasNamaFilter = nama && nama.trim() !== "";
-      const hasAnyFilter =
-        hasCabangFilter || hasUnitKerjaFilter || hasNamaFilter;
+      const printCabang = selectedCabang ? selectedCabang.trim() : "";
+      const printUnitKerja = selectedUnitKerja ? selectedUnitKerja.trim() : "";
+      const printKeyword = nama ? nama.trim() : "";
+      
+      const printStatus = typeof status !== "undefined" && status !== "Semua" ? status : "";
 
-      let filteredDataForPrint;
+      const fetchSize = typeof totalElements !== "undefined" && totalElements > 0 ? totalElements : 10000;
+      
+      const response = await GlobalApi.getAllAnggota(
+        0,
+        fetchSize,
+        printCabang,
+        printUnitKerja,
+        printKeyword,
+        printStatus
+      );
 
-      if (hasAnyFilter) {
-        const printCabang = hasCabangFilter ? selectedCabang : null;
-        const printUnitKerja = hasUnitKerjaFilter ? selectedUnitKerja : null;
-        const printKeyword = hasNamaFilter ? nama : null;
-
-        filteredDataForPrint = await fetchDataAnggota(
-          0,
-          totalElements > 0 ? totalElements : 10000,
-          printCabang,
-          printUnitKerja,
-          printKeyword,
-          status,
-          false, // Don't update table state
-        );
-      } else {
-        filteredDataForPrint = anggotaData;
+      let filteredDataForPrint = [];
+      if (Array.isArray(response)) {
+        filteredDataForPrint = response;
+      } else if (response && Array.isArray(response.content)) {
+        filteredDataForPrint = response.content;
+      } else if (response?.data && Array.isArray(response.data.content)) {
+        filteredDataForPrint = response.data.content;
       }
 
       if (!filteredDataForPrint || filteredDataForPrint.length === 0) {
-        console.warn("No data available for printing.");
-        console.warn("Possible reasons:");
-        console.warn("1. No data exists in table");
-        console.warn("2. API returned empty response");
-        console.warn("3. Filters are too restrictive");
-        alert("Tidak ada data untuk dicetak.");
+        if (!printWindow.closed) {
+           printWindow.document.getElementById('msg').innerText = "Data tidak ditemukan atau kosong.";
+        }
         setIsLoading(false);
         return;
       }
 
-      const printWindow = window.open("", "_blank", "width=800,height=600");
+      if (!printWindow.closed) {
+        printWindow.document.getElementById('msg').innerText = "Sedang merakit " + filteredDataForPrint.length + " data beserta foto... (Browser mungkin butuh waktu)";
+      }
 
-      // Determine title based on filter
-      const titleCabang =
-        selectedCabang && selectedCabang.trim() !== ""
-          ? `Cabang ${selectedCabang}`
-          : "Semua Cabang";
+      const titleCabang = printCabang !== "" ? `Cabang ${printCabang}` : "Semua Cabang";
+
+      let rowsHtml = "";
+      filteredDataForPrint.forEach((item, index) => {
+        
+        let imgTag = "";
+        if (item.foto) {
+          try {
+            const decodedString = atob(item.foto);
+            imgTag = "<img src='data:image/jpeg;base64," + decodedString + "' alt='foto' width='50' height='50' decoding='async' style='object-fit:cover; border-radius:4px; border:1px solid #ccc;'/>";
+          } catch (e) {
+            imgTag = "-";
+          }
+        } else {
+          imgTag = "-";
+        }
+
+        const tglLahir = item.tanggalLahir ? formatDate(item.tanggalLahir) : "-";
+        
+        let tglPensiun = "-";
+        if (item.prediksiPensiun) {
+            try {
+                tglPensiun = typeof formatRetirementDate === "function" 
+                    ? formatRetirementDate(item.prediksiPensiun) 
+                    : item.prediksiPensiun;
+            } catch (e) {
+                tglPensiun = item.prediksiPensiun;
+            }
+        }
+
+        const updateAtStr = (item.updatedAt && item.updatedAt.length >= 3) ? item.updatedAt[2] + "-" + item.updatedAt[1] + "-" + item.updatedAt[0] : "-";
+
+        rowsHtml += "<tr>" +
+          "<td style='text-align:center;'>" + (index + 1) + "</td>" +
+          "<td>" +
+            "<div>" + (item.cabang || "-") + ",</div>" +
+            "<div>" + (item.unitKerja || "-") + "</div>" +
+          "</td>" +
+          "<td style='text-align:center;'>" + imgTag + "</td>" +
+          "<td>" +
+            "<div class='font-bold'>" + (item.namaLengkap || "-") + "</div>" +
+            "<div>NPA: " + (item.npaPgri || "-") + "</div>" +
+          "</td>" +
+          "<td>" +
+            "<div>" + tglLahir + " " + (item.nip || "") + ",</div>" +
+            "<div>" + (item.jabatan || "-") + "</div>" +
+            "<div>Pensiun: " + tglPensiun + "</div>" +
+          "</td>" +
+          "<td>" +
+            "<div>" + (item.statusKeanggotaan ? item.statusKeanggotaan : "-") + "</div>" +
+            "<div>" + updateAtStr + "</div>" +
+          "</td>" +
+        "</tr>";
+      });
 
       const htmlContent = `
         <html>
@@ -424,89 +480,50 @@ const DataAnggota = () => {
               .title { font-size: 28px; font-weight: bold; color: #00796b; }
               .subtitle { font-size: 20px; font-weight: normal; color: #555; }
               table { width: 100%; border-collapse: collapse; border: 1px solid #ccc; }
-              th, td { padding: 8px; border: 1px solid #ccc; }
-              .header-row th[colspan="2"] { text-align: center; }
-              .total-row { font-weight: bold; background-color: #e0f2f1; }
+              th, td { padding: 8px; border: 1px solid #ccc; font-size: 12px;}
+              .header-row th { text-align: center; background-color: #f3f4f6; font-size: 12px; }
+              .font-bold { font-weight: bold; }
             </style>
           </head>
           <body>
             <div class="title">Data Anggota ${titleCabang}</div>
-            <div class="subtitle">Jumlah Anggota: ${
-              filteredDataForPrint.length
-            }</div>
+            <div class="subtitle">Jumlah Anggota: ${filteredDataForPrint.length}</div>
             <table>
               <thead>
                 <tr class="header-row">
-                  <th>No</th>
-                  <th>Unit Kerja</th>
-                  <th>Foto</th>
-                  <th>Nama</th>
-                  <th>Tanggal Lahir</th>
-                  <th>Keterangan</th>
+                  <th style="width: 5%;">No</th>
+                  <th style="width: 25%;">Unit Kerja</th>
+                  <th style="width: 10%;">Foto</th>
+                  <th style="width: 25%;">Nama</th>
+                  <th style="width: 20%;">Tanggal Lahir</th>
+                  <th style="width: 15%;">Keterangan</th>
                 </tr>
               </thead>
               <tbody>
-                ${filteredDataForPrint
-                  .map(
-                    (item, index) => `
-                      <tr>
-                        <td>${index + 1}</td>
-                         <td>
-                          <div>${item.cabang},</div>
-                          <div>${item.unitKerja}</div>
-                        </td>
-                        <td>${
-                          item.foto
-                            ? `<img src="data:image/png;base64,${item.foto}" alt="foto" width="50" height="50"/>`
-                            : ""
-                        }</td>
-                        <td>
-                          <div class="font-bold">${item.namaLengkap}</div>
-                          <div>${item.npaPgri}</div>
-                        </td>
-                        <td>
-                          <div>${formatDate(item.tanggalLahir)} ${
-                            item.nip
-                          },</div>
-                           <div>${item.jabatan}</div>
-                          <div>${formatRetirementDate(
-                            item.prediksiPensiun,
-                          )}</div>
-                        </td>
-                       
-                        <td>
-                          <div>${
-                            item.statusKeanggotaan
-                              ? item.statusKeanggotaan
-                              : "-"
-                          }</div>
-                           <div>
-  ${
-    item.updatedAt
-      ? `${item.updatedAt[2]}-${item.updatedAt[1]}-${item.updatedAt[0]}`
-      : "-"
-  }
-</div>
-                        </td>
-                      </tr>
-                    `,
-                  )
-                  .join("")}
+                ${rowsHtml}
               </tbody>
             </table>
           </body>
         </html>
       `;
 
+      printWindow.document.open();
       printWindow.document.write(htmlContent);
       printWindow.document.close();
-      printWindow.onload = () => {
+
+      const printDelay = Math.max(2000, (filteredDataForPrint.length / 1000) * 1500);
+
+      setTimeout(() => {
+        printWindow.focus();
         printWindow.print();
         printWindow.close();
-      };
+      }, printDelay);
+
     } catch (error) {
       console.error("Error during print process:", error);
-      alert("Terjadi kesalahan: " + error.message);
+      if (!printWindow.closed) {
+         printWindow.document.body.innerHTML = "<h2 style='color:red; font-family:sans-serif; text-align:center; margin-top:20%;'>Terjadi kesalahan: " + error.message + "</h2>";
+      }
     } finally {
       setIsLoading(false);
     }
@@ -793,7 +810,8 @@ const DropdownCabang = ({ label, options, selectedCabang, handleChange }) => {
   }, [selectedCabang]);
 
   return (
-    <div className=" inline-block w-44" ref={dropdownRef}>
+    // PERBAIKAN: Tambahkan 'relative' di class ini
+    <div className="relative inline-block w-44" ref={dropdownRef}>
       <label className="block mb-2 font-semibold text-gray-800">{label}</label>
       <input
         type="text"
@@ -923,7 +941,8 @@ const DropdownUnitKerja = ({
   }, [selectedCabang]);
 
   return (
-    <div className=" inline-block w-44" ref={dropdownRef}>
+    // PERBAIKAN: Tambahkan 'relative' di class ini
+    <div className="relative inline-block w-44" ref={dropdownRef}>
       <label className="block mb-2 font-semibold text-gray-800">{label}</label>
       <input
         type="text"
