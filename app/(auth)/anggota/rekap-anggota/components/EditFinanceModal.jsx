@@ -184,16 +184,21 @@ const EditFinanceModal = ({
                 if (isReset) return false;
 
                 // Selalu tampilkan kategori inti (PGRI & SANDUKA) meskipun nilainya 0
-                const coreKeys = ["pgri", "sanduka"];
-                if (coreKeys.includes(item.key)) return true;
+                const alwaysShow = ["pgri", "sanduka"];
+                if (alwaysShow.includes(item.key)) return true;
 
-                // Untuk kategori lain, sembunyikan jika nilainya 0
+                // Tampilkan DASPEN, DERAP, KALENDER jika nilainya > 0 
+                // ATAU jika user baru saja menambahkannya (ada di addedCategories)
+                const coreKeys = ["daspen", "derap", "kalender"];
+                const isAdded = addedCategories.some(c => c.key === item.key);
+                
                 const totalVal = parseInt(item.iuran || 0) + (nominalBaruList[item.key] || 0);
-                return totalVal > 0;
+                return totalVal > 0 || isAdded;
               })
               .map((item, idx) => {
                 const isReset = resetKeys.includes(item.key);
-                const oldValue = isReset ? 0 : parseInt(item.iuran || 0);
+                // PRIORITAS: Gunakan newValues (hasil fetch/session) jika ada, jika tidak gunakan data DB
+                const oldValue = isReset ? 0 : (newValues[item.key] ?? parseInt(item.iuran || 0));
                 const inputValue = isReset ? 0 : nominalBaruList[item.key] || 0;
                 const totalValue = oldValue + inputValue;
 
@@ -280,11 +285,15 @@ const EditFinanceModal = ({
               </div>
             )}
 
-            {addedCategories.map((item, idx) => {
+            {/* Menampilkan kategori tambahan selain kategori inti */}
+            {addedCategories
+              .filter(cat => !["pgri", "sanduka", "daspen", "derap", "kalender"].includes(cat.key))
+              .map((item, idx) => {
               const oldValue = newValues[item.key] ?? 0;
               const inputValue = manualInputs[item.key] ?? 0;
               const totalValue = oldValue + inputValue;
-              const displayName = item.keterangan || item.label || item.key;
+              // Pastikan label tampil dengan benar
+              const displayName = item.label || item.keterangan || item.key;
               return (
                 <div key={`added-${idx}`} className="space-y-2 p-3 rounded-lg bg-yellow-50 border-l-4 border-yellow-400 hover:border-yellow-500 transition-colors">
                   <div className="flex items-center justify-between">
@@ -377,11 +386,11 @@ const EditFinanceModal = ({
                       >
                         <option value="">-- Pilih Keterangan --</option>
                         {Array.isArray(keteranganLainLain) && keteranganLainLain.map((item, index) => (
-                          <option key={index} value={item.keterangan || item.nama_iuran || item}>
+                          <option key={index} value={JSON.stringify(item)}>
                             {item.keterangan || item.nama_iuran || item}
                           </option>
                         ))}
-                        <option value="Lain-Lain (Manual)">Lain-Lain (Manual)</option>
+                        <option value="manual">Lain-Lain (Manual)</option>
                       </select>
                     </div>
                   )}

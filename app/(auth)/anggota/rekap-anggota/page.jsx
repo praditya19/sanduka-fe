@@ -77,6 +77,7 @@ function RekapAnggota() {
   const [selectedKategori, setSelectedKategori] = useState("");
   const [selectedKeterangan, setSelectedKeterangan] = useState("");
   const [keteranganLainLain, setKeteranganLainLain] = useState([]);
+  const [standardIuranList, setStandardIuranList] = useState([]);
   const [notifDaspen, setNotifDaspen] = useState(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -116,19 +117,22 @@ function RekapAnggota() {
 
   // --- Fetch Keterangan Lain-Lain dari API ---
   useEffect(() => {
-    const fetchLainLain = async () => {
+    const fetchData = async () => {
       try {
-        // Coba ambil data lengkap, jika gagal fallback ke keterangan
-        let response = await GlobalApi.getKeteranganLainlain();
-        
-        // Jika response dibungkus { data: [...] }
-        const actualData = response?.data || response || [];
-        setKeteranganLainLain(actualData);
+        // 1. Fetch Keterangan Lain-Lain
+        let responseLain = await GlobalApi.getKeteranganLainlain();
+        const actualLain = responseLain?.data || responseLain || [];
+        setKeteranganLainLain(actualLain);
+
+        // 2. Fetch Iuran Standar (PGRI, Kalender, Derap, dll)
+        let responseStd = await GlobalApi.getIuranByFilter("");
+        const actualStd = Array.isArray(responseStd) ? responseStd : (responseStd?.data || []);
+        setStandardIuranList(actualStd);
       } catch (error) {
-        console.error("❌ Gagal mengambil data keterangan lain-lain:", error);
+        console.error("❌ Gagal mengambil data inisialisasi:", error);
       }
     };
-    fetchLainLain();
+    fetchData();
   }, []);
 
   const [filesDataMap, setFilesDataMap] = useState({});
@@ -572,52 +576,114 @@ function RekapAnggota() {
     setSumbanganList(prev => prev.map(s => s.jenis === jenis ? { ...s, jumlah: 0 } : s));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!selectedKategori) return;
-    const key = selectedKategori === "lainlain" ? selectedKeterangan : selectedKategori;
-    if (!key) return;
 
-    // PENTING: Jika kategori ditambahkan kembali, pastikan dihapus dari resetKeys
-    // agar nominalnya langsung muncul (tidak dianggap sedang dihapus)
-    setResetKeys(prev => prev.filter(k => k !== key));
+    let uniqueKey = selectedKategori;
+    let initialValue = 0;
+    let itemObj = null;
 
-    // Jika kategori yang dipilih adalah kategori inti (PGRI, Sanduka, Daspen, dll),
-    // kita tidak perlu menambahkannya ke addedCategories karena sudah ada di groupedIuran.
-    // Kita cukup mengeset nilainya saja.
-    const coreKeys = ["pgri", "sanduka", "daspen", "derap", "kalender"];
-    if (coreKeys.includes(key.toLowerCase())) {
-      // Jika daspen, sinkronkan nilai provinsinya
-      if (key.toLowerCase() === "daspen") {
-        setDaspenValue(provDaspenValue);
+    // 1. Ambil data dasar berdasarkan kategori
+    if (selectedKategori === "lainlain") {
+      if (selectedKeterangan === "manual") {
+        uniqueKey = "Lain-Lain (Manual)";
+      } else {
+        try {
+          itemObj = JSON.parse(selectedKeterangan);
+          uniqueKey = itemObj.keterangan || itemObj.nama_iuran || "Lain-Lain";
+        } catch (e) { uniqueKey = "Lain-Lain"; }
       }
-      // Untuk kategori inti lainnya, biarkan tetap muncul di groupedIuran
-    } else {
-      // Hanya tambahkan ke addedCategories jika memang kategori baru (Lain-Lain/Tambahan)
-      if (!addedCategories.some(c => c.key === key)) {
-        setAddedCategories(prev => [...prev, { key, label: key }]);
-        // --- PERBAIKAN: Ambil nominal dari API keteranganLainLain ---
-        // --- PERBAIKAN PAMUNGKAS: Pencarian Pintar (Smart Lookup) ---
-        const listLain = Array.isArray(keteranganLainLain) ? keteranganLainLain : (keteranganLainLain?.data || []);
-        
-        const foundFromApi = listLain.find(item => {
-          const apiLabel = (item.keterangan || item.nama_iuran || item.nama || item || "").toString().trim().toLowerCase();
-          const selectedLabel = key.toString().trim().toLowerCase();
-          return apiLabel === selectedLabel;
-        });
+    }
 
-        if (foundFromApi && typeof foundFromApi === 'object') {
-          // Cari kolom mana saja yang mengandung kata kunci nominal/jumlah/tarif secara dinamis
-          const smartKey = Object.keys(foundFromApi).find(k => 
-            k.toLowerCase().includes('nominal') || 
-            k.toLowerCase().includes('jumlah') || 
-            k.toLowerCase().includes('tarif') ||
-            k.toLowerCase().includes('harga')
-          );
-          
-          const nominal = smartKey ? parseInt(foundFromApi[smartKey] || 0) : 0;
-          setManualInputs(prev => ({ ...prev, [key]: nominal }));
-        }
+    // 2. LOGIKA PENGAMBILAN NILAI DEFAULT (Agresif + Database Standard)
+    let currentStdList = standardIuranList;
+    
+    // Jika list masih kosong, coba fetch ulang sekali lagi (on-demand fallback)
+    if (currentStdList.length === 0) {
+      try {
+        const responseStd = await GlobalApi.getIuranByFilter("");
+        currentStdList = Array.isArray(responseStd) ? responseStd : (responseStd?.data || []);
+        setStandardIuranList(currentStdList);
+      } catch (e) { console.error("On-demand fetch failed:", e); }
+    }
+
+    if (selectedKategori === "kalender" || selectedKategori === "derap") {
+      // SUMBER UTAMA: Ambil dari standardIuranList (DATABASE DEFAULT)
+      const matchName = selectedKategori.trim().toUpperCase(); // "KALENDER" or "DERAP"
+      let stdItem = currentStdList.find(item => item.iuran?.trim().toUpperCase() === matchName);
+      
+      // On-Demand fetch jika tidak ada di list lokal
+      if (!stdItem) {
+        try {
+          const res = await GlobalApi.getIuranByFilter(matchName);
+          stdItem = Array.isArray(res) ? res[0] : (res?.data?.[0] || res);
+          if (stdItem) setStandardIuranList(prev => [...prev, stdItem]);
+        } catch (e) { console.error("Specific fetch failed:", e); }
       }
+
+      if (stdItem) {
+        initialValue = parseInt(stdItem.propinsi || 0) + 
+                       parseInt(stdItem.kabupaten || 0) + 
+                       parseInt(stdItem.cabang || 0);
+      }
+
+      // SUMBER CADANGAN: Ambil dari API Target Cabang (Jika database default 0 atau tidak ketemu)
+      const cabangId = selectedMember?.cabang || selectedMember?.user?.cabang;
+      if (initialValue === 0 && cabangId) {
+        try {
+          const apiFunc = selectedKategori === "kalender" ? GlobalApi.getTableKalender : GlobalApi.getTableDerap;
+          const res = await apiFunc(selectedMonth, selectedYear, cabangId);
+          const data = res?.data?.[0] || res?.[0] || res?.data || res;
+          if (data) {
+            initialValue = Object.entries(data).reduce((acc, [k, v]) => {
+              if (['propinsi', 'kabupaten', 'cabang', 'nominal', 'jumlah', 'tarif'].some(key => k.toLowerCase().includes(key)) && !['id', 'bulan', 'tahun'].includes(k.toLowerCase())) {
+                return acc + (parseInt(v) || 0);
+              }
+              return acc;
+            }, 0);
+          }
+        } catch (e) { console.error("API Fallback failed:", e); }
+      }
+    } else if (selectedKategori === "lainlain" && itemObj) {
+      // Ambil nominal dari objek lain-lain yang dipilih
+      const smartKey = Object.keys(itemObj).find(k => 
+        ['nominal', 'jumlah', 'tarif', 'harga'].some(key => k.toLowerCase().includes(key))
+      );
+      initialValue = smartKey ? parseInt(itemObj[smartKey] || 0) : 0;
+    } else if (selectedKategori === "daspen") {
+      // DASPEN murni dari hasil hitung NIP (daspenValue), tidak dari Database Standard
+      initialValue = parseInt(provDaspenValue || daspenValue || 0);
+    } else if (selectedKategori === "pgri" || selectedKategori === "sanduka") {
+      let pgriItem = currentStdList.find(item => item.iuran?.trim().toUpperCase() === "IURAN PGRI");
+      
+      // On-Demand fetch untuk PGRI/Sanduka
+      if (!pgriItem) {
+        try {
+          const res = await GlobalApi.getIuranByFilter("IURAN PGRI");
+          pgriItem = Array.isArray(res) ? res[0] : (res?.data?.[0] || res);
+          if (pgriItem) setStandardIuranList(prev => [...prev, pgriItem]);
+        } catch (e) { console.error("PGRI specific fetch failed:", e); }
+      }
+
+      if (selectedKategori === "pgri") {
+        if (pgriItem) {
+          initialValue = parseInt(pgriItem.pb || 0) + parseInt(pgriItem.propinsi || 0) + 
+                         parseInt(pgriItem.kabupaten || 0) + parseInt(pgriItem.cabang || 0);
+        } else { initialValue = 8000; }
+      } else {
+        if (pgriItem && pgriItem.sanduka) {
+          initialValue = parseInt(pgriItem.sanduka || 0);
+        } else { initialValue = 3000; }
+      }
+    }
+
+    // 3. UPDATE STATE
+    setNewValues(prev => ({ ...prev, [uniqueKey]: initialValue }));
+    setResetKeys(prev => prev.filter(k => k !== uniqueKey));
+
+    if (!addedCategories.some(c => c.key === uniqueKey)) {
+      const labelMap = { iuran: "Iuran", derap: "Derap", kalender: "Kalender", lainlain: "Lain-Lain", daspen: "Daspen", pgri: "PGRI", sanduka: "Sanduka" };
+      setAddedCategories(prev => [...prev, { key: uniqueKey, label: labelMap[selectedKategori] || uniqueKey }]);
     }
 
     setShowDropdown(false);
@@ -625,28 +691,70 @@ function RekapAnggota() {
     setSelectedKeterangan("");
   };
 
+
   const handleUpdateClick = async () => {
     if (!selectedMember) return;
     setLoadButton(true);
     try {
+      const tagihanUntukBulan = `${selectedYear}-${String(selectedMonth).padStart(2, "0")}-01`;
+      const cabangName = selectedMember.cabang || selectedMember.user?.cabang || "";
+
+      // Siapkan payload sesuai format yang diminta
       const payload = {
         nomorRekening,
-        bulan: selectedMonth,
-        tahun: selectedYear,
-        nominalBaruList,
-        resetKeys,
-        sumbanganList,
-        // Sertakan iuran pokok, jika ada di resetKeys maka kirim 0 agar jadi "Belum Input"
-        pgri: resetKeys.includes("pgri") ? 0 : selectedMember.pgri,
-        sanduka: resetKeys.includes("sanduka") ? 0 : selectedMember.sanduka,
-        daspen: resetKeys.includes("daspen") ? 0 : daspenValue,
-        derap: resetKeys.includes("derap") ? 0 : selectedMember.derap,
-        kalender: resetKeys.includes("kalender") ? 0 : selectedMember.kalender,
-        addedCategories: addedCategories.map(c => ({
-          key: c.key,
-          nominal: manualInputs[c.key] || 0
-        }))
+        tagihanUntukBulan,
+
+        // PGRI: Gunakan nominalBaruList untuk tambahan cabang
+        defaultPgri: newValues.pgri ?? selectedMember.pgri ?? 0,
+        manualPgri: nominalBaruList.pgri || 0,
+        pgri: (newValues.pgri ?? selectedMember.pgri ?? 0) + (nominalBaruList.pgri || 0),
+
+        // SANDUKA
+        defaultSanduka: newValues.sanduka ?? selectedMember.sanduka ?? 0,
+        manualSanduka: nominalBaruList.sanduka || 0,
+        sanduka: (newValues.sanduka ?? selectedMember.sanduka ?? 0) + (nominalBaruList.sanduka || 0),
+
+        // DASPEN
+        defaultDaspen: newValues.daspen ?? provDaspenValue ?? daspenValue ?? 0,
+        manualDaspen: nominalBaruList.daspen || 0,
+        daspen: (newValues.daspen ?? provDaspenValue ?? daspenValue ?? 0) + (nominalBaruList.daspen || 0),
+
+        // DERAP
+        defaultDerap: newValues.derap ?? selectedMember.derap ?? 0,
+        manualDerap: nominalBaruList.derap || 0,
+        derap: (newValues.derap ?? selectedMember.derap ?? 0) + (nominalBaruList.derap || 0),
+
+        // KALENDER
+        defaultKalender: newValues.kalender ?? selectedMember.kalender ?? 0,
+        manualKalender: nominalBaruList.kalender || 0,
+        kalender: (newValues.kalender ?? selectedMember.kalender ?? 0) + (nominalBaruList.kalender || 0),
+
+        // Gabungkan Added Categories & Sumbangan List
+        iuranSumbanganList: [
+          ...addedCategories.map(c => ({
+            jenis: c.label || c.key,
+            // Jika kategori inti ada di addedCategories (misal baru ditambah), ambil dari nominalBaruList juga
+            jumlah: (newValues[c.key] || 0) + (nominalBaruList[c.key] || manualInputs[c.key] || 0),
+            cabang: cabangName,
+            tagihanUntukBulan
+          })),
+          ...sumbanganList.map(s => ({
+            jenis: s.jenis,
+            jumlah: s.jumlah || 0,
+            cabang: cabangName,
+            tagihanUntukBulan
+          }))
+        ]
       };
+
+      // Jika ada yang di-reset (Trash icon), paksa jadi 0
+      resetKeys.forEach(key => {
+        if (payload.hasOwnProperty(key)) payload[key] = 0;
+        if (payload.hasOwnProperty(`default${key.charAt(0).toUpperCase() + key.slice(1)}`)) {
+          payload[`default${key.charAt(0).toUpperCase() + key.slice(1)}`] = 0;
+          payload[`manual${key.charAt(0).toUpperCase() + key.slice(1)}`] = 0;
+        }
+      });
 
       const success = await handleUpdateIuran(selectedMember.idByNominal, payload);
       if (success) closePopup();
