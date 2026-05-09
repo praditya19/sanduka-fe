@@ -512,11 +512,11 @@ function RekapAnggota() {
       const profile = response[0] || {};
       const freshMember = {
         ...member,
-        pgri: (dataIuran.pgri && parseInt(dataIuran.pgri) > 0) ? parseInt(dataIuran.pgri) : (member.pgri > 0 ? parseInt(member.pgri) : (parseInt(profile.pgri) || 8000)),
-        sanduka: (dataIuran.sanduka && parseInt(dataIuran.sanduka) > 0) ? parseInt(dataIuran.sanduka) : (member.sanduka > 0 ? parseInt(member.sanduka) : (parseInt(profile.sanduka) || 3000)),
-        daspen: (dataIuran.daspen && parseInt(dataIuran.daspen) > 0) ? parseInt(dataIuran.daspen) : (member.daspen > 0 ? parseInt(member.daspen) : (parseInt(profile.daspen) || 0)),
-        derap: (dataIuran.derap && parseInt(dataIuran.derap) > 0) ? parseInt(dataIuran.derap) : (member.derap > 0 ? parseInt(member.derap) : (parseInt(profile.derap) || 0)),
-        kalender: (dataIuran.kalender && parseInt(dataIuran.kalender) > 0) ? parseInt(dataIuran.kalender) : (member.kalender > 0 ? parseInt(member.kalender) : (parseInt(profile.kalender) || 0)),
+        pgri: (dataIuran.defaultPgri && parseInt(dataIuran.defaultPgri) > 0) ? parseInt(dataIuran.defaultPgri) : (dataIuran.pgri && parseInt(dataIuran.pgri) > 0) ? (parseInt(dataIuran.pgri) - (parseInt(dataIuran.manualPgri) || 0)) : (member.pgri > 0 ? parseInt(member.pgri) : (parseInt(profile.pgri) || 8000)),
+        sanduka: (dataIuran.defaultSanduka && parseInt(dataIuran.defaultSanduka) > 0) ? parseInt(dataIuran.defaultSanduka) : (dataIuran.sanduka && parseInt(dataIuran.sanduka) > 0) ? (parseInt(dataIuran.sanduka) - (parseInt(dataIuran.manualSanduka) || 0)) : (member.sanduka > 0 ? parseInt(member.sanduka) : (parseInt(profile.sanduka) || 3000)),
+        daspen: (dataIuran.defaultDaspen && parseInt(dataIuran.defaultDaspen) > 0) ? parseInt(dataIuran.defaultDaspen) : (dataIuran.daspen && parseInt(dataIuran.daspen) > 0) ? (parseInt(dataIuran.daspen) - (parseInt(dataIuran.manualDaspen) || 0)) : (member.daspen > 0 ? parseInt(member.daspen) : (parseInt(profile.daspen) || 0)),
+        derap: (dataIuran.defaultDerap && parseInt(dataIuran.defaultDerap) > 0) ? parseInt(dataIuran.defaultDerap) : (dataIuran.derap && parseInt(dataIuran.derap) > 0) ? (parseInt(dataIuran.derap) - (parseInt(dataIuran.manualDerap) || 0)) : (member.derap > 0 ? parseInt(member.derap) : (parseInt(profile.derap) || 0)),
+        kalender: (dataIuran.defaultKalender && parseInt(dataIuran.defaultKalender) > 0) ? parseInt(dataIuran.defaultKalender) : (dataIuran.kalender && parseInt(dataIuran.kalender) > 0) ? (parseInt(dataIuran.kalender) - (parseInt(dataIuran.manualKalender) || 0)) : (member.kalender > 0 ? parseInt(member.kalender) : (parseInt(profile.kalender) || 0)),
       };
 
       // Set data final sekaligus untuk memicu re-render modal yang akurat
@@ -588,7 +588,13 @@ function RekapAnggota() {
 
   // 1. Handle uniqueKey khusus lainlain
   if (selectedKategori === "lainlain") {
-    uniqueKey = selectedKeterangan?.trim() || `Lain-Lain-${Date.now()}`;
+    try {
+      const parsed = JSON.parse(selectedKeterangan);
+      const rawKey = parsed.keterangan || parsed.nama_iuran || selectedKeterangan;
+      uniqueKey = rawKey.toString().replace(/"/g, "").trim();
+    } catch (e) {
+      uniqueKey = selectedKeterangan?.toString().replace(/"/g, "").trim() || `Lain-Lain-${Date.now()}`;
+    }
   }
 
   // 2. Ambil standard iuran (fallback jika kosong)
@@ -695,10 +701,19 @@ function RekapAnggota() {
 
       console.log("📋 Data list:", dataList);
 
+      let searchKeterangan = selectedKeterangan;
+      try {
+        const parsed = JSON.parse(selectedKeterangan);
+        const rawKey = parsed.keterangan || parsed.nama_iuran || selectedKeterangan;
+        searchKeterangan = rawKey.toString().replace(/"/g, "").trim();
+      } catch (e) {
+        searchKeterangan = selectedKeterangan?.toString().replace(/"/g, "").trim();
+      }
+
       const matchingItem = dataList.find(
         (item) =>
           cleanText(item.keterangan) ===
-          cleanText(selectedKeterangan)
+          cleanText(searchKeterangan)
       );
 
       console.log("🎯 Matching item:", matchingItem);
@@ -793,9 +808,9 @@ function RekapAnggota() {
       ...prev,
       {
         key: uniqueKey,
-        label: labelMap[selectedKategori] || uniqueKey,
+        label: selectedKategori === "lainlain" ? uniqueKey : (labelMap[selectedKategori] || uniqueKey),
         ...(selectedKategori === "lainlain" && selectedKeterangan
-          ? { keterangan: selectedKeterangan }
+          ? { keterangan: uniqueKey }
           : {}),
       },
     ]);
@@ -851,13 +866,21 @@ function RekapAnggota() {
         iuranSumbanganList: [
           ...addedCategories.map(c => ({
             jenis: c.label || c.key,
+            keterangan: c.keterangan || c.label || c.key,
+            namaSumbangan: c.label || c.key,
+            namaIuran: c.label || c.key,
             // Jika kategori inti ada di addedCategories (misal baru ditambah), ambil dari nominalBaruList juga
             jumlah: (newValues[c.key] || 0) + (nominalBaruList[c.key] || manualInputs[c.key] || 0),
             cabang: cabangName,
             tagihanUntukBulan
           })),
-          ...sumbanganList.map(s => ({
+          ...sumbanganList
+            .filter((s) => parseInt(s.jumlah || 0) > 0)
+            .map((s) => ({
             jenis: s.jenis,
+            keterangan: s.keterangan || s.namaSumbangan || s.jenis,
+            namaSumbangan: s.namaSumbangan || s.jenis,
+            namaIuran: s.namaIuran || s.jenis,
             jumlah: s.jumlah || 0,
             cabang: cabangName,
             tagihanUntukBulan
