@@ -157,8 +157,18 @@ export const exportToExcelLogic = async (selectedCabang, selectedUnitKerja, sele
     const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     const namaBulan = monthNames[selectedBulan - 1] || selectedBulan;
 
+    // Menentukan bulan berikutnya untuk nama file
+    let nextMonthIndex = (parseInt(selectedBulan) || (new Date().getMonth() + 1));
+    let nextYear = (parseInt(selectedTahun) || new Date().getFullYear());
+    
+    if (nextMonthIndex >= 12) {
+      nextMonthIndex = 0;
+      nextYear += 1;
+    }
+    const namaBulanBerikutnya = monthNames[nextMonthIndex];
+
     const excelData = [
-      [`Tagihan Untuk Bulan ${namaBulan} ${selectedTahun}`],
+      [`Tagihan Untuk Bulan ${namaBulanBerikutnya} ${nextYear}`],
       [],
       [
         "No", "Cabang", "Unit Kerja", "Nama Anggota", "NIP", "NPA", "Nomor Rekening",
@@ -208,7 +218,7 @@ export const exportToExcelLogic = async (selectedCabang, selectedUnitKerja, sele
     XLSX.utils.book_append_sheet(wb, ws, "RekapData");
     
     const waktuDownload = new Date().toLocaleString("id-ID", { dateStyle: "short" }).replace(/\//g, "-");
-    XLSX.writeFile(wb, `Backupbynominal_${namaBulan}_${selectedTahun}_${waktuDownload}.xlsx`);
+    XLSX.writeFile(wb, `Backupbynominal_${namaBulanBerikutnya}_${nextYear}_${waktuDownload}.xlsx`);
   } catch (error) {
     console.error("Gagal ekspor data:", error);
     alert("Terjadi kesalahan saat ekspor.");
