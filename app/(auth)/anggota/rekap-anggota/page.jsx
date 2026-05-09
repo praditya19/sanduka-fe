@@ -577,119 +577,237 @@ function RekapAnggota() {
   };
 
   const handleSave = async () => {
-    if (!selectedKategori) return;
+  if (!selectedKategori) return;
 
-    let uniqueKey = selectedKategori;
-    let initialValue = 0;
-    let itemObj = null;
+  let uniqueKey = selectedKategori;
+  let initialValue = 0;
 
-    // 1. Ambil data dasar berdasarkan kategori
-    if (selectedKategori === "lainlain") {
-      if (selectedKeterangan === "manual") {
-        uniqueKey = "Lain-Lain (Manual)";
-      } else {
-        try {
-          itemObj = JSON.parse(selectedKeterangan);
-          uniqueKey = itemObj.keterangan || itemObj.nama_iuran || "Lain-Lain";
-        } catch (e) { uniqueKey = "Lain-Lain"; }
-      }
+  // 🔧 helper untuk bersihin string
+  const cleanText = (text) =>
+    text?.toString().replace(/"/g, "").trim().toLowerCase();
+
+  // 1. Handle uniqueKey khusus lainlain
+  if (selectedKategori === "lainlain") {
+    uniqueKey = selectedKeterangan?.trim() || `Lain-Lain-${Date.now()}`;
+  }
+
+  // 2. Ambil standard iuran (fallback jika kosong)
+  let currentStdList = standardIuranList;
+
+  if (currentStdList.length === 0) {
+    try {
+      const responseStd = await GlobalApi.getIuranByFilter("");
+      currentStdList = Array.isArray(responseStd)
+        ? responseStd
+        : responseStd?.data || [];
+      setStandardIuranList(currentStdList);
+    } catch (e) {
+      console.error("On-demand fetch failed:", e);
     }
+  }
 
-    // 2. LOGIKA PENGAMBILAN NILAI DEFAULT (Agresif + Database Standard)
-    let currentStdList = standardIuranList;
-    
-    // Jika list masih kosong, coba fetch ulang sekali lagi (on-demand fallback)
-    if (currentStdList.length === 0) {
+  // =========================
+  // 📅 KALENDER / DERAP
+  // =========================
+  if (selectedKategori === "kalender" || selectedKategori === "derap") {
+    const matchName = selectedKategori.trim().toUpperCase();
+
+    let stdItem = currentStdList.find(
+      (item) => item.iuran?.trim().toUpperCase() === matchName
+    );
+
+    if (!stdItem) {
       try {
-        const responseStd = await GlobalApi.getIuranByFilter("");
-        currentStdList = Array.isArray(responseStd) ? responseStd : (responseStd?.data || []);
-        setStandardIuranList(currentStdList);
-      } catch (e) { console.error("On-demand fetch failed:", e); }
+        const res = await GlobalApi.getIuranByFilter(matchName);
+        stdItem = Array.isArray(res)
+          ? res[0]
+          : res?.data?.[0] || res;
+
+        if (stdItem) {
+          setStandardIuranList((prev) => [...prev, stdItem]);
+        }
+      } catch (e) {
+        console.error("Specific fetch failed:", e);
+      }
     }
 
-    if (selectedKategori === "kalender" || selectedKategori === "derap") {
-      // SUMBER UTAMA: Ambil dari standardIuranList (DATABASE DEFAULT)
-      const matchName = selectedKategori.trim().toUpperCase(); // "KALENDER" or "DERAP"
-      let stdItem = currentStdList.find(item => item.iuran?.trim().toUpperCase() === matchName);
-      
-      // On-Demand fetch jika tidak ada di list lokal
-      if (!stdItem) {
-        try {
-          const res = await GlobalApi.getIuranByFilter(matchName);
-          stdItem = Array.isArray(res) ? res[0] : (res?.data?.[0] || res);
-          if (stdItem) setStandardIuranList(prev => [...prev, stdItem]);
-        } catch (e) { console.error("Specific fetch failed:", e); }
-      }
+    if (stdItem) {
+      initialValue =
+        parseInt(stdItem.propinsi || 0) +
+        parseInt(stdItem.kabupaten || 0) +
+        parseInt(stdItem.cabang || 0);
+    }
 
-      if (stdItem) {
-        initialValue = parseInt(stdItem.propinsi || 0) + 
-                       parseInt(stdItem.kabupaten || 0) + 
-                       parseInt(stdItem.cabang || 0);
-      }
+    // fallback API cabang
+    const cabangId =
+      selectedMember?.cabang || selectedMember?.user?.cabang;
 
-      // SUMBER CADANGAN: Ambil dari API Target Cabang (Jika database default 0 atau tidak ketemu)
-      const cabangId = selectedMember?.cabang || selectedMember?.user?.cabang;
-      if (initialValue === 0 && cabangId) {
-        try {
-          const apiFunc = selectedKategori === "kalender" ? GlobalApi.getTableKalender : GlobalApi.getTableDerap;
-          const res = await apiFunc(selectedMonth, selectedYear, cabangId);
-          const data = res?.data?.[0] || res?.[0] || res?.data || res;
-          if (data) {
-            initialValue = Object.entries(data).reduce((acc, [k, v]) => {
-              if (['propinsi', 'kabupaten', 'cabang', 'nominal', 'jumlah', 'tarif'].some(key => k.toLowerCase().includes(key)) && !['id', 'bulan', 'tahun'].includes(k.toLowerCase())) {
+    if (initialValue === 0 && cabangId) {
+      try {
+        const apiFunc =
+          selectedKategori === "kalender"
+            ? GlobalApi.getTableKalender
+            : GlobalApi.getTableDerap;
+
+        const res = await apiFunc(
+          selectedMonth,
+          selectedYear,
+          cabangId
+        );
+
+        const data =
+          res?.data?.[0] || res?.[0] || res?.data || res;
+
+        if (data) {
+          initialValue = Object.entries(data).reduce(
+            (acc, [k, v]) => {
+              if (
+                ["propinsi", "kabupaten", "cabang", "nominal", "jumlah", "tarif"].some(
+                  (key) => k.toLowerCase().includes(key)
+                ) &&
+                !["id", "bulan", "tahun"].includes(k.toLowerCase())
+              ) {
                 return acc + (parseInt(v) || 0);
               }
               return acc;
-            }, 0);
-          }
-        } catch (e) { console.error("API Fallback failed:", e); }
+            },
+            0
+          );
+        }
+      } catch (e) {
+        console.error("API Fallback failed:", e);
       }
-    } else if (selectedKategori === "lainlain" && itemObj) {
-      // Ambil nominal dari objek lain-lain yang dipilih
-      const smartKey = Object.keys(itemObj).find(k => 
-        ['nominal', 'jumlah', 'tarif', 'harga'].some(key => k.toLowerCase().includes(key))
+    }
+  }
+
+  // =========================
+  // 📦 LAIN-LAIN (FIXED)
+  // =========================
+  else if (selectedKategori === "lainlain" && selectedKeterangan) {
+    try {
+      console.log("🔍 Keterangan dipilih:", selectedKeterangan);
+
+      const response = await GlobalApi.getLainlain(selectedKeterangan);
+
+      const dataList = Array.isArray(response)
+        ? response
+        : response?.data || [];
+
+      console.log("📋 Data list:", dataList);
+
+      const matchingItem = dataList.find(
+        (item) =>
+          cleanText(item.keterangan) ===
+          cleanText(selectedKeterangan)
       );
-      initialValue = smartKey ? parseInt(itemObj[smartKey] || 0) : 0;
-    } else if (selectedKategori === "daspen") {
-      // DASPEN murni dari hasil hitung NIP (daspenValue), tidak dari Database Standard
-      initialValue = parseInt(provDaspenValue || daspenValue || 0);
-    } else if (selectedKategori === "pgri" || selectedKategori === "sanduka") {
-      let pgriItem = currentStdList.find(item => item.iuran?.trim().toUpperCase() === "IURAN PGRI");
-      
-      // On-Demand fetch untuk PGRI/Sanduka
-      if (!pgriItem) {
-        try {
-          const res = await GlobalApi.getIuranByFilter("IURAN PGRI");
-          pgriItem = Array.isArray(res) ? res[0] : (res?.data?.[0] || res);
-          if (pgriItem) setStandardIuranList(prev => [...prev, pgriItem]);
-        } catch (e) { console.error("PGRI specific fetch failed:", e); }
-      }
 
-      if (selectedKategori === "pgri") {
-        if (pgriItem) {
-          initialValue = parseInt(pgriItem.pb || 0) + parseInt(pgriItem.propinsi || 0) + 
-                         parseInt(pgriItem.kabupaten || 0) + parseInt(pgriItem.cabang || 0);
-        } else { initialValue = 8000; }
+      console.log("🎯 Matching item:", matchingItem);
+
+      if (matchingItem) {
+        initialValue = parseInt(matchingItem.jumlahNominal || 0);
+        console.log("💰 Initial value:", initialValue);
       } else {
-        if (pgriItem && pgriItem.sanduka) {
-          initialValue = parseInt(pgriItem.sanduka || 0);
-        } else { initialValue = 3000; }
+        console.warn(
+          "⚠️ Tidak ditemukan data dengan keterangan:",
+          selectedKeterangan
+        );
+        initialValue = 0;
+      }
+    } catch (error) {
+      console.error("❌ Gagal mengambil data lain-lain:", error);
+    }
+  }
+
+  // =========================
+  // 🧮 DASPEN
+  // =========================
+  else if (selectedKategori === "daspen") {
+    initialValue = parseInt(provDaspenValue || daspenValue || 0);
+  }
+
+  // =========================
+  // 👥 PGRI & SANDUKA
+  // =========================
+  else if (
+    selectedKategori === "pgri" ||
+    selectedKategori === "sanduka"
+  ) {
+    let pgriItem = currentStdList.find(
+      (item) =>
+        item.iuran?.trim().toUpperCase() === "IURAN PGRI"
+    );
+
+    if (!pgriItem) {
+      try {
+        const res = await GlobalApi.getIuranByFilter("IURAN PGRI");
+        pgriItem = Array.isArray(res)
+          ? res[0]
+          : res?.data?.[0] || res;
+
+        if (pgriItem) {
+          setStandardIuranList((prev) => [...prev, pgriItem]);
+        }
+      } catch (e) {
+        console.error("PGRI fetch failed:", e);
       }
     }
 
-    // 3. UPDATE STATE
-    setNewValues(prev => ({ ...prev, [uniqueKey]: initialValue }));
-    setResetKeys(prev => prev.filter(k => k !== uniqueKey));
-
-    if (!addedCategories.some(c => c.key === uniqueKey)) {
-      const labelMap = { iuran: "Iuran", derap: "Derap", kalender: "Kalender", lainlain: "Lain-Lain", daspen: "Daspen", pgri: "PGRI", sanduka: "Sanduka" };
-      setAddedCategories(prev => [...prev, { key: uniqueKey, label: labelMap[selectedKategori] || uniqueKey }]);
+    if (selectedKategori === "pgri") {
+      initialValue = pgriItem
+        ? parseInt(pgriItem.pb || 0) +
+          parseInt(pgriItem.propinsi || 0) +
+          parseInt(pgriItem.kabupaten || 0) +
+          parseInt(pgriItem.cabang || 0)
+        : 8000;
+    } else {
+      initialValue = pgriItem?.sanduka
+        ? parseInt(pgriItem.sanduka || 0)
+        : 3000;
     }
+  }
 
-    setShowDropdown(false);
-    setSelectedKategori("");
-    setSelectedKeterangan("");
-  };
+  // =========================
+  // 💾 UPDATE STATE
+  // =========================
+  setNewValues((prev) => ({
+    ...prev,
+    [uniqueKey]: initialValue,
+  }));
+
+  
+
+  setResetKeys((prev) => prev.filter((k) => k !== uniqueKey));
+
+  if (!addedCategories.some((c) => c.key === uniqueKey)) {
+    const labelMap = {
+      iuran: "Iuran",
+      derap: "Derap",
+      kalender: "Kalender",
+      lainlain: "Lain-Lain",
+      daspen: "Daspen",
+      pgri: "PGRI",
+      sanduka: "Sanduka",
+    };
+
+    setAddedCategories((prev) => [
+      ...prev,
+      {
+        key: uniqueKey,
+        label: labelMap[selectedKategori] || uniqueKey,
+        ...(selectedKategori === "lainlain" && selectedKeterangan
+          ? { keterangan: selectedKeterangan }
+          : {}),
+      },
+    ]);
+  }
+
+  // =========================
+  // 🔄 RESET
+  // =========================
+  setShowDropdown(false);
+  setSelectedKategori("");
+  setSelectedKeterangan("");
+};
 
 
   const handleUpdateClick = async () => {
