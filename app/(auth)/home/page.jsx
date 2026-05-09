@@ -235,6 +235,12 @@ export default function IconGrid() {
       color: "text-lime-500",
     },
     {
+      icon: faMoneyBillTransfer,
+      label: "Keuangan New",
+      href: "/keuangan-new",
+      color: "text-emerald-500",
+    },
+    {
       icon: faClipboardCheck,
       label: "Ketentuan",
       href: "/ketentuan",
