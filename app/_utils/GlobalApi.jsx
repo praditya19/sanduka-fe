@@ -1613,7 +1613,7 @@ const getSaldoAkhir = async (month, year) => {
     });
     return response.data;
   } catch (error) {
-    console.error("Error fatching saldo akhir:", error);
+    console.error("Error fetching saldo akhir:", error);
     throw error;
   }
 };

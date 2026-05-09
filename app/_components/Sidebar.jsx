@@ -88,6 +88,12 @@ const icons = [
     color: "text-lime-500",
   },
   {
+    icon: faFileInvoiceDollar,
+    label: "Keuangan New",
+    href: "/keuangan-new",
+    color: "text-emerald-500",
+  },
+  {
     icon: faClipboardCheck,
     label: "Ketentuan",
     href: "/ketentuan",
