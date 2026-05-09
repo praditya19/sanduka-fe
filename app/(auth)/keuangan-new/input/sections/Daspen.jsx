@@ -181,245 +181,254 @@ const DaspenSection = () => {
       </div>
 
       <div className="p-6 space-y-8 overflow-y-auto">
-        <AnimatePresence>
-          {showConfig && (
-            <motion.div 
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden"
+        {/* Top Section: Configuration (Integrated) */}
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden"
+        >
+          <div className="bg-slate-50/50 p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-rose-500 text-white flex items-center justify-center shadow-lg shadow-rose-100">
+                <FaCalculator className="text-base" />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-slate-800 tracking-tight">Konfigurasi Besaran Daspen</h3>
+                <p className="text-slate-400 text-[9px] font-medium uppercase tracking-widest">Parameter Kuota & Kategori</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => fetchInitialData()}
+              className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-rose-500 hover:border-rose-200 transition-all shadow-sm"
             >
-              <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 mb-8 space-y-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center space-x-2">
-                    <FaCalculator className="text-rose-500" />
-                    <span>Konfigurasi Besaran Daspen</span>
-                  </h3>
-                  <button 
-                    onClick={handleSaveBesaran}
-                    className="px-4 py-2 bg-rose-500 text-white text-xs font-bold rounded-xl shadow-md hover:bg-rose-600 transition-all"
-                  >
-                    Simpan Perubahan
-                  </button>
-                </div>
+              Reset Default
+            </button>
+          </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div>
-                    <label className="text-xs font-black text-slate-500 uppercase mb-1 px-1">Kuota Dasar</label>
-                    <input 
-                      type="number"
-                      value={kuota}
-                      onChange={(e) => setKuota(parseInt(e.target.value) || 0)}
-                      className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 outline-none focus:ring-2 focus:ring-rose-500/20"
-                    />
+          <div className="p-6 sm:p-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+              <div>
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Kuota Dasar</label>
+                <div className="relative group">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
+                    <span className="text-slate-300 font-black text-sm">Rp</span>
                   </div>
-                  {[
-                    { label: "Kat I (X)", key: "katagori1", val: kat1Val },
-                    { label: "Kat II (X)", key: "katagori2", val: kat2Val },
-                    { label: "Kat III (X)", key: "katagori3", val: kat3Val }
-                  ].map(cat => (
-                    <div key={cat.key}>
-                      <label className="text-xs font-black text-slate-500 uppercase mb-1 px-1">{cat.label}</label>
-                      <div className="space-y-1">
-                        <input 
-                          type="number" step="0.01"
-                          onChange={(e) => {
-                            if(cat.key === "katagori1") setKatagori1(parseFloat(e.target.value) || 0);
-                            if(cat.key === "katagori2") setKatagori2(parseFloat(e.target.value) || 0);
-                            if(cat.key === "katagori3") setKatagori3(parseFloat(e.target.value) || 0);
-                          }}
-                          value={cat.key === "katagori1" ? katagori1 : cat.key === "katagori2" ? katagori2 : katagori3}
-                          className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 outline-none focus:ring-2 focus:ring-rose-500/20"
-                        />
-                        <p className="text-xs text-rose-500 font-bold px-1">= {formatCurrency(cat.val)}</p>
-                      </div>
-                    </div>
-                  ))}
+                  <input 
+                    type="number"
+                    value={kuota}
+                    onChange={(e) => setKuota(parseInt(e.target.value) || 0)}
+                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-rose-500 outline-none font-black text-slate-700 transition-all text-base group-hover:bg-slate-100/50 shadow-inner"
+                  />
                 </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              {[
+                { label: "Kategori I (X)", key: "katagori1", val: kat1Val },
+                { label: "Kategori II (X)", key: "katagori2", val: kat2Val },
+                { label: "Kategori III (X)", key: "katagori3", val: kat3Val }
+              ].map(cat => (
+                <div key={cat.key}>
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">{cat.label}</label>
+                  <div className="space-y-2">
+                    <input 
+                      type="number" step="0.01"
+                      value={cat.key === "katagori1" ? katagori1 : cat.key === "katagori2" ? katagori2 : katagori3}
+                      onChange={(e) => {
+                        const v = parseFloat(e.target.value) || 0;
+                        if(cat.key === "katagori1") setKatagori1(v);
+                        if(cat.key === "katagori2") setKatagori2(v);
+                        if(cat.key === "katagori3") setKatagori3(v);
+                      }}
+                      className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-rose-500 outline-none font-black text-slate-700 transition-all text-base hover:bg-slate-100/50 shadow-inner text-center"
+                    />
+                    <div className="px-4 py-1.5 bg-rose-50 rounded-lg text-center">
+                      <p className="text-[10px] text-rose-600 font-black">{formatCurrency(cat.val)}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-          {/* Input Form */}
-          <div className="space-y-6">
-            <h3 className="font-black text-slate-800 flex items-center space-x-2">
-              <span className="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center text-xs">01</span>
-              <span>Input Realisasi Per Cabang</span>
-            </h3>
+            <button 
+              onClick={handleSaveBesaran}
+              className="w-full py-5 bg-rose-500 hover:bg-rose-600 text-white rounded-[24px] font-black shadow-xl shadow-rose-100 transition-all flex items-center justify-center space-x-2 active:scale-[0.98]"
+            >
+              <FaSave className="text-base" />
+              <span className="text-base tracking-tight">Simpan Konfigurasi Daspen</span>
+            </button>
+          </div>
+        </motion.div>
 
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
-                  <label className="text-xs font-black text-slate-500 uppercase mb-1.5 block px-1">Cabang</label>
+        {/* Bottom Section: Laporan & Input */}
+        <div className="space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-[18px] bg-rose-50 text-rose-600 flex items-center justify-center border border-rose-100 shadow-sm">
+                <FaHandHoldingHeart className="text-xl" />
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-slate-800 tracking-tight">Input Realisasi & Monitoring</h3>
+                <p className="text-slate-400 text-xs font-medium">Pengelolaan Daspen per cabang</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Sidebar: Filter & Input */}
+            <div className="lg:col-span-1 space-y-6">
+              <div className="bg-white p-5 rounded-[28px] border border-slate-100 shadow-xl shadow-slate-100/50 space-y-5">
+                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50 pb-2">Filter Data</h4>
+                <div>
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Pencarian</label>
+                  <div className="relative">
+                    <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-sm" />
+                    <input 
+                      type="text" 
+                      placeholder="Cari Cabang..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-9 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-rose-500/20 focus:bg-white transition-all text-xs"
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Bulan</label>
+                    <select 
+                      value={selectedMonth} 
+                      onChange={(e) => setSelectedMonth(e.target.value)}
+                      className="w-full px-3 py-3 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-slate-700 text-[10px] appearance-none"
+                    >
+                      {bulanList.map(b => <option key={b.id} value={b.namaBulan}>{b.namaBulan}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Tahun</label>
+                    <select 
+                      value={selectedYear} 
+                      onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                      className="w-full px-3 py-3 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-slate-700 text-[10px] appearance-none"
+                    >
+                      {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Input Card */}
+              <form onSubmit={handleSubmitTarget} className="bg-slate-900 p-6 rounded-[32px] shadow-2xl space-y-5">
+                <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-white/5 pb-2">Entri Transaksi</h4>
+                
+                <div className="space-y-3">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block px-1">Pilih Cabang</label>
                   <select 
                     value={selectedCabang}
                     onChange={(e) => setSelectedCabang(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl outline-none font-bold text-white text-xs focus:bg-white/10"
                   >
-                    <option value="">-- Pilih Cabang --</option>
-                    {cabangList.map(c => <option key={c.id} value={c.kecamatan}>{c.kecamatan}</option>)}
+                    <option value="" className="text-slate-800">-- Pilih Cabang --</option>
+                    {cabangList.map(c => <option key={c.id} value={c.kecamatan} className="text-slate-800">{c.kecamatan}</option>)}
                   </select>
                 </div>
-                <div>
-                  <label className="text-xs font-black text-slate-500 uppercase mb-1.5 block px-1">Bulan</label>
-                  <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
-                    {bulanList.map(b => <option key={b.id} value={b.namaBulan}>{b.namaBulan}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-black text-slate-500 uppercase mb-1.5 block px-1">Tahun</label>
-                  <select value={selectedYear} onChange={(e) => setSelectedYear(parseInt(e.target.value))} className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
-                    {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
-                  </select>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-3 gap-3 p-4 bg-slate-900 rounded-3xl">
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { label: "KAT I", val: kat1, setter: setKat1 },
+                    { label: "KAT II", val: kat2, setter: setKat2 },
+                    { label: "KAT III", val: kat3, setter: setKat3 }
+                  ].map(cat => (
+                    <div key={cat.label}>
+                      <label className="text-[8px] font-black text-slate-500 uppercase mb-1 block text-center">{cat.label}</label>
+                      <input 
+                        type="number"
+                        value={cat.val}
+                        onChange={(e) => cat.setter(parseInt(e.target.value) || 0)}
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-2 text-white font-black text-center outline-none focus:bg-white/10 text-xs"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="space-y-3 pt-2">
+                  <div className="flex justify-between items-center px-1">
+                    <span className="text-[9px] font-black text-slate-500 uppercase">Target</span>
+                    <span className="text-sm font-black text-emerald-400">{formatCurrency(totalTarget)}</span>
+                  </div>
+                  <button 
+                    type="submit"
+                    className="w-full py-4 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-black shadow-lg shadow-rose-900/20 transition-all active:scale-[0.98] text-xs"
+                  >
+                    Kunci Transaksi
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Main Content: Stats & Table */}
+            <div className="lg:col-span-3 space-y-6">
+              {/* Summary Stats Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
-                  { label: "Kategori I", val: kat1, setter: setKat1 },
-                  { label: "Kategori II", val: kat2, setter: setKat2 },
-                  { label: "Kategori III", val: kat3, setter: setKat3 }
-                ].map(cat => (
-                  <div key={cat.label}>
-                    <label className="text-xs font-black text-slate-500 uppercase mb-1 block">{cat.label}</label>
-                    <input 
-                      type="number"
-                      value={cat.val}
-                      onChange={(e) => cat.setter(parseInt(e.target.value) || 0)}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white font-black outline-none focus:bg-white/10"
-                    />
+                  { label: "Setor Provinsi (89.5%)", val: perolehanProvinsi, color: "bg-indigo-600", icon: <FaShieldAlt /> },
+                  { label: "Bagian Kabupaten (4%)", val: perolehanKabupaten, color: "bg-amber-500", icon: <FaChartPie /> },
+                  { label: "Bagian Cabang (6.5%)", val: perolehanCabang, color: "bg-emerald-500", icon: <FaUsers /> }
+                ].map((stat, i) => (
+                  <div key={i} className={`${stat.color} p-5 rounded-[28px] text-white shadow-lg flex items-center justify-between group overflow-hidden relative`}>
+                    <div className="relative z-10">
+                      <p className="text-[9px] font-black opacity-60 uppercase tracking-widest mb-0.5">{stat.label}</p>
+                      <h4 className="text-lg font-black">{formatCurrency(stat.val)}</h4>
+                    </div>
+                    <div className="text-3xl opacity-10 group-hover:scale-125 transition-transform duration-500">
+                      {stat.icon}
+                    </div>
                   </div>
                 ))}
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
-                  <p className="text-[10px] font-black text-emerald-600 uppercase mb-1">Total Target</p>
-                  <p className="text-lg font-black text-emerald-700">{formatCurrency(totalTarget)}</p>
+              {/* Table Card */}
+              <div className="bg-white rounded-[32px] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden">
+                <div className="p-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+                  <div className="flex items-center gap-2">
+                    <FaHandHoldingHeart className="text-rose-500 text-sm" />
+                    <h4 className="text-sm font-black text-slate-800 tracking-tight uppercase tracking-widest text-[10px]">Rekapitulasi Daspen Per Cabang</h4>
+                  </div>
                 </div>
-                <div className="p-4 bg-rose-50 rounded-2xl border border-rose-100">
-                  <p className="text-[10px] font-black text-rose-600 uppercase mb-1">Porsi Cabang</p>
-                  <p className="text-lg font-black text-rose-700">{formatCurrency(perolehanCabang)}</p>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-slate-50/50 border-b border-slate-100">
+                        {["No", "Cabang/Khusus", "Kat I", "Kat II", "Kat III", "Total Target", "Status"].map((h, i) => (
+                          <th key={i} className="px-4 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-center whitespace-nowrap">
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {loadingTable ? (
+                        Array(5).fill(0).map((_, i) => <tr key={i} className="animate-pulse"><td colSpan={7} className="p-6"><div className="h-3 bg-slate-100 rounded-full w-full" /></td></tr>)
+                      ) : tableData.filter(r => r["Cabang/Khusus"]?.toLowerCase().includes(searchQuery.toLowerCase())).length > 0 ? (
+                        tableData.filter(r => r["Cabang/Khusus"]?.toLowerCase().includes(searchQuery.toLowerCase())).map((row, i) => (
+                          <tr key={i} className="hover:bg-slate-50/80 transition-colors text-center text-[11px] font-bold text-slate-600">
+                            <td className="px-4 py-4 text-slate-400 font-black">{i + 1}</td>
+                            <td className="px-4 py-4 font-black text-slate-800 text-left whitespace-nowrap">{row["Cabang/Khusus"]}</td>
+                            <td className="px-4 py-4"><span className="px-2 py-0.5 bg-rose-50 text-rose-600 rounded-md">{row["Anggota Kategori I"]}</span></td>
+                            <td className="px-4 py-4"><span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-md">{row["Anggota Kategori II"]}</span></td>
+                            <td className="px-4 py-4"><span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-md">{row["Anggota Kategori III"]}</span></td>
+                            <td className="px-4 py-4 text-slate-900 font-black">{formatCurrency(row["Total Target Perolehan"])}</td>
+                            <td className="px-4 py-4">
+                              <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-full text-[8px] font-black">TERCATAT</span>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr><td colSpan={7} className="py-16 text-center text-slate-300 font-black uppercase tracking-widest text-xs">Data Kosong</td></tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
-              </div>
-
-              <button 
-                onClick={handleSubmitTarget}
-                className="w-full py-4 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-black shadow-lg shadow-rose-200 transition-all active:scale-95"
-              >
-                Kunci Transaksi Daspen
-              </button>
-            </div>
-          </div>
-
-          {/* Breakdown Card */}
-          <div className="space-y-6">
-            <h3 className="font-black text-slate-800 flex items-center space-x-2">
-              <span className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs">02</span>
-              <span>Proyeksi Distribusi Perolehan</span>
-            </h3>
-            
-            <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
-              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-8 bg-indigo-500 rounded-full" />
-                  <span className="text-xs font-bold text-slate-600 uppercase">Setor Provinsi (89.5%)</span>
-                </div>
-                <span className="font-black text-slate-800">{formatCurrency(perolehanProvinsi)}</span>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-8 bg-amber-500 rounded-full" />
-                  <span className="text-xs font-bold text-slate-600 uppercase">Bagian Kabupaten (4.0%)</span>
-                </div>
-                <span className="font-black text-slate-800">{formatCurrency(perolehanKabupaten)}</span>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-8 bg-emerald-500 rounded-full" />
-                  <span className="text-xs font-bold text-slate-600 uppercase">Bagian Cabang (6.5%)</span>
-                </div>
-                <span className="font-black text-slate-800">{formatCurrency(perolehanCabang)}</span>
-              </div>
-
-              <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between px-2">
-                <span className="text-sm font-black text-slate-400 uppercase">Total Akumulasi</span>
-                <span className="text-2xl font-black text-rose-500">{formatCurrency(totalTarget)}</span>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Table */}
-        <div className="pt-8 border-t border-slate-100">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-black text-slate-800 flex items-center space-x-2">
-              <span className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs">03</span>
-              <span>Rekapitulasi Daspen Per Cabang</span>
-            </h3>
-            <div className="flex flex-wrap items-center gap-2">
-              <select 
-                value={selectedMonth} 
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                className="px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl outline-none text-xs font-black text-slate-600 focus:ring-2 focus:ring-rose-500/20"
-              >
-                {bulanList.map(b => <option key={b.id} value={b.namaBulan}>{b.namaBulan}</option>)}
-              </select>
-              <select 
-                value={selectedYear} 
-                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                className="px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl outline-none text-xs font-black text-slate-600 focus:ring-2 focus:ring-rose-500/20"
-              >
-                {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
-              </select>
-              <div className="relative">
-                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs" />
-                <input 
-                  type="text" 
-                  placeholder="Cari Cabang..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl outline-none text-xs font-black w-48 focus:ring-2 focus:ring-rose-500/20"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="bg-slate-50/50 text-xs uppercase font-black text-slate-500 tracking-wider border-b border-slate-100">
-                  <th className="px-6 py-4">Cabang</th>
-                  <th className="px-6 py-4 text-center">Kat I</th>
-                  <th className="px-6 py-4 text-center">Kat II</th>
-                  <th className="px-6 py-4 text-center">Kat III</th>
-                  <th className="px-6 py-4 text-right">Total</th>
-                  <th className="px-6 py-4 text-center">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {loadingTable ? (
-                   Array(3).fill(0).map((_, i) => (
-                    <tr key={i} className="animate-pulse">
-                      <td colSpan="6" className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-full" /></td>
-                    </tr>
-                  ))
-                ) : tableData.filter(r => r["Cabang/Khusus"]?.toLowerCase().includes(searchQuery.toLowerCase())).map((row, i) => (
-                  <tr key={i} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 font-black text-slate-700 text-sm">{row["Cabang/Khusus"]}</td>
-                    <td className="px-6 py-4 text-center font-bold text-slate-600">{row["Anggota Kategori I"]}</td>
-                    <td className="px-6 py-4 text-center font-bold text-slate-600">{row["Anggota Kategori II"]}</td>
-                    <td className="px-6 py-4 text-center font-bold text-slate-600">{row["Anggota Kategori III"]}</td>
-                    <td className="px-6 py-4 text-right font-black text-rose-500">{formatCurrency(row["Total Target Perolehan"])}</td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="px-2 py-1 rounded-full bg-rose-50 text-rose-600 text-[10px] font-black">TERCATAT</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           </div>
         </div>
       </div>

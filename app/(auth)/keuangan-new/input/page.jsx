@@ -67,58 +67,61 @@ function KeuanganInputContent() {
         <HeaderMenu toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
         <HeaderMobile toggleSidebar={toggleSidebar} />
 
-        <main className="p-4 md:p-8 mt-24 md:mt-20 max-w-[95%] mx-auto">
+        <main className="px-4 md:px-6 py-8 mt-24 md:mt-20 max-w-[1600px] mx-auto">
           {/* Header Section */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-            <div className="flex items-center space-x-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-6 px-2">
+            <div className="flex items-center space-x-5">
               <button 
                 onClick={() => router.back()}
-                className="p-3 bg-white rounded-2xl shadow-sm border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all active:scale-95"
+                className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 text-slate-600 hover:bg-slate-50 hover:text-emerald-500 transition-all active:scale-90"
               >
-                <FaArrowLeft />
+                <FaArrowLeft className="text-lg" />
               </button>
               <div>
-                <h1 className="text-2xl font-black text-slate-800 tracking-tight">Input Data Utama</h1>
-                <p className="text-slate-400 text-sm font-medium">Pengelolaan iuran dan sumbangan periodik</p>
+                <h1 className="text-3xl font-black text-slate-800 tracking-tight">Manajemen Input Keuangan</h1>
+                <p className="text-slate-400 text-sm font-medium uppercase tracking-widest text-[10px]">Administrasi Iuran & Pendapatan Organisasi</p>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* Sidebar Tabs */}
-            <div className="lg:col-span-1 space-y-2">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-300 ${
-                    activeTab === tab.id 
-                    ? "bg-white shadow-md border-l-4 border-l-emerald-500 translate-x-2" 
-                    : "hover:bg-white/50 text-slate-400 hover:text-slate-600"
-                  }`}
-                >
-                  <div className="flex items-center space-x-4">
-                    <div className={`p-2 rounded-xl ${activeTab === tab.id ? tab.bg + " " + tab.color : "bg-slate-100 text-slate-400"}`}>
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+            {/* Navigation Tabs (Sidebar-like but integrated) */}
+            <div className="xl:col-span-2 space-y-3">
+              <div className="bg-white/40 backdrop-blur-sm p-2 rounded-[32px] border border-white/60 shadow-sm">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`w-full flex items-center space-x-3 p-4 rounded-[24px] transition-all duration-500 group ${
+                      activeTab === tab.id 
+                      ? "bg-slate-900 text-white shadow-2xl shadow-slate-900/20 translate-x-2" 
+                      : "text-slate-400 hover:bg-white hover:text-slate-600 hover:shadow-lg hover:shadow-slate-200/50"
+                    }`}
+                  >
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500 ${
+                      activeTab === tab.id 
+                      ? "bg-white/10 text-white" 
+                      : "bg-slate-100 text-slate-400 group-hover:bg-slate-200 group-hover:text-slate-600"
+                    }`}>
                       {tab.icon}
                     </div>
-                    <span className={`font-bold text-sm ${activeTab === tab.id ? "text-slate-800" : ""}`}>
+                    <span className={`font-black text-[11px] uppercase tracking-wider ${activeTab === tab.id ? "opacity-100" : "opacity-60"}`}>
                       {tab.label}
                     </span>
-                  </div>
-                  <FaChevronRight className={`text-[10px] transition-transform ${activeTab === tab.id ? "rotate-90 text-emerald-500" : "opacity-0"}`} />
-                </button>
-              ))}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Main Content Area */}
-            <div className="lg:col-span-3">
+            <div className="xl:col-span-10">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeTab}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 min-h-[600px] overflow-hidden"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="bg-white rounded-[40px] border border-slate-100 shadow-2xl shadow-slate-200/60 overflow-hidden min-h-[700px]"
                 >
                   {activeTab === "iuran-pgri" && <IuranPgriSection />}
                   {activeTab === "daspen" && <DaspenSection />}

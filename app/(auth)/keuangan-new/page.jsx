@@ -10,7 +10,7 @@ import SummaryCards from "./components/SummaryCards";
 import AIInsight from "./components/AIInsight";
 import QuickActions from "./components/QuickActions";
 import AIChat from "./components/AIChat";
-import { FaCalendarAlt, FaFilter } from "react-icons/fa";
+import { FaCalendarAlt, FaFilter, FaChartBar } from "react-icons/fa";
 
 export default function KeuanganNew() {
   const router = useRouter();
@@ -39,21 +39,53 @@ export default function KeuanganNew() {
     fetchTableData();
   }, [selectedMonth, selectedYear]);
 
+
   const fetchTableData = async () => {
     setTableLoading(true);
     try {
-      const response = await GlobalApi.getNominalAggregatedData("", null, null, selectedMonth, selectedYear);
-      
-      // Filter out 'Total' row and process groups
-      const regularData = response.filter(item => item.cabang !== "Total");
-      
-      // Group by Cabang like in the original page
-      const grouped = regularData.reduce((acc, item) => {
+      // Mengambil data dari balancing total iuran sesuai permintaan user
+      const response = await GlobalApi.getTransaksiBankBalancing(
+        "", 
+        null, 
+        selectedYear, 
+        selectedMonth, 
+        null, 
+        null
+      );
+
+      const safeData = Array.isArray(response) ? response : [];
+
+      // Filter untuk memastikan hanya mengambil record terbaru per NPA (menghindari duplikasi)
+      const npaMap = {};
+      safeData.forEach((item) => {
+        const key = `${item.cabang}-${item.unitKerja}-${item.npa}`;
+        if (!npaMap[key] || item.id > npaMap[key].id) {
+          npaMap[key] = item;
+        }
+      });
+
+      // Group by Cabang
+      const grouped = Object.values(npaMap).reduce((acc, item) => {
         const key = item.cabang || "Lainnya";
         if (!acc[key]) {
-          acc[key] = { cabang: key, totalIuran: 0 };
+          acc[key] = { 
+            cabang: key, 
+            target: 0, 
+            realisasi: 0 
+          };
         }
-        acc[key].totalIuran += parseFloat(item.totalIuran) || 0;
+        
+        // Target adalah total semua iuran (Anggota, Sanduka, Daspen, Derap, Kalender, Sumbangan)
+        const itemTarget = (item.totalIuranAnggota || 0) +
+                           (item.totalIuranSanduka || 0) +
+                           (item.totalIuranDaspen || 0) +
+                           (item.totalIuranDerap || 0) +
+                           (item.totalIuranKalender || 0) +
+                           (item.totalIuranSumbangan || 0);
+        
+        acc[key].target += itemTarget;
+        acc[key].realisasi += (item.potongan || 0);
+        
         return acc;
       }, {});
 
@@ -91,15 +123,15 @@ export default function KeuanganNew() {
       const organisasiKeluar = cleanNumber(responseOrganisasi.total_keluar);
 
       setData({
-        sanduka: { 
-          saldo: sandukaSaldo, 
-          pemasukan: sandukaMasuk, 
-          pengeluaran: sandukaKeluar 
+        sanduka: {
+          saldo: sandukaSaldo,
+          pemasukan: sandukaMasuk,
+          pengeluaran: sandukaKeluar
         },
-        organisasi: { 
-          saldo: organisasiSaldo, 
-          pemasukan: organisasiMasuk, 
-          pengeluaran: organisasiKeluar 
+        organisasi: {
+          saldo: organisasiSaldo,
+          pemasukan: organisasiMasuk,
+          pengeluaran: organisasiKeluar
         }
       });
     } catch (error) {
@@ -133,7 +165,7 @@ export default function KeuanganNew() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row overflow-hidden">
       <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-      
+
       <div className={`flex-1 transition-all duration-300 ${isSidebarOpen ? "md:ml-64" : "ml-0"}`}>
         <HeaderMenu toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
         <HeaderMobile toggleSidebar={toggleSidebar} />
@@ -158,7 +190,7 @@ export default function KeuanganNew() {
                   <FaCalendarAlt className="text-sm" />
                 </div>
                 <div className="flex items-center px-1">
-                  <select 
+                  <select
                     value={selectedMonth}
                     onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
                     className="bg-transparent border-none text-sm font-black text-slate-700 focus:ring-0 cursor-pointer pl-3 pr-8 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_8px_center] bg-no-repeat"
@@ -168,7 +200,7 @@ export default function KeuanganNew() {
                     ))}
                   </select>
                   <div className="w-[1px] h-4 bg-slate-200" />
-                  <select 
+                  <select
                     value={selectedYear}
                     onChange={(e) => setSelectedYear(parseInt(e.target.value))}
                     className="bg-transparent border-none text-sm font-black text-slate-700 focus:ring-0 cursor-pointer pl-3 pr-8 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_8px_center] bg-no-repeat"
@@ -185,28 +217,30 @@ export default function KeuanganNew() {
             </div>
           </div>
 
-          {/* Module Switcher */}
-          <div className="flex bg-slate-100 p-1.5 rounded-2xl mb-8 w-fit shadow-inner">
-            <button
-              onClick={() => setActiveModule("sanduka")}
-              className={`px-8 py-2.5 rounded-xl font-bold transition-all duration-300 ${
-                activeModule === "sanduka" 
-                ? "bg-white text-emerald-600 shadow-md scale-100" 
-                : "text-slate-400 hover:text-slate-600 scale-95"
-              }`}
-            >
-              Sanduka
-            </button>
-            <button
-              onClick={() => setActiveModule("organisasi")}
-              className={`px-8 py-2.5 rounded-xl font-bold transition-all duration-300 ${
-                activeModule === "organisasi" 
-                ? "bg-white text-blue-600 shadow-md scale-100" 
-                : "text-slate-400 hover:text-slate-600 scale-95"
-              }`}
-            >
-              Organisasi
-            </button>
+          {/* Module & View Switcher */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+            <div className="flex bg-slate-100 p-1.5 rounded-2xl w-fit shadow-inner">
+              <button
+                onClick={() => setActiveModule("sanduka")}
+                className={`px-8 py-2.5 rounded-xl font-bold transition-all duration-300 ${activeModule === "sanduka"
+                    ? "bg-white text-emerald-600 shadow-md scale-100"
+                    : "text-slate-400 hover:text-slate-600 scale-95"
+                  }`}
+              >
+                Sanduka
+              </button>
+              <button
+                onClick={() => setActiveModule("organisasi")}
+                className={`px-8 py-2.5 rounded-xl font-bold transition-all duration-300 ${activeModule === "organisasi"
+                    ? "bg-white text-blue-600 shadow-md scale-100"
+                    : "text-slate-400 hover:text-slate-600 scale-95"
+                  }`}
+              >
+                Organisasi
+              </button>
+            </div>
+
+            <div></div>
           </div>
 
           <AnimatePresence mode="wait">
@@ -216,72 +250,79 @@ export default function KeuanganNew() {
               exit={{ opacity: 0, y: -20 }}
               key={activeModule} // Re-animate when module changes
             >
-              <SummaryCards 
-                saldo={data[activeModule].saldo} 
-                pemasukan={data[activeModule].pemasukan} 
-                pengeluaran={data[activeModule].pengeluaran} 
-                loading={loading} 
+              <SummaryCards
+                saldo={data[activeModule].saldo}
+                pemasukan={data[activeModule].pemasukan}
+                pengeluaran={data[activeModule].pengeluaran}
+                loading={loading}
                 type={activeModule}
               />
-              
+
               <AIInsight insights={insights} loading={loading} />
-              
+
               <QuickActions />
 
               {/* Arrears Table Section */}
-              <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 mt-8">
-                <div className="flex items-center justify-between mb-6">
+              <div className="bg-white rounded-[40px] p-8 shadow-xl border border-slate-100 mt-8 overflow-hidden">
+                <div className="flex items-center justify-between mb-8">
                   <div>
-                    <h2 className="text-xl font-bold text-slate-800">Data Setoran Per Cabang</h2>
-                    <p className="text-xs text-slate-400 mt-1">Status pembayaran iuran anggota berdasarkan wilayah</p>
+                    <h2 className="text-2xl font-black text-slate-800 tracking-tight">Data Setoran <span className="text-emerald-500">Per Cabang</span></h2>
+                    <p className="text-sm font-medium text-slate-400 mt-1">Status pembayaran iuran anggota berdasarkan wilayah</p>
                   </div>
                 </div>
-                
+
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
                     <thead>
-                      <tr className="text-slate-400 text-xs uppercase tracking-widest border-b border-slate-100">
-                        <th className="pb-4 font-semibold text-center w-16">No</th>
-                        <th className="pb-4 font-semibold">Cabang</th>
-                        <th className="pb-4 font-semibold text-center">Kurang Setor</th>
-                        <th className="pb-4 font-semibold text-right">Aksi</th>
+                      <tr className="text-slate-400 text-[10px] font-black uppercase tracking-widest border-b border-slate-100">
+                        <th className="pb-5 text-center w-16">No</th>
+                        <th className="pb-5">Cabang</th>
+                        <th className="pb-5 text-center">Total Iuran</th>
+                        <th className="pb-5 text-right">Opsi</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
                       {tableLoading ? (
                         Array(5).fill(0).map((_, i) => (
                           <tr key={i} className="animate-pulse">
-                            <td className="py-4 text-center"><div className="h-4 w-6 bg-slate-100 mx-auto rounded" /></td>
-                            <td className="py-4"><div className="h-4 w-32 bg-slate-100 rounded" /></td>
-                            <td className="py-4 text-center"><div className="h-4 w-24 bg-slate-100 mx-auto rounded" /></td>
-                            <td className="py-4 text-right"><div className="h-4 w-20 bg-slate-100 ml-auto rounded" /></td>
+                            <td className="py-6 text-center"><div className="h-4 w-6 bg-slate-100 mx-auto rounded-full" /></td>
+                            <td className="py-6"><div className="h-4 w-32 bg-slate-100 rounded-full" /></td>
+                            <td className="py-6 text-center"><div className="h-6 w-24 bg-slate-100 mx-auto rounded-full" /></td>
+                            <td className="py-6 text-right"><div className="h-8 w-20 bg-slate-100 ml-auto rounded-xl" /></td>
                           </tr>
                         ))
                       ) : tableData.length > 0 ? (
                         tableData.map((row, i) => (
-                          <tr key={i} className="hover:bg-slate-50 transition-colors group">
-                            <td className="py-4 text-center text-slate-500 font-medium">{i + 1}</td>
-                            <td className="py-4">
-                              <span className="font-bold text-slate-700 block uppercase text-sm">{row.cabang}</span>
+                          <tr key={i} className="hover:bg-slate-50/50 transition-colors group">
+                            <td className="py-6 text-center text-slate-400 font-bold text-xs">{i + 1}</td>
+                            <td className="py-6">
+                              <span className="font-black text-slate-700 block uppercase text-sm tracking-tight">{row.cabang}</span>
                             </td>
-                            <td className="py-4 text-center">
-                              <span className="bg-rose-50 text-rose-600 font-black px-3 py-1 rounded-full text-xs border border-rose-100">
-                                {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(row.totalIuran)}
+                            <td className="py-6 text-center">
+                              <span className="bg-emerald-50 text-emerald-600 font-black px-4 py-1.5 rounded-full text-[10px] border border-emerald-100 shadow-sm shadow-emerald-50">
+                                {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(row.target)}
                               </span>
                             </td>
-                            <td className="py-4 text-right">
-                              <button 
+                            <td className="py-6 text-right">
+                              <button
                                 onClick={() => router.push(`/keuangan-new/detail?cabang=${encodeURIComponent(row.cabang)}`)}
-                                className="bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-1.5 rounded-xl text-xs font-bold transition-all"
+                                className="bg-slate-100 hover:bg-emerald-500 hover:text-white text-slate-600 px-5 py-2 rounded-2xl text-[10px] font-black transition-all active:scale-95 shadow-sm hover:shadow-lg hover:shadow-emerald-100"
                               >
-                                Detail
+                                LIHAT DETAIL
                               </button>
                             </td>
                           </tr>
                         ))
                       ) : (
                         <tr>
-                          <td colSpan="4" className="py-8 text-center text-slate-400">Tidak ada data setoran untuk periode ini</td>
+                          <td colSpan="4" className="py-20 text-center">
+                            <div className="flex flex-col items-center">
+                              <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-3">
+                                <FaChartBar className="text-slate-300" />
+                              </div>
+                              <p className="text-slate-400 font-bold">Tidak ada data setoran untuk periode ini</p>
+                            </div>
+                          </td>
                         </tr>
                       )}
                     </tbody>

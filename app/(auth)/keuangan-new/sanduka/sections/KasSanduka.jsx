@@ -416,188 +416,193 @@ const KasSanduka = () => {
   return (
     <div className="space-y-6">
       <Toaster position="top-center" />
-      {/* Period Summary Cards - Integrated */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 print:hidden">
+      {/* Period Summary Cards - Integrated & Compact */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 print:hidden">
         {[
-          { label: `Saldo Awal ${months.find(m => m.value === monthFilter)?.label}`, value: summary.saldoAwal, color: "text-slate-600", icon: <FaWallet /> },
-          { label: "Pemasukan", value: summary.masuk, color: "text-emerald-600", icon: <FaArrowUp /> },
-          { label: "Pengeluaran", value: summary.keluar, color: "text-rose-600", icon: <FaArrowDown /> },
-          { label: "Saldo Akhir", value: summary.saldoAkhir, color: "text-blue-600", icon: <FaCheckDouble /> },
+          { label: `Saldo Awal ${months.find(m => m.value === monthFilter)?.label}`, value: summary.saldoAwal, color: "text-slate-600", icon: <FaWallet />, bg: "bg-slate-50" },
+          { label: "Total Pemasukan", value: summary.masuk, color: "text-emerald-600", icon: <FaArrowUp />, bg: "bg-emerald-50/30" },
+          { label: "Total Pengeluaran", value: summary.keluar, color: "text-rose-600", icon: <FaArrowDown />, bg: "bg-rose-50/30" },
+          { label: "Saldo Akhir Kas", value: summary.saldoAkhir, color: "text-indigo-600", icon: <FaCheckDouble />, bg: "bg-indigo-50/30" },
         ].map((item, i) => (
-          <div key={i} className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{item.label}</span>
-              <span className={`text-base ${item.color} opacity-50`}>{item.icon}</span>
+          <div key={i} className={`p-4 rounded-[24px] border border-slate-100 shadow-sm ${item.bg} transition-all hover:shadow-md`}>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{item.label}</span>
+              <span className={`text-xs ${item.color} opacity-40`}>{item.icon}</span>
             </div>
-            <p className={`text-xl font-black ${item.color}`}>
+            <p className={`text-lg font-black ${item.color} tracking-tight`}>
               {loading ? "..." : formatCurrency(item.value)}
             </p>
           </div>
         ))}
       </div>
 
-      {/* Advanced Action Bar */}
-      <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-4 print:hidden">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center bg-slate-50 rounded-xl p-1 border border-slate-100">
-              <select
-                value={monthFilter}
-                onChange={(e) => setMonthFilter(e.target.value)}
-                className="bg-transparent text-sm font-black px-3 py-2 outline-none text-slate-600"
-              >
-                {months.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-              </select>
-              <div className="w-px h-4 bg-slate-200 mx-1"></div>
-              <select
-                value={yearFilter}
-                onChange={(e) => setYearFilter(Number(e.target.value))}
-                className="bg-transparent text-sm font-black px-3 py-2 outline-none text-slate-600"
-              >
-                {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
-              </select>
-            </div>
-            <div className="relative">
-              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs" />
-              <input
-                type="text"
-                placeholder="Cari transaksi..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm font-black w-48 focus:ring-2 focus:ring-emerald-500/20"
-              />
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => setShowModalPos(true)}
-              className="flex items-center space-x-2 px-4 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-xs font-black hover:bg-slate-200 transition-all"
+      {/* Advanced Action Bar - Sleek & Compact */}
+      <div className="bg-white p-3 rounded-[24px] border border-slate-100 shadow-sm flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 print:hidden">
+        <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+          <div className="flex items-center bg-slate-50 rounded-xl p-1 border border-slate-100 shadow-inner">
+            <select
+              value={monthFilter}
+              onChange={(e) => setMonthFilter(e.target.value)}
+              className="bg-transparent text-[10px] font-black px-3 py-1.5 outline-none text-slate-600 appearance-none cursor-pointer hover:text-emerald-600 transition-all"
             >
-              <FaCog /> <span>Kelola Pos</span>
-            </button>
+              {months.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+            </select>
+            <div className="w-[1px] h-3 bg-slate-200 mx-1"></div>
+            <select
+              value={yearFilter}
+              onChange={(e) => setYearFilter(Number(e.target.value))}
+              className="bg-transparent text-[10px] font-black px-3 py-1.5 outline-none text-slate-600 appearance-none cursor-pointer hover:text-emerald-600 transition-all"
+            >
+              {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
           </div>
+          <div className="relative flex-1 lg:flex-none">
+            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-[10px]" />
+            <input
+              type="text"
+              placeholder="Cari transaksi..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl outline-none text-[11px] font-black w-full lg:w-48 focus:ring-4 focus:ring-emerald-500/5 focus:bg-white transition-all shadow-inner placeholder:text-slate-300"
+            />
+          </div>
+        </div>
+        <div className="flex items-center gap-2 w-full lg:w-auto">
+          <button
+            onClick={() => setShowModalPos(true)}
+            className="flex-1 lg:flex-none flex items-center justify-center space-x-2 px-4 py-2 bg-white border border-slate-200 text-slate-500 rounded-xl text-[10px] font-black hover:border-slate-800 hover:text-slate-800 transition-all shadow-sm"
+          >
+            <FaCog className="text-[10px]" /> <span className="uppercase tracking-widest">Konfigurasi Pos</span>
+          </button>
         </div>
       </div>
 
-      {/* Entry Buttons (Large) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 print:hidden">
+      {/* Entry Buttons - High Density */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 print:hidden">
         <button
           onClick={() => setShowModalIn(true)}
-          className="flex items-center justify-center space-x-3 p-6 bg-white border-2 border-emerald-100 rounded-[32px] hover:border-emerald-500 hover:bg-emerald-50 transition-all group"
+          className="flex items-center space-x-4 p-4 bg-emerald-500 text-white rounded-[24px] shadow-lg shadow-emerald-100 hover:bg-emerald-600 transition-all active:scale-[0.98] group"
         >
-          <div className="w-12 h-12 bg-emerald-500 text-white rounded-2xl flex items-center justify-center text-xl shadow-lg group-hover:scale-110 transition-all">
+          <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-lg backdrop-blur-md group-hover:rotate-12 transition-all">
             <FaPlus />
           </div>
           <div className="text-left">
-            <h4 className="text-base font-black text-slate-800 uppercase">Input Pemasukan</h4>
-            <p className="text-xs text-slate-400 font-bold tracking-tight">Catat penerimaan dana kas</p>
+            <h4 className="text-[12px] font-black uppercase tracking-tight leading-none mb-1">Pemasukan Kas</h4>
+            <p className="text-[9px] text-emerald-100 font-bold tracking-widest uppercase opacity-80">Catat Penerimaan Dana</p>
           </div>
         </button>
         <button
           onClick={() => setShowModalOut(true)}
-          className="flex items-center justify-center space-x-3 p-6 bg-white border-2 border-rose-100 rounded-[32px] hover:border-rose-500 hover:bg-rose-50 transition-all group"
+          className="flex items-center space-x-4 p-4 bg-rose-500 text-white rounded-[24px] shadow-lg shadow-rose-100 hover:bg-rose-600 transition-all active:scale-[0.98] group"
         >
-          <div className="w-12 h-12 bg-rose-500 text-white rounded-2xl flex items-center justify-center text-xl shadow-lg group-hover:scale-110 transition-all">
+          <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-lg backdrop-blur-md group-hover:-rotate-12 transition-all">
             <FaMinus />
           </div>
           <div className="text-left">
-            <h4 className="text-base font-black text-slate-800 uppercase">Input Pengeluaran</h4>
-            <p className="text-xs text-slate-400 font-bold tracking-tight">Catat biaya & pengeluaran kas</p>
+            <h4 className="text-[12px] font-black uppercase tracking-tight leading-none mb-1">Pengeluaran Kas</h4>
+            <p className="text-[9px] text-rose-100 font-bold tracking-widest uppercase opacity-80">Catat Biaya Operasional</p>
           </div>
         </button>
       </div>
 
-      {/* Ledger Table */}
-      <div className="bg-white rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden print:border-none print:shadow-none print:rounded-none print:m-0">
-        <div className="p-4 sm:p-6 border-b border-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/30 print:pb-2">
-          <h3 className="text-sm sm:text-base font-black text-slate-800 flex items-center space-x-2">
-            <FaFileExport className="text-emerald-500 no-print" />
-            <span>Jurnal Transaksi - {months.find(m => m.value === monthFilter)?.label} {yearFilter}</span>
-          </h3>
+      {/* Ledger Table - High Density */}
+      <div className="bg-white rounded-[28px] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden print:border-none print:shadow-none print:rounded-none print:m-0">
+        <div className="p-4 border-b border-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/40 print:pb-2">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-100 no-print">
+              <FaFileExport className="text-xs" />
+            </div>
+            <h3 className="text-[12px] font-black text-slate-800 uppercase tracking-tight">
+              Jurnal Transaksi <span className="text-emerald-500 ml-1">{months.find(m => m.value === monthFilter)?.label} {yearFilter}</span>
+            </h3>
+          </div>
           <div className="flex flex-wrap items-center gap-2 print:hidden">
             <button
               onClick={exportToExcel}
-              className="flex items-center space-x-2 px-3 sm:px-4 py-2 bg-emerald-500 text-white rounded-xl text-[9px] sm:text-[10px] font-black hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-100 uppercase tracking-wider"
+              className="flex items-center space-x-2 px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-[9px] font-black hover:border-emerald-500 hover:text-emerald-500 transition-all shadow-sm uppercase tracking-wider"
             >
               <FaFileExcel /> <span>Excel</span>
             </button>
             <button
               onClick={printLedger}
-              className="flex items-center space-x-2 px-3 sm:px-4 py-2 bg-slate-800 text-white rounded-xl text-[9px] sm:text-[10px] font-black hover:bg-slate-900 transition-all shadow-lg shadow-slate-100 uppercase tracking-wider"
+              className="flex items-center space-x-2 px-3 py-1.5 bg-slate-900 text-white rounded-lg text-[9px] font-black hover:bg-black transition-all shadow-lg shadow-slate-200 uppercase tracking-wider"
             >
               <FaPrint /> <span>Cetak</span>
             </button>
-            <div className="hidden sm:block w-px h-4 bg-slate-200 mx-1"></div>
-            <span className="text-[9px] sm:text-[10px] font-black px-3 py-2 bg-white border border-slate-200 rounded-xl text-slate-400 uppercase tracking-widest">
-              {filteredTransactions.length} Baris Data
+            <div className="hidden sm:block w-[1px] h-3 bg-slate-200 mx-1"></div>
+            <span className="text-[9px] font-black px-3 py-1.5 bg-white border border-slate-100 rounded-lg text-slate-400 uppercase tracking-widest">
+              {filteredTransactions.length} Entries
             </span>
           </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50/50 text-[10px] sm:text-xs uppercase font-black text-slate-500 tracking-wider border-b border-slate-100">
-                <th className="px-3 sm:px-6 py-4">Tgl Transaksi</th>
-                <th className="px-3 sm:px-6 py-4">No. Bukti / Keterangan</th>
-                <th className="px-3 sm:px-6 py-4 text-right">Debet (Rp)</th>
-                <th className="px-3 sm:px-6 py-4 text-right">Kredit (Rp)</th>
-                <th className="px-3 sm:px-6 py-4 text-right">Saldo (Rp)</th>
-                <th className="px-3 sm:px-6 py-4 text-center print:hidden">Aksi</th>
+              <tr className="bg-white text-[9px] uppercase font-black text-slate-400 tracking-[0.15em] border-b border-slate-50">
+                <th className="px-4 py-4 text-center w-24">Tgl Transaksi</th>
+                <th className="px-4 py-4">Nomor Bukti / Keterangan</th>
+                <th className="px-4 py-4 text-right">Debet</th>
+                <th className="px-4 py-4 text-right">Kredit</th>
+                <th className="px-4 py-4 text-right">Running Saldo</th>
+                <th className="px-4 py-4 text-center print:hidden w-20">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {loading ? (
-                Array(5).fill(0).map((_, i) => (
+                Array(10).fill(0).map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    <td colSpan="6" className="px-6 py-6"><div className="h-4 bg-slate-100 rounded w-full"></div></td>
+                    <td colSpan="6" className="px-4 py-3"><div className="h-2.5 bg-slate-50 rounded-full w-full"></div></td>
                   </tr>
                 ))
               ) : filteredTransactions.length > 0 ? (
                 filteredTransactions.map((t, i) => (
-                  <tr key={t.id || i} className={`hover:bg-slate-50/50 transition-all group ${t.isVirtual ? 'bg-amber-50/30' : ''}`}>
-                    <td className="px-3 sm:px-6 py-4 text-[10px] sm:text-sm font-bold text-slate-500">{t.formattedDate}</td>
-                    <td className="px-3 sm:px-6 py-4">
-                      <div className={`text-[10px] sm:text-sm font-black ${t.isVirtual ? 'text-amber-600' : 'text-slate-700'}`}>{t.nomorBukti || "-"}</div>
-                      <div className="text-[9px] sm:text-xs text-slate-400 font-medium truncate max-w-[100px] sm:max-w-md">{t.keterangan}</div>
+                  <tr key={t.id || i} className={`hover:bg-slate-50/80 transition-all group ${t.isVirtual ? 'bg-amber-50/20' : ''}`}>
+                    <td className="px-4 py-3 text-[10px] font-bold text-slate-400 text-center">{t.formattedDate}</td>
+                    <td className="px-4 py-3">
+                      <div className={`text-[11px] font-black ${t.isVirtual ? 'text-amber-600' : 'text-slate-800'} leading-none mb-1`}>{t.nomorBukti || "-"}</div>
+                      <div className="text-[9px] text-slate-400 font-medium truncate max-w-[200px] lg:max-w-md italic">{t.keterangan}</div>
                     </td>
-                    <td className="px-3 sm:px-6 py-4 text-right text-[10px] sm:text-sm font-black text-emerald-600">
-                      {t.debet > 0 ? formatCurrency(t.debet) : "0"}
+                    <td className="px-4 py-3 text-right text-[11px] font-black text-emerald-600">
+                      {t.debet > 0 ? formatCurrency(t.debet) : "Rp 0"}
                     </td>
-                    <td className="px-3 sm:px-6 py-4 text-right text-[10px] sm:text-sm font-black text-rose-600">
-                      {t.kredit > 0 ? formatCurrency(t.kredit) : "0"}
+                    <td className="px-4 py-3 text-right text-[11px] font-black text-rose-500">
+                      {t.kredit > 0 ? formatCurrency(t.kredit) : "Rp 0"}
                     </td>
-                    <td className="px-3 sm:px-6 py-4 text-right text-[10px] sm:text-sm font-black text-slate-800 bg-slate-50/30">
+                    <td className="px-4 py-3 text-right text-[11px] font-black text-slate-900 bg-slate-50/40">
                       {formatCurrency(t.runningBalance)}
                     </td>
-                    <td className="px-3 sm:px-6 py-4 text-center print:hidden">
-                      {!t.isVirtual && (
+                    <td className="px-4 py-3 text-center print:hidden">
+                      {!t.isVirtual ? (
                         <div className="flex items-center justify-center space-x-1 opacity-0 group-hover:opacity-100 transition-all">
-                          <button className="p-2 text-blue-500 hover:bg-blue-50 rounded-xl transition-all"><FaEdit size={14} /></button>
-                          <button className="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition-all"><FaTrash size={14} /></button>
+                          <button className="w-7 h-7 flex items-center justify-center text-indigo-500 hover:bg-indigo-50 rounded-lg transition-all"><FaEdit size={10} /></button>
+                          <button className="w-7 h-7 flex items-center justify-center text-rose-500 hover:bg-rose-50 rounded-lg transition-all"><FaTrash size={10} /></button>
                         </div>
+                      ) : (
+                        <span className="text-[8px] font-black bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded uppercase tracking-tighter shadow-sm">System</span>
                       )}
-                      {t.isVirtual && <span className="text-[10px] font-black text-amber-500 uppercase">System</span>}
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="px-6 py-20 text-center">
-                    <FaInfoCircle className="text-slate-100 text-6xl mx-auto mb-4" />
-                    <p className="text-slate-400 font-bold">Data transaksi tidak ditemukan</p>
+                  <td colSpan="6" className="px-6 py-24 text-center bg-slate-50/10">
+                    <div className="w-16 h-16 bg-white rounded-2xl border border-slate-100 flex items-center justify-center mx-auto mb-4 shadow-xl shadow-slate-200/50">
+                      <FaInfoCircle className="text-slate-200 text-3xl" />
+                    </div>
+                    <p className="text-slate-400 text-[11px] font-black uppercase tracking-widest">Transaksi Tidak Ditemukan</p>
                   </td>
                 </tr>
               )}
             </tbody>
-            {/* Table Footer - Total */}
+            {/* Table Footer - Compact Total */}
             {!loading && filteredTransactions.length > 0 && (
-              <tfoot className="bg-slate-800 text-white">
-                <tr className="font-black text-[10px] sm:text-sm">
-                  <td colSpan="2" className="px-3 sm:px-6 py-5 uppercase tracking-wider">Total Transaksi Periode Ini</td>
-                  <td className="px-3 sm:px-6 py-5 text-right">{formatCurrency(summary.masuk)}</td>
-                  <td className="px-3 sm:px-6 py-5 text-right">{formatCurrency(summary.keluar)}</td>
-                  <td className="px-3 sm:px-6 py-5 text-right bg-emerald-600">{formatCurrency(summary.saldoAkhir)}</td>
-                  <td className="print:hidden px-3 sm:px-6"></td>
+              <tfoot className="bg-slate-900 text-white">
+                <tr className="font-black text-[10px] sm:text-xs">
+                  <td colSpan="2" className="px-4 py-4 uppercase tracking-[0.1em] text-slate-400">Ringkasan Periode</td>
+                  <td className="px-4 py-4 text-right text-emerald-400 border-l border-white/5">{formatCurrency(summary.masuk)}</td>
+                  <td className="px-4 py-4 text-right text-rose-400 border-l border-white/5">{formatCurrency(summary.keluar)}</td>
+                  <td className="px-4 py-4 text-right bg-emerald-600 text-white border-l border-white/5">{formatCurrency(summary.saldoAkhir)}</td>
+                  <td className="print:hidden px-4 py-4"></td>
                 </tr>
               </tfoot>
             )}
