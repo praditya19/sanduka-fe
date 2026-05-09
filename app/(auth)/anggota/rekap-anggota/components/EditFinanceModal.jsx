@@ -366,19 +366,21 @@ const EditFinanceModal = ({
                 <h4 className="font-semibold text-purple-700 mb-2">
                   Keuangan:
                 </h4>
-                {sumbanganList.map((sumbangan, index) => {
+                {sumbanganList
+                  .filter((s) => parseInt(s.jumlah || 0) > 0)
+                  .map((sumbangan, index) => {
                   const jumlahValue = parseInt(sumbangan.jumlah || 0);
                   const isDeleted = jumlahValue === 0;
                   return (
                     <div
                       key={index}
-                      className={`space-y-1 px-3 py-2 rounded-md border-l-4 mb-2 ${isDeleted ? "bg-gray-100 border-gray-400 opacity-60" : "bg-purple-50 border-purple-400"}`}
+                      className="space-y-1 px-3 py-2 rounded-md border-l-4 mb-2 bg-purple-50 border-purple-400"
                     >
                       <div className="flex items-center justify-between">
                         <span
-                          className={`font-medium ${isDeleted ? "text-gray-500" : "text-purple-800"}`}
+                          className="font-medium text-purple-800"
                         >
-                          {sumbangan.keterangan || sumbangan.jenis}{" "}
+                          {sumbangan.namaSumbangan || sumbangan.keterangan || sumbangan.jenis}{" "}
                           {isDeleted && (
                             <span className="text-red-500 ml-2 text-sm">
                               (Dihapus)
