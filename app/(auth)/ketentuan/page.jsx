@@ -202,7 +202,7 @@ const page = () => {
           <div className="py-8 md:py-12">
             <div className="container mx-auto px-4 mt-6 md:mt-12 md:px-6 lg:px-12">
               <h2 className="text-2xl md:text-3xl font-bold mb-8 text-center text-teal-500">
-                Informasi Santunan Duka Cita
+                Informasi Keanggotaan PGRI Jepara
               </h2>
 
               <div className="max-w-5xl mx-auto space-y-6">

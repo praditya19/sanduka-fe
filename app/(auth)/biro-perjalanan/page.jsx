@@ -189,6 +189,58 @@ const TravelPage = () => {
         </div>
       </div>
 
+      {/* SECTION TENTANG BIRO TOUR & TRAVEL */}
+      {!loading && promoInfos.length > 0 && (
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-14">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4 flex items-center justify-center gap-2">
+              <FileText className="text-blue-600" /> Tentang Biro Tour & Travel
+            </h2>
+            <div className="w-24 h-1.5 bg-blue-500 rounded-full mx-auto opacity-80"></div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-10">
+            {promoInfos.map((info) => (
+              <div key={info.id} className="flex flex-col">
+                {info.foto && (
+                  <div
+                    className="mb-6 rounded-xl overflow-hidden cursor-pointer group relative"
+                    onClick={() => setLightboxImage(renderImage(info.foto))}
+                  >
+                    <img
+                      src={renderImage(info.foto)}
+                      alt="Foto Informasi"
+                      className="w-full h-auto block object-contain group-hover:scale-[1.02] transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                      <span className="text-white opacity-0 group-hover:opacity-100 bg-black/50 p-3 rounded-full backdrop-blur-sm shadow-lg">⤢</span>
+                    </div>
+                  </div>
+                )}
+
+                {info.text && (
+                  <div
+                    className="w-full text-sm text-gray-700 summernote-content"
+                    dangerouslySetInnerHTML={{ __html: info.text }}
+                  />
+                )}
+
+                {info.file && (
+                  <div className="mt-6">
+                    <button
+                      onClick={() => handleDownloadFile(info.file, info.id)}
+                      className="flex items-center justify-center gap-2 w-full bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white py-3 px-4 rounded-xl font-bold transition-colors border border-blue-200 shadow-sm"
+                    >
+                      <Download size={18} /> Unduh File Lampiran
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 pb-20">
         {loading ? (
           <div className="flex justify-center items-center py-20">
@@ -310,63 +362,7 @@ const TravelPage = () => {
             )}
 
             {/* --- 3. DAFTAR INFORMASI & DOKUMEN BEBAS (TEKS & FILE) --- */}
-            {promoInfos.length > 0 && (
-              <div className="space-y-8 max-w-4xl mx-auto mt-20">
-                <h3 className="text-2xl font-bold text-gray-800 text-center mb-8 flex items-center justify-center gap-2">
-                  <FileText className="text-blue-600" /> Informasi Tour & Travel
-                </h3>
-                
-                <div className="grid grid-cols-1 gap-8">
-                  {promoInfos.map((info) => (
-                    <div key={info.id} className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 md:p-8 flex flex-col">
-                      <h4 className="text-xl font-bold text-gray-800 mb-6 pb-4 border-b border-gray-100">
-                        {info.keteranganFoto && info.keteranganFoto !== "-" ? info.keteranganFoto : "Informasi Terkini"}
-                      </h4>
-                      
-                      {/* Tampilkan Foto jika ada (Otomatis menyesuaikan ukuran Landscape/Kotak) */}
-                      {info.foto && (
-                        <div 
-                          className="mb-6 rounded-xl overflow-hidden cursor-pointer border border-gray-100 group relative bg-gray-50" 
-                          onClick={() => setLightboxImage(renderImage(info.foto))}
-                        >
-                          <img 
-                            src={renderImage(info.foto)} 
-                            alt="Foto Informasi" 
-                            className="w-full h-auto block object-contain group-hover:scale-[1.02] transition-transform duration-500" 
-                          />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                             <span className="text-white opacity-0 group-hover:opacity-100 bg-black/50 p-3 rounded-full backdrop-blur-sm shadow-lg">⤢</span>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Tampilkan Text Area jika ada teks */}
-                      {info.text && (
-                        <div className="mb-6 flex-grow">
-                          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Deskripsi / Teks</label>
-                          <div
-                            className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-700 summernote-content"
-                            dangerouslySetInnerHTML={{ __html: info.text }}
-                          />
-                        </div>
-                      )}
-
-                      {/* Tombol Download File jika ada file */}
-                      {info.file && (
-                        <div className="mt-auto pt-2">
-                          <button
-                            onClick={() => handleDownloadFile(info.file, info.id)}
-                            className="flex items-center justify-center gap-2 w-full bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white py-3 px-4 rounded-xl font-bold transition-colors border border-blue-200 shadow-sm"
-                          >
-                            <Download size={18} /> Unduh File Lampiran
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Dipindah ke bawah hero section */}
 
           </div>
         )}
