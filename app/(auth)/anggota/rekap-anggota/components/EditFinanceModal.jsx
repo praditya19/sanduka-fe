@@ -154,12 +154,18 @@ const EditFinanceModal = ({
 
             {groupedIuran
               .filter((item) => {
-                if (item.isSumbanganDetail) return false;
                 if (resetKeys.includes(item.key)) return false;
+                
+                // Selalu tampilkan PGRI & Sanduka
                 if (["pgri", "sanduka"].includes(item.key)) return true;
+                
+                // Selalu tampilkan jika itu adalah kategori yang baru ditambahkan atau data lama dari DB
                 const isAdded = addedCategories.some((c) => c.key === item.key);
+                if (isAdded || item.isExistingSumbangan) return true;
+
+                // Tampilkan kategori lain hanya jika memiliki nilai
                 const totalVal = parseInt(item.iuran || 0) + (nominalBaruList[item.key] || 0);
-                return totalVal > 0 || isAdded;
+                return totalVal > 0;
               })
               .map((item, idx) => {
                 const isReset = resetKeys.includes(item.key);
@@ -174,7 +180,9 @@ const EditFinanceModal = ({
                         <div className="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center text-teal-600 font-black text-xs">
                           {idx + 1}
                         </div>
-                        <span className="font-bold text-slate-700 text-sm">{item.key.toUpperCase()}</span>
+                        <span className="font-bold text-slate-700 text-sm">
+                          {item.label || item.key.toUpperCase()}
+                        </span>
                       </div>
                       <button
                         type="button"
@@ -241,7 +249,9 @@ const EditFinanceModal = ({
                         <option value="">-- Pilih --</option>
                         <option value="pgri">PGRI</option>
                         <option value="sanduka">Sanduka</option>
-                        <option value="daspen">Daspen {notifDaspen ? "✓" : "×"}</option>
+                        <option value="daspen">
+                          Daspen {notifDaspen ? "(Sinkronisasi ✓)" : "(Belum Sinkronisasi ✕)"}
+                        </option>
                         <option value="kalender">Kalender</option>
                         <option value="derap">Derap</option>
                         <option value="lainlain">Lain-Lain</option>
