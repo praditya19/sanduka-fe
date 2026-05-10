@@ -41,7 +41,7 @@ const Berita = () => {
       year: "numeric",
     });
   };
-const stripHtml = (html) => {
+  const stripHtml = (html) => {
     if (!html) return "";
     return html.replace(/<[^>]*>?/gm, "");
   };
@@ -193,22 +193,24 @@ const stripHtml = (html) => {
                       )}
                     </div>
 
-                    <div className="relative h-56 lg:h-64 overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent z-10 opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
-                     <img
-                  src={
-                    news.galeri?.length > 0
-                      ? `data:image/jpeg;base64,${news.galeri[0].gambar}`
-                      : "/placeholder.jpg"
-                  }
-                  alt={news.judul}
-                  className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
-                />
+                    <Link href={`/berita/${news.id}`} className="block">
+                      <div className="relative h-56 lg:h-64 overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent z-10 opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
+                        <img
+                          src={
+                            news.galeri?.length > 0
+                              ? `data:image/jpeg;base64,${news.galeri[0].gambar}`
+                              : "/placeholder.jpg"
+                          }
+                          alt={news.judul}
+                          className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                        />
 
-                      <h3 className="absolute bottom-4 left-4 right-4 z-20 text-white text-lg font-bold leading-tight drop-shadow-lg line-clamp-2">
-                        {news.judul}
-                      </h3>
-                    </div>
+                        <h3 className="absolute bottom-4 left-4 right-4 z-20 text-white text-lg font-bold leading-tight drop-shadow-lg line-clamp-2">
+                          {news.judul}
+                        </h3>
+                      </div>
+                    </Link>
 
                     <div className="p-6">
                       <div className="flex items-center justify-between text-sm mb-4">
