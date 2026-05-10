@@ -435,7 +435,9 @@ const AddUnitForm = () => {
                     />
                     <div className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 max-h-48 overflow-y-auto">
                       {filteredCabang.length > 0 ? (
-                        filteredCabang.map((item) => (
+                        [...filteredCabang]
+                          .sort((a, b) => a.kecamatan.localeCompare(b.kecamatan, "id"))
+                          .map((item) => (
                           <div
                             key={item.id}
                             onClick={() => handleCabangSelect(item.kecamatan)}
@@ -527,7 +529,9 @@ const AddUnitForm = () => {
                                 Pilih Cabang
                               </li>
                               {filteredCabangOptions.length > 0 ? (
-                                filteredCabangOptions.map((cabang) => (
+                                [...filteredCabangOptions]
+                                  .sort((a, b) => a.kecamatan.localeCompare(b.kecamatan, "id"))
+                                  .map((cabang) => (
                                   <li
                                     key={cabang.idKecamatan}
                                     className="p-2 cursor-pointer hover:bg-gray-100"

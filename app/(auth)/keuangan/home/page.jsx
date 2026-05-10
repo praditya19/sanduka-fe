@@ -2361,7 +2361,9 @@ function RekapAnggota() {
                         >
                           Pilih Cabang
                         </li>
-                        {filteredCabangList.map((cabang) => (
+                        {[...filteredCabangList]
+                          .sort((a, b) => a.kecamatan.localeCompare(b.kecamatan, "id"))
+                          .map((cabang) => (
                           <li
                             key={cabang.id}
                             onClick={() => handleSelectCabang(cabang)}

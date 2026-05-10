@@ -625,7 +625,9 @@ const Page = () => {
                               Pilih Cabang
                             </li>
                             {filteredOptions.length > 0 ? (
-                              filteredOptions.map((option, index) => (
+                              filteredOptions
+                                .sort((a, b) => a.kecamatan.localeCompare(b.kecamatan, "id"))
+                                .map((option, index) => (
                                 <li
                                   key={index}
                                   className="p-2 hover:bg-blue-50 cursor-pointer transition-colors duration-150"

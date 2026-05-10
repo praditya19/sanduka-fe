@@ -484,7 +484,9 @@ const SyncData = () => {
                     <ul className="max-h-44 overflow-y-auto">
                       <li className="p-2"><Input type="text" onChange={(e) => handleCabangSearch(e.target.value)} className="block w-full" placeholder="Cari Cabang..." autoFocus /></li>
                       <li onClick={() => handleSelectCabang({ kecamatan: "" })} className="px-4 py-2 cursor-pointer hover:bg-gray-100">Pilih Cabang</li>
-                      {filteredCabangList.map((cabang) => (<li key={cabang.id} onClick={() => handleSelectCabang(cabang)} className="px-4 py-2 cursor-pointer hover:bg-gray-100">{cabang.kecamatan}</li>))}
+                      {filteredCabangList
+                        .sort((a, b) => a.kecamatan.localeCompare(b.kecamatan, "id"))
+                        .map((cabang) => (<li key={cabang.id} onClick={() => handleSelectCabang(cabang)} className="px-4 py-2 cursor-pointer hover:bg-gray-100">{cabang.kecamatan}</li>))}
                     </ul>
                   </div>
                 )}
@@ -497,7 +499,9 @@ const SyncData = () => {
                       <li className="p-2"><Input type="text" value={unitKerjaInput} onChange={handleUnitKerjaChange} placeholder="Cari Unit Kerja..." autoFocus className="block w-full" /></li>
                       <li onClick={() => handleUnitKerjaSelect({ unitKerja: "" })} className="px-4 py-2 cursor-pointer hover:bg-gray-100">Pilih Unit Kerja</li>
                       {filteredUnitKerja.length > 0 ? (
-                        filteredUnitKerja.map((unitKerja) => (<li key={unitKerja.id} onClick={() => handleUnitKerjaSelect(unitKerja)} className="px-4 py-2 cursor-pointer hover:bg-gray-100">{unitKerja.unitKerja}</li>))
+                        filteredUnitKerja
+                          .sort((a, b) => a.unitKerja.localeCompare(b.unitKerja, "id"))
+                          .map((unitKerja) => (<li key={unitKerja.id} onClick={() => handleUnitKerjaSelect(unitKerja)} className="px-4 py-2 cursor-pointer hover:bg-gray-100">{unitKerja.unitKerja}</li>))
                       ) : (<li className="px-4 py-2 text-gray-500">Tidak ada hasil</li>)}
                     </ul>
                   </div>

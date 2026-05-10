@@ -2243,7 +2243,9 @@ export default function BankTransactionPage() {
                             >
                               Pilih Cabang
                             </li>
-                            {[...filteredCabangList].map((cabang) => (
+                            {[...filteredCabangList]
+                              .sort((a, b) => a.kecamatan.localeCompare(b.kecamatan, "id"))
+                              .map((cabang) => (
                               <li
                                 key={cabang.id}
                                 onClick={() => handleSelectCabang(cabang)}
@@ -2291,7 +2293,9 @@ export default function BankTransactionPage() {
                           >
                             Pilih Unit Kerja
                           </li>
-                          {filteredUnitKerja.map((unitKerja) => (
+                          {filteredUnitKerja
+                            .sort((a, b) => a.unitKerja.localeCompare(b.unitKerja, "id"))
+                            .map((unitKerja) => (
                             <li
                               key={unitKerja.id}
                               onClick={() => handleUnitKerjaSelect(unitKerja)}
@@ -2880,7 +2884,9 @@ export default function BankTransactionPage() {
                               >
                                 Pilih Cabang
                               </li>
-                              {[...filteredCabangList].map((cabang) => (
+                              {[...filteredCabangList]
+                                .sort((a, b) => a.kecamatan.localeCompare(b.kecamatan, "id"))
+                                .map((cabang) => (
                                 <li
                                   key={cabang.id}
                                   onClick={() => handleSelectCabang(cabang)}
@@ -3173,7 +3179,9 @@ export default function BankTransactionPage() {
                         </li>
                       )}
 
-                      {filteredCabang.map((item, index) => (
+                      {filteredCabang
+                        .sort((a, b) => a.kecamatan.localeCompare(b.kecamatan, "id"))
+                        .map((item, index) => (
                         <li
                           key={index}
                           className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
@@ -3236,7 +3244,9 @@ export default function BankTransactionPage() {
                         </li>
                       )}
 
-                      {filterUnitKerja.map((item, index) => (
+                      {filterUnitKerja
+                        .sort((a, b) => a.unitKerja.localeCompare(b.unitKerja, "id"))
+                        .map((item, index) => (
                         <li
                           key={index}
                           className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
