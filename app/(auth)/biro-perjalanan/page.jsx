@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import Header from "@/app/_components/Header";
 import GlobalApi from "@/app/_utils/GlobalApi";
-import { Share2, Loader2, Phone, X, PlayCircle } from "lucide-react";
+import { Share2, Loader2, Phone, X, PlayCircle, Download, FileText } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 
@@ -126,8 +126,48 @@ const TravelPage = () => {
     }
   };
 
-  const promoPhotos = promos.filter(p => p.foto);
-  const promoVideos = promos.filter(p => !p.foto && p.link && getYouTubeEmbedUrl(p.link));
+  const handleDownloadFile = (base64Data, id) => {
+    if (!base64Data) {
+      alert("File tidak ditemukan!");
+      return;
+    }
+
+    let mimeType = "application/octet-stream";
+    let extension = "file"; 
+    let cleanBase64 = base64Data;
+
+    if (base64Data.startsWith("data:")) {
+      const arr = base64Data.split(",");
+      mimeType = arr[0].match(/:(.*?);/)[1];
+      cleanBase64 = arr[1];
+      
+      if (mimeType.includes("pdf")) extension = "pdf";
+      else if (mimeType.includes("word") || mimeType.includes("document")) extension = "docx";
+    } else {
+      if (base64Data.startsWith("JVBERi0")) {
+        mimeType = "application/pdf";
+        extension = "pdf";
+      } else if (base64Data.startsWith("UEsDBBQ")) {
+        mimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        extension = "docx";
+      } else if (base64Data.startsWith("0M8R4KGx")) {
+        mimeType = "application/msword";
+        extension = "doc";
+      }
+    }
+
+    const fileUrl = `data:${mimeType};base64,${cleanBase64}`;
+    const link = document.createElement("a");
+    link.href = fileUrl;
+    link.download = `Dokumen_Travel_${id}.${extension}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const promoInfos = promos.filter(p => p.text || p.file);
+  const promoVideos = promos.filter(p => (!p.text && !p.file) && !p.foto && p.link && getYouTubeEmbedUrl(p.link));
+  const promoPhotos = promos.filter(p => (!p.text && !p.file) && p.foto);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-50">
@@ -216,7 +256,7 @@ const TravelPage = () => {
               <div className="w-24 h-1.5 bg-teal-500 rounded-full mx-auto opacity-80"></div>
             </div>
 
-            {/* --- 1. GRID FOTO BANNER --- */}
+            {/* --- 1. GRID FOTO BANNER MURNI --- */}
             {promoPhotos.length > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
                 {promoPhotos.map((promo) => (
@@ -230,15 +270,12 @@ const TravelPage = () => {
                       alt={promo.keteranganFoto}
                       className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
                     />
-                    {/* Gradasi gelap untuk teks bawah */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-90 transition-opacity group-hover:opacity-100"></div>
 
-                    {/* Ikon Zoom di tengah */}
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <span className="bg-black/50 text-white p-3 rounded-full backdrop-blur-sm">⤢</span>
                     </div>
 
-                    {/* Teks Keterangan di Pojok Kiri Bawah */}
                     <div className="absolute bottom-0 left-0 right-0 p-5">
                       <h3 className="text-white font-bold text-lg md:text-xl drop-shadow-md leading-snug line-clamp-2">
                         {promo.keteranganFoto}
@@ -251,12 +288,11 @@ const TravelPage = () => {
 
             {/* --- 2. LIST VIDEO YOUTUBE BESAR --- */}
             {promoVideos.length > 0 && (
-              <div className="space-y-16">
+              <div className="space-y-16 mb-16">
                 {promoVideos.map((promo) => {
                   const embedUrl = getYouTubeEmbedUrl(promo.link);
                   return (
                     <div key={promo.id} className="w-full max-w-5xl mx-auto flex flex-col group">
-                      {/* Iframe Video Super Besar */}
                       <div className="border-[6px] border-[#0d9488] rounded-xl overflow-hidden shadow-lg bg-white relative pt-[56.25%] transform group-hover:-translate-y-1 transition-transform duration-300">
                         <iframe
                           className="absolute top-0 left-0 w-full h-full"
@@ -267,10 +303,70 @@ const TravelPage = () => {
                           allowFullScreen
                         ></iframe>
                       </div>
-                      {/* Keterangan dihapus sesuai request, jika ingin dimunculkan kembali uncomment kode di bawah */}
                     </div>
                   );
                 })}
+              </div>
+            )}
+
+            {/* --- 3. DAFTAR INFORMASI & DOKUMEN BEBAS (TEKS & FILE) --- */}
+            {promoInfos.length > 0 && (
+              <div className="space-y-8 max-w-4xl mx-auto mt-20">
+                <h3 className="text-2xl font-bold text-gray-800 text-center mb-8 flex items-center justify-center gap-2">
+                  <FileText className="text-blue-600" /> Pengumuman & Dokumen Terkait
+                </h3>
+                
+                <div className="grid grid-cols-1 gap-8">
+                  {promoInfos.map((info) => (
+                    <div key={info.id} className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 md:p-8 flex flex-col">
+                      <h4 className="text-xl font-bold text-gray-800 mb-6 pb-4 border-b border-gray-100">
+                        {info.keteranganFoto && info.keteranganFoto !== "-" ? info.keteranganFoto : "Informasi Terkini"}
+                      </h4>
+                      
+                      {/* Tampilkan Foto jika ada (Otomatis menyesuaikan ukuran Landscape/Kotak) */}
+                      {info.foto && (
+                        <div 
+                          className="mb-6 rounded-xl overflow-hidden cursor-pointer border border-gray-100 group relative bg-gray-50 flex justify-center" 
+                          onClick={() => setLightboxImage(renderImage(info.foto))}
+                        >
+                          <img 
+                            src={renderImage(info.foto)} 
+                            alt="Foto Informasi" 
+                            className="w-full h-auto max-h-[600px] object-contain group-hover:scale-[1.02] transition-transform duration-500" 
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                             <span className="text-white opacity-0 group-hover:opacity-100 bg-black/50 p-3 rounded-full backdrop-blur-sm shadow-lg">⤢</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Tampilkan Text Area jika ada teks */}
+                      {info.text && (
+                        <div className="mb-6 flex-grow">
+                          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Deskripsi / Teks</label>
+                          <textarea
+                            readOnly
+                            value={info.text}
+                            rows={6}
+                            className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-700 outline-none resize-none custom-scrollbar"
+                          />
+                        </div>
+                      )}
+
+                      {/* Tombol Download File jika ada file */}
+                      {info.file && (
+                        <div className="mt-auto pt-2">
+                          <button
+                            onClick={() => handleDownloadFile(info.file, info.id)}
+                            className="flex items-center justify-center gap-2 w-full bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white py-3 px-4 rounded-xl font-bold transition-colors border border-blue-200 shadow-sm"
+                          >
+                            <Download size={18} /> Unduh File Lampiran
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -282,11 +378,11 @@ const TravelPage = () => {
       {selectedPackage && (
         <div
           className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[999] p-4 transition-opacity duration-300"
-          onClick={() => setSelectedPackage(null)} /* <-- Tambahkan ini untuk menutup modal */
+          onClick={() => setSelectedPackage(null)} 
         >
           <div
             className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative shadow-2xl animate-fade-in-up flex flex-col"
-            onClick={(e) => e.stopPropagation()} /* <-- Tambahkan ini agar klik di dalam konten tidak ikut menutup modal */
+            onClick={(e) => e.stopPropagation()} 
           >
             <button
               onClick={() => setSelectedPackage(null)}

@@ -755,7 +755,6 @@ export default function PengaduanPage() {
               </thead>
               <tbody>
                 {rekapPengaduan
-          
                   .map((rekap) => (
                     <tr key={rekap.id} className="border-b hover:bg-gray-50">
                       <td className="py-3 px-4">{rekap.category}</td>
@@ -799,6 +798,33 @@ export default function PengaduanPage() {
                   ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {showDeleteConfirmation && (
+          <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-[200]">
+            <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+              <h3 className="text-xl font-bold text-red-600 mb-4">Konfirmasi Hapus</h3>
+              <p className="mb-6">
+                Apakah Anda yakin ingin menghapus pengaduan ini? Tindakan ini tidak dapat dibatalkan.
+              </p>
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={() => setShowDeleteConfirmation(false)}
+                  className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
+                  disabled={loading}
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={confirmDeletePengaduan}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                  disabled={loading}
+                >
+                  {loading ? "Menghapus..." : "Hapus"}
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

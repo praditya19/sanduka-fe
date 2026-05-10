@@ -221,11 +221,11 @@ const VerifikasiAnggotaMutasi = () => {
       });
       setTimeout(() => {
         window.location.reload();
-      }, 3000); 
+      }, 3000);
     } catch (error) {
       console.error("Error verifying user:", error);
       setNotification({
-        type: "error", 
+        type: "error",
         message: `Anggota Gagal Diverifikasi!`,
       });
     }
@@ -444,9 +444,8 @@ const VerifikasiAnggotaMutasi = () => {
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="container mx-auto p-4 md:p-6">
             <FilterSection
@@ -715,7 +714,7 @@ const DropdownUnitKerja = ({
     .filter((option) =>
       selectedCabang
         ? option.cabang.trim().toLowerCase() ===
-          selectedCabang.trim().toLowerCase()
+        selectedCabang.trim().toLowerCase()
         : true
     )
     .filter((option) =>
@@ -750,9 +749,8 @@ const DropdownUnitKerja = ({
       <label className="block mb-2 font-semibold text-gray-800">{label}</label>
       <input
         type="text"
-        className={`border rounded-lg p-2 w-full bg-white shadow-sm ${
-          !selectedCabang ? "bg-gray-200 cursor-not-allowed" : ""
-        }`}
+        className={`border rounded-lg p-2 w-full bg-white shadow-sm ${!selectedCabang ? "bg-gray-200 cursor-not-allowed" : ""
+          }`}
         placeholder={
           !selectedCabang ? "Pilih cabang terlebih dahulu" : `Pilih ${label}`
         }
@@ -821,6 +819,7 @@ const DataTable = ({
   const [expandedRow, setExpandedRow] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const profileImageUrl = "/profile.png";
+  const [zoomedImage, setZoomedImage] = useState(null);
 
   useEffect(() => {
     const handleResize = () => {
@@ -940,8 +939,11 @@ const DataTable = ({
                   {isMobile ? (
                     <td className="py-2 px-4 border">
                       <div className="flex flex-col items-center justify-center">
-                        <div className="w-20 h-20 overflow-hidden">
+                        <div className="w-20 h-20 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity rounded-md">
                           <Image
+                            onClick={() => setZoomedImage(
+                              fotoBase64[index] ? `data:image/jpeg;base64,${fotoBase64[index]}` : profileImageUrl
+                            )}
                             src={
                               fotoBase64[index]
                                 ? `data:image/jpeg;base64,${fotoBase64[index]}`
@@ -950,7 +952,7 @@ const DataTable = ({
                             width={60}
                             height={60}
                             alt="Anggota Foto"
-                            className="object-cover"
+                            className="object-cover w-full h-full"
                             unoptimized={true}
                           />
                         </div>
@@ -959,8 +961,11 @@ const DataTable = ({
                   ) : (
                     <td className="py-2 px-2 border">
                       <div className="flex items-center justify-center">
-                        <div className="w-20 h-20 overflow-hidden flex items-center justify-center">
+                        <div className="w-20 h-20 overflow-hidden flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity rounded-md">
                           <Image
+                            onClick={() => setZoomedImage(
+                              fotoBase64[index] ? `data:image/jpeg;base64,${fotoBase64[index]}` : profileImageUrl
+                            )}
                             src={
                               fotoBase64[index]
                                 ? `data:image/jpeg;base64,${fotoBase64[index]}`
@@ -969,7 +974,7 @@ const DataTable = ({
                             width={60}
                             height={60}
                             alt="Anggota Foto"
-                            className="object-cover"
+                            className="object-cover w-full h-full"
                           />
                         </div>
                       </div>
@@ -1070,6 +1075,27 @@ const DataTable = ({
                     </td>
                   </tr>
                 )}
+                {zoomedImage && (
+                  <div
+                    className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+                    onClick={() => setZoomedImage(null)}
+                  >
+                    <div className="relative flex flex-col items-center animate-in zoom-in duration-200">
+                      <button
+                        className="absolute -top-3 -right-3 bg-white text-gray-600 hover:text-red-500 hover:bg-gray-100 shadow-md rounded-full w-8 h-8 flex items-center justify-center text-xl font-bold z-50 border border-gray-200 transition-colors"
+                        onClick={() => setZoomedImage(null)}
+                      >
+                        &times;
+                      </button>
+                      <img
+                        src={zoomedImage}
+                        alt="Zoomed Profil"
+                        className="max-w-[250px] md:max-w-[400px] max-h-[85vh] object-contain rounded-lg shadow-[0_20px_50px_rgba(0,0,0,0.1)] border-4 border-white bg-white"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                  </div>
+                )}
               </React.Fragment>
             );
           })
@@ -1087,6 +1113,7 @@ const PopupDetail = ({
 }) => {
   const [showConfirmReject, setShowConfirmReject] = useState(false);
   const [decodedImage, setDecodedImage] = useState(null);
+  const [zoomedImage, setZoomedImage] = useState(null); // STATE BARU UNTUK ZOOM
   const profileImageUrl = "/profile.png";
 
   useEffect(() => {
@@ -1106,7 +1133,7 @@ const PopupDetail = ({
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-60 transition-opacity duration-300 ease-in-out">
+    <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-60 transition-opacity duration-300 ease-in-out z-50">
       <div className="bg-white p-4 sm:p-8 rounded-lg shadow-xl w-full max-w-lg transform transition-transform duration-300 ease-in-out">
         <div className="flex justify-between items-center mb-4 sm:mb-6">
           <h2 className="text-lg sm:text-xl font-bold text-gray-900">
@@ -1122,13 +1149,14 @@ const PopupDetail = ({
 
         <div className="flex flex-col space-y-4 sm:space-y-6">
           <div className="flex justify-center">
-            <div className="w-20 h-20 overflow-hidden">
+            <div className="w-20 h-20 overflow-hidden rounded-md cursor-pointer hover:opacity-80 transition-opacity shadow-sm">
               <Image
+                onClick={() => setZoomedImage(decodedImage || profileImageUrl)}
                 src={decodedImage || profileImageUrl}
-                width={60}
-                height={60}
+                width={80}
+                height={80}
                 alt="Anggota Foto"
-                className="object-cover"
+                className="object-cover w-full h-full"
               />
             </div>
           </div>
@@ -1164,13 +1192,15 @@ const PopupDetail = ({
             <div>
               <p className="font-medium text-gray-600">Tanggal Lahir:</p>
               <p>
-                {new Intl.DateTimeFormat("id-ID", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                })
-                  .format(new Date(selectedRow.tanggalLahir))
-                  .replace(/\//g, "-")}
+                {selectedRow.tanggalLahir 
+                  ? new Intl.DateTimeFormat("id-ID", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    })
+                      .format(new Date(selectedRow.tanggalLahir))
+                      .replace(/\//g, "-")
+                  : "-"}
               </p>
             </div>
           </div>
@@ -1187,29 +1217,32 @@ const PopupDetail = ({
             </div>
             <div>
               <p className="font-medium text-gray-600">Nomor Hp:</p>
-              <a
-                href={`https://wa.me/${selectedRow.nomorHp.replace(
-                  /^0/,
-                  "62"
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center text-green-500"
-              >
-                <FontAwesomeIcon icon={faWhatsapp} className="mr-2" size="lg" />
-                <span>{selectedRow.nomorHp}</span>
-              </a>
+              {selectedRow.nomorHp ? (
+                <a
+                  href={`https://wa.me/${selectedRow.nomorHp.replace(
+                    /^0/,
+                    "62"
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center text-green-500"
+                >
+                  <FontAwesomeIcon icon={faWhatsapp} className="mr-2" size="lg" />
+                  <span>{selectedRow.nomorHp}</span>
+                </a>
+              ) : (
+                <p>-</p>
+              )}
             </div>
 
             <div>
               <p className="font-medium text-gray-600 mr-4">Status:</p>
               <div className="flex text-center justify-between px-1">
-                <Button className="w-24 hover:bg-green-600">
+                <Button className="w-24 hover:bg-green-600" onClick={() => handleVerifyUserClick(selectedRow.id)}>
                   <FontAwesomeIcon
                     icon={faCheckCircle}
                     size="2xl"
                     className="cursor-pointer"
-                    onClick={() => handleVerifyUserClick(selectedRow.id)}
                   />
                 </Button>
                 <Button
@@ -1230,7 +1263,7 @@ const PopupDetail = ({
 
       {/* Confirmation Popup */}
       {showConfirmReject && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-60">
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-[60]">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96">
             <p className="text-center text-gray-800 font-semibold mb-4">
               Apa Anda yakin tidak memverifikasi Anggota ini?
@@ -1249,6 +1282,29 @@ const PopupDetail = ({
                 Tidak
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* POPUP ZOOM GAMBAR */}
+      {zoomedImage && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black bg-opacity-40 backdrop-blur-sm"
+          onClick={() => setZoomedImage(null)}
+        >
+          <div className="relative flex flex-col items-center animate-in zoom-in duration-200">
+            <button
+              className="absolute -top-3 -right-3 bg-white text-gray-600 hover:text-red-500 hover:bg-gray-100 shadow-md rounded-full w-8 h-8 flex items-center justify-center text-xl font-bold z-50 border border-gray-200 transition-colors"
+              onClick={() => setZoomedImage(null)}
+            >
+              &times;
+            </button>
+            <img
+              src={zoomedImage}
+              alt="Zoomed Profil"
+              className="max-w-[250px] md:max-w-[400px] max-h-[85vh] object-contain rounded-lg shadow-[0_20px_50px_rgba(0,0,0,0.1)] border-4 border-white bg-white"
+              onClick={(e) => e.stopPropagation()}
+            />
           </div>
         </div>
       )}
@@ -1296,11 +1352,10 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
         <button
           key={page}
           onClick={() => onPageChange(page - 1)}
-          className={`px-3 py-1 border rounded text-sm ${
-            page - 1 === currentPage
-              ? "bg-blue-500 text-white"
-              : "bg-white hover:bg-gray-50"
-          }`}
+          className={`px-3 py-1 border rounded text-sm ${page - 1 === currentPage
+            ? "bg-blue-500 text-white"
+            : "bg-white hover:bg-gray-50"
+            }`}
         >
           {page}
         </button>

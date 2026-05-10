@@ -133,6 +133,7 @@ const Page = () => {
   const [statusSegeraCount, setStatusSegeraCount] = useState(0);
   const [fotoBase64, setFotoBase64] = useState("");
   const profileImageUrl = "/profile.png";
+  const [zoomedImage, setZoomedImage] = useState(null);
 
   const fetchPensiunData = async (
     page,
@@ -999,7 +1000,13 @@ const Page = () => {
                               </td>
                               <td className="py-3 px-4 text-center">
                                 <div className="flex justify-center">
-                                  <div className="w-12 h-12 relative overflow-hidden rounded-full border-2 border-teal-600">
+                                  {/* Tambahan: cursor-pointer, hover:opacity-80, transition-opacity, dan event onClick */}
+                                  <div
+                                    className="w-12 h-12 relative overflow-hidden rounded-full border-2 border-teal-600 cursor-pointer hover:opacity-80 transition-opacity shadow-sm"
+                                    onClick={() => setZoomedImage(
+                                      fotoBase64[index] ? `data:image/jpeg;base64,${fotoBase64[index]}` : profileImageUrl
+                                    )}
+                                  >
                                     <Image
                                       src={
                                         fotoBase64[index]
@@ -1348,6 +1355,27 @@ const Page = () => {
                 Ya, Saya Yakin
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {zoomedImage && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black bg-opacity-40 backdrop-blur-sm"
+          onClick={() => setZoomedImage(null)}
+        >
+          <div className="relative flex flex-col items-center animate-in zoom-in duration-200">
+            <button
+              className="absolute -top-3 -right-3 bg-white text-gray-600 hover:text-red-500 hover:bg-gray-100 shadow-md rounded-full w-8 h-8 flex items-center justify-center text-xl font-bold z-50 border border-gray-200 transition-colors"
+              onClick={() => setZoomedImage(null)}
+            >
+              &times;
+            </button>
+            <img
+              src={zoomedImage}
+              alt="Zoomed Profil"
+              className="max-w-[250px] md:max-w-[400px] max-h-[85vh] object-contain rounded-lg shadow-[0_20px_50px_rgba(0,0,0,0.1)] border-4 border-white bg-white"
+              onClick={(e) => e.stopPropagation()}
+            />
           </div>
         </div>
       )}

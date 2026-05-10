@@ -19,7 +19,10 @@ import {
   Link as LinkIcon, 
   AlignLeft, 
   Upload, 
-  Youtube 
+  Youtube,
+  FileText,
+  Paperclip,
+  Download
 } from "lucide-react";
 
 const getYouTubeEmbedUrl = (url) => {
@@ -31,6 +34,46 @@ const getYouTubeEmbedUrl = (url) => {
   }
   return null;
 };
+
+const handleDownloadFile = (base64Data, id) => {
+    if (!base64Data) {
+      alert("File tidak ditemukan!");
+      return;
+    }
+
+    let mimeType = "application/octet-stream";
+    let extension = "file";
+    let cleanBase64 = base64Data;
+
+    if (base64Data.startsWith("data:")) {
+      const arr = base64Data.split(",");
+      mimeType = arr[0].match(/:(.*?);/)[1];
+      cleanBase64 = arr[1];
+      
+      if (mimeType.includes("pdf")) extension = "pdf";
+      else if (mimeType.includes("word") || mimeType.includes("document")) extension = "docx";
+    } else {
+      // Deteksi ekstensi berdasarkan header Base64
+      if (base64Data.startsWith("JVBERi0")) {
+        mimeType = "application/pdf";
+        extension = "pdf";
+      } else if (base64Data.startsWith("UEsDBBQ")) {
+        mimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        extension = "docx";
+      } else if (base64Data.startsWith("0M8R4KGx")) {
+        mimeType = "application/msword";
+        extension = "doc";
+      }
+    }
+
+    const fileUrl = `data:${mimeType};base64,${cleanBase64}`;
+    const link = document.createElement("a");
+    link.href = fileUrl;
+    link.download = `Dokumen_${id}.${extension}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
 const NotificationPopup = ({ type, message, onClose }) => {
   useEffect(() => {
@@ -123,6 +166,15 @@ const CreatePaket = () => {
   const [videoLink, setVideoLink] = useState("");
   const [videoKeterangan, setVideoKeterangan] = useState("");
   const [isSubmittingVideo, setIsSubmittingVideo] = useState(false);
+
+  const [infoKeterangan, setInfoKeterangan] = useState("");
+  const [infoText, setInfoText] = useState("");
+  const [infoFoto, setInfoFoto] = useState(null);
+  const [infoFotoPreview, setInfoFotoPreview] = useState("");
+  const [infoFile, setInfoFile] = useState(null);
+  const [isSubmittingInfo, setIsSubmittingInfo] = useState(false);
+  const infoFotoInputRef = useRef(null);
+  const infoFileInputRef = useRef(null);
 
   useEffect(() => {
     fetchPackages();
@@ -464,6 +516,63 @@ const CreatePaket = () => {
     }
   };
 
+  const handleInfoFotoChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const safeFile = await compressImage(file);
+      setInfoFoto(safeFile);
+      setInfoFotoPreview(URL.createObjectURL(safeFile));
+    } catch (error) {
+      setNotification({ type: "error", message: "Gagal membaca file foto." });
+    }
+  };
+
+  const handleInfoFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) setInfoFile(file);
+  };
+
+  const handleCreateInfo = async (e) => {
+    e.preventDefault();
+    
+    // Validasi minimal ada salah satu isian (Teks, Foto, atau File)
+    if (!infoText.trim() && !infoFoto && !infoFile) {
+      setNotification({ type: "error", message: "Minimal isi salah satu: Teks, Foto, atau File!" });
+      return;
+    }
+
+    try {
+      setIsSubmittingInfo(true);
+      const formData = new FormData();
+      
+      // Jika backend secara sistem wajib menerima keteranganFoto, kita beri default string kosong
+      formData.append("keteranganFoto", "-"); 
+      
+      if (infoText) formData.append("text", infoText);
+      if (infoFoto) formData.append("foto", infoFoto);
+      if (infoFile) formData.append("file", infoFile); 
+
+      await GlobalApi.createSlidePaket(formData);
+      setNotification({ type: "success", message: "Informasi/Dokumen berhasil ditambahkan!" });
+      
+      // Reset Form
+      setInfoText("");
+      setInfoFoto(null);
+      setInfoFotoPreview("");
+      setInfoFile(null);
+      if (infoFotoInputRef.current) infoFotoInputRef.current.value = "";
+      if (infoFileInputRef.current) infoFileInputRef.current.value = "";
+      
+      // Refresh Data
+      fetchSlides();
+    } catch (error) {
+      setNotification({ type: "error", message: "Gagal menambahkan Informasi/Dokumen!" });
+    } finally {
+      setIsSubmittingInfo(false);
+    }
+  };
+
   const renderImageBase64 = (base64String) => {
     if (!base64String) return "/placeholder.jpg";
     if (base64String.startsWith('data:image')) return base64String;
@@ -799,90 +908,276 @@ const CreatePaket = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="bg-slate-700 px-6 py-4 flex justify-between items-center">
-              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                <AlignLeft className="w-5 h-5" /> Daftar Dokumentasi Travel
-              </h2>
-              <span className="bg-white/20 text-white py-1 px-3 rounded-full text-xs font-medium">
-                {slides.length} Item
-              </span>
-            </div>
+          {(() => {
+            const slideMedia = slides.filter(item => (!item.text && !item.file) && (item.foto || item.link));
+            const slideInfo = slides.filter(item => item.text || item.file);
 
-            <div className="p-6 md:p-8 bg-gray-50/50">
-              {slides.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
-                  <ImageIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">Belum ada dokumentasi yang ditambahkan.</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {slides.map((item) => {
-                    const embedUrl = getYouTubeEmbedUrl(item.link);
-                    return (
-                      <div key={item.id} className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col group relative">
-                        {/* Tombol Hapus Terintegrasi Popup */}
-                        <button 
-                            onClick={() => handleDeleteDokumentasi(item.id)}
-                            className="absolute top-2 right-2 bg-white/90 hover:bg-red-50 text-red-500 p-2 rounded-full shadow-md transition-colors z-20 opacity-0 group-hover:opacity-100"
-                            title="Hapus Item"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                        </button>
+            return (
+              <>
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mt-8">
+                  <div className="bg-slate-700 px-6 py-4 flex justify-between items-center">
+                    <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                      <ImageIcon className="w-5 h-5" /> Daftar Dokumentasi Travel (Foto & Video)
+                    </h2>
+                    <span className="bg-white/20 text-white py-1 px-3 rounded-full text-xs font-medium">
+                      {slideMedia.length} Item
+                    </span>
+                  </div>
 
-                        {/* Area Visual (Foto/Video) */}
-                        <div className="relative h-48 bg-gray-100 overflow-hidden border-b border-gray-100">
-                          {item.foto ? (
-                            <img 
-                              src={renderImageBase64(item.foto)} 
-                              alt={item.keteranganFoto} 
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                            />
-                          ) : embedUrl ? (
-                            <iframe
-                              className="w-full h-full z-10"
-                              src={embedUrl}
-                              title="YouTube Video"
-                              frameBorder="0"
-                              allowFullScreen
-                            ></iframe>
-                          ) : (
-                            <div className="flex items-center justify-center h-full text-gray-400 flex-col">
-                              <LinkIcon className="w-8 h-8 mb-2 opacity-50" />
-                              <span className="text-xs">Link Tidak Valid</span>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Area Teks */}
-                        <div className="p-4 flex-1 flex flex-col">
-                          <h4 className="font-bold text-gray-800 line-clamp-2 mb-2 text-sm leading-snug">
-                            {item.keteranganFoto}
-                          </h4>
-                          <div className="mt-auto pt-3 flex justify-between items-end border-t border-gray-50">
-                            {item.foto ? (
-                                <span className="bg-teal-50 text-teal-600 border border-teal-100 py-1 px-2.5 rounded-lg text-[10px] font-bold tracking-wide">
-                                  📸 FOTO
-                                </span>
-                            ) : (
-                                <span className="bg-red-50 text-red-600 border border-red-100 py-1 px-2.5 rounded-lg text-[10px] font-bold tracking-wide flex items-center gap-1">
-                                  <Youtube className="w-3 h-3" /> VIDEO
-                                </span>
-                            )}
-
-                            {item.createdAt && (
-                              <span className="text-[10px] text-gray-400 font-medium">
-                                {`${item.createdAt[2]}/${item.createdAt[1]}/${item.createdAt[0]}`}
-                              </span>
-                            )}
-                          </div>
-                        </div>
+                  <div className="p-6 md:p-8 bg-gray-50/50">
+                    {slideMedia.length === 0 ? (
+                      <div className="text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
+                        <ImageIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                        <p className="text-gray-500">Belum ada foto atau video dokumentasi.</p>
                       </div>
-                    );
-                  })}
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {slideMedia.map((item) => {
+                          const embedUrl = getYouTubeEmbedUrl(item.link);
+                          return (
+                            <div key={item.id} className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col group relative">
+                              <button 
+                                onClick={() => handleDeleteDokumentasi(item.id)}
+                                className="absolute top-2 right-2 bg-white/90 hover:bg-red-50 text-red-500 p-2 rounded-full shadow-md transition-colors z-20 opacity-0 group-hover:opacity-100"
+                                title="Hapus Item"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+
+                              <div className="relative h-48 bg-gray-100 overflow-hidden border-b border-gray-100 flex items-center justify-center">
+                                {item.foto ? (
+                                  <img 
+                                    src={renderImageBase64(item.foto)} 
+                                    alt={item.keteranganFoto} 
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                                  />
+                                ) : embedUrl ? (
+                                  <iframe
+                                    className="w-full h-full z-10"
+                                    src={embedUrl}
+                                    title="YouTube Video"
+                                    frameBorder="0"
+                                    allowFullScreen
+                                  ></iframe>
+                                ) : (
+                                  <div className="flex items-center justify-center h-full text-gray-400 flex-col">
+                                    <LinkIcon className="w-8 h-8 mb-2 opacity-50" />
+                                    <span className="text-xs">Link Tidak Valid</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="p-4 flex-1 flex flex-col bg-white">
+                                <h4 className="font-bold text-gray-800 line-clamp-2 mb-2 text-sm leading-snug">
+                                  {item.keteranganFoto && item.keteranganFoto !== "-" ? item.keteranganFoto : "Dokumentasi"}
+                                </h4>
+                                <div className="mt-auto pt-3 flex justify-between items-end border-t border-gray-50">
+                                  {item.foto ? (
+                                    <span className="bg-teal-50 text-teal-600 border border-teal-100 py-1 px-2.5 rounded-lg text-[10px] font-bold tracking-wide">📸 FOTO</span>
+                                  ) : (
+                                    <span className="bg-red-50 text-red-600 border border-red-100 py-1 px-2.5 rounded-lg text-[10px] font-bold tracking-wide flex items-center gap-1"><Youtube className="w-3 h-3" /> VIDEO</span>
+                                  )}
+                                  {item.createdAt && (
+                                    <span className="text-[10px] text-gray-400 font-medium">
+                                      {`${item.createdAt[2]}/${item.createdAt[1]}/${item.createdAt[0]}`}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
+
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mt-8">
+                  <div className="bg-indigo-700 px-6 py-4 flex justify-between items-center">
+                    <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                      <FileText className="w-5 h-5" /> Daftar Informasi & Dokumen Terlampir
+                    </h2>
+                    <span className="bg-white/20 text-white py-1 px-3 rounded-full text-xs font-medium">
+                      {slideInfo.length} Item
+                    </span>
+                  </div>
+
+                  <div className="p-6 md:p-8 bg-gray-50/50">
+                    {slideInfo.length === 0 ? (
+                      <div className="text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
+                        <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                        <p className="text-gray-500">Belum ada informasi atau file dokumen yang ditambahkan.</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {slideInfo.map((item) => (
+                          <div key={item.id} className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 flex flex-col relative group hover:shadow-lg transition-shadow">
+                            
+                            {/* Tombol Hapus Info/File */}
+                            <button 
+                              onClick={() => handleDeleteDokumentasi(item.id)}
+                              className="absolute top-4 right-4 bg-white hover:bg-red-50 text-red-500 p-2 rounded-full shadow-md transition-colors z-20 opacity-0 group-hover:opacity-100 border border-gray-100"
+                              title="Hapus Item"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+
+                            <h4 className="text-lg font-bold text-gray-800 mb-4 pb-3 border-b border-gray-100 pr-10">
+                              {item.keteranganFoto && item.keteranganFoto !== "-" ? item.keteranganFoto : "Informasi Terkini"}
+                            </h4>
+
+                            {item.foto && (
+                              <div className="mb-4 rounded-xl overflow-hidden border border-gray-100 h-40 relative group/img cursor-pointer">
+                                <img 
+                                  src={renderImageBase64(item.foto)} 
+                                  alt="Foto Informasi" 
+                                  className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500" 
+                                />
+                                <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors flex items-center justify-center">
+                                  {/* Jika kamu punya fungsi Zoom, bisa ditambahkan onClick pada icon ini. Karena di CreatePaket belum ada, kita jadikan statis dulu */}
+                                  <span className="text-white opacity-0 group-hover/img:opacity-100 drop-shadow-md text-xl font-bold">⤢</span>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Teks Deskripsi */}
+                            {item.text && (
+                              <div className="mb-4 flex-grow">
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Deskripsi / Teks</label>
+                                <textarea
+                                  readOnly
+                                  value={item.text}
+                                  rows={item.foto ? 3 : 5}
+                                  className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-700 outline-none resize-none custom-scrollbar"
+                                />
+                              </div>
+                            )}
+
+                            {/* Area Bawah: Tombol File & Info Tambahan */}
+                            <div className="mt-auto flex flex-col sm:flex-row gap-4 items-center justify-between pt-2">
+                              {item.file ? (
+                                <button 
+                                  onClick={() => handleDownloadFile(item.file, item.id)}
+                                  className="flex items-center justify-center gap-2 w-full sm:w-auto bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white py-2.5 px-4 rounded-xl text-sm font-bold transition-colors border border-indigo-200 shadow-sm"
+                                >
+                                  <Download size={16} /> Unduh File
+                                </button>
+                              ) : (
+                                <div className="flex-1"></div>
+                              )}
+
+                              <div className="flex items-center gap-2 ml-auto">
+                                <span className={`border py-1 px-2.5 rounded-lg text-[10px] font-bold tracking-wide flex items-center gap-1 ${item.file ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-gray-100 text-gray-600 border-gray-200'}`}>
+                                  {item.file ? '📎 FILE' : item.foto ? '📸 INFO FOTO' : '📝 TEKS'}
+                                </span>
+                                {item.createdAt && (
+                                  <span className="text-[10px] text-gray-400 font-medium whitespace-nowrap">
+                                    {`${item.createdAt[2]}/${item.createdAt[1]}/${item.createdAt[0]}`}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            );
+          })()}
+
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col mt-8">
+            <div className="bg-indigo-600 px-6 py-4">
+              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                <FileText className="w-5 h-5" /> Tambah Informasi / Dokumen Bebas
+              </h2>
+              <p className="text-indigo-100 text-xs mt-1">Form ini opsional. Anda bisa mengisi teks saja, foto saja, file saja, atau semuanya.</p>
             </div>
+            
+            <form onSubmit={handleCreateInfo} className="p-6 md:p-8 space-y-6">
+              {/* Baris 1: Text Panjang */}
+              <div className="grid grid-cols-1 gap-6">
+                <div>
+                  <label className="block text-sm text-gray-700 font-semibold mb-2">Isi Teks (Opsional)</label>
+                  <textarea
+                    rows={4}
+                    placeholder="Tulis informasi detail di sini..."
+                    className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition"
+                    value={infoText}
+                    onChange={(e) => setInfoText(e.target.value)}
+                  ></textarea>
+                </div>
+              </div>
+
+              {/* Baris 2: Upload Foto & File */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100">
+                {/* Input Foto */}
+                <div>
+                  <label className="text-sm text-gray-700 font-semibold mb-2 flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4 text-indigo-500" /> Upload Foto (Opsional)
+                  </label>
+                  <div 
+                    className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:bg-gray-50 transition cursor-pointer flex flex-col items-center justify-center min-h-[120px] relative overflow-hidden"
+                    onClick={() => infoFotoInputRef.current.click()}
+                  >
+                    {infoFotoPreview ? (
+                      <img src={infoFotoPreview} alt="Preview Info" className="absolute inset-0 w-full h-full object-cover z-0" />
+                    ) : (
+                      <div className="text-gray-400 flex flex-col items-center z-10">
+                        <Upload className="w-6 h-6 mb-2 opacity-50" />
+                        <p className="text-xs font-medium">Klik untuk upload foto</p>
+                      </div>
+                    )}
+                    <input type="file" accept="image/*" className="hidden" ref={infoFotoInputRef} onChange={handleInfoFotoChange} />
+                  </div>
+                  {infoFotoPreview && (
+                    <button type="button" onClick={() => {setInfoFotoPreview(""); setInfoFoto(null);}} className="text-xs text-red-500 hover:underline mt-2">
+                      Hapus Foto
+                    </button>
+                  )}
+                </div>
+
+                {/* Input File (PDF/Doc) */}
+                <div>
+                  <label className="text-sm text-gray-700 font-semibold mb-2 flex items-center gap-2">
+                    <Paperclip className="w-4 h-4 text-indigo-500" /> Upload File/Dokumen (Opsional)
+                  </label>
+                  <div 
+                    className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:bg-gray-50 transition cursor-pointer flex flex-col items-center justify-center min-h-[120px]"
+                    onClick={() => infoFileInputRef.current.click()}
+                  >
+                    {infoFile ? (
+                      <div className="flex flex-col items-center text-indigo-600">
+                        <FileText className="w-8 h-8 mb-2" />
+                        <p className="text-xs font-semibold px-2 text-center line-clamp-2">{infoFile.name}</p>
+                      </div>
+                    ) : (
+                      <div className="text-gray-400 flex flex-col items-center">
+                        <Upload className="w-6 h-6 mb-2 opacity-50" />
+                        <p className="text-xs font-medium">Klik untuk upload file PDF/Doc</p>
+                      </div>
+                    )}
+                    <input type="file" accept=".pdf,.doc,.docx" className="hidden" ref={infoFileInputRef} onChange={handleInfoFileChange} />
+                  </div>
+                  {infoFile && (
+                    <button type="button" onClick={() => setInfoFile(null)} className="text-xs text-red-500 hover:underline mt-2">
+                      Hapus File
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="pt-4 flex justify-end">
+                <button
+                  type="submit"
+                  disabled={isSubmittingInfo || (!infoText && !infoFoto && !infoFile)}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-bold transition disabled:opacity-50 flex items-center gap-2 shadow-md"
+                >
+                  {isSubmittingInfo ? "Menyimpan..." : "Simpan Data"}
+                </button>
+              </div>
+            </form>
           </div>
 
         </div>

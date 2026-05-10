@@ -54,6 +54,7 @@ const FormStep1 = ({
   const [canProceed, setCanProceed] = useState(true);
   const [temanUnitKerjaData, setTemanUnitKerjaData] = useState([]);
   const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
+  const [zoomedImage, setZoomedImage] = useState(null);
 
   useEffect(() => {
     if (!token) {
@@ -172,7 +173,7 @@ const FormStep1 = ({
 
   const handleCabangSelect = (cabang) => {
     const selectedKecamatan = cabang ? cabang.kecamatan : "";
-    
+
     setSelectedCabang(selectedKecamatan);
     setQueryCabang("");
     setShowDropdownCabang(false);
@@ -182,12 +183,12 @@ const FormStep1 = ({
     );
     setFilteredUnitKerja(unitsForSelectedCabang);
 
-    setFormData((prev) => ({ 
-      ...prev, 
+    setFormData((prev) => ({
+      ...prev,
       branch: selectedKecamatan,
-      unit: "", 
-      memberName: "", 
-      memberId: null 
+      unit: "",
+      memberName: "",
+      memberId: null
     }));
     setQueryUnit("");
     setTemanUnitKerjaData([]);
@@ -571,7 +572,7 @@ const FormStep1 = ({
                         type="text"
                         className="border rounded-lg p-2 w-full bg-white shadow-sm cursor-pointer"
                         placeholder="Pilih Cabang"
-                        value={selectedCabang} 
+                        value={selectedCabang}
                         disabled={
                           sessionStorage.getItem("role") !== "SUPERADMIN"
                         }
@@ -760,11 +761,12 @@ const FormStep1 = ({
                     {selectedMemberInfo && !isFetchingMember && (
                       <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-4 w-full shadow-sm">
                         <Image
+                          onClick={() => setZoomedImage(selectedMemberInfo.foto)}
                           src={selectedMemberInfo.foto}
                           alt="Foto Anggota"
                           width={60}
                           height={60}
-                          className="w-16 h-16 object-cover rounded-full border border-gray-300 bg-white"
+                          className="w-16 h-16 object-cover rounded-full border border-gray-300 bg-white cursor-pointer hover:opacity-80 transition-opacity"
                           unoptimized={true}
                         />
                         <div className="flex flex-col">
@@ -832,6 +834,27 @@ const FormStep1 = ({
           </form>
         </div>
       </div>
+      {zoomedImage && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+          onClick={() => setZoomedImage(null)}
+        >
+          <div className="relative flex flex-col items-center animate-in zoom-in duration-200">
+            <button
+              className="absolute -top-3 -right-3 bg-white text-gray-600 hover:text-red-500 hover:bg-gray-100 shadow-md rounded-full w-8 h-8 flex items-center justify-center text-xl font-bold z-50 border border-gray-200 transition-colors"
+              onClick={() => setZoomedImage(null)}
+            >
+              &times;
+            </button>
+            <img
+              src={zoomedImage}
+              alt="Zoomed Profil"
+              className="max-w-[250px] md:max-w-[400px] max-h-[85vh] object-contain rounded-lg shadow-[0_20px_50px_rgba(0,0,0,0.1)] border-4 border-white bg-white"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
