@@ -96,14 +96,34 @@ function RekapAnggota() {
   // Computed values for Modal
   const groupedIuran = useMemo(() => {
     if (!selectedMember) return [];
-    return [
+    const base = [
       { key: "pgri", iuran: selectedMember.pgri },
       { key: "sanduka", iuran: selectedMember.sanduka },
-      { key: "daspen", iuran: daspenValue }, // Menggunakan daspenValue hasil fetch NIP
+      { key: "daspen", iuran: daspenValue },
       { key: "derap", iuran: selectedMember.derap },
       { key: "kalender", iuran: selectedMember.kalender },
     ];
-  }, [selectedMember, daspenValue]);
+
+    // Ambil detail sumbangan (Lain-Lain) yang sudah ada di database
+    const existingSumbangan = (selectedMember.detailSumbangan || []).map(s => ({
+      key: s.namaSumbangan,
+      label: s.namaSumbangan,
+      iuran: s.jumlah,
+      isExistingSumbangan: true
+    }));
+
+    // Gabungkan dengan kategori yang ditambahkan manual di sesi ini
+    const extra = addedCategories.map(cat => ({
+      key: cat.key,
+      label: cat.label,
+      iuran: newValues[cat.key] || 0
+    }));
+
+    // Filter duplikat (jika ada yang di addedCategories tapi sudah ada di existing)
+    const filteredExtra = extra.filter(e => !existingSumbangan.some(ex => ex.key === e.key));
+
+    return [...base, ...existingSumbangan, ...filteredExtra];
+  }, [selectedMember, daspenValue, addedCategories, newValues]);
 
   useEffect(() => {
     let total = groupedIuran.reduce((sum, item) => {
@@ -112,11 +132,8 @@ function RekapAnggota() {
       return sum + val;
     }, 0);
 
-    sumbanganList.forEach(s => total += parseInt(s.jumlah || 0));
-    addedCategories.forEach(c => total += (manualInputs[c.key] || 0));
-
     setGrandTotal(total);
-  }, [groupedIuran, resetKeys, nominalBaruList, sumbanganList, addedCategories, manualInputs]);
+  }, [groupedIuran, resetKeys, nominalBaruList]);
 
   // --- Fetch Keterangan Lain-Lain dari API ---
   useEffect(() => {
@@ -872,22 +889,19 @@ function RekapAnggota() {
             keterangan: c.keterangan || c.label || c.key,
             namaSumbangan: c.label || c.key,
             namaIuran: c.label || c.key,
-            // Jika kategori inti ada di addedCategories (misal baru ditambah), ambil dari nominalBaruList juga
-            jumlah: (newValues[c.key] || 0) + (nominalBaruList[c.key] || manualInputs[c.key] || 0),
+            jumlah: resetKeys.includes(c.key) ? 0 : ((newValues[c.key] || 0) + (nominalBaruList[c.key] || 0)),
             cabang: cabangName,
             tagihanUntukBulan
           })),
-          ...sumbanganList
-            .filter((s) => parseInt(s.jumlah || 0) > 0)
-            .map((s) => ({
-              jenis: s.jenis,
-              keterangan: s.keterangan || s.namaSumbangan || s.jenis,
-              namaSumbangan: s.namaSumbangan || s.jenis,
-              namaIuran: s.namaIuran || s.jenis,
-              jumlah: s.jumlah || 0,
-              cabang: cabangName,
-              tagihanUntukBulan
-            }))
+          ...(selectedMember.detailSumbangan || []).map(s => ({
+            jenis: s.namaSumbangan,
+            keterangan: s.keterangan || s.namaSumbangan,
+            namaSumbangan: s.namaSumbangan,
+            namaIuran: s.namaSumbangan,
+            jumlah: resetKeys.includes(s.namaSumbangan) ? 0 : (s.jumlah || 0),
+            cabang: cabangName,
+            tagihanUntukBulan
+          }))
         ]
       };
 
