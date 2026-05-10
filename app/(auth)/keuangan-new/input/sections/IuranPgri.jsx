@@ -4,13 +4,14 @@ import { useRouter } from "next/navigation";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { motion, AnimatePresence } from "framer-motion";
 import toast, { Toaster } from "react-hot-toast";
-import { 
-  FaDollarSign, 
-  FaUsers, 
-  FaSave, 
-  FaUndo, 
-  FaSearch, 
-  FaPrint, 
+import { Input } from "@/components/ui/input";
+import {
+  FaDollarSign,
+  FaUsers,
+  FaSave,
+  FaUndo,
+  FaSearch,
+  FaPrint,
   FaCheckCircle,
   FaExclamationCircle,
   FaChevronLeft,
@@ -43,11 +44,11 @@ const IuranPgriSection = () => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [totalAnggotaCabang, setTotalAnggotaCabang] = useState(0);
   const [keterangan, setKeterangan] = useState("");
-  
+
   // Lists
   const [cabangList, setCabangList] = useState([]);
   const [bulanList, setBulanList] = useState([]);
-  
+
   // Table State
   const [rawBalancingData, setRawBalancingData] = useState([]);
   const [loadingTable, setLoadingTable] = useState(false);
@@ -73,6 +74,38 @@ const IuranPgriSection = () => {
     totalDibayar: 0
   });
 
+  // Dropdown Cabang Standard State
+  const [showCabangDropdown, setShowCabangDropdown] = useState(false);
+  const [filteredCabangList, setFilteredCabangList] = useState([]);
+  const [searchDropCabang, setSearchDropCabang] = useState("");
+  const cabangRef = React.useRef(null);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (cabangRef.current && !cabangRef.current.contains(event.target)) {
+        setShowCabangDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleCabangSearch = (query) => {
+    setSearchDropCabang(query);
+    const filtered = cabangList.filter((cab) =>
+      (cab.kecamatan || "").toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredCabangList(filtered);
+  };
+
+  const handleSelectCabang = (cabangName) => {
+    setSearchQuery(cabangName);
+    setShowCabangDropdown(false);
+    setSearchDropCabang("");
+    setCurrentPage(1);
+  };
+
   // Initial Fetch
   useEffect(() => {
     fetchInitialData();
@@ -85,10 +118,11 @@ const IuranPgriSection = () => {
         GlobalApi.getCabang(),
         GlobalApi.getDefaultIuranById(2)
       ]);
-      
+
       setBulanList(resBulan.data || []);
       setCabangList(resCabang.data || []);
-      
+      setFilteredCabangList(resCabang.data || []);
+
       if (resIuran) {
         setBesaran({
           pb: parseInt(resIuran.pb) || 0,
@@ -116,7 +150,7 @@ const IuranPgriSection = () => {
     try {
       const monthObj = bulanList.find(b => b.namaBulan === selectedMonth);
       const monthNumber = monthObj ? monthObj.id : (new Date().getMonth() + 1);
-      
+
       const data = await GlobalApi.getTransaksiBankBalancing("", null, selectedYear, monthNumber, null, null);
       setRawBalancingData(data || []);
       setCurrentPage(1);
@@ -130,18 +164,84 @@ const IuranPgriSection = () => {
   // Compute Transactions Table
   const transactions = useMemo(() => {
     if (!rawBalancingData.length) return [];
-    
+
     const grouped = rawBalancingData.reduce((acc, item) => {
       const cab = item.cabang || "Lainnya";
-      if (!acc[cab]) acc[cab] = { members: new Set(), potBank: 0, tunai: 0 };
-      
-      if (item.npa) acc[cab].members.add(item.npa);
-      
-      const amount = parseFloat(item.totalIuran) || 0;
+      if (!acc[cab]) {
+        acc[cab] = { 
+          members: new Set(), 
+          potBank: 0, 
+          tunai: 0, 
+          manualByNpa: {} // Store manual sum per NPA to pick the most complete data
+        };
+      }
+
+      if (item.npa) {
+        acc[cab].members.add(item.npa);
+        
+        // Helper untuk membersihkan format Rupiah
+        const parseCurrency = (val) => {
+          if (!val) return 0;
+          const cleaned = val.toString().replace(/[^0-9,-]/g, '').replace(',', '.');
+          return parseFloat(cleaned) || 0;
+        };
+
+        // Pastikan data sesuai dengan periode yang dipilih
+        let itemDate = item.tagihanUntukBulan || item.tagihan_untuk_bulan || "";
+        if (Array.isArray(itemDate) && itemDate.length >= 2) {
+          itemDate = `${itemDate[0]}-${String(itemDate[1]).padStart(2, "0")}`;
+        }
+        
+        // Hanya hitung jika periode cocok (Mei 2026 -> 2026-05)
+        const selectedPeriod = `${selectedYear}-${String(bulanList.find(b => b.namaBulan === selectedMonth)?.id || "").padStart(2, "0")}`;
+        if (itemDate && !itemDate.toString().includes(selectedPeriod)) return acc;
+
+        // Varian 1: Field manual eksplisit
+        const mPgri = parseCurrency(item.manualPgri || item.manual_pgri);
+        const mSanduka = parseCurrency(item.manualSanduka || item.manual_sanduka);
+        const mDaspen = parseCurrency(item.manualDaspen || item.manual_daspen);
+        const mDerap = parseCurrency(item.manualDerap || item.manual_derap);
+        const mKalender = parseCurrency(item.manualKalender || item.manual_kalender);
+        const mLain = parseCurrency(item.manualLainLain || item.manual_lain_lain || item.totalIuranSumbangan || item.total_iuran_sumbangan);
+        
+        let currentManual = mPgri + mSanduka + mDaspen + mDerap + mKalender + mLain;
+        
+        // Varian 2: Fallback hitung selisih jika manual eksplisit 0
+        if (currentManual === 0) {
+          const pgriTotal = parseCurrency(item.totalIuranAnggota || item.pgri);
+          const pgriDefault = parseCurrency(item.defaultPgri || item.default_pgri);
+          const sandukaTotal = parseCurrency(item.totalIuranSanduka || item.sanduka);
+          const sandukaDefault = parseCurrency(item.defaultSanduka || item.default_sanduka);
+          
+          if (pgriTotal > pgriDefault && pgriDefault > 0) currentManual += (pgriTotal - pgriDefault);
+          if (sandukaTotal > sandukaDefault && sandukaDefault > 0) currentManual += (sandukaTotal - sandukaDefault);
+          
+          // Untuk Daspen, Derap, Kalender jika standar biasanya 0, maka anggap semua manual
+          if (currentManual === 0) {
+             currentManual += parseCurrency(item.totalIuranDaspen || item.totalIuranDerap || item.totalIuranKalender);
+          }
+        }
+        
+        // Simpan nilai manual tertinggi yang ditemukan untuk NPA ini
+        if (!acc[cab].manualByNpa[item.npa] || currentManual > acc[cab].manualByNpa[item.npa]) {
+          acc[cab].manualByNpa[item.npa] = currentManual;
+        }
+      }
+
+      // Helper untuk membersihkan format Rupiah
+      const parseCurrency = (val) => {
+        if (!val) return 0;
+        const cleaned = val.toString().replace(/[^0-9,-]/g, '').replace(',', '.');
+        return parseFloat(cleaned) || 0;
+      };
+
+      const amountBank = parseCurrency(item.potongan);
+      const amountTotal = parseCurrency(item.totalIuran);
+
       if (item.keterangan === "Sukses") {
-        acc[cab].potBank += amount;
-      } else {
-        acc[cab].tunai += amount;
+        acc[cab].potBank += amountBank;
+      } else if (item.keterangan === "Tunai") {
+        acc[cab].tunai += amountTotal;
       }
       return acc;
     }, {});
@@ -149,20 +249,22 @@ const IuranPgriSection = () => {
     return Object.keys(grouped).sort().map(cabName => {
       const group = grouped[cabName];
       const totalAnggota = group.members.size;
-      
+
       const pb = totalAnggota * besaran.pb;
       const prov = totalAnggota * besaran.propinsi;
       const kab = totalAnggota * besaran.kabupaten;
       const cabPeruntukan = totalAnggota * besaran.cabang;
       const sanduka = totalAnggota * besaran.sanduka;
-      
-      const tambahan = 0; // Placeholder for now
+
+      // Hitung total manual dari Map unik NPA
+      const manualTotal = Object.values(group.manualByNpa).reduce((sum, val) => sum + val, 0);
+      const tambahan = manualTotal;
       const totalCabang = cabPeruntukan + tambahan;
       const totalTagihan = pb + prov + kab + totalCabang + sanduka;
       const potBank = group.potBank;
       const tunai = group.tunai;
       const selisih = totalTagihan - (potBank + tunai);
-      
+
       return [
         cabName,        // 0: Cabang
         totalAnggota,   // 1: Total Anggota
@@ -178,25 +280,56 @@ const IuranPgriSection = () => {
         tunai,          // 11: Setoran Tunai
         selisih         // 12: Selisih
       ];
+    }).filter(row => {
+      if (!searchQuery) return true;
+      return row[0].toLowerCase().includes(searchQuery.toLowerCase());
     });
-  }, [rawBalancingData, besaran]);
+  }, [rawBalancingData, besaran, searchQuery]);
 
   useEffect(() => {
     fetchTransactions();
   }, [fetchTransactions]);
 
+  // Calculate Totals for Footer
+  const columnTotals = useMemo(() => {
+    if (!transactions.length) return Array(13).fill(0);
+    return transactions.reduce((acc, row) => {
+      for (let i = 1; i <= 12; i++) {
+        acc[i] += parseFloat(row[i]) || 0;
+      }
+      return acc;
+    }, Array(13).fill(0));
+  }, [transactions]);
+
   // Calculate Summary Stats
   useEffect(() => {
     if (transactions.length > 0) {
+      const isFiltered = !!searchQuery;
+      
       const stats = transactions.reduce((acc, row) => {
-        const tagihan = row[9];
-        const potBank = row[10];
-        const tunai = row[11];
-        const dibayar = potBank + tunai;
+        // row structure from the map:
+        // [cabName, totalAnggota, pb, prov, kab, cabPeruntukan, tambahan, totalCabang, sanduka, totalTagihanRow, potBank, tunai, selisih]
+        // Indices: 0:cab, 1:members, 2:pb, 3:prov, 4:kab, 5:peruntukan, 6:tambahan, 7:totalCab, 8:sanduka, 9:tagihan, 10:bank, 11:tunai, 12:selisih
         
-        acc.totalTagihan += tagihan;
+        const pb = row[2] || 0;
+        const prov = row[3] || 0;
+        const kab = row[4] || 0;
+        const totalCab = row[7] || 0;
+        const sanduka = row[8] || 0;
+        
+        // Rumus user: pb + provinsi + kabupaten
+        // Jika percabang: tambahkan porsi cabang itu sendiri (totalCab) dan sanduka
+        const tagihanDisplay = isFiltered 
+          ? (pb + prov + kab + totalCab + sanduka)
+          : (pb + prov + kab);
+
+        const potBank = row[10] || 0;
+        const tunai = row[11] || 0;
+        const dibayar = potBank + tunai;
+
+        acc.totalTagihan += tagihanDisplay;
         acc.totalSetoran += dibayar;
-        acc.totalSelisih += (tagihan - dibayar);
+        acc.totalSelisih += (tagihanDisplay - dibayar);
         acc.potonganBank += potBank;
         acc.setoranTunai += tunai;
         acc.totalDibayar += dibayar;
@@ -220,7 +353,7 @@ const IuranPgriSection = () => {
         totalDibayar: 0
       });
     }
-  }, [transactions]);
+  }, [transactions, searchQuery]);
 
   const handleSaveTable = async () => {
     if (!transactions.length) {
@@ -307,10 +440,10 @@ const IuranPgriSection = () => {
         selisih: Math.round(selisih),
         keterangan: editForm.keterangan || "Koreksi via Dashboard",
       };
-      
+
       // Simpan ke tabel rekapitulasi baru
       await GlobalApi.saveRekap(payload);
-      
+
       // Tetap simpan ke target-sanduka lama jika masih dibutuhkan untuk kompatibilitas
       await GlobalApi.createTargetIuaran({
         cabang: editingRow[0],
@@ -388,15 +521,12 @@ const IuranPgriSection = () => {
   const grandTotal = totalIuran + besaran.sanduka;
 
   // Pagination Logic
-  const filteredTransactions = transactions.filter(t => 
-    t[0]?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  const paginatedData = filteredTransactions;
+  const paginatedData = searchQuery ? transactions : transactions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div className="flex flex-col h-full">
       <Toaster position="top-center" />
-      
+
       {/* Top Banner */}
       <div className="bg-emerald-500 p-6 text-white">
         <div className="flex items-center space-x-4">
@@ -416,7 +546,7 @@ const IuranPgriSection = () => {
 
       <div className="p-6 space-y-8 overflow-y-auto">
         {/* Top Section: Form Besaran (Full Width) */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden"
@@ -431,7 +561,7 @@ const IuranPgriSection = () => {
                 <p className="text-slate-400 text-[9px] font-medium uppercase tracking-widest">Parameter Keuangan Utama</p>
               </div>
             </div>
-            <button 
+            <button
               onClick={() => fetchInitialData()}
               className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-emerald-500 hover:border-emerald-200 transition-all shadow-sm"
             >
@@ -457,10 +587,10 @@ const IuranPgriSection = () => {
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
                       <span className="text-slate-300 font-black text-sm">Rp</span>
                     </div>
-                    <input 
+                    <input
                       type="number"
                       value={besaran[field.key]}
-                      onChange={(e) => setBesaran({...besaran, [field.key]: parseInt(e.target.value) || 0})}
+                      onChange={(e) => setBesaran({ ...besaran, [field.key]: parseInt(e.target.value) || 0 })}
                       className="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-emerald-500 outline-none font-black text-slate-700 transition-all text-base group-hover:bg-slate-100/50 shadow-inner"
                     />
                   </div>
@@ -479,7 +609,7 @@ const IuranPgriSection = () => {
                   <h5 className="text-lg font-black">{formatCurrency(grandTotal)}</h5>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={handleUpdateBesaran}
                 disabled={loadingBesaran}
                 className="w-full py-5 bg-slate-800 hover:bg-slate-900 disabled:bg-slate-200 text-white rounded-[24px] font-black shadow-xl shadow-slate-200 transition-all flex items-center justify-center space-x-2 active:scale-[0.98]"
@@ -503,26 +633,24 @@ const IuranPgriSection = () => {
                 <p className="text-slate-400 text-xs font-medium">Monitoring peruntukan dan realisasi iuran</p>
               </div>
             </div>
-            
+
             <div className="flex bg-slate-100 p-1 rounded-[18px] shadow-inner border border-slate-200">
               <button
                 onClick={() => { setActiveSubTab("data-iuran"); setCurrentPage(1); }}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-[15px] font-black text-[9px] uppercase tracking-wider transition-all duration-300 ${
-                  activeSubTab === "data-iuran"
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-[15px] font-black text-[9px] uppercase tracking-wider transition-all duration-300 ${activeSubTab === "data-iuran"
                   ? "bg-white text-indigo-600 shadow-lg"
                   : "text-slate-400 hover:text-slate-600"
-                }`}
+                  }`}
               >
                 <FaChartBar className={activeSubTab === "data-iuran" ? "text-indigo-500" : ""} />
                 Data Iuran
               </button>
               <button
                 onClick={() => { setActiveSubTab("peruntukan"); setCurrentPage(1); }}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-[15px] font-black text-[9px] uppercase tracking-wider transition-all duration-300 ${
-                  activeSubTab === "peruntukan"
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-[15px] font-black text-[9px] uppercase tracking-wider transition-all duration-300 ${activeSubTab === "peruntukan"
                   ? "bg-white text-indigo-600 shadow-lg"
                   : "text-slate-400 hover:text-slate-600"
-                }`}
+                  }`}
               >
                 <FaTable className={activeSubTab === "peruntukan" ? "text-indigo-500" : ""} />
                 Peruntukan Cabang
@@ -530,51 +658,9 @@ const IuranPgriSection = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Filter Sidebar */}
-            <div className="lg:col-span-1 space-y-4">
-              <div className="bg-white p-5 rounded-[28px] border border-slate-100 shadow-xl shadow-slate-100/50 space-y-5">
-                <div>
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Pencarian</label>
-                  <div className="relative">
-                    <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-sm" />
-                    <input 
-                      type="text" 
-                      placeholder="Cari Cabang..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-9 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white transition-all text-xs"
-                    />
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Bulan</label>
-                    <select 
-                      value={selectedMonth} 
-                      onChange={(e) => setSelectedMonth(e.target.value)}
-                      className="w-full px-3 py-3 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-slate-700 text-[10px] appearance-none"
-                    >
-                      {bulanList.map(b => <option key={b.id} value={b.namaBulan}>{b.namaBulan}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Tahun</label>
-                    <select 
-                      value={selectedYear} 
-                      onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                      className="w-full px-3 py-3 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-slate-700 text-[10px] appearance-none"
-                    >
-                      {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-
+          <div className="w-full space-y-6">
             {/* Main Content Area */}
-            <div className="lg:col-span-3 space-y-6">
+            <div className="space-y-6">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeSubTab}
@@ -586,16 +672,17 @@ const IuranPgriSection = () => {
                   {activeSubTab === "data-iuran" && (
                     <>
                       {/* Summary Stats Grid */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         {[
-                          { label: "Total Tagihan", val: summaryStats.totalTagihan, color: "bg-indigo-600", icon: <FaNewspaper /> },
-                          { label: "Setoran Diterima", val: summaryStats.totalSetoran, color: "bg-emerald-500", icon: <FaCheckCircle /> },
-                          { label: "Total Selisih", val: summaryStats.totalSelisih, color: "bg-rose-500", icon: <FaExclamationCircle /> }
+                          { label: "Total Anggota", val: columnTotals[1], color: "bg-blue-600", icon: <FaUsers />, isCurrency: false },
+                          { label: "Total Tagihan", val: summaryStats.totalTagihan, color: "bg-indigo-600", icon: <FaNewspaper />, isCurrency: true },
+                          { label: "Setoran Diterima", val: summaryStats.totalSetoran, color: "bg-emerald-500", icon: <FaCheckCircle />, isCurrency: true },
+                          { label: "Total Selisih", val: summaryStats.totalSelisih, color: "bg-rose-500", icon: <FaExclamationCircle />, isCurrency: true }
                         ].map((stat, i) => (
                           <div key={i} className={`${stat.color} p-5 rounded-[28px] text-white shadow-lg shadow-${stat.color.split('-')[1]}-100 flex items-center justify-between group overflow-hidden relative`}>
                             <div className="relative z-10">
                               <p className="text-[9px] font-black opacity-60 uppercase tracking-widest mb-0.5">{stat.label}</p>
-                              <h4 className="text-xl font-black">{formatCurrency(stat.val)}</h4>
+                              <h4 className="text-xl font-black">{stat.isCurrency ? formatCurrency(stat.val) : stat.val.toLocaleString('id-ID')}</h4>
                             </div>
                             <div className="text-3xl opacity-10 group-hover:scale-125 transition-transform duration-500">
                               {stat.icon}
@@ -627,19 +714,105 @@ const IuranPgriSection = () => {
 
                       {/* Full Table */}
                       <div className="bg-white rounded-[32px] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden">
-                        <div className="p-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
-                          <div className="flex items-center gap-2">
-                            <FaTable className="text-indigo-500 text-sm" />
-                            <h4 className="text-sm font-black text-slate-800 tracking-tight uppercase tracking-widest text-[10px]">Tabel Rekapitulasi Iuran - <span className="text-indigo-600">{selectedMonth} {selectedYear}</span></h4>
+                        <div className="p-6 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between bg-slate-50/30 gap-4">
+                          <div className="flex items-center gap-4 flex-1">
+                            <div className="flex items-center gap-2 min-w-fit">
+                              <FaTable className="text-indigo-500 text-sm" />
+                              <h4 className="text-sm font-black text-slate-800 tracking-tight uppercase tracking-widest text-[10px]">Tabel Rekapitulasi Iuran</h4>
+                            </div>
+
+                            {/* Search & Date Filter in Header */}
+                            <div className="flex flex-wrap items-center gap-3 flex-1">
+                              <div className="relative min-w-[200px]" ref={cabangRef}>
+                                <div className="relative group">
+                                  <Input
+                                    type="text"
+                                    value={searchQuery || "Semua Cabang"}
+                                    readOnly
+                                    onClick={() => {
+                                      setShowCabangDropdown(!showCabangDropdown);
+                                      setFilteredCabangList(cabangList);
+                                    }}
+                                    className="w-full pl-4 pr-10 py-2 bg-white border border-slate-200 rounded-lg outline-none font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500/20 transition-all text-[10px] cursor-pointer hover:border-indigo-300 shadow-sm"
+                                    placeholder="Pilih Cabang"
+                                  />
+                                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-[8px] transition-transform duration-300 group-hover:text-indigo-500">
+                                    {showCabangDropdown ? "▲" : "▼"}
+                                  </div>
+                                </div>
+                                {showCabangDropdown && (
+                                  <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: 10 }}
+                                    className="absolute z-[100] border border-slate-100 rounded-xl bg-white shadow-2xl mt-2 w-full max-h-72 overflow-hidden flex flex-col ring-1 ring-black/5"
+                                  >
+                                    <div className="p-3 border-b border-slate-50 bg-slate-50/50">
+                                      <div className="relative">
+                                        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-[10px]" />
+                                        <Input
+                                          type="text"
+                                          value={searchDropCabang}
+                                          onChange={(e) => handleCabangSearch(e.target.value)}
+                                          className="w-full pl-8 pr-3 py-2 text-[10px] font-bold border-slate-200 rounded-lg focus:ring-indigo-500 bg-white"
+                                          placeholder="Ketik nama cabang..."
+                                          autoFocus
+                                        />
+                                      </div>
+                                    </div>
+                                    <ul className="overflow-y-auto py-2 custom-scrollbar">
+                                      <li
+                                        onClick={() => handleSelectCabang("")}
+                                        className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${!searchQuery
+                                          ? "bg-indigo-50 text-indigo-600 border-indigo-500"
+                                          : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
+                                          }`}
+                                      >
+                                        Semua Cabang
+                                      </li>
+                                      {[...filteredCabangList]
+                                        .sort((a, b) => (a.kecamatan || "").localeCompare(b.kecamatan || ""))
+                                        .map((cab, idx) => (
+                                          <li
+                                            key={idx}
+                                            onClick={() => handleSelectCabang(cab.kecamatan)}
+                                            className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${searchQuery === cab.kecamatan
+                                              ? "bg-indigo-50 text-indigo-600 border-indigo-500"
+                                              : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
+                                              }`}
+                                          >
+                                            {cab.kecamatan}
+                                          </li>
+                                        ))}
+                                    </ul>
+                                  </motion.div>
+                                )}
+                              </div>
+                              <select
+                                value={selectedMonth}
+                                onChange={(e) => setSelectedMonth(e.target.value)}
+                                className="px-3 py-2 bg-white border border-slate-200 rounded-lg outline-none font-bold text-slate-700 text-[10px] appearance-none cursor-pointer hover:bg-slate-50 transition-colors"
+                              >
+                                {bulanList.map(b => <option key={b.id} value={b.namaBulan}>{b.namaBulan}</option>)}
+                              </select>
+                              <select
+                                value={selectedYear}
+                                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                                className="px-3 py-2 bg-white border border-slate-200 rounded-lg outline-none font-bold text-slate-700 text-[10px] appearance-none cursor-pointer hover:bg-slate-50 transition-colors"
+                              >
+                                {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
+                              </select>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <button onClick={handleSaveTable} className="flex items-center gap-2 px-5 py-2.5 bg-emerald-500 text-white rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 shadow-lg">
+
+                          <div className="flex items-center gap-2">
+                            <button onClick={handleSaveTable} className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-lg font-black text-[9px] uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 shadow-md">
                               <FaSave />
-                              <span>Simpan Data</span>
+                              <span>Simpan</span>
                             </button>
-                            <button onClick={() => window.print()} className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-black transition-all active:scale-95 shadow-lg">
+                            <button onClick={() => window.print()} className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg font-black text-[9px] uppercase tracking-widest hover:bg-black transition-all active:scale-95 shadow-md">
                               <FaPrint />
-                              <span>Cetak PDF</span>
+                              <span>PDF</span>
                             </button>
                           </div>
                         </div>
@@ -658,46 +831,65 @@ const IuranPgriSection = () => {
                               {loadingTable ? (
                                 Array(5).fill(0).map((_, i) => <tr key={i} className="animate-pulse"><td colSpan={14} className="p-6"><div className="h-3 bg-slate-100 rounded-full w-full" /></td></tr>)
                               ) : paginatedData.length > 0 ? (
-                                paginatedData.map((row, i) => {
-                                  const totalCabang = (parseInt(row[5] || 0) + parseInt(row[6] || 0));
-                                  const totalTagihanRow = (parseInt(row[2] || 0) + parseInt(row[3] || 0) + parseInt(row[4] || 0) + totalCabang + parseInt(row[8] || 0));
-                                  return (
-                                    <tr key={i} className="hover:bg-slate-50/80 transition-colors text-center text-[11px] font-bold text-slate-600">
-                                      <td className="px-3 py-4 text-slate-400 font-black">{(currentPage - 1) * itemsPerPage + i + 1}</td>
-                                      <td className="px-3 py-4 font-black text-slate-800 text-left whitespace-nowrap">{row[0]}</td>
-                                      <td className="px-3 py-4 text-indigo-600 font-black"><span className="px-2 py-0.5 bg-indigo-50 rounded-md">{row[1]}</span></td>
-                                      <td className="px-3 py-4">{formatCurrency(row[2])}</td>
-                                      <td className="px-3 py-4">{formatCurrency(row[3])}</td>
-                                      <td className="px-3 py-4">{formatCurrency(row[4])}</td>
-                                      <td className="px-3 py-4">{formatCurrency(row[5])}</td>
-                                      <td className="px-3 py-4">{formatCurrency(row[6])}</td>
-                                      <td className="px-3 py-4 text-emerald-600">{formatCurrency(row[7] || totalCabang)}</td>
-                                      <td className="px-3 py-4">{formatCurrency(row[8])}</td>
-                                      <td className="px-3 py-4 text-slate-900 bg-slate-50/50 font-black">{formatCurrency(row[9] || totalTagihanRow)}</td>
-                                      <td className="px-3 py-4 text-rose-500">{formatCurrency(row[10] || 0)}</td>
-                                      <td className="px-3 py-4 text-blue-600">{formatCurrency(row[11] || 0)}</td>
-                                      <td className="px-3 py-4"><span className="px-2 py-0.5 bg-rose-50 text-rose-600 rounded-md">{formatCurrency(row[12] || totalTagihanRow)}</span></td>
-                                      <td className="px-3 py-4">
-                                        <div className="flex items-center justify-center gap-2">
-                                          <button 
-                                            onClick={() => handleEdit(row)}
-                                            className="w-8 h-8 flex items-center justify-center bg-blue-50 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition-all shadow-sm"
-                                            title="Edit"
-                                          >
-                                            <FaEdit size={12} />
-                                          </button>
-                                          <button 
-                                            onClick={() => handleDelete(row)}
-                                            className="w-8 h-8 flex items-center justify-center bg-rose-50 text-rose-500 rounded-lg hover:bg-rose-500 hover:text-white transition-all shadow-sm"
-                                            title="Delete"
-                                          >
-                                            <FaTrash size={12} />
-                                          </button>
-                                        </div>
-                                      </td>
-                                    </tr>
-                                  );
-                                })
+                                <>
+                                  {paginatedData.map((row, i) => {
+                                    const totalCabang = (parseInt(row[5] || 0) + parseInt(row[6] || 0));
+                                    const totalTagihanRow = (parseInt(row[2] || 0) + parseInt(row[3] || 0) + parseInt(row[4] || 0) + totalCabang + parseInt(row[8] || 0));
+                                    return (
+                                      <tr key={i} className="hover:bg-slate-50/80 transition-colors text-center text-[11px] font-bold text-slate-600">
+                                        <td className="px-3 py-4 text-slate-400 font-black">{(currentPage - 1) * itemsPerPage + i + 1}</td>
+                                        <td className="px-3 py-4 font-black text-slate-800 text-left whitespace-nowrap">{row[0]}</td>
+                                        <td className="px-3 py-4 text-indigo-600 font-black"><span className="px-2 py-0.5 bg-indigo-50 rounded-md">{row[1]}</span></td>
+                                        <td className="px-3 py-4">{formatCurrency(row[2])}</td>
+                                        <td className="px-3 py-4">{formatCurrency(row[3])}</td>
+                                        <td className="px-3 py-4">{formatCurrency(row[4])}</td>
+                                        <td className="px-3 py-4">{formatCurrency(row[5])}</td>
+                                        <td className="px-3 py-4">{formatCurrency(row[6])}</td>
+                                        <td className="px-3 py-4 text-emerald-600">{formatCurrency(row[7] || totalCabang)}</td>
+                                        <td className="px-3 py-4">{formatCurrency(row[8])}</td>
+                                        <td className="px-3 py-4 text-slate-900 bg-slate-50/50 font-black">{formatCurrency(row[9] || totalTagihanRow)}</td>
+                                        <td className="px-3 py-4 text-rose-500">{formatCurrency(row[10] || 0)}</td>
+                                        <td className="px-3 py-4 text-blue-600">{formatCurrency(row[11] || 0)}</td>
+                                        <td className="px-3 py-4"><span className="px-2 py-0.5 bg-rose-50 text-rose-600 rounded-md">{formatCurrency(row[12] || totalTagihanRow)}</span></td>
+                                        <td className="px-3 py-4">
+                                          <div className="flex items-center justify-center gap-2">
+                                            <button
+                                              onClick={() => handleEdit(row)}
+                                              className="w-8 h-8 flex items-center justify-center bg-blue-50 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition-all shadow-sm"
+                                              title="Edit"
+                                            >
+                                              <FaEdit size={12} />
+                                            </button>
+                                            <button
+                                              onClick={() => handleDelete(row)}
+                                              className="w-8 h-8 flex items-center justify-center bg-rose-50 text-rose-500 rounded-lg hover:bg-rose-500 hover:text-white transition-all shadow-sm"
+                                              title="Delete"
+                                            >
+                                              <FaTrash size={12} />
+                                            </button>
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
+                                  {/* Total Row */}
+                                  <tr className="bg-slate-900 text-white font-black text-[11px] text-center sticky bottom-0">
+                                    <td className="px-3 py-5 border-r border-slate-800" colSpan={2}>TOTAL KESELURUHAN</td>
+                                    <td className="px-3 py-5 bg-indigo-500/20 text-indigo-300">{columnTotals[1]}</td>
+                                    <td className="px-3 py-5">{formatCurrency(columnTotals[2])}</td>
+                                    <td className="px-3 py-5">{formatCurrency(columnTotals[3])}</td>
+                                    <td className="px-3 py-5">{formatCurrency(columnTotals[4])}</td>
+                                    <td className="px-3 py-5">{formatCurrency(columnTotals[5])}</td>
+                                    <td className="px-3 py-5">{formatCurrency(columnTotals[6])}</td>
+                                    <td className="px-3 py-5 text-emerald-400">{formatCurrency(columnTotals[7])}</td>
+                                    <td className="px-3 py-5">{formatCurrency(columnTotals[8])}</td>
+                                    <td className="px-3 py-5 bg-slate-800 font-black text-amber-400">{formatCurrency(columnTotals[9])}</td>
+                                    <td className="px-3 py-5 text-rose-400">{formatCurrency(columnTotals[10])}</td>
+                                    <td className="px-3 py-5 text-blue-400">{formatCurrency(columnTotals[11])}</td>
+                                    <td className="px-3 py-5 bg-rose-500/20 text-white">{formatCurrency(columnTotals[12])}</td>
+                                    <td className="px-3 py-5">-</td>
+                                  </tr>
+                                </>
                               ) : (
                                 <tr><td colSpan={14} className="py-16 text-center text-slate-300 font-black uppercase tracking-widest text-xs">Data Kosong</td></tr>
                               )}
@@ -765,7 +957,7 @@ const IuranPgriSection = () => {
       <AnimatePresence>
         {isEditModalOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -782,7 +974,7 @@ const IuranPgriSection = () => {
                     <p className="text-[9px] font-medium text-slate-400 uppercase tracking-widest">Periode: {selectedMonth} {selectedYear}</p>
                   </div>
                 </div>
-                <button 
+                <button
                   onClick={() => setIsEditModalOpen(false)}
                   className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-200 text-slate-400 transition-all"
                 >
@@ -795,47 +987,47 @@ const IuranPgriSection = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Total Anggota</label>
-                    <input 
+                    <input
                       type="number"
                       value={editForm.totalAnggota}
-                      onChange={(e) => setEditForm({...editForm, totalAnggota: parseInt(e.target.value) || 0})}
+                      onChange={(e) => setEditForm({ ...editForm, totalAnggota: parseInt(e.target.value) || 0 })}
                       className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-blue-500 outline-none font-black text-slate-700 transition-all shadow-inner"
                     />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Tambahan Cabang</label>
-                    <input 
+                    <input
                       type="number"
                       value={editForm.tambahanCabang}
-                      onChange={(e) => setEditForm({...editForm, tambahanCabang: parseInt(e.target.value) || 0})}
+                      onChange={(e) => setEditForm({ ...editForm, tambahanCabang: parseInt(e.target.value) || 0 })}
                       className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-blue-500 outline-none font-black text-slate-700 transition-all shadow-inner"
                     />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Potongan Bank</label>
-                    <input 
+                    <input
                       type="number"
                       value={editForm.potonganBank}
-                      onChange={(e) => setEditForm({...editForm, potonganBank: parseInt(e.target.value) || 0})}
+                      onChange={(e) => setEditForm({ ...editForm, potonganBank: parseInt(e.target.value) || 0 })}
                       className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-blue-500 outline-none font-black text-slate-700 transition-all shadow-inner"
                     />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Setoran Tunai</label>
-                    <input 
+                    <input
                       type="number"
                       value={editForm.setoranTunai}
-                      onChange={(e) => setEditForm({...editForm, setoranTunai: parseInt(e.target.value) || 0})}
+                      onChange={(e) => setEditForm({ ...editForm, setoranTunai: parseInt(e.target.value) || 0 })}
                       className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-blue-500 outline-none font-black text-slate-700 transition-all shadow-inner"
                     />
                   </div>
                 </div>
-                
+
                 <div className="space-y-1.5">
                   <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Keterangan / Alasan Koreksi</label>
-                  <textarea 
+                  <textarea
                     value={editForm.keterangan}
-                    onChange={(e) => setEditForm({...editForm, keterangan: e.target.value})}
+                    onChange={(e) => setEditForm({ ...editForm, keterangan: e.target.value })}
                     rows={2}
                     className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-blue-500 outline-none font-bold text-slate-700 transition-all shadow-inner text-xs resize-none"
                     placeholder="Contoh: Penyesuaian jumlah anggota manual..."
@@ -843,13 +1035,13 @@ const IuranPgriSection = () => {
                 </div>
 
                 <div className="flex gap-3 pt-4">
-                  <button 
+                  <button
                     onClick={() => setIsEditModalOpen(false)}
                     className="flex-1 py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95"
                   >
                     Batal
                   </button>
-                  <button 
+                  <button
                     onClick={handleSaveEdit}
                     className="flex-1 py-4 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-100 transition-all active:scale-95"
                   >
