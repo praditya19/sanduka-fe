@@ -3820,6 +3820,39 @@ const deleteLembaga = async (id) => {
     throw error;
   }
 };
+
+// Rekapitulasi Iuran
+const saveRekap = async (data) => {
+  try {
+    const response = await axiosClient.post("/api/rekapitulasi-iuran", data);
+    return response.data;
+  } catch (error) {
+    console.error("Error saveRekap:", error);
+    throw error;
+  }
+};
+
+const saveRekapBatch = async (data) => {
+  try {
+    const response = await axiosClient.post("/api/rekapitulasi-iuran/batch", data);
+    return response.data;
+  } catch (error) {
+    console.error("Error saveRekapBatch:", error);
+    throw error;
+  }
+};
+
+const getRekapByPeriode = async (bulan, tahun) => {
+  try {
+    const response = await axiosClient.get(`/api/rekapitulasi-iuran/filter`, {
+      params: { bulan, tahun }
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error getRekapByPeriode:", error);
+    throw error;
+  }
+};
 // END
 
 // Export all functions
@@ -4089,4 +4122,7 @@ export default {
   getLembagaById,
   updateLembaga,
   deleteLembaga,
+  saveRekap,
+  saveRekapBatch,
+  getRekapByPeriode,
 };

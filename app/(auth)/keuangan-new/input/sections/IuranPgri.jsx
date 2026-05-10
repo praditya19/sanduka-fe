@@ -222,8 +222,43 @@ const IuranPgriSection = () => {
     }
   }, [transactions]);
 
-  const handleSaveTable = () => {
-    toast.success("Rekapitulasi data iuran berhasil disimpan!");
+  const handleSaveTable = async () => {
+    if (!transactions.length) {
+      toast.error("Tidak ada data untuk disimpan.");
+      return;
+    }
+
+    const loadingToast = toast.loading("Sedang menyimpan data rekapitulasi...");
+    try {
+      const monthObj = bulanList.find(b => b.namaBulan === selectedMonth);
+      const monthId = monthObj ? monthObj.id : (new Date().getMonth() + 1);
+
+      const payload = transactions.map(row => ({
+        cabang: row[0],
+        totalAnggota: parseInt(row[1]) || 0,
+        pb: Math.round(row[2]) || 0,
+        provinsi: Math.round(row[3]) || 0,
+        kabupaten: Math.round(row[4]) || 0,
+        cabangIuran: Math.round(row[5]) || 0,
+        tambahanCabang: Math.round(row[6]) || 0,
+        totalCabang: Math.round(row[7]) || 0,
+        sanduka: Math.round(row[8]) || 0,
+        totalTagihan: Math.round(row[9]) || 0,
+        potonganBank: Math.round(row[10]) || 0,
+        setoranTunai: Math.round(row[11]) || 0,
+        selisih: Math.round(row[12]) || 0,
+        bulan: selectedMonth,
+        bulanId: monthId,
+        tahun: selectedYear,
+        keterangan: "Simpan Rekapitulasi Otomatis"
+      }));
+
+      await GlobalApi.saveRekapBatch(payload);
+      toast.success("Rekapitulasi data iuran berhasil disimpan ke database!", { id: loadingToast });
+    } catch (error) {
+      console.error("Error saving rekap batch:", error);
+      toast.error("Gagal menyimpan data rekapitulasi.", { id: loadingToast });
+    }
   };
 
   const handleEdit = (row) => {
@@ -240,23 +275,56 @@ const IuranPgriSection = () => {
 
   const handleSaveEdit = async () => {
     try {
+      const monthObj = bulanList.find(b => b.namaBulan === selectedMonth);
+      const monthId = monthObj ? monthObj.id : (new Date().getMonth() + 1);
+
+      // Hitung ulang nilai berdasarkan anggota yang dikoreksi
+      const pb = editForm.totalAnggota * besaran.pb;
+      const prov = editForm.totalAnggota * besaran.propinsi;
+      const kab = editForm.totalAnggota * besaran.kabupaten;
+      const cabPeruntukan = editForm.totalAnggota * besaran.cabang;
+      const sanduka = editForm.totalAnggota * besaran.sanduka;
+      const totalCabang = cabPeruntukan + editForm.tambahanCabang;
+      const totalTagihan = pb + prov + kab + totalCabang + sanduka;
+      const selisih = totalTagihan - (editForm.potonganBank + editForm.setoranTunai);
+
       const payload = {
+        cabang: editingRow[0],
+        totalAnggota: editForm.totalAnggota,
+        bulan: selectedMonth,
+        bulanId: monthId,
+        tahun: selectedYear,
+        pb: Math.round(pb),
+        provinsi: Math.round(prov),
+        kabupaten: Math.round(kab),
+        cabangIuran: Math.round(cabPeruntukan),
+        tambahanCabang: Math.round(editForm.tambahanCabang),
+        totalCabang: Math.round(totalCabang),
+        sanduka: Math.round(sanduka),
+        totalTagihan: Math.round(totalTagihan),
+        potonganBank: Math.round(editForm.potonganBank),
+        setoranTunai: Math.round(editForm.setoranTunai),
+        selisih: Math.round(selisih),
+        keterangan: editForm.keterangan || "Koreksi via Dashboard",
+      };
+      
+      // Simpan ke tabel rekapitulasi baru
+      await GlobalApi.saveRekap(payload);
+      
+      // Tetap simpan ke target-sanduka lama jika masih dibutuhkan untuk kompatibilitas
+      await GlobalApi.createTargetIuaran({
         cabang: editingRow[0],
         jumlah: editForm.totalAnggota,
         bulan: selectedMonth,
         tahun: selectedYear,
         keterangan: editForm.keterangan || "Koreksi via Dashboard",
-        // Additional fields if supported by backend
-        tambahan: editForm.tambahanCabang,
-        tunai: editForm.setoranTunai,
-        bank: editForm.potonganBank
-      };
-      
-      await GlobalApi.createTargetIuaran(payload);
-      toast.success(`Data ${editingRow[0]} berhasil dikoreksi!`);
+      });
+
+      toast.success(`Data ${editingRow[0]} berhasil dikoreksi dan disimpan!`);
       setIsEditModalOpen(false);
       fetchTransactions();
     } catch (error) {
+      console.error("Error saving edit:", error);
       toast.error("Gagal menyimpan koreksi data.");
     }
   };
@@ -337,7 +405,11 @@ const IuranPgriSection = () => {
           </div>
           <div>
             <h2 className="text-xl font-black">Manajemen Iuran PGRI</h2>
-            <p className="text-emerald-100 text-xs font-medium">Kelola besaran iuran dan target setoran cabang</p>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="px-2 py-0.5 bg-white/20 rounded-md text-[10px] font-black uppercase tracking-widest">Periode: {selectedMonth} {selectedYear}</span>
+              <span className="w-1 h-1 bg-white/40 rounded-full" />
+              <p className="text-emerald-100 text-[10px] font-medium uppercase tracking-widest">Kelola besaran iuran dan target setoran cabang</p>
+            </div>
           </div>
         </div>
       </div>
@@ -536,7 +608,7 @@ const IuranPgriSection = () => {
                       <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-xl shadow-slate-100/50">
                         <div className="flex items-center gap-2 mb-6">
                           <div className="w-1 h-5 bg-indigo-500 rounded-full" />
-                          <h4 className="text-base font-black text-slate-800">Rincian Pembayaran Akumulatif</h4>
+                          <h4 className="text-base font-black text-slate-800">Rincian Pembayaran Akumulatif - <span className="text-indigo-600">{selectedMonth} {selectedYear}</span></h4>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                           {[
@@ -558,7 +630,7 @@ const IuranPgriSection = () => {
                         <div className="p-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
                           <div className="flex items-center gap-2">
                             <FaTable className="text-indigo-500 text-sm" />
-                            <h4 className="text-sm font-black text-slate-800 tracking-tight uppercase tracking-widest text-[10px]">Tabel Rekapitulasi Iuran</h4>
+                            <h4 className="text-sm font-black text-slate-800 tracking-tight uppercase tracking-widest text-[10px]">Tabel Rekapitulasi Iuran - <span className="text-indigo-600">{selectedMonth} {selectedYear}</span></h4>
                           </div>
                           <div className="flex items-center gap-3">
                             <button onClick={handleSaveTable} className="flex items-center gap-2 px-5 py-2.5 bg-emerald-500 text-white rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 shadow-lg">
@@ -641,7 +713,7 @@ const IuranPgriSection = () => {
                       <div className="p-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
                         <div className="flex items-center gap-2">
                           <FaTable className="text-indigo-500 text-sm" />
-                          <h4 className="text-sm font-black text-slate-800 tracking-tight uppercase tracking-widest text-[10px]">Peruntukan Cabang</h4>
+                          <h4 className="text-sm font-black text-slate-800 tracking-tight uppercase tracking-widest text-[10px]">Peruntukan Cabang - <span className="text-indigo-600">{selectedMonth} {selectedYear}</span></h4>
                         </div>
                       </div>
                       <div className="overflow-x-auto">
