@@ -10,47 +10,34 @@ import {
   FaCoins
 } from "react-icons/fa";
 
-const StatCard = ({ title, value, icon: Icon, gradient, shadowColor, isLoading }) => {
+const StatCard = ({ title, value, icon: Icon, gradient, isLoading }) => {
   const isCurrency = typeof value === 'number' && value > 5000;
   const isCount = title === "Anggota" || title === "Unit Kerja";
 
   return (
-    <div className="relative group transition-all duration-300 hover:-translate-y-1">
-      {/* Background Glow */}
-      <div className={`absolute inset-0 rounded-2xl opacity-10 blur-lg transition-opacity group-hover:opacity-30 ${gradient}`} />
-      
-      {/* Card Body */}
-      <div className="relative bg-white/80 backdrop-blur-md border border-white/50 rounded-2xl p-4 shadow-sm h-full flex flex-col overflow-hidden min-h-[120px]">
-        
-        {/* Top: Icon */}
-        <div className={`w-9 h-9 rounded-xl mb-3 flex-shrink-0 ${isLoading ? 'bg-gray-200 animate-pulse' : gradient} flex items-center justify-center text-white text-base shadow-md ${isLoading ? '' : shadowColor}`}>
-          {isLoading ? null : <Icon />}
-        </div>
+    <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-3 flex items-center space-x-3 transition-all duration-300 hover:shadow-md hover:border-teal-100">
+      {/* Icon Section */}
+      <div className={`w-10 h-10 rounded-lg flex-shrink-0 ${isLoading ? 'bg-slate-100 animate-pulse' : gradient} flex items-center justify-center text-white text-sm shadow-sm`}>
+        {isLoading ? null : <Icon />}
+      </div>
 
-        {/* Middle: Title */}
-        <div className="mb-1">
-          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-tight block truncate group-hover:text-gray-600 transition-colors">
-            {title}
-          </span>
-        </div>
-
-        {/* Bottom: Value */}
-        <div className="mt-auto">
+      {/* Text Section */}
+      <div className="flex-1 min-w-0">
+        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest truncate">
+          {title}
+        </p>
+        <div className="mt-0.5">
           {isLoading ? (
-            <div className="h-6 w-24 bg-gray-200 animate-pulse rounded-md" />
+            <div className="h-4 w-16 bg-slate-100 animate-pulse rounded" />
           ) : (
-            <h4 className="text-lg font-black text-gray-800 leading-none">
-              {!isCount && isCurrency ? (
-                <span className="text-xs font-semibold text-gray-400 mr-0.5">Rp.</span>
-              ) : null}
+            <h4 className="text-sm font-black text-slate-800 truncate leading-tight">
+              {!isCount && isCurrency && (
+                <span className="text-[10px] font-bold text-slate-400 mr-0.5">Rp</span>
+              )}
               {typeof value === 'number' ? value.toLocaleString("id-ID") : value}
             </h4>
           )}
-          <div className={`w-6 h-1 ${isLoading ? 'bg-gray-100' : 'bg-gray-100 group-hover:w-16'} rounded-full mt-2 transition-all duration-500`} />
         </div>
-
-        {/* Decorative corner element */}
-        <div className={`absolute -right-6 -bottom-6 w-16 h-16 rounded-full opacity-5 ${gradient}`} />
       </div>
     </div>
   );
@@ -58,13 +45,12 @@ const StatCard = ({ title, value, icon: Icon, gradient, shadowColor, isLoading }
 
 const SummaryStats = ({ stats, isLoading }) => {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3 mb-8 mt-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 2xl:grid-cols-8 gap-3 mb-6 mt-4">
       <StatCard 
         title="Anggota" 
         value={stats.memberCount} 
         icon={FaUsers} 
         gradient="bg-gradient-to-br from-blue-500 to-cyan-400" 
-        shadowColor="shadow-blue-200"
         isLoading={isLoading}
       />
       <StatCard 
@@ -72,7 +58,6 @@ const SummaryStats = ({ stats, isLoading }) => {
         value={stats.unitKerjaCount} 
         icon={FaBuilding} 
         gradient="bg-gradient-to-br from-indigo-500 to-purple-400" 
-        shadowColor="shadow-indigo-200"
         isLoading={isLoading}
       />
       <StatCard 
@@ -80,7 +65,6 @@ const SummaryStats = ({ stats, isLoading }) => {
         value={stats.pgri} 
         icon={FaUniversity} 
         gradient="bg-gradient-to-br from-teal-500 to-emerald-400" 
-        shadowColor="shadow-teal-200"
         isLoading={isLoading}
       />
       <StatCard 
@@ -88,7 +72,6 @@ const SummaryStats = ({ stats, isLoading }) => {
         value={stats.sanduka} 
         icon={FaHandHoldingHeart} 
         gradient="bg-gradient-to-br from-rose-500 to-pink-400" 
-        shadowColor="shadow-rose-200"
         isLoading={isLoading}
       />
       <StatCard 
@@ -96,7 +79,6 @@ const SummaryStats = ({ stats, isLoading }) => {
         value={stats.daspen} 
         icon={FaWallet} 
         gradient="bg-gradient-to-br from-orange-500 to-amber-400" 
-        shadowColor="shadow-orange-200"
         isLoading={isLoading}
       />
       <StatCard 
@@ -104,7 +86,6 @@ const SummaryStats = ({ stats, isLoading }) => {
         value={stats.derap} 
         icon={FaFileInvoiceDollar} 
         gradient="bg-gradient-to-br from-violet-600 to-indigo-500" 
-        shadowColor="shadow-violet-200"
         isLoading={isLoading}
       />
       <StatCard 
@@ -112,7 +93,6 @@ const SummaryStats = ({ stats, isLoading }) => {
         value={stats.kalender} 
         icon={FaCalendarAlt} 
         gradient="bg-gradient-to-br from-emerald-600 to-teal-500" 
-        shadowColor="shadow-emerald-200"
         isLoading={isLoading}
       />
       <StatCard 
@@ -120,7 +100,6 @@ const SummaryStats = ({ stats, isLoading }) => {
         value={stats.total} 
         icon={FaCoins} 
         gradient="bg-gradient-to-br from-slate-800 to-slate-600" 
-        shadowColor="shadow-slate-300"
         isLoading={isLoading}
       />
     </div>
