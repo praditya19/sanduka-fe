@@ -88,16 +88,18 @@ const MemberRow = React.memo(({
       </td>
       <td className="p-3 md:border-b flex flex-col md:table-cell border-b md:border-b-0 border-teal-50">
         <span className="md:hidden font-bold text-teal-600 uppercase text-xs mb-1">Lain-Lain</span>
-        {member.detailSumbangan && member.detailSumbangan.length > 0 ? (
+        {member.detailSumbangan && member.detailSumbangan.filter(d => parseInt(d.jumlah || 0) > 0).length > 0 ? (
           <div className="text-left md:text-right">
-            {member.detailSumbangan.map((detail, idx) => (
-              <div key={idx} className="mb-1 pb-1 border-b md:border-0 last:border-b-0">
-                <div className="font-medium text-[10px]">{detail.namaSumbangan}</div>
-                <div className="text-xs text-gray-700">
-                  Rp. {parseInt(detail.jumlah || 0).toLocaleString("id-ID")}
+            {member.detailSumbangan
+              .filter(detail => parseInt(detail.jumlah || 0) > 0)
+              .map((detail, idx) => (
+                <div key={idx} className="mb-1 pb-1 border-b md:border-0 last:border-b-0">
+                  <div className="font-medium text-[10px]">{detail.namaSumbangan}</div>
+                  <div className="text-xs text-gray-700">
+                    Rp. {parseInt(detail.jumlah || 0).toLocaleString("id-ID")}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         ) : (
           <div className="text-sm md:text-right">

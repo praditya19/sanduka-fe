@@ -154,17 +154,21 @@ const EditFinanceModal = ({
 
             {groupedIuran
               .filter((item) => {
+                // Jangan tampilkan jika sudah di-klik hapus (trash icon) di sesi ini
                 if (resetKeys.includes(item.key)) return false;
                 
-                // Selalu tampilkan PGRI & Sanduka
+                // Selalu tampilkan PGRI & Sanduka (Mandatory)
                 if (["pgri", "sanduka"].includes(item.key)) return true;
                 
-                // Selalu tampilkan jika itu adalah kategori yang baru ditambahkan atau data lama dari DB
-                const isAdded = addedCategories.some((c) => c.key === item.key);
-                if (isAdded || item.isExistingSumbangan) return true;
-
-                // Tampilkan kategori lain hanya jika memiliki nilai
+                // Hitung total nilai (Awal + Penyesuaian)
                 const totalVal = parseInt(item.iuran || 0) + (nominalBaruList[item.key] || 0);
+
+                // Selalu tampilkan jika baru saja ditambahkan lewat tombol "Tambah Kategori" 
+                // agar user bisa mengisi nominalnya (meskipun masih 0)
+                const isAdded = addedCategories.some((c) => c.key === item.key);
+                if (isAdded) return true;
+
+                // Untuk kategori lain (Data lama dari DB), hanya tampilkan jika nilainya > 0
                 return totalVal > 0;
               })
               .map((item, idx) => {
