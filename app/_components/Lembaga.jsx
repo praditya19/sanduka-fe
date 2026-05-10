@@ -8,7 +8,7 @@ const LembagaDisplay = () => {
 
   const [lembagaData, setLembagaData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("PUSAT");
+  const [activeTab, setActiveTab] = useState("PENGURUS KABUPATEN");
   const [selectedLembaga, setSelectedLembaga] = useState(null); 
   
   const [lightboxImage, setLightboxImage] = useState(null);
@@ -58,33 +58,29 @@ const LembagaDisplay = () => {
           </p>
         </div>
 
-        {/* Tab / Toggle PUSAT vs CABANG */}
+        {/* Tab / Toggle PENGURUS KABUPATEN vs PENGURUS CABANG */}
         <div className="flex justify-center mb-12">
-          <div className="bg-white p-1.5 rounded-full shadow-md border border-gray-200 inline-flex relative">
+          <div className="bg-white rounded-2xl shadow-md border border-gray-200 inline-flex gap-2 p-2">
             <button
-              onClick={() => setActiveTab("PUSAT")}
-              className={`relative px-8 py-3 rounded-full text-sm font-bold transition-all duration-300 z-10 ${
-                activeTab === "PUSAT" ? "text-white" : "text-gray-500 hover:text-indigo-600"
+              onClick={() => setActiveTab("PENGURUS KABUPATEN")}
+              className={`px-6 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
+                activeTab === "PENGURUS KABUPATEN"
+                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30"
+                  : "text-gray-500 hover:text-indigo-600 hover:bg-indigo-50"
               }`}
             >
-              LEMBAGA PUSAT
+              PENGURUS KABUPATEN
             </button>
             <button
-              onClick={() => setActiveTab("CABANG")}
-              className={`relative px-8 py-3 rounded-full text-sm font-bold transition-all duration-300 z-10 ${
-                activeTab === "CABANG" ? "text-white" : "text-gray-500 hover:text-indigo-600"
+              onClick={() => setActiveTab("PENGURUS CABANG")}
+              className={`px-6 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
+                activeTab === "PENGURUS CABANG"
+                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30"
+                  : "text-gray-500 hover:text-indigo-600 hover:bg-indigo-50"
               }`}
             >
-              LEMBAGA CABANG
+              PENGURUS CABANG / CABANG KHUSUS
             </button>
-            
-            <div
-              className={`absolute top-1.5 bottom-1.5 w-1/2 bg-indigo-600 rounded-full transition-transform duration-300 ease-in-out shadow-md`}
-              style={{
-                transform: activeTab === "PUSAT" ? "translateX(0%)" : "translateX(100%)",
-                left: "6px"
-              }}
-            ></div>
           </div>
         </div>
 
@@ -99,7 +95,7 @@ const LembagaDisplay = () => {
             <Building className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-gray-700 mb-2">Tidak Ada Data</h3>
             <p className="text-gray-500">
-              Belum ada data Lembaga <span className="font-bold">{activeTab}</span> yang didaftarkan.
+              Belum ada data <span className="font-bold">{activeTab}</span> yang didaftarkan.
             </p>
           </div>
         ) : (

@@ -103,7 +103,7 @@ const LembagaPage = () => {
         setUserRole(role);
 
         if (role === "ADMIN") {
-            setFormData((prev) => ({ ...prev, jenisLembaga: "CABANG" }));
+            setFormData((prev) => ({ ...prev, jenisLembaga: "PENGURUS CABANG" }));
         }
 
         fetchLembaga();
@@ -211,7 +211,7 @@ const LembagaPage = () => {
     const resetForm = () => {
         setFormData({
             namaLembaga: "",
-            jenisLembaga: userRole === "ADMIN" ? "CABANG" : "",
+            jenisLembaga: userRole === "ADMIN" ? "PENGURUS CABANG" : "",
             keteranganLembaga: ""
         });
         setFotoLembaga(null);
@@ -267,7 +267,7 @@ const LembagaPage = () => {
         setSelectedId(item.id);
         setFormData({
             namaLembaga: item.namaLembaga || "",
-            jenisLembaga: item.jenisLembaga || (userRole === "ADMIN" ? "CABANG" : ""),
+            jenisLembaga: item.jenisLembaga || (userRole === "ADMIN" ? "PENGURUS CABANG" : ""),
             keteranganLembaga: item.keteranganLembaga || "",
         });
 
@@ -401,8 +401,8 @@ const LembagaPage = () => {
                                                     }`}
                                             >
                                                 <option value="" disabled>-- Pilih Jenis --</option>
-                                                <option value="PUSAT">PUSAT</option>
-                                                <option value="CABANG">CABANG</option>
+                                                <option value="PENGURUS KABUPATEN">PENGURUS KABUPATEN</option>
+                                                <option value="PENGURUS CABANG">PENGURUS CABANG</option>
                                             </select>
                                         </div>
 
@@ -515,7 +515,7 @@ const LembagaPage = () => {
                             ) : (
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     {lembagaList
-                                        .filter(item => userRole === "ADMIN" ? item.jenisLembaga === "CABANG" : true)
+                                        .filter(item => userRole === "ADMIN" ? item.jenisLembaga === "PENGURUS CABANG" : true)
                                         .map((item) => (
                                             <div key={item.id} className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col group">
                                                 <div className="flex p-5 gap-5 border-b border-gray-100">

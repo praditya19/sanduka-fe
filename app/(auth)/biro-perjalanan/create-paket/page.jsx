@@ -1,6 +1,7 @@
 "use client";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import React, { useState, useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
 import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
@@ -74,6 +75,49 @@ const handleDownloadFile = (base64Data, id) => {
     link.click();
     document.body.removeChild(link);
   };
+
+const SummernoteEditor = dynamic(
+  () => {
+    return Promise.all([
+      import("jquery").then((mod) => mod.default),
+      import("summernote/dist/summernote-lite.min.css"),
+      import("summernote/dist/summernote-lite.min.js"),
+    ]).then(([jQuery]) => {
+      window.jQuery = jQuery;
+      window.$ = jQuery;
+
+      return ({ value, onChange, height }) => {
+        const editorRef = useRef(null);
+
+        useEffect(() => {
+          const $ = window.jQuery;
+
+          if ($ && editorRef.current) {
+            $(editorRef.current).summernote({
+              height: height || 250,
+              callbacks: {
+                onChange: function (contents) {
+                  onChange(contents);
+                },
+              },
+            });
+
+            if (value) {
+              $(editorRef.current).summernote("code", value);
+            }
+
+            return () => {
+              $(editorRef.current).summernote("destroy");
+            };
+          }
+        }, []);
+
+        return <textarea ref={editorRef} />;
+      };
+    });
+  },
+  { ssr: false }
+);
 
 const NotificationPopup = ({ type, message, onClose }) => {
   useEffect(() => {
@@ -537,7 +581,8 @@ const CreatePaket = () => {
     e.preventDefault();
     
     // Validasi minimal ada salah satu isian (Teks, Foto, atau File)
-    if (!infoText.trim() && !infoFoto && !infoFile) {
+    const plainText = infoText.replace(/<[^>]*>/g, "").trim();
+    if (!plainText && !infoFoto && !infoFile) {
       setNotification({ type: "error", message: "Minimal isi salah satu: Teks, Foto, atau File!" });
       return;
     }
@@ -558,6 +603,9 @@ const CreatePaket = () => {
       
       // Reset Form
       setInfoText("");
+      if (window.jQuery && window.jQuery('.note-editable').length) {
+        window.jQuery('.note-editable').last().html("");
+      }
       setInfoFoto(null);
       setInfoFotoPreview("");
       setInfoFile(null);
@@ -1044,11 +1092,9 @@ const CreatePaket = () => {
                             {item.text && (
                               <div className="mb-4 flex-grow">
                                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Deskripsi / Teks</label>
-                                <textarea
-                                  readOnly
-                                  value={item.text}
-                                  rows={item.foto ? 3 : 5}
-                                  className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-700 outline-none resize-none custom-scrollbar"
+                                <div
+                                  className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-700 summernote-content"
+                                  dangerouslySetInnerHTML={{ __html: item.text }}
                                 />
                               </div>
                             )}
@@ -1100,13 +1146,13 @@ const CreatePaket = () => {
               <div className="grid grid-cols-1 gap-6">
                 <div>
                   <label className="block text-sm text-gray-700 font-semibold mb-2">Isi Teks (Opsional)</label>
-                  <textarea
-                    rows={4}
-                    placeholder="Tulis informasi detail di sini..."
-                    className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition"
-                    value={infoText}
-                    onChange={(e) => setInfoText(e.target.value)}
-                  ></textarea>
+                  <div className="border-2 border-gray-200 rounded-xl overflow-hidden">
+                    <SummernoteEditor
+                      value={infoText}
+                      onChange={(content) => setInfoText(content)}
+                      height={250}
+                    />
+                  </div>
                 </div>
               </div>
 
