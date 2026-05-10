@@ -232,6 +232,7 @@ const TemanUnitKerja = () => {
                           .toLowerCase()
                           .includes(queryUnit.toLowerCase())
                       )
+                      .sort((a, b) => a.unitKerja.localeCompare(b.unitKerja, "id"))
                       .map((unit) => (
                         <li
                           key={unit.id}

@@ -801,7 +801,7 @@ const Page = () => {
                                 "SUPERADMIN"
                                   ? [{ id: "All", kecamatan: "All" }]
                                   : []),
-                                ...filteredCabangList,
+                                ...[...filteredCabangList].sort((a, b) => a.kecamatan.localeCompare(b.kecamatan, "id")),
                               ].map((cabang) => (
                                 <li
                                   key={cabang.id}
@@ -861,7 +861,9 @@ const Page = () => {
                               >
                                 Pilih Nama Ranting
                               </li>
-                              {allRantingList.map((ranting) => (
+                              {[...allRantingList]
+                                .sort((a, b) => a.namaRanting.localeCompare(b.namaRanting, "id"))
+                                .map((ranting) => (
                                 <li
                                   key={ranting.id}
                                   onClick={() => handleSelectRanting(ranting)}
@@ -932,7 +934,9 @@ const Page = () => {
                               >
                                 Semua Unit Kerja
                               </li>
-                              {filteredUnitKerjaOptions.map((item) => (
+                              {[...filteredUnitKerjaOptions]
+                                .sort((a, b) => a.unitKerja.localeCompare(b.unitKerja, "id"))
+                                .map((item) => (
                                 <li
                                   key={item.id}
                                   className="p-2 cursor-pointer hover:bg-gray-100"

@@ -483,7 +483,9 @@ const Page = () => {
                           Pilih Cabang
                         </li>
 
-                        {filteredCabangList.map((cabang) => (
+                        {filteredCabangList
+                          .sort((a, b) => a.kecamatan.localeCompare(b.kecamatan, "id"))
+                          .map((cabang) => (
                           <li
                             key={cabang.id}
                             className="p-2 px-2 hover:bg-gray-100 cursor-pointer"

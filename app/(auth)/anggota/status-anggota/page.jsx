@@ -918,7 +918,9 @@ const DropdownCabang = ({ label, options, selectedCabang, handleChange }) => {
             </li>
 
             {filteredOptions.length > 0 ? (
-              filteredOptions.map((item) => (
+              filteredOptions
+                .sort((a, b) => a.kecamatan.localeCompare(b.kecamatan, "id"))
+                .map((item) => (
                 <li
                   key={item.idKecamatan}
                   className="p-2 cursor-pointer hover:bg-gray-100"
@@ -1045,7 +1047,9 @@ const DropdownUnitKerja = ({
                 >
                   Pilih Unit Kerja
                 </li>
-                {filteredOptions.map((item) => (
+                {filteredOptions
+                  .sort((a, b) => a.unitKerja.localeCompare(b.unitKerja, "id"))
+                  .map((item) => (
                   <li
                     key={item.id}
                     className="p-2 cursor-pointer hover:bg-gray-100"

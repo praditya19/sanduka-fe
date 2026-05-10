@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FaPlusCircle, FaMinusCircle } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import HeaderMenu from "@/app/_components/HeaderMenu";
@@ -8,6 +8,96 @@ import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { ClipLoader } from "react-spinners";
+
+const DropdownCabang = ({ options, selectedCabang, onChange, disabled }) => {
+  const [query, setQuery] = useState("");
+  const [filterQuery, setFilterQuery] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = React.useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    setQuery(selectedCabang);
+  }, [selectedCabang]);
+
+  const filteredOptions = [...options]
+    .sort((a, b) => a.kecamatan.localeCompare(b.kecamatan, "id"))
+    .filter((o) => o.kecamatan.toLowerCase().includes(filterQuery.toLowerCase()));
+
+  return (
+    <div className="relative w-full" ref={dropdownRef}>
+      <input
+        type="text"
+        className={`border rounded-lg p-2 w-full bg-white shadow-sm ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
+        placeholder="Pilih Cabang"
+        value={disabled ? selectedCabang : query}
+        readOnly
+        disabled={disabled}
+        onFocus={() => {
+          if (!disabled) {
+            setQuery("");
+            setFilterQuery("");
+            setShowDropdown(true);
+          }
+        }}
+      />
+      {showDropdown && !disabled && (
+        <div className="absolute z-20 border rounded-lg bg-white shadow-md mt-1 w-full">
+          <ul className="max-h-44 overflow-y-auto">
+            <li className="py-2 px-2">
+              <input
+                type="text"
+                className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Cari Cabang..."
+                value={filterQuery}
+                onChange={(e) => setFilterQuery(e.target.value)}
+                autoFocus
+              />
+            </li>
+            <li
+              className="p-2 cursor-pointer hover:bg-gray-100 font-semibold text-gray-600"
+              onClick={() => {
+                setQuery("");
+                onChange("");
+                setShowDropdown(false);
+                setFilterQuery("");
+              }}
+            >
+              Semua Cabang
+            </li>
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((item) => (
+                <li
+                  key={item.id}
+                  className="p-2 cursor-pointer hover:bg-gray-100"
+                  onClick={() => {
+                    setQuery(item.kecamatan);
+                    onChange(item.kecamatan);
+                    setShowDropdown(false);
+                    setFilterQuery("");
+                  }}
+                >
+                  {item.kecamatan}
+                </li>
+              ))
+            ) : (
+              <li className="p-2 text-gray-500">Tidak ada hasil</li>
+            )}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const Page = () => {
   const [allData, setAllData] = useState([]);
@@ -285,18 +375,12 @@ const Page = () => {
                 {/* Mobile Filters */}
                 <div className="md:hidden mb-4">
                   <div className="bg-white p-3 rounded-lg shadow-sm mb-3 border border-gray-200">
-                    <select
-                      value={selectedCabang}
-                      onChange={(e) => setSelectedCabang(e.target.value)}
-                      className="p-2 border rounded w-full mb-2"
-                    >
-                      <option value="">Semua Cabang</option>
-                      {cabangOptions.map((option) => (
-                        <option key={option.id} value={option.kecamatan}>
-                          {option.kecamatan}
-                        </option>
-                      ))}
-                    </select>
+                    <DropdownCabang
+                      options={cabangOptions}
+                      selectedCabang={selectedCabang}
+                      onChange={setSelectedCabang}
+                      disabled={sessionStorage.getItem("role") === "ADMIN"}
+                    />
 
                     <select
                       value={selectedMonth}
@@ -336,18 +420,12 @@ const Page = () => {
                 {/* Desktop Filters */}
                 <div className="hidden md:flex w-full items-center justify-between mb-4">
                   <div className="flex w-2/3 space-x-2">
-                    <select
-                      value={selectedCabang}
-                      onChange={(e) => setSelectedCabang(e.target.value)}
-                      className="p-2 border rounded w-full"
-                    >
-                      <option value="">Semua Cabang</option>
-                      {cabangOptions.map((option) => (
-                        <option key={option.id} value={option.kecamatan}>
-                          {option.kecamatan}
-                        </option>
-                      ))}
-                    </select>
+                    <DropdownCabang
+                      options={cabangOptions}
+                      selectedCabang={selectedCabang}
+                      onChange={setSelectedCabang}
+                      disabled={sessionStorage.getItem("role") === "ADMIN"}
+                    />
 
                     <select
                       value={selectedMonth}

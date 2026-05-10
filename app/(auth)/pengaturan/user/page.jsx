@@ -942,7 +942,9 @@ const Page = () => {
                                           autoFocus
                                         />
                                         <ul className="mt-1 max-h-48 overflow-y-auto bg-white border rounded-lg shadow-sm">
-                                          {filteredOptions.map((item) => (
+                                          {[...filteredOptions]
+                                            .sort((a, b) => a.kecamatan.localeCompare(b.kecamatan, "id"))
+                                            .map((item) => (
                                             <li
                                               key={item.idKecamatan}
                                               className="p-2 cursor-pointer hover:bg-gray-100"
