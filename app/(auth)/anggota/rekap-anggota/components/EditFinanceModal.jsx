@@ -43,584 +43,237 @@ const EditFinanceModal = ({
   if (!isPopupVisible) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-      <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-4xl relative space-y-6 overflow-y-auto max-h-screen">
-        <button
-          type="button"
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl transition-colors"
-          onClick={closePopup}
-        >
-          ✕
-        </button>
-        <h2 className="text-center text-2xl font-bold text-white bg-[#B91C1C] py-3 rounded-lg shadow-sm uppercase tracking-wide">
-          Form Keuangan
-        </h2>
+    <div className="fixed inset-0 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm z-50 p-4 md:p-6 animate-in fade-in duration-300">
+      <div className="bg-white rounded-[1.5rem] shadow-2xl w-full max-w-4xl relative overflow-hidden flex flex-col max-h-[92vh] border border-slate-100 animate-in zoom-in-95 duration-300">
 
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start bg-white p-2 rounded-lg">
-          {/* Left: Photo */}
-          <div className="md:col-span-2 flex justify-center">
-            <div className="relative w-28 h-36 rounded-xl overflow-hidden shadow-md border-2 border-gray-100">
-              <Image
-                src={
-                  fotoBase64
-                    ? fotoBase64.startsWith("blob:")
-                      ? fotoBase64
-                      : `data:image/jpeg;base64,${fotoBase64}`
-                    : profileImageUrl
-                }
-                fill
-                alt="Foto User"
-                className="object-cover"
-                unoptimized={true}
-              />
+        {/* Refined Header */}
+        <div className="bg-gradient-to-r from-teal-600 to-emerald-500 px-6 py-4 flex items-center justify-between shadow-sm">
+          <div className="flex items-center space-x-3">
+            <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
+              <FiSave className="text-white text-xl" />
+            </div>
+            <div>
+              <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">
+                Update Iuran Anggota
+              </h2>
+              <p className="text-teal-50 text-[10px] font-medium opacity-80">
+                Lengkapi rincian pembayaran di bawah ini
+              </p>
             </div>
           </div>
-
-          {/* Middle: Core Info */}
-          <div className="md:col-span-6 space-y-2">
-            {dataNpa ? (
-              <>
-                <h3 className="text-xl font-bold text-gray-900 mb-2 uppercase tracking-tight">
-                  {dataNpa.namaLengkap || dataNpa.nama_lengkap || "-"}
-                </h3>
-                <div className="space-y-1 text-sm text-gray-700">
-                  <p>
-                    <span className="w-48 inline-block">
-                      Tempat, Tanggal Lahir
-                    </span>
-                    :
-                    <span className="font-medium text-gray-900 uppercase">
-                      {dataNpa.tempatLahir ||
-                        dataNpa.tempat_lahir ||
-                        dataNpa.user?.tempatLahir ||
-                        dataNpa.pendaftaran?.tempatLahir ||
-                        "-"}
-                      ,{" "}
-                      {(() => {
-                        const tgl =
-                          dataNpa.tanggalLahir ||
-                          dataNpa.tanggal_lahir ||
-                          dataNpa.user?.tanggalLahir ||
-                          dataNpa.pendaftaran?.tanggalLahir;
-                        if (Array.isArray(tgl)) {
-                          return `${tgl[2] || tgl[0] || "-"}-${tgl[1] || "-"}-${tgl[0] || tgl[2] || "-"}`;
-                        }
-                        if (typeof tgl === "string") {
-                          const d = new Date(tgl);
-                          if (!isNaN(d.getTime())) {
-                            return d
-                              .toLocaleDateString("id-ID", {
-                                day: "2-digit",
-                                month: "2-digit",
-                                year: "numeric",
-                              })
-                              .replace(/\//g, "-");
-                          }
-                          return tgl;
-                        }
-                        return "-";
-                      })()}
-                    </span>
-                  </p>
-                  <p>
-                    <span className="w-48 inline-block">
-                      Nomor Anggota PGRI
-                    </span>
-                    :{" "}
-                    <span className="font-medium text-gray-900">
-                      {dataNpa.npaPgri ||
-                        dataNpa.npa_pgri ||
-                        dataNpa.npa ||
-                        dataNpa.user?.npaPgri ||
-                        "-"}
-                    </span>
-                  </p>
-                  <p>
-                    <span className="w-48 inline-block">
-                      Nomor Induk Pegawai
-                    </span>
-                    :{" "}
-                    <span className="font-medium text-gray-900">
-                      {dataNpa.nip ||
-                        dataNpa.user?.nip ||
-                        dataNpa.pendaftaran?.nip ||
-                        "-"}
-                    </span>
-                  </p>
-                </div>
-              </>
-            ) : (
-              <div className="flex items-center space-x-2 text-gray-400">
-                <div className="animate-spin h-4 w-4 border-2 border-teal-500 border-t-transparent rounded-full"></div>
-                <span>Memuat data anggota...</span>
-              </div>
-            )}
-          </div>
-
-          {/* Right: Work Info */}
-          <div className="md:col-span-4 space-y-1 text-sm text-gray-700 md:border-l md:pl-6 border-gray-100">
-            {dataNpa && (
-              <>
-                <p className="font-bold text-gray-900 uppercase">
-                  {dataNpa.cabang || dataNpa.user?.cabang || "-"},{" "}
-                </p>
-                <p className="font-medium">
-                  {dataNpa.jabatan || dataNpa.user?.jabatan || "Lain-Lain"}
-                </p>
-                <p className="text-gray-600">
-                  {dataNpa.unitKerja ||
-                    dataNpa.user?.unitKerja ||
-                    dataNpa.unit_kerja ||
-                    "-"}
-                </p>
-              </>
-            )}
-          </div>
+          <button
+            type="button"
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/10 text-white hover:bg-white/20 transition-all active:scale-90"
+            onClick={closePopup}
+          >
+            <span className="text-2xl leading-none">✕</span>
+          </button>
         </div>
 
-        <div className="gap-6">
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nomor Rekening
-            </label>
-            <input
-              type="text"
-              placeholder="Masukkan Nomor Rekening"
-              value={nomorRekening}
-              onChange={(e) => setNomorRekening(e.target.value)}
-              className="w-full border border-black px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-            />
-          </div>
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 custom-scrollbar bg-slate-50/20">
 
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Tagihan Untuk Bulan
-            </label>
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <label className="block text-xs text-gray-600 mb-1">
-                  Bulan
-                </label>
-                <select
-                  value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                  className="w-full border border-gray-300 px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                >
-                  {[
-                    "Januari",
-                    "Februari",
-                    "Maret",
-                    "April",
-                    "Mei",
-                    "Juni",
-                    "Juli",
-                    "Agustus",
-                    "September",
-                    "Oktober",
-                    "November",
-                    "Desember",
-                  ].map((month, idx) => (
-                    <option key={idx} value={idx + 1}>
-                      {month}
-                    </option>
-                  ))}
-                </select>
+          {/* Balanced Member Section */}
+          <div className="bg-white rounded-2xl p-5 md:p-6 border border-teal-100 shadow-sm relative overflow-hidden">
+            <div className="relative z-10 flex flex-col md:flex-row gap-6 items-center md:items-start text-center md:text-left">
+              {/* Profile Photo */}
+              <div className="relative w-24 h-32 md:w-28 md:h-36 rounded-xl overflow-hidden border-2 border-white shadow-md">
+                <Image
+                  src={
+                    fotoBase64
+                      ? fotoBase64.startsWith("blob:")
+                        ? fotoBase64
+                        : `data:image/jpeg;base64,${fotoBase64}`
+                      : profileImageUrl
+                  }
+                  fill
+                  alt="Foto Anggota"
+                  className="object-cover"
+                  unoptimized={true}
+                />
               </div>
-              <div className="flex-1">
-                <label className="block text-xs text-gray-600 mb-1">
-                  Tahun
-                </label>
-                <select
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                  className="w-full border border-gray-300 px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                >
-                  {Array.from({ length: 10 }, (_, i) => {
-                    const year = new Date().getFullYear() + i - 5;
-                    return (
-                      <option key={year} value={year}>
-                        {year}
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
-              <div className="flex-1">
-                <label className="block text-xs text-gray-600 mb-1">
-                  Dipilih
-                </label>
-                <div className="w-full border border-gray-300 bg-white px-3 py-2 rounded text-sm font-medium">
-                  {selectedMonth.toString().padStart(2, "0")}-{selectedYear}
+
+              {/* Identity Info */}
+              <div className="flex-1 space-y-3">
+                <div>
+                  <h3 className="text-xl md:text-2xl font-black text-slate-800 tracking-tight">
+                    {dataNpa?.namaLengkap || dataNpa?.nama_lengkap || "Nama Anggota"}
+                  </h3>
+                  <p className="text-teal-600 text-xs font-bold uppercase tracking-widest mt-1">
+                    {dataNpa?.cabang || "Cabang"}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-3 border-t border-slate-50">
+                  <div>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NPA PGRI</p>
+                    <p className="text-slate-700 font-bold text-sm">{dataNpa?.npaPgri || dataNpa?.npa || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Unit Kerja</p>
+                    <p className="text-slate-700 font-bold text-sm">{dataNpa?.unitKerja || "-"}</p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
+                Nomor Rekening
+              </label>
+              <input
+                type="text"
+                placeholder="Masukkan No. Rekening"
+                value={nomorRekening}
+                onChange={(e) => setNomorRekening(e.target.value)}
+                className="w-full bg-slate-50 border border-transparent px-4 py-3 rounded-xl focus:outline-none focus:border-teal-400 focus:bg-white text-base font-bold text-slate-700 transition-all"
+              />
+            </div>
+
+            <div className="bg-white p-4 rounded-2xl border border-teal-50 shadow-sm flex flex-col justify-center">
+              <label className="block text-[10px] font-black text-teal-600 uppercase tracking-widest mb-1.5 ml-1">
+                Periode Tagihan
+              </label>
+              <div className="flex items-center space-x-2 px-1">
+                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                <p className="text-base font-black text-slate-700 tracking-tight">
+                  Tagihan untuk bulan <span className="text-teal-600">
+                    {["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"][selectedMonth - 1]} {selectedYear}
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center space-x-3 px-2">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Rincian Iuran</span>
+              <div className="h-px bg-slate-100 flex-1"></div>
+            </div>
+
             {groupedIuran
               .filter((item) => {
                 if (item.isSumbanganDetail) return false;
-                const isReset = resetKeys.includes(item.key);
-                // Jika sedang klik 'Hapus' di sesi ini, sembunyikan sementara
-                if (isReset) return false;
-
-                // Selalu tampilkan kategori inti (PGRI & SANDUKA) meskipun nilainya 0
-                const alwaysShow = ["pgri", "sanduka"];
-                if (alwaysShow.includes(item.key)) return true;
-
-                // Tampilkan DASPEN, DERAP, KALENDER jika nilainya > 0
-                // ATAU jika user baru saja menambahkannya (ada di addedCategories)
-                const coreKeys = ["daspen", "derap", "kalender"];
+                if (resetKeys.includes(item.key)) return false;
+                if (["pgri", "sanduka"].includes(item.key)) return true;
                 const isAdded = addedCategories.some((c) => c.key === item.key);
-
-                const totalVal =
-                  parseInt(item.iuran || 0) + (nominalBaruList[item.key] || 0);
+                const totalVal = parseInt(item.iuran || 0) + (nominalBaruList[item.key] || 0);
                 return totalVal > 0 || isAdded;
               })
               .map((item, idx) => {
                 const isReset = resetKeys.includes(item.key);
-                // PRIORITAS: Gunakan newValues (hasil fetch/session) jika ada, jika tidak gunakan data DB
-                const oldValue = isReset
-                  ? 0
-                  : (newValues[item.key] ?? parseInt(item.iuran || 0));
+                const oldValue = isReset ? 0 : (newValues[item.key] ?? parseInt(item.iuran || 0));
                 const inputValue = isReset ? 0 : nominalBaruList[item.key] || 0;
                 const totalValue = oldValue + inputValue;
 
                 return (
-                  <div
-                    key={idx}
-                    className="space-y-2 p-3 rounded-lg bg-white border border-gray-200 hover:border-blue-300 transition-colors"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-gray-800 text-sm uppercase tracking-wide">
-                        {item.key}
-                      </span>
+                  <div key={idx} className="bg-white border border-slate-100 rounded-2xl p-4 md:p-5 shadow-sm hover:shadow-md transition-all group">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center text-teal-600 font-black text-xs">
+                          {idx + 1}
+                        </div>
+                        <span className="font-bold text-slate-700 text-sm">{item.key.toUpperCase()}</span>
+                      </div>
                       <button
                         type="button"
-                        className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition-colors"
                         onClick={() => {
                           setResetKeys((prev) => [...prev, item.key]);
-                          setNominalBaruList((prev) => ({
-                            ...prev,
-                            [item.key]: 0,
-                          }));
+                          setNominalBaruList((prev) => ({ ...prev, [item.key]: 0 }));
                         }}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:bg-red-50 hover:text-red-500 transition-all"
                       >
                         <FiTrash size={16} />
                       </button>
                     </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div>
-                        <label className="block text-xs text-gray-500 mb-1">
-                          Default
-                        </label>
-                        <input
-                          type="text"
-                          readOnly
-                          value={`Rp. ${oldValue.toLocaleString("id-ID")}`}
-                          className="w-full border border-gray-300 px-3 py-2 rounded text-center bg-gray-50 text-gray-700 font-medium"
-                        />
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="space-y-1">
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Awal</p>
+                        <div className="bg-slate-50 px-4 py-2.5 rounded-xl text-slate-500 font-bold text-sm">
+                          Rp {oldValue.toLocaleString("id-ID")}
+                        </div>
                       </div>
-                      <div>
-                        <label className="block text-xs text-gray-500 mb-1">
-                          Tambahan Cabang
-                        </label>
+                      <div className="space-y-1">
+                        <p className="text-[9px] font-black text-teal-600 uppercase tracking-widest ml-1">Penyesuaian</p>
                         <input
                           type="text"
-                          placeholder="Rp. 0"
-                          value={
-                            inputValue === 0
-                              ? ""
-                              : `Rp. ${inputValue.toLocaleString("id-ID")}`
-                          }
+                          placeholder="Rp 0"
+                          value={inputValue === 0 ? "" : `Rp ${inputValue.toLocaleString("id-ID")}`}
                           onChange={(e) => {
-                            const angka =
-                              parseInt(e.target.value.replace(/[^\d]/g, "")) ||
-                              0;
-                            setNominalBaruList((prev) => ({
-                              ...prev,
-                              [item.key]: angka,
-                            }));
+                            const val = parseInt(e.target.value.replace(/[^\d]/g, "")) || 0;
+                            setNominalBaruList((prev) => ({ ...prev, [item.key]: val }));
                           }}
-                          className="w-full border border-blue-300 px-3 py-2 rounded text-center bg-white text-blue-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full bg-white border border-teal-100 px-4 py-2.5 rounded-xl focus:outline-none focus:border-teal-500 font-bold text-teal-700 text-sm transition-all"
                         />
                       </div>
-                      <div>
-                        <label className="block text-xs text-gray-500 mb-1">
-                          Total
-                        </label>
-                        <input
-                          type="text"
-                          readOnly
-                          value={`Rp. ${totalValue.toLocaleString("id-ID")}`}
-                          className="w-full border border-green-300 px-3 py-2 rounded text-center bg-green-50 text-green-700 font-medium"
-                        />
+                      <div className="space-y-1">
+                        <p className="text-[9px] font-black text-slate-700 uppercase tracking-widest ml-1">Total</p>
+                        <div className="bg-teal-600 px-4 py-2.5 rounded-xl text-white font-black text-sm">
+                          Rp {totalValue.toLocaleString("id-ID")}
+                        </div>
                       </div>
                     </div>
                   </div>
                 );
               })}
 
-            {sumbanganList.length > 0 && (
-              <div className="mt-4">
-                <h4 className="font-semibold text-purple-700 mb-2">
-                  Keuangan:
-                </h4>
-                {sumbanganList
-                  .filter((s) => parseInt(s.jumlah || 0) > 0)
-                  .map((sumbangan, index) => {
-                  const jumlahValue = parseInt(sumbangan.jumlah || 0);
-                  const isDeleted = jumlahValue === 0;
-                  return (
-                    <div
-                      key={index}
-                      className="space-y-1 px-3 py-2 rounded-md border-l-4 mb-2 bg-purple-50 border-purple-400"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span
-                          className="font-medium text-purple-800"
-                        >
-                          {sumbangan.namaSumbangan || sumbangan.keterangan || sumbangan.jenis}{" "}
-                          {isDeleted && (
-                            <span className="text-red-500 ml-2 text-sm">
-                              (Dihapus)
-                            </span>
-                          )}
-                        </span>
-                        <button
-                          type="button"
-                          className={`p-1 rounded-full transition-colors ${isDeleted ? "text-gray-400 cursor-not-allowed" : "text-red-500 hover:text-red-700 hover:bg-red-50"}`}
-                          onClick={() =>
-                            !isDeleted && handleDeleteSumbangan(sumbangan.jenis)
-                          }
-                          disabled={isDeleted}
-                        >
-                          <FiTrash size={16} />
-                        </button>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2 mt-2">
-                        <div>
-                          <label className="block text-xs text-gray-500 mb-1">
-                            Nilai Sumbangan
-                          </label>
-                          <input
-                            type="text"
-                            readOnly
-                            value={`Rp. ${jumlahValue.toLocaleString("id-ID")}`}
-                            className={`w-full border px-2 py-1 rounded text-center font-medium ${isDeleted ? "bg-gray-200 text-gray-500" : "bg-purple-100 text-purple-700"}`}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs text-gray-500 mb-1">
-                            Tambahan Cabang
-                          </label>
-                          <input
-                            type="text"
-                            readOnly
-                            value={isDeleted ? "Dihapus" : "Tidak bisa diubah"}
-                            className="w-full border px-2 py-1 rounded text-center bg-gray-200 text-gray-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs text-gray-500 mb-1">
-                            Total
-                          </label>
-                          <input
-                            type="text"
-                            readOnly
-                            value={`Rp. ${jumlahValue.toLocaleString("id-ID")}`}
-                            className={`w-full border px-2 py-1 rounded text-center font-medium ${isDeleted ? "bg-gray-200 text-gray-500" : "bg-purple-100 text-purple-700"}`}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Menampilkan kategori tambahan selain kategori inti */}
-            {addedCategories
-              .filter(
-                (cat) =>
-                  !["pgri", "sanduka", "daspen", "derap", "kalender"].includes(
-                    cat.key,
-                  ),
-              )
-              .map((item, idx) => {
-                const oldValue = newValues[item.key] ?? 0;
-                const inputValue = manualInputs[item.key] ?? 0;
-                const totalValue = oldValue + inputValue;
-                // Pastikan label tampil dengan benar
-                const displayName = item.keterangan || item.label || item.key;
-                return (
-                  <div
-                    key={`added-${idx}`}
-                    className="space-y-2 p-3 rounded-lg bg-yellow-50 border-l-4 border-yellow-400 hover:border-yellow-500 transition-colors"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-yellow-800">
-                        {displayName}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const updatedCategories = addedCategories.filter(
-                            (_, i) => i !== idx,
-                          );
-                          setAddedCategories(updatedCategories);
-                          setManualInputs((prev) => {
-                            const n = { ...prev };
-                            delete n[item.key];
-                            return n;
-                          });
-                          setNewValues((prev) => {
-                            const n = { ...prev };
-                            delete n[item.key];
-                            return n;
-                          });
-                        }}
-                        className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50"
-                      >
-                        <FiTrash size={16} />
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div>
-                        <label className="block text-xs text-yellow-600 mb-1">
-                          Default
-                        </label>
-                        <input
-                          type="text"
-                          readOnly
-                          value={`Rp. ${oldValue.toLocaleString("id-ID")}`}
-                          className="w-full border border-yellow-300 px-3 py-2 rounded text-center bg-yellow-100 text-yellow-700 font-medium"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-yellow-600 mb-1">
-                          Tambahan
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="Rp. 0"
-                          value={
-                            inputValue === 0
-                              ? ""
-                              : `Rp. ${inputValue.toLocaleString("id-ID")}`
-                          }
-                          onChange={(e) => {
-                            const angka =
-                              parseInt(e.target.value.replace(/[^\d]/g, "")) ||
-                              0;
-                            setManualInputs((prev) => ({
-                              ...prev,
-                              [item.key]: angka,
-                            }));
-                          }}
-                          className="w-full border border-yellow-300 px-3 py-2 rounded text-center bg-white text-yellow-700 font-medium focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-yellow-600 mb-1">
-                          Total
-                        </label>
-                        <input
-                          type="text"
-                          readOnly
-                          value={`Rp. ${totalValue.toLocaleString("id-ID")}`}
-                          className="w-full border border-yellow-300 px-3 py-2 rounded text-center bg-yellow-100 text-yellow-700 font-medium"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-
-            <div className="flex items-center justify-between bg-purple-200 px-3 py-2 rounded-md font-bold mt-4">
-              <span>Total</span>
-              <span>Rp. {grandTotal.toLocaleString("id-ID")}</span>
-            </div>
-
-            <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg border border-gray-300 p-4 mt-6">
-              <h3 className="text-lg font-semibold text-purple-800 mb-3 flex items-center">
-                <span className="bg-purple-600 text-white p-2 rounded-full mr-3">
-                  <FiPlus size={18} />
-                </span>
-                Tambah Keuangan
-              </h3>
+            <div className="pt-6 text-center">
               <button
                 onClick={() => setShowDropdown(!showDropdown)}
-                className="flex items-center text-blue-600 hover:text-blue-800 mb-4 p-3 bg-white rounded-lg border border-blue-200 hover:border-blue-300 transition-colors w-full"
+                className="inline-flex items-center space-x-2 px-6 py-3 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 hover:border-teal-400 hover:text-teal-500 transition-all group"
               >
-                <span className="bg-blue-100 text-blue-600 p-2 rounded-full mr-3">
-                  <FiPlus size={16} />
-                </span>
-                <span className="font-medium">Tambah Kategori Baru</span>
+                <FiPlus size={18} />
+                <span className="font-bold text-xs uppercase tracking-widest">Tambah Kategori</span>
               </button>
 
               {showDropdown && (
-                <div className="space-y-4 bg-white p-4 rounded-lg border border-blue-200">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Pilih Kategori Tambahan
-                    </label>
-                    <select
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      value={selectedKategori}
-                      onChange={(e) => setSelectedKategori(e.target.value)}
-                    >
-                      <option value="">-- Pilih Kategori --</option>
-                      <option value="pgri">PGRI</option>
-                      <option value="sanduka">Sanduka</option>
-                      <option value="daspen">
-                        Daspen{" "}
-                        {notifDaspen === true
-                          ? " (✓ Sinkron)"
-                          : " (× Tidak Sinkron)"}
-                      </option>
-                      <option value="kalender">Kalender</option>
-                      <option value="derap">Derap</option>
-                      <option value="lainlain">Lain-Lain</option>
-                    </select>
-                  </div>
-
-                  {selectedKategori === "lainlain" && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Pilih Keterangan
-                      </label>
+                <div className="mt-4 p-6 bg-white rounded-2xl border border-teal-50 shadow-xl animate-in fade-in slide-in-from-top-2 duration-200 max-w-lg mx-auto">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
+                    <div className="space-y-1">
+                      <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Kategori</label>
                       <select
-                        id="keterangan-select"
-                        className="w-full border p-2 rounded"
-                        value={selectedKeterangan}
-                        onChange={(e) => setSelectedKeterangan(e.target.value)}
+                        className="w-full bg-slate-50 border border-transparent px-4 py-3 rounded-xl focus:outline-none focus:border-teal-400 font-bold text-slate-700 text-sm"
+                        value={selectedKategori}
+                        onChange={(e) => setSelectedKategori(e.target.value)}
                       >
-                        <option value="">-- Pilih Keterangan --</option>
-                        {Array.isArray(keteranganLainLain) &&
-                          keteranganLainLain.map((item, index) => (
-                            <option key={index} value={JSON.stringify(item)}>
-                              {item.keterangan || item.nama_iuran || item}
-                            </option>
-                          ))}
-                        <option value="manual">Lain-Lain (Manual)</option>
+                        <option value="">-- Pilih --</option>
+                        <option value="pgri">PGRI</option>
+                        <option value="sanduka">Sanduka</option>
+                        <option value="daspen">Daspen {notifDaspen ? "✓" : "×"}</option>
+                        <option value="kalender">Kalender</option>
+                        <option value="derap">Derap</option>
+                        <option value="lainlain">Lain-Lain</option>
                       </select>
                     </div>
-                  )}
+
+                    {selectedKategori === "lainlain" && (
+                      <div className="space-y-1 animate-in slide-in-from-top-1">
+                        <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Keterangan</label>
+                        <select
+                          className="w-full bg-slate-50 border border-transparent px-4 py-3 rounded-xl focus:outline-none focus:border-teal-400 font-bold text-slate-700 text-sm"
+                          value={selectedKeterangan}
+                          onChange={(e) => setSelectedKeterangan(e.target.value)}
+                        >
+                          <option value="">-- Pilih --</option>
+                          {Array.isArray(keteranganLainLain) && keteranganLainLain.map((item, index) => (
+                            <option key={index} value={JSON.stringify(item)}>{item.keterangan || item.nama_iuran || item}</option>
+                          ))}
+                          <option value="manual">Manual</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
 
                   {selectedKategori && (
-                    <div className="flex justify-end space-x-3 pt-2">
-                      <button
-                        onClick={() => setShowDropdown(false)}
-                        className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-                      >
-                        Batal
-                      </button>
+                    <div className="flex justify-center space-x-3 mt-6 pt-4 border-t border-slate-50">
+                      <button onClick={() => setShowDropdown(false)} className="px-6 py-2 text-slate-400 font-bold uppercase text-[10px]">Batal</button>
                       <button
                         onClick={handleSave}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center"
+                        className="bg-slate-800 text-white px-8 py-2 rounded-xl font-bold uppercase text-[10px] tracking-widest hover:bg-slate-900 transition-all active:scale-95"
                       >
-                        <FiSave className="mr-2" size={16} /> Simpan Kategori
+                        Terapkan
                       </button>
                     </div>
                   )}
@@ -630,23 +283,45 @@ const EditFinanceModal = ({
           </div>
         </div>
 
-        <div className="flex justify-end gap-4 pt-4">
-          <button
-            className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-            onClick={closePopup}
-          >
-            Batal
-          </button>
-          <button
-            type="button"
-            className={`flex items-center justify-center bg-blue-600 text-white font-bold py-2 px-4 rounded ${loadButton ? "opacity-60 cursor-not-allowed" : "hover:bg-blue-700"}`}
-            onClick={async () => {
-              if (!loadButton) await handleUpdateClick();
-            }}
-            disabled={loadButton}
-          >
-            {loadButton ? "Loading..." : "Update"}
-          </button>
+        {/* Balanced Action Footer */}
+        <div className="p-5 md:p-6 bg-slate-50 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center space-x-4">
+            <div className="space-y-0.5">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center md:text-left">TOTAL TAGIHAN</p>
+              <div className="flex items-baseline space-x-2 justify-center md:justify-start">
+                <span className="text-teal-500 text-sm font-bold">Rp</span>
+                <span className="text-slate-800 text-3xl font-black tracking-tighter">
+                  {grandTotal.toLocaleString("id-ID")}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex space-x-3 w-full md:w-auto">
+            <button
+              className="flex-1 md:flex-none bg-white text-slate-400 font-bold py-3 px-8 rounded-xl uppercase text-[10px] tracking-widest border border-slate-200 hover:bg-slate-50 transition-all"
+              onClick={closePopup}
+            >
+              Kembali
+            </button>
+            <button
+              type="button"
+              className={`flex-1 md:flex-none flex items-center justify-center bg-teal-600 text-white font-black py-3 px-10 rounded-xl uppercase text-[10px] tracking-widest shadow-lg shadow-teal-100 transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${loadButton ? "opacity-60 cursor-not-allowed" : ""}`}
+              onClick={async () => { if (!loadButton) await handleUpdateClick(); }}
+              disabled={loadButton}
+            >
+              {loadButton ? (
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <span>Menyimpan...</span>
+                </div>
+              ) : (
+                <span className="flex items-center">
+                  <FiSave className="mr-2" size={16} /> Simpan Data
+                </span>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>

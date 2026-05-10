@@ -27,9 +27,9 @@ const FilterSection = ({
   handleSearchClick
 }) => {
   return (
-    <div className="flex gap-4 mb-6">
-      <div className="flex flex-col relative w-80" ref={cabangRef}>
-        <p>Cabang</p>
+    <div className="flex flex-col md:flex-row gap-4 mb-6">
+      <div className="flex flex-col relative w-full md:w-80" ref={cabangRef}>
+        <p className="text-sm font-medium text-gray-700 mb-1">Cabang</p>
         <Input
           type="text"
           value={selectedCabang}
@@ -42,7 +42,7 @@ const FilterSection = ({
           disabled={isAdmin}
         />
         {!isAdmin && showCabangDropdown && (
-          <div className="absolute z-50 border rounded-lg bg-white shadow-sm mt-16 w-full">
+          <div className="absolute z-50 border rounded-lg bg-white shadow-sm mt-20 w-full">
             <ul className="max-h-44 overflow-y-auto">
               <li className="py-2 px-2">
                 <Input
@@ -73,8 +73,8 @@ const FilterSection = ({
           </div>
         )}
       </div>
-      <div className="flex flex-col relative w-80" ref={unitKerjaRef}>
-        <p>Unit Kerja</p>
+      <div className="flex flex-col relative w-full md:w-80" ref={unitKerjaRef}>
+        <p className="text-sm font-medium text-gray-700 mb-1">Unit Kerja</p>
         <Input
           type="text"
           value={unitKerjaInput}
@@ -86,7 +86,7 @@ const FilterSection = ({
           onClick={handleUnitKerjaClick}
         />
         {showUnitKerjaDropdown && (
-          <div className="absolute z-50 border rounded-lg bg-white shadow-sm mt-16 w-full">
+          <div className="absolute z-50 border rounded-lg bg-white shadow-sm mt-20 w-full">
             <ul className="max-h-44 overflow-y-auto">
               <li className="py-2 px-2">
                 <Input
@@ -119,19 +119,19 @@ const FilterSection = ({
           </div>
         )}
       </div>
-      <div className="flex flex-col relative w-80">
+      <div className="flex flex-col relative w-full md:w-80">
         <div className="relative">
-          <p>Nama Anggota</p>
+          <p className="text-sm font-medium text-gray-700 mb-1">Nama Anggota</p>
           <Input
             type="text"
             value={namaAnggotaInput}
             onChange={handleNamaAnggotaInputChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm p-2 border pr-10"
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm p-2 border pr-10"
             placeholder="Nama anggota..."
           />
           <button
             onClick={handleSearchClick}
-            className="absolute right-2 top-12 transform -translate-y-1/2 text-teal-600 hover:text-teal-800"
+            className="absolute right-2 top-9 text-teal-600 hover:text-teal-800"
           >
             <FaSearch />
           </button>

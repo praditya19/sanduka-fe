@@ -64,8 +64,11 @@ function RekapAnggota() {
   const [dataNpa, setDataNpa] = useState(null);
   const [fotoBase64, setFotoBase64] = useState(null);
   const [nomorRekening, setNomorRekening] = useState("");
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const nextMonthDate = new Date();
+  nextMonthDate.setMonth(nextMonthDate.getMonth() + 1);
+  
+  const [selectedMonth, setSelectedMonth] = useState(nextMonthDate.getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(nextMonthDate.getFullYear());
   const [nominalBaruList, setNominalBaruList] = useState({});
   const [resetKeys, setResetKeys] = useState([]);
   const [sumbanganList, setSumbanganList] = useState([]);
@@ -249,7 +252,7 @@ function RekapAnggota() {
       }
 
       const apiData = Array.isArray(response) ? response : (response?.data || []);
-      
+
       // 1. Ambil data file (Daspen prov) lebih awal agar bisa disinkronkan
       let fileMap = {};
       try {
@@ -263,7 +266,7 @@ function RekapAnggota() {
       }
 
       const processedData = processApiResponse(apiData, null, false);
-      
+
       // 2. Sinkronkan data daspen dengan data prov (fileMap) secara otomatis
       const syncedData = processedData.map(item => {
         if (item.nip && fileMap[item.nip]) {
@@ -577,252 +580,252 @@ function RekapAnggota() {
   };
 
   const handleSave = async () => {
-  if (!selectedKategori) return;
+    if (!selectedKategori) return;
 
-  let uniqueKey = selectedKategori;
-  let initialValue = 0;
+    let uniqueKey = selectedKategori;
+    let initialValue = 0;
 
-  // 🔧 helper untuk bersihin string
-  const cleanText = (text) =>
-    text?.toString().replace(/"/g, "").trim().toLowerCase();
+    // 🔧 helper untuk bersihin string
+    const cleanText = (text) =>
+      text?.toString().replace(/"/g, "").trim().toLowerCase();
 
-  // 1. Handle uniqueKey khusus lainlain
-  if (selectedKategori === "lainlain") {
-    try {
-      const parsed = JSON.parse(selectedKeterangan);
-      const rawKey = parsed.keterangan || parsed.nama_iuran || selectedKeterangan;
-      uniqueKey = rawKey.toString().replace(/"/g, "").trim();
-    } catch (e) {
-      uniqueKey = selectedKeterangan?.toString().replace(/"/g, "").trim() || `Lain-Lain-${Date.now()}`;
-    }
-  }
-
-  // 2. Ambil standard iuran (fallback jika kosong)
-  let currentStdList = standardIuranList;
-
-  if (currentStdList.length === 0) {
-    try {
-      const responseStd = await GlobalApi.getIuranByFilter("");
-      currentStdList = Array.isArray(responseStd)
-        ? responseStd
-        : responseStd?.data || [];
-      setStandardIuranList(currentStdList);
-    } catch (e) {
-      console.error("On-demand fetch failed:", e);
-    }
-  }
-
-  // =========================
-  // 📅 KALENDER / DERAP
-  // =========================
-  if (selectedKategori === "kalender" || selectedKategori === "derap") {
-    const matchName = selectedKategori.trim().toUpperCase();
-
-    let stdItem = currentStdList.find(
-      (item) => item.iuran?.trim().toUpperCase() === matchName
-    );
-
-    if (!stdItem) {
-      try {
-        const res = await GlobalApi.getIuranByFilter(matchName);
-        stdItem = Array.isArray(res)
-          ? res[0]
-          : res?.data?.[0] || res;
-
-        if (stdItem) {
-          setStandardIuranList((prev) => [...prev, stdItem]);
-        }
-      } catch (e) {
-        console.error("Specific fetch failed:", e);
-      }
-    }
-
-    if (stdItem) {
-      initialValue =
-        parseInt(stdItem.propinsi || 0) +
-        parseInt(stdItem.kabupaten || 0) +
-        parseInt(stdItem.cabang || 0);
-    }
-
-    // fallback API cabang
-    const cabangId =
-      selectedMember?.cabang || selectedMember?.user?.cabang;
-
-    if (initialValue === 0 && cabangId) {
-      try {
-        const apiFunc =
-          selectedKategori === "kalender"
-            ? GlobalApi.getTableKalender
-            : GlobalApi.getTableDerap;
-
-        const res = await apiFunc(
-          selectedMonth,
-          selectedYear,
-          cabangId
-        );
-
-        const data =
-          res?.data?.[0] || res?.[0] || res?.data || res;
-
-        if (data) {
-          initialValue = Object.entries(data).reduce(
-            (acc, [k, v]) => {
-              if (
-                ["propinsi", "kabupaten", "cabang", "nominal", "jumlah", "tarif"].some(
-                  (key) => k.toLowerCase().includes(key)
-                ) &&
-                !["id", "bulan", "tahun"].includes(k.toLowerCase())
-              ) {
-                return acc + (parseInt(v) || 0);
-              }
-              return acc;
-            },
-            0
-          );
-        }
-      } catch (e) {
-        console.error("API Fallback failed:", e);
-      }
-    }
-  }
-
-  // =========================
-  // 📦 LAIN-LAIN (FIXED)
-  // =========================
-  else if (selectedKategori === "lainlain" && selectedKeterangan) {
-    try {
-      console.log("🔍 Keterangan dipilih:", selectedKeterangan);
-
-      const response = await GlobalApi.getLainlain(selectedKeterangan);
-
-      const dataList = Array.isArray(response)
-        ? response
-        : response?.data || [];
-
-      console.log("📋 Data list:", dataList);
-
-      let searchKeterangan = selectedKeterangan;
+    // 1. Handle uniqueKey khusus lainlain
+    if (selectedKategori === "lainlain") {
       try {
         const parsed = JSON.parse(selectedKeterangan);
         const rawKey = parsed.keterangan || parsed.nama_iuran || selectedKeterangan;
-        searchKeterangan = rawKey.toString().replace(/"/g, "").trim();
+        uniqueKey = rawKey.toString().replace(/"/g, "").trim();
       } catch (e) {
-        searchKeterangan = selectedKeterangan?.toString().replace(/"/g, "").trim();
+        uniqueKey = selectedKeterangan?.toString().replace(/"/g, "").trim() || `Lain-Lain-${Date.now()}`;
       }
+    }
 
-      const matchingItem = dataList.find(
-        (item) =>
-          cleanText(item.keterangan) ===
-          cleanText(searchKeterangan)
+    // 2. Ambil standard iuran (fallback jika kosong)
+    let currentStdList = standardIuranList;
+
+    if (currentStdList.length === 0) {
+      try {
+        const responseStd = await GlobalApi.getIuranByFilter("");
+        currentStdList = Array.isArray(responseStd)
+          ? responseStd
+          : responseStd?.data || [];
+        setStandardIuranList(currentStdList);
+      } catch (e) {
+        console.error("On-demand fetch failed:", e);
+      }
+    }
+
+    // =========================
+    // 📅 KALENDER / DERAP
+    // =========================
+    if (selectedKategori === "kalender" || selectedKategori === "derap") {
+      const matchName = selectedKategori.trim().toUpperCase();
+
+      let stdItem = currentStdList.find(
+        (item) => item.iuran?.trim().toUpperCase() === matchName
       );
 
-      console.log("🎯 Matching item:", matchingItem);
+      if (!stdItem) {
+        try {
+          const res = await GlobalApi.getIuranByFilter(matchName);
+          stdItem = Array.isArray(res)
+            ? res[0]
+            : res?.data?.[0] || res;
 
-      if (matchingItem) {
-        initialValue = parseInt(matchingItem.jumlahNominal || 0);
-        console.log("💰 Initial value:", initialValue);
-      } else {
-        console.warn(
-          "⚠️ Tidak ditemukan data dengan keterangan:",
-          selectedKeterangan
-        );
-        initialValue = 0;
-      }
-    } catch (error) {
-      console.error("❌ Gagal mengambil data lain-lain:", error);
-    }
-  }
-
-  // =========================
-  // 🧮 DASPEN
-  // =========================
-  else if (selectedKategori === "daspen") {
-    initialValue = parseInt(provDaspenValue || daspenValue || 0);
-  }
-
-  // =========================
-  // 👥 PGRI & SANDUKA
-  // =========================
-  else if (
-    selectedKategori === "pgri" ||
-    selectedKategori === "sanduka"
-  ) {
-    let pgriItem = currentStdList.find(
-      (item) =>
-        item.iuran?.trim().toUpperCase() === "IURAN PGRI"
-    );
-
-    if (!pgriItem) {
-      try {
-        const res = await GlobalApi.getIuranByFilter("IURAN PGRI");
-        pgriItem = Array.isArray(res)
-          ? res[0]
-          : res?.data?.[0] || res;
-
-        if (pgriItem) {
-          setStandardIuranList((prev) => [...prev, pgriItem]);
+          if (stdItem) {
+            setStandardIuranList((prev) => [...prev, stdItem]);
+          }
+        } catch (e) {
+          console.error("Specific fetch failed:", e);
         }
-      } catch (e) {
-        console.error("PGRI fetch failed:", e);
+      }
+
+      if (stdItem) {
+        initialValue =
+          parseInt(stdItem.propinsi || 0) +
+          parseInt(stdItem.kabupaten || 0) +
+          parseInt(stdItem.cabang || 0);
+      }
+
+      // fallback API cabang
+      const cabangId =
+        selectedMember?.cabang || selectedMember?.user?.cabang;
+
+      if (initialValue === 0 && cabangId) {
+        try {
+          const apiFunc =
+            selectedKategori === "kalender"
+              ? GlobalApi.getTableKalender
+              : GlobalApi.getTableDerap;
+
+          const res = await apiFunc(
+            selectedMonth,
+            selectedYear,
+            cabangId
+          );
+
+          const data =
+            res?.data?.[0] || res?.[0] || res?.data || res;
+
+          if (data) {
+            initialValue = Object.entries(data).reduce(
+              (acc, [k, v]) => {
+                if (
+                  ["propinsi", "kabupaten", "cabang", "nominal", "jumlah", "tarif"].some(
+                    (key) => k.toLowerCase().includes(key)
+                  ) &&
+                  !["id", "bulan", "tahun"].includes(k.toLowerCase())
+                ) {
+                  return acc + (parseInt(v) || 0);
+                }
+                return acc;
+              },
+              0
+            );
+          }
+        } catch (e) {
+          console.error("API Fallback failed:", e);
+        }
       }
     }
 
-    if (selectedKategori === "pgri") {
-      initialValue = pgriItem
-        ? parseInt(pgriItem.pb || 0) +
+    // =========================
+    // 📦 LAIN-LAIN (FIXED)
+    // =========================
+    else if (selectedKategori === "lainlain" && selectedKeterangan) {
+      try {
+        console.log("🔍 Keterangan dipilih:", selectedKeterangan);
+
+        const response = await GlobalApi.getLainlain(selectedKeterangan);
+
+        const dataList = Array.isArray(response)
+          ? response
+          : response?.data || [];
+
+        console.log("📋 Data list:", dataList);
+
+        let searchKeterangan = selectedKeterangan;
+        try {
+          const parsed = JSON.parse(selectedKeterangan);
+          const rawKey = parsed.keterangan || parsed.nama_iuran || selectedKeterangan;
+          searchKeterangan = rawKey.toString().replace(/"/g, "").trim();
+        } catch (e) {
+          searchKeterangan = selectedKeterangan?.toString().replace(/"/g, "").trim();
+        }
+
+        const matchingItem = dataList.find(
+          (item) =>
+            cleanText(item.keterangan) ===
+            cleanText(searchKeterangan)
+        );
+
+        console.log("🎯 Matching item:", matchingItem);
+
+        if (matchingItem) {
+          initialValue = parseInt(matchingItem.jumlahNominal || 0);
+          console.log("💰 Initial value:", initialValue);
+        } else {
+          console.warn(
+            "⚠️ Tidak ditemukan data dengan keterangan:",
+            selectedKeterangan
+          );
+          initialValue = 0;
+        }
+      } catch (error) {
+        console.error("❌ Gagal mengambil data lain-lain:", error);
+      }
+    }
+
+    // =========================
+    // 🧮 DASPEN
+    // =========================
+    else if (selectedKategori === "daspen") {
+      initialValue = parseInt(provDaspenValue || daspenValue || 0);
+    }
+
+    // =========================
+    // 👥 PGRI & SANDUKA
+    // =========================
+    else if (
+      selectedKategori === "pgri" ||
+      selectedKategori === "sanduka"
+    ) {
+      let pgriItem = currentStdList.find(
+        (item) =>
+          item.iuran?.trim().toUpperCase() === "IURAN PGRI"
+      );
+
+      if (!pgriItem) {
+        try {
+          const res = await GlobalApi.getIuranByFilter("IURAN PGRI");
+          pgriItem = Array.isArray(res)
+            ? res[0]
+            : res?.data?.[0] || res;
+
+          if (pgriItem) {
+            setStandardIuranList((prev) => [...prev, pgriItem]);
+          }
+        } catch (e) {
+          console.error("PGRI fetch failed:", e);
+        }
+      }
+
+      if (selectedKategori === "pgri") {
+        initialValue = pgriItem
+          ? parseInt(pgriItem.pb || 0) +
           parseInt(pgriItem.propinsi || 0) +
           parseInt(pgriItem.kabupaten || 0) +
           parseInt(pgriItem.cabang || 0)
-        : 8000;
-    } else {
-      initialValue = pgriItem?.sanduka
-        ? parseInt(pgriItem.sanduka || 0)
-        : 3000;
+          : 8000;
+      } else {
+        initialValue = pgriItem?.sanduka
+          ? parseInt(pgriItem.sanduka || 0)
+          : 3000;
+      }
     }
-  }
 
-  // =========================
-  // 💾 UPDATE STATE
-  // =========================
-  setNewValues((prev) => ({
-    ...prev,
-    [uniqueKey]: initialValue,
-  }));
-
-  
-
-  setResetKeys((prev) => prev.filter((k) => k !== uniqueKey));
-
-  if (!addedCategories.some((c) => c.key === uniqueKey)) {
-    const labelMap = {
-      iuran: "Iuran",
-      derap: "Derap",
-      kalender: "Kalender",
-      lainlain: "Lain-Lain",
-      daspen: "Daspen",
-      pgri: "PGRI",
-      sanduka: "Sanduka",
-    };
-
-    setAddedCategories((prev) => [
+    // =========================
+    // 💾 UPDATE STATE
+    // =========================
+    setNewValues((prev) => ({
       ...prev,
-      {
-        key: uniqueKey,
-        label: selectedKategori === "lainlain" ? uniqueKey : (labelMap[selectedKategori] || uniqueKey),
-        ...(selectedKategori === "lainlain" && selectedKeterangan
-          ? { keterangan: uniqueKey }
-          : {}),
-      },
-    ]);
-  }
+      [uniqueKey]: initialValue,
+    }));
 
-  // =========================
-  // 🔄 RESET
-  // =========================
-  setShowDropdown(false);
-  setSelectedKategori("");
-  setSelectedKeterangan("");
-};
+
+
+    setResetKeys((prev) => prev.filter((k) => k !== uniqueKey));
+
+    if (!addedCategories.some((c) => c.key === uniqueKey)) {
+      const labelMap = {
+        iuran: "Iuran",
+        derap: "Derap",
+        kalender: "Kalender",
+        lainlain: "Lain-Lain",
+        daspen: "Daspen",
+        pgri: "PGRI",
+        sanduka: "Sanduka",
+      };
+
+      setAddedCategories((prev) => [
+        ...prev,
+        {
+          key: uniqueKey,
+          label: selectedKategori === "lainlain" ? uniqueKey : (labelMap[selectedKategori] || uniqueKey),
+          ...(selectedKategori === "lainlain" && selectedKeterangan
+            ? { keterangan: uniqueKey }
+            : {}),
+        },
+      ]);
+    }
+
+    // =========================
+    // 🔄 RESET
+    // =========================
+    setShowDropdown(false);
+    setSelectedKategori("");
+    setSelectedKeterangan("");
+  };
 
 
   const handleUpdateClick = async () => {
@@ -877,14 +880,14 @@ function RekapAnggota() {
           ...sumbanganList
             .filter((s) => parseInt(s.jumlah || 0) > 0)
             .map((s) => ({
-            jenis: s.jenis,
-            keterangan: s.keterangan || s.namaSumbangan || s.jenis,
-            namaSumbangan: s.namaSumbangan || s.jenis,
-            namaIuran: s.namaIuran || s.jenis,
-            jumlah: s.jumlah || 0,
-            cabang: cabangName,
-            tagihanUntukBulan
-          }))
+              jenis: s.jenis,
+              keterangan: s.keterangan || s.namaSumbangan || s.jenis,
+              namaSumbangan: s.namaSumbangan || s.jenis,
+              namaIuran: s.namaIuran || s.jenis,
+              jumlah: s.jumlah || 0,
+              cabang: cabangName,
+              tagihanUntukBulan
+            }))
         ]
       };
 
@@ -961,30 +964,30 @@ function RekapAnggota() {
       <div className="flex">
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
-        <div className={`flex-1 transition-all duration-300 mt-12 px-8 ${isSidebarOpen ? "ml-64" : "ml-0"}`}>
-          <main className="w-full py-8">
-            <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-              <h1 className="text-3xl font-extrabold flex items-center gap-3 text-gray-800">
+        <div className={`flex-1 transition-all duration-300 mt-12 px-4 md:px-8 ${isSidebarOpen && !isMobile ? "ml-64" : "ml-0"}`}>
+          <main className="w-full py-4 md:py-8">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-6">
+              <h1 className="text-2xl md:text-3xl font-extrabold flex items-center gap-3 text-gray-800">
                 By Nominal
               </h1>
 
-              <div className="flex flex-wrap gap-2">
-                <button onClick={handlePrint} className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors flex items-center gap-2 text-sm shadow-sm">
+              <div className="flex flex-wrap gap-2 w-full lg:w-auto">
+                <button onClick={handlePrint} className="flex-1 lg:flex-none px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors flex items-center justify-center gap-2 text-sm shadow-sm">
                   <FaPrint /> Cetak
                 </button>
-                <button onClick={exportToExcel} disabled={isExporting} className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors flex items-center gap-2 text-sm shadow-sm">
+                <button onClick={exportToExcel} disabled={isExporting} className="flex-1 lg:flex-none px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors flex items-center justify-center gap-2 text-sm shadow-sm">
                   <FaFileExcel /> {isExporting ? "Exporting..." : "Excel"}
                 </button>
 
-                <div className="relative" ref={rekapDropdownRef}>
+                <div className="relative flex-1 lg:flex-none" ref={rekapDropdownRef}>
                   <button
                     onClick={handleRekap}
-                    className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors flex items-center gap-2 text-sm shadow-sm"
+                    className="w-full px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors flex items-center justify-center gap-2 text-sm shadow-sm"
                   >
                     <FaRegClock /> Rekap
                   </button>
                   {showRekapDropdown && (
-                    <div className="absolute left-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-xl z-50 py-1 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200">
+                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-xl z-50 py-1 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200">
                       <button
                         onClick={() => {
                           exportPotonganBankLogic(groupedData, selectedMonth, selectedYear);
@@ -1009,7 +1012,7 @@ function RekapAnggota() {
                 <button
                   onClick={handleBackupTarget}
                   disabled={isExporting}
-                  className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm shadow-sm"
+                  className="flex-1 lg:flex-none px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm shadow-sm"
                 >
                   Backup Target
                 </button>
@@ -1043,14 +1046,14 @@ function RekapAnggota() {
 
             <SummaryStats stats={stats} isLoading={loading} />
 
-            <SummaryBanner
+            {/* <SummaryBanner
               totalAnggota={groupedData.reduce((sum, g) => sum + parseInt(g.jumlah), 0)}
               unitKerjaCount={groupedData.length}
-            />
+            /> */}
 
             <div className="overflow-x-auto bg-white rounded-b-lg shadow-xl border border-teal-100">
-              <table className="w-full text-left border-collapse min-w-[1200px]">
-                <thead className="bg-teal-600 text-white text-sm uppercase sticky top-0 z-10">
+              <table className="w-full text-left border-collapse md:min-w-[1200px]">
+                <thead className="hidden md:table-header-group bg-teal-600 text-white text-sm uppercase sticky top-0 z-10">
                   <tr>
                     <th className="p-3 border-b border-teal-500 text-center w-12">No</th>
                     <th className="p-3 border-b border-teal-500">Cabang</th>
