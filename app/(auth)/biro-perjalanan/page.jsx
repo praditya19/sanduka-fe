@@ -313,7 +313,7 @@ const TravelPage = () => {
             {promoInfos.length > 0 && (
               <div className="space-y-8 max-w-4xl mx-auto mt-20">
                 <h3 className="text-2xl font-bold text-gray-800 text-center mb-8 flex items-center justify-center gap-2">
-                  <FileText className="text-blue-600" /> Pengumuman & Dokumen Terkait
+                  <FileText className="text-blue-600" /> Informasi Tour & Travel
                 </h3>
                 
                 <div className="grid grid-cols-1 gap-8">
@@ -326,13 +326,13 @@ const TravelPage = () => {
                       {/* Tampilkan Foto jika ada (Otomatis menyesuaikan ukuran Landscape/Kotak) */}
                       {info.foto && (
                         <div 
-                          className="mb-6 rounded-xl overflow-hidden cursor-pointer border border-gray-100 group relative bg-gray-50 flex justify-center" 
+                          className="mb-6 rounded-xl overflow-hidden cursor-pointer border border-gray-100 group relative bg-gray-50" 
                           onClick={() => setLightboxImage(renderImage(info.foto))}
                         >
                           <img 
                             src={renderImage(info.foto)} 
                             alt="Foto Informasi" 
-                            className="w-full h-auto max-h-[600px] object-contain group-hover:scale-[1.02] transition-transform duration-500" 
+                            className="w-full h-auto block object-contain group-hover:scale-[1.02] transition-transform duration-500" 
                           />
                           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
                              <span className="text-white opacity-0 group-hover:opacity-100 bg-black/50 p-3 rounded-full backdrop-blur-sm shadow-lg">⤢</span>
@@ -344,11 +344,9 @@ const TravelPage = () => {
                       {info.text && (
                         <div className="mb-6 flex-grow">
                           <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Deskripsi / Teks</label>
-                          <textarea
-                            readOnly
-                            value={info.text}
-                            rows={6}
-                            className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-700 outline-none resize-none custom-scrollbar"
+                          <div
+                            className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-700 summernote-content"
+                            dangerouslySetInnerHTML={{ __html: info.text }}
                           />
                         </div>
                       )}
