@@ -3758,7 +3758,70 @@ const deleteRunningText = async () => {
     throw error;
   }
 };
+
+// LEMBAGA
+const createLembaga = async (data) => {
+  try {
+    const response = await axiosClient.post("/api/lembaga", data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error createLembaga:", error);
+    throw error;
+  }
+};
+
+const getAllLembaga = async (page = 0, size = 10, sortBy = "id", direction = "desc") => {
+  try {
+    const response = await axiosClient.get(`/api/lembaga`, {
+      params: {
+        page,
+        size,
+        sortBy,
+        direction,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error getAllLembaga:", error);
+    throw error;
+  }
+};
+
+const getLembagaById = async (id) => {
+  try {
+    const response = await axiosClient.get(`/api/lembaga/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error getLembagaById:", error);
+    throw error;
+  }
+};
+
+const updateLembaga = async (id, data) => {
+  try {
+    const response = await axiosClient.put(`/api/lembaga/${id}`, data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error updateLembaga:", error);
+    throw error;
+  }
+};
+
+const deleteLembaga = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/lembaga/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error deleteLembaga:", error);
+    throw error;
+  }
+};
 // END
+
 // Export all functions
 export default {
   registerUser,
@@ -4021,4 +4084,9 @@ export default {
   createRunningText,
   getRunningText,
   deleteRunningText,
+  createLembaga,
+  getAllLembaga,
+  getLembagaById,
+  updateLembaga,
+  deleteLembaga,
 };

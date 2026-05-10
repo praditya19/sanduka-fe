@@ -37,6 +37,7 @@ import {
   faNewspaper,
   faPenNib,
   faEarth,
+  faBuildingColumns,
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import {
@@ -52,6 +53,7 @@ import GaleriKegiatan from "@/app/_components/GaleriKegiatan";
 import News from "@/app/_components/News";
 import BiroTravel from "@/app/_components/BiroTravel";
 import Live from "@/app/_components/Live";
+import LembagaDisplay from "@/app/_components/Lembaga";
 import Metsos from "@/app/_components/Metsos";
 import Image from "next/image";
 import Sidebar from "@/app/_components/Sidebar";
@@ -306,6 +308,12 @@ export default function IconGrid() {
       label: "Tour & Travel",
       href: "/biro-perjalanan/create-paket",
       color: "text-blue-600",
+    },
+    {
+      icon: faBuildingColumns,
+      label: "Lembaga",
+      href: "/lembaga",
+      color: "text-green-600",
     },
   ];
 
@@ -1324,6 +1332,12 @@ export default function IconGrid() {
           <div className="px-4 mx-auto max-w-6xl mb-12 -mt-10">
             <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 w-full max-w-md sm:max-w-full">
               <BiroTravel />
+            </div>
+          </div>
+
+          <div className="px-4 mx-auto max-w-6xl mb-12 -mt-10">
+            <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 w-full max-w-md sm:max-w-full">
+              <LembagaDisplay />
             </div>
           </div>
 

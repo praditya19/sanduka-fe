@@ -32,6 +32,9 @@ const TemanUnitKerja = () => {
   const [unitKerjaOptions, setUnitKerjaOptions] = useState([]);
   const [queryUnit, setQueryUnit] = useState("");
   const [fotoBase64, setFotoBase64] = useState("");
+  
+  // STATE BARU UNTUK ZOOM FOTO
+  const [zoomedImage, setZoomedImage] = useState(null); 
 
   const [role, setRole] = useState(null);
 
@@ -278,17 +281,23 @@ const TemanUnitKerja = () => {
 
                       <div className="flex w-full items-center">
                         <div className="flex-shrink-0 w-1/3 flex justify-center self-start">
-                          <Image
-                            src={base64Image}
-                            width={80}
-                            height={80}
-                            alt={
-                              fotoFromState
-                                ? "Anggota Foto"
-                                : `Fallback Image: ${profileImageUrl}`
-                            }
-                            className=" border-2 border-gray-200 max-w-[80px] max-h-[80px]"
-                          />
+                          {/* PERBAIKAN: Menambahkan div wrapper untuk trigger zoom */}
+                          <div 
+                            className="cursor-pointer hover:opacity-80 transition-opacity rounded-md overflow-hidden shadow-sm border-2 border-gray-200 w-[80px] h-[80px] flex items-center justify-center"
+                            onClick={() => setZoomedImage(base64Image)}
+                          >
+                            <Image
+                              src={base64Image}
+                              width={80}
+                              height={80}
+                              alt={
+                                fotoFromState
+                                  ? "Anggota Foto"
+                                  : `Fallback Image: ${profileImageUrl}`
+                              }
+                              className="object-cover w-full h-full"
+                            />
+                          </div>
                         </div>
 
                         <div className="ml-2 w-2/3">
@@ -369,7 +378,7 @@ const TemanUnitKerja = () => {
                 })
               )}
             </div>
-            <ul className="flex mt-4 space-x-2 justify-center">
+            <ul className="flex mt-4 space-x-2 justify-center pb-8">
               <li>
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
@@ -431,6 +440,30 @@ const TemanUnitKerja = () => {
           </div>
         </div>
       </div>
+
+      {/* POPUP ZOOM GAMBAR */}
+      {zoomedImage && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black bg-opacity-40 backdrop-blur-sm"
+          onClick={() => setZoomedImage(null)}
+        >
+          <div className="relative flex flex-col items-center animate-in zoom-in duration-200">
+            <button
+              className="absolute -top-3 -right-3 bg-white text-gray-600 hover:text-red-500 hover:bg-gray-100 shadow-md rounded-full w-8 h-8 flex items-center justify-center text-xl font-bold z-50 border border-gray-200 transition-colors"
+              onClick={() => setZoomedImage(null)}
+            >
+              &times;
+            </button>
+            <img
+              src={zoomedImage}
+              alt="Zoomed Profil"
+              className="max-w-[250px] md:max-w-[400px] max-h-[85vh] object-contain rounded-lg shadow-[0_20px_50px_rgba(0,0,0,0.3)] border-4 border-white bg-white"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
