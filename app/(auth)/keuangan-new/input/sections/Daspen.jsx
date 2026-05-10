@@ -168,7 +168,11 @@ const DaspenSection = () => {
             </div>
             <div>
               <h2 className="text-xl font-black">Dana Sosial Pensiun (Daspen)</h2>
-              <p className="text-rose-100 text-xs font-medium">Manajemen kuota dan perolehan per kategori</p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="px-2 py-0.5 bg-white/20 rounded-md text-[10px] font-black uppercase tracking-widest">Periode: {selectedMonth} {selectedYear}</span>
+                <span className="w-1 h-1 bg-white/40 rounded-full" />
+                <p className="text-rose-100 text-[10px] font-medium uppercase tracking-widest">Manajemen kuota dan perolehan per kategori</p>
+              </div>
             </div>
           </div>
           <button 
@@ -390,7 +394,7 @@ const DaspenSection = () => {
                 <div className="p-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
                   <div className="flex items-center gap-2">
                     <FaHandHoldingHeart className="text-rose-500 text-sm" />
-                    <h4 className="text-sm font-black text-slate-800 tracking-tight uppercase tracking-widest text-[10px]">Rekapitulasi Daspen Per Cabang</h4>
+                    <h4 className="text-sm font-black text-slate-800 tracking-tight uppercase tracking-widest text-[10px]">Rekapitulasi Daspen Per Cabang - <span className="text-rose-600">{selectedMonth} {selectedYear}</span></h4>
                   </div>
                 </div>
                 <div className="overflow-x-auto">

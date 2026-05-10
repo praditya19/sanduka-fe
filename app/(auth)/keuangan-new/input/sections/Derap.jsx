@@ -139,7 +139,11 @@ const DerapSection = () => {
           </div>
           <div>
             <h2 className="text-xl font-black">Publikasi Derap</h2>
-            <p className="text-indigo-100 text-xs font-medium">Manajemen pesanan dan distribusi majalah Derap</p>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="px-2 py-0.5 bg-white/20 rounded-md text-[10px] font-black uppercase tracking-widest">Periode: {selectedMonth} {selectedYear}</span>
+              <span className="w-1 h-1 bg-white/40 rounded-full" />
+              <p className="text-indigo-100 text-[10px] font-medium uppercase tracking-widest">Manajemen pesanan dan distribusi majalah Derap</p>
+            </div>
           </div>
         </div>
         <button onClick={() => setShowConfig(!showConfig)} className="p-3 bg-white/20 hover:bg-white/30 rounded-2xl backdrop-blur-md transition-all active:scale-95">
@@ -334,7 +338,7 @@ const DerapSection = () => {
                 <div className="p-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
                   <div className="flex items-center gap-2">
                     <FaNewspaper className="text-indigo-500 text-sm" />
-                    <h4 className="text-sm font-black text-slate-800 tracking-tight uppercase tracking-widest text-[10px]">Riwayat Distribusi Derap</h4>
+                    <h4 className="text-sm font-black text-slate-800 tracking-tight uppercase tracking-widest text-[10px]">Riwayat Distribusi Derap - <span className="text-indigo-600">{selectedMonth} {selectedYear}</span></h4>
                   </div>
                 </div>
                 <div className="overflow-x-auto">

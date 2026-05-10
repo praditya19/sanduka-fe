@@ -152,7 +152,11 @@ const LainLainSection = () => {
           </div>
           <div>
             <h2 className="text-xl font-black">Lain-Lain</h2>
-            <p className="text-slate-300 text-xs font-medium">Pencatatan transaksi keuangan kategori lainnya</p>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="px-2 py-0.5 bg-white/20 rounded-md text-[10px] font-black uppercase tracking-widest">Periode: {selectedMonth} {selectedYear}</span>
+              <span className="w-1 h-1 bg-white/40 rounded-full" />
+              <p className="text-slate-300 text-[10px] font-medium uppercase tracking-widest">Pencatatan transaksi keuangan kategori lainnya</p>
+            </div>
           </div>
         </div>
         {!showForm && (
