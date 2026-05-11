@@ -139,6 +139,7 @@ const CreateBerita = () => {
     responContributor: sessionStorage.getItem("nama") || "",
     isiBerita: "",
     status: "",
+    kategori: "",
     galeri: [
       {
         file: null,
@@ -300,6 +301,43 @@ const CreateBerita = () => {
                 <form onSubmit={handleSubmit} className="p-8">
                   <div className="grid grid-cols-12 gap-6">
                     <div className="col-span-12 lg:col-span-5 space-y-6">
+                      <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                          <span className="w-1 h-4 bg-purple-500 rounded-full"></span>
+                          Kategori Berita
+                        </label>
+                        <select
+                          name="kategori"
+                          value={formData.kategori}
+                          onChange={handleChange}
+                          className="w-full border-2 border-gray-200 rounded-xl px-6 py-4 text-lg focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-300 outline-none bg-white cursor-pointer"
+                          required
+                        >
+                          <option value="">-- Pilih Kategori --</option>
+                          <option value="BERITA">📰 Berita</option>
+                          <option value="ARTIKEL">📝 Artikel</option>
+                          <option value="CERPEN">✍️ Cerpen</option>
+                          <option value="ANEKDOT">😂 Anekdot</option>
+                        </select>
+
+                        {formData.kategori && (
+                          <div className="mt-3 p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg">
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">
+                                {formData.kategori === "BERITA"}
+                                {formData.kategori === "ARTIKEL"}
+                                {formData.kategori === "CERPEN"}
+                                {formData.kategori === "ANEKDOT"}
+                              </span>
+                              <p className="text-sm font-medium text-purple-800">
+                                Kategori:{" "}
+                                {formData.kategori.charAt(0) +
+                                  formData.kategori.slice(1).toLowerCase()}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                       <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200 p-6 sticky top-24">
                         <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                           <span className="w-1 h-5 bg-green-500 rounded-full"></span>
