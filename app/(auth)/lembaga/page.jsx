@@ -89,7 +89,13 @@ const LembagaPage = () => {
     const [viewLembaga, setViewLembaga] = useState(null);
     const [lightboxImage, setLightboxImage] = useState(null);
 
-    const initialForm = { namaLembaga: "", jenisLembaga: "", keteranganLembaga: "" };
+    // State untuk dropdown cabang
+    const [cabangOptions, setCabangOptions] = useState([]);
+    const [showCabangDropdown, setShowCabangDropdown] = useState(false);
+    const [cabangQuery, setCabangQuery] = useState("");
+    const cabangDropdownRef = useRef(null);
+
+    const initialForm = { namaLembaga: "", jenisLembaga: "", keteranganLembaga: "", cabang: "" };
     const [formData, setFormData] = useState(initialForm);
     const [fotoLembaga, setFotoLembaga] = useState(null);
     const [previewLembaga, setPreviewLembaga] = useState(null);
@@ -100,15 +106,39 @@ const LembagaPage = () => {
 
     useEffect(() => {
         const role = sessionStorage.getItem("role");
+        const cabangFromSession = sessionStorage.getItem("cabang") || "";
         setUserRole(role);
 
         if (role === "ADMIN") {
-            setFormData((prev) => ({ ...prev, jenisLembaga: "PENGURUS CABANG" }));
+            setFormData((prev) => ({
+                ...prev,
+                jenisLembaga: "PENGURUS CABANG",
+                cabang: cabangFromSession,
+            }));
         }
 
         fetchLembaga();
         const savedSidebar = localStorage.getItem("isSidebarOpen");
         if (savedSidebar !== null) setIsSidebarOpen(savedSidebar === "true");
+
+        // Fetch cabang options
+        GlobalApi.getCabang().then((res) => {
+            const sorted = [...(res.data || [])].sort((a, b) =>
+                a.kecamatan.localeCompare(b.kecamatan, "id")
+            );
+            setCabangOptions(sorted);
+        }).catch(console.error);
+    }, []);
+
+    // Close cabang dropdown on outside click
+    useEffect(() => {
+        const handler = (e) => {
+            if (cabangDropdownRef.current && !cabangDropdownRef.current.contains(e.target)) {
+                setShowCabangDropdown(false);
+            }
+        };
+        document.addEventListener("mousedown", handler);
+        return () => document.removeEventListener("mousedown", handler);
     }, []);
 
     const fetchLembaga = async () => {
@@ -209,10 +239,12 @@ const LembagaPage = () => {
     };
 
     const resetForm = () => {
+        const cabangFromSession = sessionStorage.getItem("cabang") || "";
         setFormData({
             namaLembaga: "",
             jenisLembaga: userRole === "ADMIN" ? "PENGURUS CABANG" : "",
-            keteranganLembaga: ""
+            keteranganLembaga: "",
+            cabang: userRole === "ADMIN" ? cabangFromSession : ""
         });
         setFotoLembaga(null);
         setPreviewLembaga(null);
@@ -229,6 +261,7 @@ const LembagaPage = () => {
         data.append("namaLembaga", formData.namaLembaga);
         if (formData.jenisLembaga) data.append("jenisLembaga", formData.jenisLembaga);
         if (formData.keteranganLembaga) data.append("keteranganLembaga", formData.keteranganLembaga);
+        if (formData.cabang) data.append("cabang", formData.cabang);
         if (fotoLembaga) data.append("fotoLembaga", fotoLembaga);
 
         pengurusList.forEach((p) => {
@@ -269,6 +302,7 @@ const LembagaPage = () => {
             namaLembaga: item.namaLembaga || "",
             jenisLembaga: item.jenisLembaga || (userRole === "ADMIN" ? "PENGURUS CABANG" : ""),
             keteranganLembaga: item.keteranganLembaga || "",
+            cabang: item.cabang || "",
         });
 
         if (item.fotoLembaga) {
@@ -406,6 +440,75 @@ const LembagaPage = () => {
                                             </select>
                                         </div>
 
+                                        {/* Field Cabang — muncul hanya saat PENGURUS CABANG */}
+                                        {formData.jenisLembaga === "PENGURUS CABANG" && (
+                                            <div className="flex flex-col" ref={cabangDropdownRef}>
+                                                <label className="text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">
+                                                    Cabang <span className="text-red-500">*</span>
+                                                </label>
+                                                {userRole === "ADMIN" ? (
+                                                    /* ADMIN: cabang terkunci dari session, tidak bisa diubah */
+                                                    <input
+                                                        type="text"
+                                                        readOnly
+                                                        value={formData.cabang}
+                                                        className="border-2 border-gray-200 p-3 rounded-xl bg-gray-200 text-gray-500 cursor-not-allowed opacity-80 font-medium w-full"
+                                                    />
+                                                ) : (
+                                                    /* SUPERADMIN: bisa pilih cabang bebas */
+                                                    <div className="relative">
+                                                        <input
+                                                            type="text"
+                                                            readOnly
+                                                            value={formData.cabang}
+                                                            placeholder="Pilih Cabang"
+                                                            className="border-2 border-gray-200 p-3 rounded-xl bg-gray-50 focus:bg-white focus:border-indigo-500 outline-none w-full cursor-pointer font-medium text-gray-700"
+                                                            onFocus={() => { setCabangQuery(""); setShowCabangDropdown(true); }}
+                                                            onClick={() => { setCabangQuery(""); setShowCabangDropdown(true); }}
+                                                        />
+                                                        {showCabangDropdown && (
+                                                            <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg">
+                                                                <div className="p-2">
+                                                                    <input
+                                                                        type="text"
+                                                                        autoFocus
+                                                                        placeholder="Cari cabang..."
+                                                                        value={cabangQuery}
+                                                                        onChange={(e) => setCabangQuery(e.target.value)}
+                                                                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-400"
+                                                                    />
+                                                                </div>
+                                                                <ul className="max-h-44 overflow-y-auto">
+                                                                    <li
+                                                                        className="px-4 py-2 text-sm text-gray-500 cursor-pointer hover:bg-gray-50 font-medium"
+                                                                        onClick={() => { setFormData(prev => ({ ...prev, cabang: "" })); setShowCabangDropdown(false); }}
+                                                                    >
+                                                                        Pilih Cabang
+                                                                    </li>
+                                                                    {cabangOptions
+                                                                        .filter(c => c.kecamatan.toLowerCase().includes(cabangQuery.toLowerCase()))
+                                                                        .map((c) => (
+                                                                            <li
+                                                                                key={c.idKecamatan}
+                                                                                className="px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-indigo-50 hover:text-indigo-700"
+                                                                                onClick={() => {
+                                                                                    setFormData(prev => ({ ...prev, cabang: c.kecamatan }));
+                                                                                    setShowCabangDropdown(false);
+                                                                                    setCabangQuery("");
+                                                                                }}
+                                                                            >
+                                                                                {c.kecamatan}
+                                                                            </li>
+                                                                        ))
+                                                                    }
+                                                                </ul>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
                                         <div className="flex flex-col">
                                             <label className="text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">Keterangan / Deskripsi</label>
                                             <textarea name="keteranganLembaga" rows={4} value={formData.keteranganLembaga} onChange={handleChange} className="w-full border-2 border-gray-200 p-3 rounded-xl bg-gray-50 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" />
@@ -515,7 +618,13 @@ const LembagaPage = () => {
                             ) : (
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     {lembagaList
-                                        .filter(item => userRole === "ADMIN" ? item.jenisLembaga === "PENGURUS CABANG" : true)
+                                        .filter(item => {
+                                            if (userRole === "ADMIN") {
+                                                const adminCabang = sessionStorage.getItem("cabang") || "";
+                                                return item.jenisLembaga === "PENGURUS CABANG" && item.cabang === adminCabang;
+                                            }
+                                            return true;
+                                        })
                                         .map((item) => (
                                             <div key={item.id} className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col group">
                                                 <div className="flex p-5 gap-5 border-b border-gray-100">
