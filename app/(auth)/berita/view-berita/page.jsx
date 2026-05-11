@@ -137,6 +137,7 @@ const ViewBerita = () => {
     username: "",
     email: "",
     role: "",
+    kategori: "",
     isiBerita: "",
     status: "DRAFT",
     galeri: [],
@@ -200,6 +201,7 @@ const ViewBerita = () => {
       role: news.role ?? "",
       isiBerita: news.isiBerita ?? "",
       status: news.status ?? "DRAFT",
+      kategori: news.kategori ?? "",
 
       galeri: news.galeri
         ? news.galeri.map((item) => ({
@@ -229,20 +231,13 @@ const ViewBerita = () => {
     const roleSession = sessionStorage.getItem("role");
     const namaSession = sessionStorage.getItem("nama");
 
-    // Debug console
-    console.log("=== DEBUG SUBMIT ===");
-    console.log("Role dari sessionStorage:", roleSession);
-    console.log("Role dari formData:", formData.role);
-    console.log("Role yang akan dikirim:", roleSession?.toUpperCase() || "");
-    console.log("ResponEditor (nama):", namaSession);
-    console.log("===================");
-
     formDataToSend.append("judul", formData.judul);
     formDataToSend.append("username", formData.username);
     formDataToSend.append("email", formData.email);
     formDataToSend.append("role", roleSession?.toUpperCase() || "");
     formDataToSend.append("status", formData.status);
     formDataToSend.append("isiBerita", formData.isiBerita);
+    formDataToSend.append("kategori", formData.kategori);
     formDataToSend.append("responEditor", namaSession || "");
 
     // Loop untuk foto (hanya yang ada file baru)
@@ -502,7 +497,7 @@ const ViewBerita = () => {
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-80"></div>
 
                             <span className="absolute top-4 left-4 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-white text-xs font-semibold border border-white/30">
-                              Berita
+                              {news.kategori || "Tidak ada Kategori"}
                             </span>
 
                             <h3 className="absolute bottom-4 left-4 right-4 text-white text-xl font-bold leading-tight group-hover:translate-y-[-4px] transition-transform duration-300">
@@ -544,26 +539,6 @@ const ViewBerita = () => {
                                 </svg>
                                 <span>{formatDate(news.createdAt)}</span>
                               </div>
-                            </div>
-
-                            <div className="flex items-center text-xs text-gray-500 mb-3 bg-gray-50 p-2 rounded-lg">
-                              <svg
-                                className="w-4 h-4 mr-1"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                />
-                              </svg>
-                              <span className="font-medium">Editor:</span>
-                              <span className="ml-1">
-                                {news.sss || "editor"}
-                              </span>
                             </div>
 
                             <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3">
@@ -779,7 +754,7 @@ const ViewBerita = () => {
 
                   <div className="absolute top-6 left-6">
                     <span className="px-4 py-2 bg-white/20 backdrop-blur-md rounded-full text-white text-sm font-semibold border border-white/30 shadow-lg">
-                      📰 Berita Terkini
+                      {selectedNews.kategori || "Tidak ada Kategori"} 
                     </span>
                   </div>
 
@@ -837,30 +812,6 @@ const ViewBerita = () => {
                         </p>
                       </div>
                     </div>
-
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                        <svg
-                          className="w-4 h-4 text-green-600"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                          />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-400">Editor</p>
-                        <p className="font-medium">
-                          {selectedNews.ss || "editor"}
-                        </p>
-                      </div>
-                    </div>
                   </div>
 
                   <div className="prose prose-lg max-w-none">
@@ -906,7 +857,7 @@ const ViewBerita = () => {
                             d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                           />
                         </svg>
-                        Edit Berita
+                        Edit Karya
                       </button>
 
                       <button
@@ -929,7 +880,7 @@ const ViewBerita = () => {
                             d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                           />
                         </svg>
-                        Hapus Berita
+                        Hapus Karya
                       </button>
                     </div>
 
@@ -1091,10 +1042,45 @@ const ViewBerita = () => {
                   <form onSubmit={handleSubmit} className="space-y-8">
                     <div className="grid grid-cols-12 gap-6">
                       <div className="col-span-5 space-y-6">
+                        <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
+  <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+    <span className="w-1 h-4 bg-purple-500 rounded-full"></span>
+    Kategori Karya
+  </label>
+  <select
+    name="kategori"
+    value={formData.kategori}
+    onChange={handleChange}
+    className="w-full border-2 border-gray-200 rounded-xl px-6 py-4 text-lg focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-300 outline-none bg-white cursor-pointer"
+    required
+  >
+    <option value="">-- Pilih Kategori --</option>
+    <option value="BERITA">📰 Berita</option>
+    <option value="ARTIKEL">📝 Artikel</option>
+    <option value="CERPEN">✍️ Cerpen</option>
+    <option value="ANEKDOT">😂 Anekdot</option>
+  </select>
+  
+  {formData.kategori && (
+    <div className="mt-3 p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg">
+      <div className="flex items-center gap-2">
+        <span className="text-lg">
+          {formData.kategori === 'BERITA'}
+          {formData.kategori === 'ARTIKEL'}
+          {formData.kategori === 'CERPEN'}
+          {formData.kategori === 'ANEKDOT'}
+        </span>
+        <p className="text-sm font-medium text-purple-800">
+          Kategori: {formData.kategori.charAt(0) + formData.kategori.slice(1).toLowerCase()}
+        </p>
+      </div>
+    </div>
+  )}
+</div>
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-24">
                           <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                             <span className="w-1 h-5 bg-green-500 rounded-full"></span>
-                            Foto Utama Berita
+                            Foto Utama Karya
                           </h3>
 
                           <div className="mb-4">
@@ -1194,7 +1180,7 @@ const ViewBerita = () => {
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                           <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                             <span className="w-1 h-4 bg-blue-500 rounded-full"></span>
-                            Judul Berita
+                            Judul Karya
                           </label>
                           <input
                             type="text"
@@ -1210,7 +1196,7 @@ const ViewBerita = () => {
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                           <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                             <span className="w-1 h-4 bg-orange-500 rounded-full"></span>
-                            Isi Berita
+                            Isi Karya
                           </label>
                           {typeof window !== "undefined" && (
                             <SummernoteEditor
@@ -1371,7 +1357,7 @@ const ViewBerita = () => {
                                 d="M5 13l4 4L19 7"
                               />
                             </svg>
-                            Update Berita
+                            Update Karya
                           </button>
                         </div>
                       </div>

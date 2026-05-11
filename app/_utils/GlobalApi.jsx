@@ -3281,6 +3281,7 @@ const createBerita = async (data) => {
     formData.append("isiBerita", data.isiBerita);
     formData.append("status", data.status || "DRAFT");
     formData.append("responContributor", data.responContributor);
+    formData.append("kategori", data.kategori);
 
     if (data.galeri && data.galeri.length > 0) {
       data.galeri.forEach((g) => {
@@ -3291,10 +3292,20 @@ const createBerita = async (data) => {
       });
     }
 
+    console.log("📤 Data yang dikirim ke /api/berita/create:");
+    for (let [key, value] of formData.entries()) {
+      if (value instanceof File) {
+        console.log(`  ${key}: File(${value.name}, ${value.size} bytes)`);
+      } else {
+        console.log(`  ${key}: ${value}`);
+      }
+    }
+
     const response = await axiosClient.post("/api/berita/create", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
 
+    console.log("✅ Response dari server:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error createBerita:", error);
