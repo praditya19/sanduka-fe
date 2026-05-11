@@ -196,31 +196,16 @@ const IuranPgriSection = () => {
         const selectedPeriod = `${selectedYear}-${String(bulanList.find(b => b.namaBulan === selectedMonth)?.id || "").padStart(2, "0")}`;
         if (itemDate && !itemDate.toString().includes(selectedPeriod)) return acc;
 
-        // Varian 1: Field manual eksplisit
+        // Ambil nilai manual murni dari database (sesuai query SQL user)
         const mPgri = parseCurrency(item.manualPgri || item.manual_pgri);
         const mSanduka = parseCurrency(item.manualSanduka || item.manual_sanduka);
         const mDaspen = parseCurrency(item.manualDaspen || item.manual_daspen);
         const mDerap = parseCurrency(item.manualDerap || item.manual_derap);
         const mKalender = parseCurrency(item.manualKalender || item.manual_kalender);
-        const mLain = parseCurrency(item.manualLainLain || item.manual_lain_lain || item.totalIuranSumbangan || item.total_iuran_sumbangan);
+        const mLain = parseCurrency(item.manualLainLain || item.manual_lain_lain);
         
-        let currentManual = mPgri + mSanduka + mDaspen + mDerap + mKalender + mLain;
-        
-        // Varian 2: Fallback hitung selisih jika manual eksplisit 0
-        if (currentManual === 0) {
-          const pgriTotal = parseCurrency(item.totalIuranAnggota || item.pgri);
-          const pgriDefault = parseCurrency(item.defaultPgri || item.default_pgri);
-          const sandukaTotal = parseCurrency(item.totalIuranSanduka || item.sanduka);
-          const sandukaDefault = parseCurrency(item.defaultSanduka || item.default_sanduka);
-          
-          if (pgriTotal > pgriDefault && pgriDefault > 0) currentManual += (pgriTotal - pgriDefault);
-          if (sandukaTotal > sandukaDefault && sandukaDefault > 0) currentManual += (sandukaTotal - sandukaDefault);
-          
-          // Untuk Daspen, Derap, Kalender jika standar biasanya 0, maka anggap semua manual
-          if (currentManual === 0) {
-             currentManual += parseCurrency(item.totalIuranDaspen || item.totalIuranDerap || item.totalIuranKalender);
-          }
-        }
+        // Jumlahkan hanya komponen manual
+        const currentManual = mPgri + mSanduka + mDaspen + mDerap + mKalender + mLain;
         
         // Simpan nilai manual tertinggi yang ditemukan untuk NPA ini
         if (!acc[cab].manualByNpa[item.npa] || currentManual > acc[cab].manualByNpa[item.npa]) {
