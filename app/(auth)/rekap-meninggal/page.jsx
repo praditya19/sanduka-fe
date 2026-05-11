@@ -136,7 +136,7 @@ const Page = () => {
           response = await GlobalApi.getRekapLaporDiterima(
             selectedBulan,
             selectedYear,
-            selectedCabang
+            selectedCabang,
           );
         }
 
@@ -202,8 +202,8 @@ const Page = () => {
   const parseDateFromString = (dateString) => {
     if (!dateString) return new Date(0);
 
-    const lines = dateString.split('\n');
-    const dateLine = lines.find(line => line.match(/\d{2}-\d{2}-\d{4}/));
+    const lines = dateString.split("\n");
+    const dateLine = lines.find((line) => line.match(/\d{2}-\d{2}-\d{4}/));
 
     if (dateLine) {
       const match = dateLine.match(/(\d{2})-(\d{2})-(\d{4})/);
@@ -229,10 +229,12 @@ const Page = () => {
   const sortAndFilterData = (data, status, search) => {
     if (!data) return [];
 
-    const filteredBySearch = data.filter(item => {
+    const filteredBySearch = data.filter((item) => {
       if (!search) return true;
 
-      const dataMeninggal = item.Data_Meninggal ? item.Data_Meninggal.toLowerCase() : '';
+      const dataMeninggal = item.Data_Meninggal
+        ? item.Data_Meninggal.toLowerCase()
+        : "";
       return dataMeninggal.includes(search.toLowerCase());
     });
 
@@ -242,8 +244,14 @@ const Page = () => {
   useEffect(() => {
     let dataToDisplay = [];
 
-    const dataTerimaWithStatus = (dataLaporDiterima || []).map(item => ({ ...item, isTerima: true }));
-    const dataBelumWithStatus = (dataLaporBelum || []).map(item => ({ ...item, isTerima: false }));
+    const dataTerimaWithStatus = (dataLaporDiterima || []).map((item) => ({
+      ...item,
+      isTerima: true,
+    }));
+    const dataBelumWithStatus = (dataLaporBelum || []).map((item) => ({
+      ...item,
+      isTerima: false,
+    }));
 
     if (filterStatus === "Terima") {
       dataToDisplay = dataTerimaWithStatus;
@@ -253,14 +261,17 @@ const Page = () => {
       dataToDisplay = [...dataTerimaWithStatus, ...dataBelumWithStatus];
     }
 
-    const processedData = sortAndFilterData(dataToDisplay, filterStatus, searchText);
+    const processedData = sortAndFilterData(
+      dataToDisplay,
+      filterStatus,
+      searchText,
+    );
     setDisplayedDataLapor(processedData);
-
   }, [filterStatus, dataLaporDiterima, dataLaporBelum, searchText]);
 
   const years = Array.from(
     { length: currentYear - startYear + 1 },
-    (_, index) => startYear + index
+    (_, index) => startYear + index,
   );
 
   const handleClickOutside = (event) => {
@@ -285,7 +296,7 @@ const Page = () => {
   const handleFilterChange = (event) => {
     setFilterText(event.target.value);
     const filtered = cabangList.filter((cabang) =>
-      cabang.kecamatan.toLowerCase().includes(event.target.value.toLowerCase())
+      cabang.kecamatan.toLowerCase().includes(event.target.value.toLowerCase()),
     );
     setFilteredCabangList(filtered);
   };
@@ -324,16 +335,16 @@ const Page = () => {
 
     const updatedTable = tableContent.replace(
       /<th class="py-3 px-4 text-center border-b">Action<\/th>(.*?)<\/tr>/,
-      ""
+      "",
     );
     const tableWithoutActionColumn = updatedTable.replace(
       /<td class="py-3 px-4 space-x-2 text-center">(.*?)<\/td>/g,
-      ""
+      "",
     );
 
     const tableWithBlackHeader = tableWithoutActionColumn.replace(
       /<th /g,
-      `<th style="color: black;" `
+      `<th style="color: black;" `,
     );
 
     const printContent = title + tableWithBlackHeader;
@@ -421,8 +432,9 @@ const Page = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <div className="min-h-screen bg-gray-50 p-4 md:p-6">
             <div className="p-4 mt-5">
@@ -484,16 +496,18 @@ const Page = () => {
                         </li>
 
                         {filteredCabangList
-                          .sort((a, b) => a.kecamatan.localeCompare(b.kecamatan, "id"))
+                          .sort((a, b) =>
+                            a.kecamatan.localeCompare(b.kecamatan, "id"),
+                          )
                           .map((cabang) => (
-                          <li
-                            key={cabang.id}
-                            className="p-2 px-2 hover:bg-gray-100 cursor-pointer"
-                            onClick={() => handleCabangSelect(cabang)}
-                          >
-                            {cabang.kecamatan}
-                          </li>
-                        ))}
+                            <li
+                              key={cabang.id}
+                              className="p-2 px-2 hover:bg-gray-100 cursor-pointer"
+                              onClick={() => handleCabangSelect(cabang)}
+                            >
+                              {cabang.kecamatan}
+                            </li>
+                          ))}
 
                         {filteredCabangList.length === 0 && (
                           <div className="p-2 text-gray-500 text-center">
@@ -609,83 +623,253 @@ const Page = () => {
               id="table-to-print"
               className="overflow-x-auto shadow-lg rounded-lg"
             >
-              <table className="min-w-full bg-white text-sm border-collapse">
-                <thead className="bg-teal-700 text-white">
-                  <tr>
-                    <th className="py-3 px-4 text-center border-b">No</th>
-                    <th className="py-3 px-4 text-center border-b">
-                      Date lapor
-                    </th>
-                    <th className="py-3 px-4 text-center border-b">
-                      Data Meninggal
-                    </th>
-                    <th className="py-3 px-4 text-center border-b">Cabang</th>
-                    <th className="py-3 px-4 text-center border-b">
-                      Keterangan
-                    </th>
-                    <th className="py-3 px-4 text-center border-b">
-                      Diterimakan
-                    </th>
-                    <th className="py-3 px-4 text-center border-b">Nominal</th>
-                  </tr>
-                </thead>
-                <tbody>
+              <div className="w-full">
+                {/* Mobile View - Card Layout (visible di HP) */}
+                <div className="block md:hidden space-y-4">
                   {isLoading ? (
-                    <tr>
-                      <td colSpan="8" className="text-center py-16">
-                        <div className="flex justify-center items-center">
-                          <ClipLoader color="#3498db" size={50} />
-                          <span className="ml-4 text-gray-600">
-                            Memuat data...
-                          </span>
-                        </div>
-                      </td>
-                    </tr>
+                    <div className="flex justify-center items-center py-16">
+                      <ClipLoader color="#3498db" size={50} />
+                      <span className="ml-4 text-gray-600">Memuat data...</span>
+                    </div>
                   ) : Array.isArray(displayedDataLapor) &&
                     displayedDataLapor.length > 0 ? (
                     displayedDataLapor.map((item, index) => (
-                      <tr
+                      <div
                         key={index}
-                        className="border-t text-sm hover:bg-teal-100 transition-colors"
+                        className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden"
                       >
-                        <td className="py-3 px-4 text-center">{index + 1}</td>
-                        <td className="py-3 px-4">
-                          {item.Date_lapor || "N/A"}
-                        </td>
-                        <td className="py-3 px-4">{item.Data_Meninggal}
-                          <br />
-                          {item.Jabatan}
-                          <br />
-                          {item.Alamat_Rumah}
-                        </td>
-                        <td className="py-3 px-4 text-center">{item.Cabang}</td>
-                        <td className="py-3 px-4 text-center">
-                          {item.Keterangan}
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          {item.isTerima
-                            ? `Diterimakan (${item.Nama_Penerima || "-"})`
-                            : "Belum Diterimakan"}
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          {item.isTerima
-                            ? new Intl.NumberFormat("id-ID", {
-                              style: "currency",
-                              currency: "IDR",
-                            }).format(item.Nominal || 0)
-                            : "-"}
-                        </td>
-                      </tr>
+                        {/* Header Card */}
+                        <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-4 py-3 flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            <span className="bg-white/20 backdrop-blur-sm rounded-full w-6 h-6 flex items-center justify-center text-white text-xs font-bold">
+                              {index + 1}
+                            </span>
+                            <span className="text-white font-semibold text-sm">
+                              Data Laporan
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs text-teal-100">
+                              Tanggal Lapor
+                            </p>
+                            <p className="text-white text-sm font-medium">
+                              {item.Date_lapor || "N/A"}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Body Card */}
+                        <div className="p-4 space-y-3">
+                          {/* Data Meninggal */}
+                          <div className="border-b border-gray-100 pb-2">
+                            <div className="flex items-center gap-1 mb-1">
+                              <span className="text-gray-500 text-xs">📝</span>
+                              <p className="text-xs font-semibold text-teal-700">
+                                Data Meninggal
+                              </p>
+                            </div>
+                            <p className="text-sm font-medium text-gray-800">
+                              {item.Data_Meninggal}
+                            </p>
+                            <p className="text-xs text-gray-600 mt-0.5">
+                              {item.Jabatan}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              {item.Alamat_Rumah}
+                            </p>
+                          </div>
+
+                          {/* Cabang & Keterangan */}
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <div className="flex items-center gap-1 mb-1">
+                                <span className="text-gray-500 text-xs">
+                                  🏢
+                                </span>
+                                <p className="text-xs font-semibold text-teal-700">
+                                  Cabang
+                                </p>
+                              </div>
+                              <p className="text-sm text-gray-800">
+                                {item.Cabang}
+                              </p>
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-1 mb-1">
+                                <span className="text-gray-500 text-xs">
+                                  📌
+                                </span>
+                                <p className="text-xs font-semibold text-teal-700">
+                                  Keterangan
+                                </p>
+                              </div>
+                              <p className="text-sm text-gray-800">
+                                {item.Keterangan}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Status Diterimakan */}
+                          <div className="border-t border-gray-100 pt-2">
+                            <div className="flex items-center gap-1 mb-1">
+                              <span className="text-gray-500 text-xs">✓</span>
+                              <p className="text-xs font-semibold text-teal-700">
+                                Status Penerimaan
+                              </p>
+                            </div>
+                            <p
+                              className={`text-sm ${item.isTerima ? "text-green-600" : "text-orange-600"}`}
+                            >
+                              {item.isTerima
+                                ? `✓ Diterimakan (${item.Nama_Penerima || "-"})`
+                                : "✗ Belum Diterimakan"}
+                            </p>
+                          </div>
+
+                          {/* Nominal (hanya jika sudah diterimakan) */}
+                          {item.isTerima && (
+                            <div className="bg-teal-50 rounded-lg p-3 border border-teal-200">
+                              <div className="flex items-center gap-1 mb-1">
+                                <span className="text-gray-500 text-xs">
+                                  💰
+                                </span>
+                                <p className="text-xs font-semibold text-teal-700">
+                                  Nominal
+                                </p>
+                              </div>
+                              <p className="text-base font-bold text-teal-700">
+                                {new Intl.NumberFormat("id-ID", {
+                                  style: "currency",
+                                  currency: "IDR",
+                                }).format(item.Nominal || 0)}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     ))
                   ) : (
-                    <tr>
-                      <td colSpan="8" className="text-center py-2">
-                        No data available
-                      </td>
-                    </tr>
+                    <div className="text-center py-8 bg-white rounded-lg shadow">
+                      <p className="text-gray-500">Tidak ada data tersedia</p>
+                    </div>
                   )}
-                </tbody>
-              </table>
+                </div>
+
+                {/* Desktop View - Table (hidden di HP) */}
+                <div className="hidden md:block overflow-x-auto shadow-lg rounded-lg">
+                  <div id="table-to-print" className="min-w-full">
+                    <table className="min-w-full bg-white text-sm border-collapse">
+                      <thead className="bg-gradient-to-r from-teal-600 to-teal-700 text-white">
+                        <tr>
+                          <th className="py-3 px-4 text-center border-b">No</th>
+                          <th className="py-3 px-4 text-center border-b">
+                            Date lapor
+                          </th>
+                          <th className="py-3 px-4 text-center border-b">
+                            Data Meninggal
+                          </th>
+                          <th className="py-3 px-4 text-center border-b">
+                            Cabang
+                          </th>
+                          <th className="py-3 px-4 text-center border-b">
+                            Keterangan
+                          </th>
+                          <th className="py-3 px-4 text-center border-b">
+                            Diterimakan
+                          </th>
+                          <th className="py-3 px-4 text-center border-b">
+                            Nominal
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {isLoading ? (
+                          <tr>
+                            <td colSpan="7" className="text-center py-16">
+                              <div className="flex justify-center items-center">
+                                <ClipLoader color="#3498db" size={50} />
+                                <span className="ml-4 text-gray-600">
+                                  Memuat data...
+                                </span>
+                              </div>
+                            </td>
+                          </tr>
+                        ) : Array.isArray(displayedDataLapor) &&
+                          displayedDataLapor.length > 0 ? (
+                          displayedDataLapor.map((item, index) => (
+                            <tr
+                              key={index}
+                              className="border-t border-gray-200 hover:bg-teal-50 transition-colors duration-200"
+                            >
+                              <td className="py-3 px-4 text-center font-medium">
+                                {index + 1}
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                {item.Date_lapor || "N/A"}
+                              </td>
+                              <td className="py-3 px-4">
+                                <div>
+                                  <p className="font-medium">
+                                    {item.Data_Meninggal}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {item.Jabatan}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {item.Alamat_Rumah}
+                                  </p>
+                                </div>
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                {item.Cabang}
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                {item.Keterangan}
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                <span
+                                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${
+                                    item.isTerima
+                                      ? "bg-green-100 text-green-700"
+                                      : "bg-yellow-100 text-yellow-700"
+                                  }`}
+                                >
+                                  {item.isTerima ? "✓" : "⏳"}
+                                  {item.isTerima
+                                    ? `Diterimakan (${item.Nama_Penerima || "-"})`
+                                    : "Belum Diterimakan"}
+                                </span>
+                              </td>
+                              <td className="py-3 px-4 text-center font-semibold">
+                                {item.isTerima ? (
+                                  <span className="text-teal-700">
+                                    {new Intl.NumberFormat("id-ID", {
+                                      style: "currency",
+                                      currency: "IDR",
+                                      minimumFractionDigits: 0,
+                                      maximumFractionDigits: 0,
+                                    }).format(item.Nominal || 0)}
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-400">-</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="7" className="text-center py-8">
+                              <div className="text-gray-500">
+                                Tidak ada data tersedia
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
