@@ -96,6 +96,9 @@ function RekapAnggota() {
   // Computed values for Modal
   const groupedIuran = useMemo(() => {
     if (!selectedMember) return [];
+    
+    // 1. Definisikan kategori utama (Base)
+    const baseKeys = ["pgri", "sanduka", "daspen", "derap", "kalender"];
     const base = [
       { key: "pgri", iuran: selectedMember.pgri },
       { key: "sanduka", iuran: selectedMember.sanduka },
@@ -104,23 +107,42 @@ function RekapAnggota() {
       { key: "kalender", iuran: selectedMember.kalender },
     ];
 
-    // Ambil detail sumbangan (Lain-Lain) yang sudah ada di database
-    const existingSumbangan = (selectedMember.detailSumbangan || []).map(s => ({
-      key: s.namaSumbangan,
-      label: s.namaSumbangan,
-      iuran: s.jumlah,
-      isExistingSumbangan: true
-    }));
+    // 2. Ambil detail sumbangan (Lain-Lain) yang sudah ada di database
+    // Gunakan Map untuk memastikan tidak ada duplikat berdasarkan nama (case-insensitive)
+    const existingMap = new Map();
+    (selectedMember.detailSumbangan || []).forEach(s => {
+      const lowKey = s.namaSumbangan.toLowerCase().trim();
+      // Jangan masukkan jika ini sebenarnya adalah kategori base
+      if (baseKeys.includes(lowKey)) return;
+      
+      if (!existingMap.has(lowKey)) {
+        existingMap.set(lowKey, {
+          key: lowKey,
+          label: s.namaSumbangan,
+          iuran: s.jumlah,
+          isExistingSumbangan: true
+        });
+      }
+    });
+    const existingSumbangan = Array.from(existingMap.values());
 
-    // Gabungkan dengan kategori yang ditambahkan manual di sesi ini
-    const extra = addedCategories.map(cat => ({
-      key: cat.key,
-      label: cat.label,
-      iuran: newValues[cat.key] || 0
-    }));
+    // 3. Gabungkan dengan kategori yang ditambahkan manual di sesi ini
+    const extra = addedCategories.map(cat => {
+      const lowKey = cat.key.toLowerCase().trim();
+      return {
+        key: lowKey,
+        label: cat.label,
+        iuran: newValues[lowKey] || 0
+      };
+    });
 
-    // Filter duplikat (jika ada yang di addedCategories tapi sudah ada di existing)
-    const filteredExtra = extra.filter(e => !existingSumbangan.some(ex => ex.key === e.key));
+    // 4. Filter extra: 
+    // - Jangan masukkan jika sudah ada di base
+    // - Jangan masukkan jika sudah ada di existingSumbangan
+    const filteredExtra = extra.filter(e => 
+      !baseKeys.includes(e.key) && 
+      !existingMap.has(e.key)
+    );
 
     return [...base, ...existingSumbangan, ...filteredExtra];
   }, [selectedMember, daspenValue, addedCategories, newValues]);
@@ -599,7 +621,7 @@ function RekapAnggota() {
   const handleSave = async () => {
     if (!selectedKategori) return;
 
-    let uniqueKey = selectedKategori;
+    let uniqueKey = selectedKategori.toLowerCase().trim();
     let initialValue = 0;
 
     // 🔧 helper untuk bersihin string
@@ -611,9 +633,9 @@ function RekapAnggota() {
       try {
         const parsed = JSON.parse(selectedKeterangan);
         const rawKey = parsed.keterangan || parsed.nama_iuran || selectedKeterangan;
-        uniqueKey = rawKey.toString().replace(/"/g, "").trim();
+        uniqueKey = rawKey.toString().replace(/"/g, "").trim().toLowerCase();
       } catch (e) {
-        uniqueKey = selectedKeterangan?.toString().replace(/"/g, "").trim() || `Lain-Lain-${Date.now()}`;
+        uniqueKey = selectedKeterangan?.toString().replace(/"/g, "").trim().toLowerCase() || `lain-lain-${Date.now()}`;
       }
     }
 
@@ -882,35 +904,53 @@ function RekapAnggota() {
         manualKalender: nominalBaruList.kalender || 0,
         kalender: (newValues.kalender ?? selectedMember.kalender ?? 0) + (nominalBaruList.kalender || 0),
 
-        // Gabungkan Added Categories & Sumbangan List
-        iuranSumbanganList: [
-          ...addedCategories.map(c => ({
-            jenis: c.label || c.key,
-            keterangan: c.keterangan || c.label || c.key,
-            namaSumbangan: c.label || c.key,
-            namaIuran: c.label || c.key,
-            jumlah: resetKeys.includes(c.key) ? 0 : ((newValues[c.key] || 0) + (nominalBaruList[c.key] || 0)),
-            cabang: cabangName,
-            tagihanUntukBulan
-          })),
-          ...(selectedMember.detailSumbangan || []).map(s => ({
-            jenis: s.namaSumbangan,
-            keterangan: s.keterangan || s.namaSumbangan,
-            namaSumbangan: s.namaSumbangan,
-            namaIuran: s.namaSumbangan,
-            jumlah: resetKeys.includes(s.namaSumbangan) ? 0 : (s.jumlah || 0),
-            cabang: cabangName,
-            tagihanUntukBulan
-          }))
-        ]
+        // Gabungkan Added Categories & Sumbangan List tanpa duplikat
+        iuranSumbanganList: (() => {
+          const baseKeys = ["pgri", "sanduka", "daspen", "derap", "kalender"];
+          const itemsMap = new Map();
+
+          // Masukkan existing sumbangan dulu
+          (selectedMember.detailSumbangan || []).forEach(s => {
+            const lowKey = s.namaSumbangan.toLowerCase().trim();
+            if (baseKeys.includes(lowKey)) return;
+            itemsMap.set(lowKey, {
+              jenis: s.namaSumbangan,
+              keterangan: s.keterangan || s.namaSumbangan,
+              namaSumbangan: s.namaSumbangan,
+              namaIuran: s.namaSumbangan,
+              jumlah: resetKeys.includes(lowKey) ? 0 : (s.jumlah || 0),
+              cabang: cabangName,
+              tagihanUntukBulan
+            });
+          });
+
+          // Masukkan added categories (bisa override atau tambah baru)
+          addedCategories.forEach(c => {
+            const lowKey = c.key.toLowerCase().trim();
+            if (baseKeys.includes(lowKey)) return;
+            itemsMap.set(lowKey, {
+              jenis: c.label || c.key,
+              keterangan: c.keterangan || c.label || c.key,
+              namaSumbangan: c.label || c.key,
+              namaIuran: c.label || c.key,
+              jumlah: resetKeys.includes(lowKey) ? 0 : ((newValues[lowKey] || 0) + (nominalBaruList[lowKey] || 0)),
+              cabang: cabangName,
+              tagihanUntukBulan
+            });
+          });
+
+          return Array.from(itemsMap.values());
+        })()
       };
 
-      // Jika ada yang di-reset (Trash icon), paksa jadi 0
+      // Jika ada yang di-reset (Trash icon), paksa jadi 0 untuk field utama
       resetKeys.forEach(key => {
-        if (payload.hasOwnProperty(key)) payload[key] = 0;
-        if (payload.hasOwnProperty(`default${key.charAt(0).toUpperCase() + key.slice(1)}`)) {
-          payload[`default${key.charAt(0).toUpperCase() + key.slice(1)}`] = 0;
-          payload[`manual${key.charAt(0).toUpperCase() + key.slice(1)}`] = 0;
+        const lowKey = key.toLowerCase().trim();
+        if (payload.hasOwnProperty(lowKey)) payload[lowKey] = 0;
+        const capitalizedKey = lowKey.charAt(0).toUpperCase() + lowKey.slice(1);
+        if (payload.hasOwnProperty(`default${capitalizedKey}`)) {
+          payload[`default${capitalizedKey}`] = 0;
+          payload[`manual${capitalizedKey}`] = 0;
         }
       });
 
@@ -1064,6 +1104,20 @@ function RekapAnggota() {
               totalAnggota={groupedData.reduce((sum, g) => sum + parseInt(g.jumlah), 0)}
               unitKerjaCount={groupedData.length}
             /> */}
+
+            <div className="mb-4 px-4 py-3 bg-white border border-teal-100 rounded-xl shadow-sm flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-8 bg-teal-500 rounded-full"></div>
+                <div>
+                  <h3 className="text-sm md:text-base font-bold text-slate-700">
+                    Inputan Keuangan untuk bulan <span className="text-teal-600">
+                      {["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"][selectedMonth - 1]} {selectedYear}
+                    </span>
+                  </h3>
+                  <p className="text-[10px] text-slate-400 font-medium">Periode penagihan yang sedang diproses</p>
+                </div>
+              </div>
+            </div>
 
             <div className="overflow-x-auto bg-white rounded-b-lg shadow-xl border border-teal-100">
               <table className="w-full text-left border-collapse md:min-w-[1200px]">
