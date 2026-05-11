@@ -150,7 +150,7 @@ const News = () => {
                 />
                 <div className="absolute top-4 right-4 z-20">
                   <span className="px-4 py-1.5 bg-white/90 backdrop-blur-sm text-gray-800 text-xs font-semibold rounded-full shadow-lg">
-                    NEWS
+                    {news.kategori}
                   </span>
                 </div>
                 <h3 className="absolute bottom-4 left-4 right-4 z-20 text-white text-xl lg:text-2xl font-bold leading-tight drop-shadow-lg">
