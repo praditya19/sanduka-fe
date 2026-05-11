@@ -639,16 +639,13 @@ const Page = () => {
                         className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden"
                       >
                         {/* Header Card */}
-                        <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-4 py-3 flex justify-between items-center">
-                          <div className="flex items-center gap-2">
+                        <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-4 py-3 flex gap-2 items-center">
+                          <div className="flex items-center">
                             <span className="bg-white/20 backdrop-blur-sm rounded-full w-6 h-6 flex items-center justify-center text-white text-xs font-bold">
                               {index + 1}
                             </span>
-                            <span className="text-white font-semibold text-sm">
-                              Data Laporan
-                            </span>
                           </div>
-                          <div className="text-right">
+                          <div className="text-left">
                             <p className="text-xs text-teal-100">
                               Tanggal Lapor
                             </p>
@@ -712,7 +709,6 @@ const Page = () => {
                           {/* Status Diterimakan */}
                           <div className="border-t border-gray-100 pt-2">
                             <div className="flex items-center gap-1 mb-1">
-                              <span className="text-gray-500 text-xs">✓</span>
                               <p className="text-xs font-semibold text-teal-700">
                                 Status Penerimaan
                               </p>
