@@ -59,31 +59,32 @@ export default function BeritaDetail() {
       try {
         // Fetch semua berita yang dipublish
         const allNews = await GlobalApi.getAllBerita("PUBLISH");
-        
+
         // Pisahkan: 2 berita utama (termasuk berita current jika ada)
         const other = [...allNews];
-        const currentIndex = other.findIndex(item => item.id === parseInt(id));
-        
+        const currentIndex = other.findIndex(
+          (item) => item.id === parseInt(id),
+        );
+
         if (currentIndex !== -1) {
           const current = other[currentIndex];
           setCurrentNews(current);
           other.splice(currentIndex, 1);
         }
-        
+
         // Ambil 2 berita pertama sebagai headline utama
         const headlines = other.slice(0, 2);
         setMainNews(headlines);
-        
+
         // Sisanya sebagai berita lainnya
         setOtherNews(other.slice(2, 8));
-        
       } catch (error) {
         console.error("Gagal ambil data:", error);
       } finally {
         setIsLoading(false);
       }
     };
-    
+
     if (id) fetchData();
   }, [id]);
 
@@ -273,7 +274,7 @@ export default function BeritaDetail() {
               <div className="animate-pulse">
                 <div className="h-8 bg-gray-200 rounded w-1/4 mb-8"></div>
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                   <div className="lg:col-span-3">
+                  <div className="lg:col-span-3">
                     <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                       <div className="h-96 bg-gray-200"></div>
                       <div className="p-8 space-y-4">
@@ -358,12 +359,12 @@ export default function BeritaDetail() {
                 Kembali
               </Link>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 {/* Kolom Kiri: Berita Utama */}
-                <div className="lg:col-span-2">
+                <div className="lg:col-span-9">
                   <article className="bg-white rounded-2xl shadow-xl overflow-hidden">
                     {/* Hero Image */}
-                    <div className="relative h-[500px] overflow-hidden">
+                    <div className="relative h-[600px] lg:h-[700px] overflow-hidden">
                       <img
                         src={
                           currentNews.galeri?.length > 0
@@ -397,7 +398,9 @@ export default function BeritaDetail() {
                         <span>•</span>
                         <div className="flex items-center gap-2">
                           <Clock size={16} />
-                          <span>{formatReadingTime(currentNews.isiBerita)}</span>
+                          <span>
+                            {formatReadingTime(currentNews.isiBerita)}
+                          </span>
                         </div>
                       </div>
 
@@ -503,21 +506,22 @@ export default function BeritaDetail() {
                 </div>
 
                 {/* Kolom Kanan: 2 Headline Berita Utama */}
-                <div className="lg:col-span-1">
+                <div className="lg:col-span-3">
                   <div className="sticky top-28">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-6 pb-3 border-b-4 border-teal-600 inline-block">
+                    <h2 className="text-xl font-bold text-gray-900 mb-4 pb-2 border-b-4 border-teal-600 inline-block">
                       Berita Utama
                     </h2>
-                    
-                    <div className="space-y-6">
+
+                    <div className="space-y-4">
                       {mainNews.map((news, index) => (
                         <Link
                           key={news.id}
                           href={`/berita/${news.id}`}
                           className="group block"
                         >
+                          {/* Perkecil card untuk sidebar yang lebih sempit */}
                           <div className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300">
-                            <div className="relative h-48 overflow-hidden">
+                            <div className="relative h-36 overflow-hidden">
                               <img
                                 src={
                                   news.galeri?.length > 0
@@ -527,22 +531,22 @@ export default function BeritaDetail() {
                                 alt={news.judul}
                                 className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                               />
-                              <div className="absolute top-4 left-4 bg-teal-600 text-white text-xs font-bold px-2 py-1 rounded">
-                                Berita Utama 
+                              <div className="absolute top-2 left-2 bg-teal-600 text-white text-xs font-bold px-2 py-0.5 rounded">
+                                Utama
                               </div>
                             </div>
-                            <div className="p-5">
-                              <div className="text-xs text-gray-500 mb-2">
+                            <div className="p-3">
+                              <div className="text-xs text-gray-500 mb-1">
                                 {formatDate(news.updatedAt)}
                               </div>
-                              <h3 className="font-bold text-gray-900 group-hover:text-teal-600 transition mb-2 line-clamp-3 text-lg">
+                              <h3 className="font-bold text-gray-900 group-hover:text-teal-600 transition mb-1 line-clamp-2 text-sm">
                                 {news.judul}
                               </h3>
-                              <p className="text-sm text-gray-600 line-clamp-2">
-                                {news.isiBerita1?.slice(0, 100)}...
+                              <p className="text-xs text-gray-600 line-clamp-2">
+                                {news.isiBerita1?.slice(0, 80)}...
                               </p>
-                              <div className="mt-3 flex items-center text-teal-600 text-sm font-medium group-hover:translate-x-1 transition-transform">
-                                Baca selengkapnya <ChevronRight size={16} />
+                              <div className="mt-2 flex items-center text-teal-600 text-xs font-medium group-hover:translate-x-1 transition-transform">
+                                Baca <ChevronRight size={12} />
                               </div>
                             </div>
                           </div>
@@ -550,21 +554,21 @@ export default function BeritaDetail() {
                       ))}
                     </div>
 
-                    {/* Berita Lainnya */}
+                    {/* Berita Lainnya - Lebih ringkas */}
                     {otherNews.length > 0 && (
-                      <div className="mt-10">
-                        <h3 className="text-xl font-bold text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                      <div className="mt-6">
+                        <h3 className="text-base font-bold text-gray-900 mb-3 pb-1 border-b border-gray-200">
                           Berita Lainnya
                         </h3>
-                        <div className="space-y-4">
+                        <div className="space-y-3">
                           {otherNews.map((news) => (
                             <Link
                               key={news.id}
                               href={`/berita/${news.id}`}
                               className="group block"
                             >
-                              <div className="flex gap-3 hover:bg-gray-50 p-2 rounded-lg transition">
-                                <div className="w-24 h-24 flex-shrink-0 overflow-hidden rounded-lg">
+                              <div className="flex gap-2 hover:bg-gray-50 p-1 rounded-lg transition">
+                                <div className="w-16 h-16 flex-shrink-0 overflow-hidden rounded-lg">
                                   <img
                                     src={
                                       news.galeri?.length > 0
@@ -576,10 +580,10 @@ export default function BeritaDetail() {
                                   />
                                 </div>
                                 <div className="flex-1">
-                                  <div className="text-xs text-gray-500 mb-1">
+                                  <div className="text-xs text-gray-500 mb-0.5">
                                     {formatDate(news.updatedAt)}
                                   </div>
-                                  <h4 className="font-semibold text-gray-900 group-hover:text-teal-600 transition line-clamp-2 text-sm">
+                                  <h4 className="font-semibold text-gray-900 group-hover:text-teal-600 transition line-clamp-2 text-xs">
                                     {news.judul}
                                   </h4>
                                 </div>
