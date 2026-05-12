@@ -52,6 +52,9 @@ const News = () => {
 
     fetchBerita();
   }, []);
+  const getPopularNews = () => {
+  return newsData.filter((item) => (item.views || 0) > 100);
+};
   const formatDate = (arr) => {
     if (!arr) return "";
 
@@ -119,15 +122,12 @@ const News = () => {
         </p>
       </div>
 
-      {/* Grid Layout: 1 Berita Utama (kiri) + 2 Berita (kanan) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
-        {/* Kolom Kiri: 1 Berita Populer (views > 100) */}
         <div className="lg:col-span-9">
           {(() => {
             const popularNews = getPopularNews();
             const topPopular = popularNews.length > 0 ? popularNews[0] : null;
 
-            // Jika tidak ada berita populer, coba ambil berita dengan views tertinggi
             const fallbackNews =
               !topPopular && newsData.length > 0
                 ? [...newsData].sort((a, b) => b.views - a.views)[0]
