@@ -225,120 +225,117 @@ const DerapSection = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Sidebar: Filter & Input */}
-            <div className="lg:col-span-1 space-y-6">
-              <div className="bg-white p-5 rounded-[28px] border border-slate-100 shadow-xl shadow-slate-100/50 space-y-5">
-                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50 pb-2">Filter Data</h4>
-                <div>
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Pencarian</label>
-                  <div className="relative">
-                    <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-sm" />
-                    <input
-                      type="text"
-                      placeholder="Cari Cabang..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-9 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white transition-all text-xs"
-                    />
+          <div className="space-y-8">
+            {/* Summary Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[
+                { label: "Setor Provinsi", val: setorProvinsi, color: "bg-indigo-600", icon: <FaNewspaper /> },
+                { label: "Bagian Kabupaten", val: bagianKabupaten, color: "bg-amber-500", icon: <FaChartLine /> },
+                { label: "Bagian Cabang", val: bagianCabang, color: "bg-emerald-500", icon: <FaUsers /> }
+              ].map((stat, i) => (
+                <div key={i} className={`${stat.color} p-5 rounded-[28px] text-white shadow-lg flex items-center justify-between group overflow-hidden relative`}>
+                  <div className="relative z-10">
+                    <p className="text-[9px] font-black opacity-60 uppercase tracking-widest mb-0.5">{stat.label}</p>
+                    <h4 className="text-lg font-black">{formatCurrency(stat.val)}</h4>
+                  </div>
+                  <div className="text-3xl opacity-10 group-hover:scale-125 transition-transform duration-500">
+                    {stat.icon}
                   </div>
                 </div>
+              ))}
+            </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Bulan</label>
-                    <select
-                      value={selectedMonth}
-                      onChange={(e) => setSelectedMonth(e.target.value)}
-                      className="w-full px-3 py-3 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-slate-700 text-[10px] appearance-none"
-                    >
-                      {bulanList.map(b => <option key={b.id} value={b.namaBulan}>{b.namaBulan}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Tahun</label>
-                    <select
-                      value={selectedYear}
-                      onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                      className="w-full px-3 py-3 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-slate-700 text-[10px] appearance-none"
-                    >
-                      {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
-                    </select>
-                  </div>
-                </div>
+            {/* Horizontal Entry Form */}
+            <form onSubmit={handleSubmitTarget} className="bg-slate-900 p-6 sm:p-8 rounded-[40px] shadow-2xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                <FaNewspaper className="text-8xl text-white -rotate-12" />
               </div>
-
-              {/* Input Card */}
-              <form onSubmit={handleSubmitTarget} className="bg-slate-900 p-6 rounded-[32px] shadow-2xl space-y-5">
-                <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-white/5 pb-2">Entri Pesanan</h4>
-
-                <div className="space-y-3">
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block px-1">Pilih Cabang</label>
-                  <select
+              
+              <div className="relative z-10 flex flex-col xl:flex-row items-end gap-6">
+                <div className="w-full xl:w-1/3 space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block px-1">Pilih Cabang</label>
+                  <select 
                     value={selectedCabang}
                     onChange={(e) => setSelectedCabang(e.target.value)}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl outline-none font-bold text-white text-xs focus:bg-white/10"
+                    className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-bold text-white text-sm focus:bg-white/10 focus:border-indigo-500 transition-all appearance-none"
                   >
                     <option value="" className="text-slate-800">-- Pilih Cabang --</option>
                     {cabangList.map(c => <option key={c.id} value={c.kecamatan} className="text-slate-800">{c.kecamatan}</option>)}
                   </select>
                 </div>
 
-                <div className="space-y-3">
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block px-1">Jumlah Eksemplar</label>
+                <div className="w-full xl:w-1/4 space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block px-1">Jumlah Eksemplar</label>
                   <div className="relative">
                     <FaShoppingCart className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm" />
-                    <input
+                    <input 
                       type="number"
                       value={jumlahPesanan}
                       onChange={(e) => setJumlahPesanan(parseInt(e.target.value) || 0)}
-                      className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl outline-none font-black text-white text-base focus:bg-white/10"
+                      className="w-full pl-11 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-black text-white text-base focus:bg-white/10 focus:border-indigo-500 transition-all"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-3 pt-2">
-                  <div className="flex justify-between items-center px-1">
-                    <span className="text-[9px] font-black text-slate-500 uppercase">Grand Total</span>
-                    <span className="text-sm font-black text-indigo-400">{formatCurrency(totalAkhir)}</span>
-                  </div>
-                  <button
+                <div className="w-full xl:flex-1 flex xl:flex-col items-center xl:items-end justify-between xl:justify-center gap-2 px-2">
+                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Grand Total</span>
+                  <span className="text-2xl font-black text-indigo-400 tracking-tight">{formatCurrency(totalAkhir)}</span>
+                </div>
+
+                <div className="w-full xl:w-auto">
+                  <button 
                     type="submit"
-                    className="w-full py-4 bg-indigo-500 hover:bg-indigo-600 text-white rounded-2xl font-black shadow-lg shadow-indigo-900/20 transition-all active:scale-[0.98] text-xs"
+                    className="w-full px-10 py-5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-2xl font-black shadow-xl shadow-indigo-900/40 transition-all active:scale-[0.98] text-xs uppercase tracking-widest flex items-center justify-center gap-2"
                   >
+                    <FaSave />
                     Kunci Pesanan
                   </button>
                 </div>
-              </form>
-            </div>
+              </div>
+            </form>
 
-            {/* Main Content: Stats & Table */}
-            <div className="lg:col-span-3 space-y-6">
-              {/* Summary Stats Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {[
-                  { label: "Setor Provinsi", val: setorProvinsi, color: "bg-indigo-600", icon: <FaNewspaper /> },
-                  { label: "Bagian Kabupaten", val: bagianKabupaten, color: "bg-amber-500", icon: <FaChartLine /> },
-                  { label: "Bagian Cabang", val: bagianCabang, color: "bg-emerald-500", icon: <FaUsers /> }
-                ].map((stat, i) => (
-                  <div key={i} className={`${stat.color} p-5 rounded-[28px] text-white shadow-lg flex items-center justify-between group overflow-hidden relative`}>
-                    <div className="relative z-10">
-                      <p className="text-[9px] font-black opacity-60 uppercase tracking-widest mb-0.5">{stat.label}</p>
-                      <h4 className="text-lg font-black">{formatCurrency(stat.val)}</h4>
+            {/* Table Card */}
+            <div className="bg-white rounded-[40px] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden">
+                <div className="p-6 border-b border-slate-100 flex flex-col xl:flex-row xl:items-center justify-between gap-6 bg-white">
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-[18px] bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100 shadow-sm">
+                      <FaNewspaper className="text-xl" />
                     </div>
-                    <div className="text-3xl opacity-10 group-hover:scale-125 transition-transform duration-500">
-                      {stat.icon}
+                    <div>
+                      <h4 className="text-lg font-black text-slate-800 tracking-tight">Riwayat Distribusi</h4>
+                      <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Derap - {selectedMonth} {selectedYear}</p>
                     </div>
                   </div>
-                ))}
-              </div>
 
-              {/* Table Card */}
-              <div className="bg-white rounded-[32px] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden">
-                <div className="p-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
-                  <div className="flex items-center gap-2">
-                    <FaNewspaper className="text-indigo-500 text-sm" />
-                    <h4 className="text-sm font-black text-slate-800 tracking-tight uppercase tracking-widest text-[10px]">Riwayat Distribusi Derap - <span className="text-indigo-600">{selectedMonth} {selectedYear}</span></h4>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="relative min-w-[200px] flex-1 md:flex-none">
+                      <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-sm" />
+                      <input 
+                        type="text" 
+                        placeholder="Cari Cabang..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white transition-all text-xs"
+                      />
+                    </div>
+                    
+                    <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-100">
+                      <select 
+                        value={selectedMonth} 
+                        onChange={(e) => setSelectedMonth(e.target.value)}
+                        className="bg-transparent px-3 py-1.5 outline-none font-black text-slate-600 text-[10px] uppercase tracking-widest cursor-pointer"
+                      >
+                        {bulanList.map(b => <option key={b.id} value={b.namaBulan} className="font-sans normal-case">{b.namaBulan}</option>)}
+                      </select>
+                      <div className="w-[1px] h-4 bg-slate-200" />
+                      <select 
+                        value={selectedYear} 
+                        onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                        className="bg-transparent px-3 py-1.5 outline-none font-black text-slate-600 text-[10px] uppercase tracking-widest cursor-pointer"
+                      >
+                        {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y} className="font-sans normal-case">{y}</option>)}
+                      </select>
+                    </div>
                   </div>
                 </div>
                 <div className="overflow-x-auto">
@@ -378,8 +375,7 @@ const DerapSection = () => {
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
 };
 
 export default DerapSection;
