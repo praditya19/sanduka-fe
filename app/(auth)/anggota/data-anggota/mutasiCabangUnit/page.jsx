@@ -9,7 +9,11 @@ import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import GlobalApi from "@/app/_utils/GlobalApi";
-import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
+import {
+  FaTimesCircle,
+  FaCheckCircle,
+  FaExclamationCircle,
+} from "react-icons/fa";
 
 // New component for mutation notification
 const MutationNotification = ({ type, message, details, onClose }) => {
@@ -23,20 +27,20 @@ const MutationNotification = ({ type, message, details, onClose }) => {
 
   const getBgColor = () => {
     switch (type) {
-      case 'success':
-        return 'bg-green-100';
-      case 'error':
-        return 'bg-red-100';
+      case "success":
+        return "bg-green-100";
+      case "error":
+        return "bg-red-100";
       default:
-        return 'bg-blue-100';
+        return "bg-blue-100";
     }
   };
 
   const getIcon = () => {
     switch (type) {
-      case 'success':
+      case "success":
         return <FaCheckCircle className="text-green-500 text-4xl mb-3" />;
-      case 'error':
+      case "error":
         return <FaExclamationCircle className="text-red-500 text-4xl mb-3" />;
       default:
         return null;
@@ -45,19 +49,24 @@ const MutationNotification = ({ type, message, details, onClose }) => {
 
   const getTextColor = () => {
     switch (type) {
-      case 'success':
-        return 'text-green-800';
-      case 'error':
-        return 'text-red-800';
+      case "success":
+        return "text-green-800";
+      case "error":
+        return "text-red-800";
       default:
-        return 'text-blue-800';
+        return "text-blue-800";
     }
   };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
-      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+      <div
+        className="absolute inset-0 bg-black opacity-50"
+        onClick={onClose}
+      ></div>
+      <div
+        className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}
+      >
         <button
           onClick={onClose}
           className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
@@ -67,22 +76,21 @@ const MutationNotification = ({ type, message, details, onClose }) => {
         </button>
 
         <div className="flex flex-col items-center space-y-3">
-          <div className="animate-bounce">
-            {getIcon()}
-          </div>
+          <div className="animate-bounce">{getIcon()}</div>
 
           <h3 className={`text-xl font-bold ${getTextColor()}`}>
-            {type === 'success' ? 'Mutasi Berhasil!' : 'Mutasi Gagal!'}
+            {type === "success" ? "Mutasi Berhasil!" : "Mutasi Gagal!"}
           </h3>
 
-          <p className={`${getTextColor()} text-center text-lg`}>
-            {message}
-          </p>
-          
+          <p className={`${getTextColor()} text-center text-lg`}>{message}</p>
+
           {details && (
             <div className="mt-3 w-full">
               {Object.entries(details).map(([key, value]) => (
-                <div key={key} className="flex justify-between border-t border-gray-200 pt-2 mt-2">
+                <div
+                  key={key}
+                  className="flex justify-between border-t border-gray-200 pt-2 mt-2"
+                >
                   <span className="font-medium">{key}:</span>
                   <span>{value}</span>
                 </div>
@@ -109,7 +117,7 @@ const page = () => {
 
   const [userData, setUserData] = useState(null);
   const [cabang, setCabang] = useState("");
-
+  const [keterangan, setKeterangan] = useState("");
   const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
 
   const [showDropdownCabangUnit, setShowDropdownCabangUnit] = useState(false);
@@ -176,7 +184,7 @@ const page = () => {
     setShowDropdownCabangUnit(false);
 
     const filteredUnits = unitKerjaOptions.filter(
-      (unit) => unit.cabang === cabangItem.kecamatan
+      (unit) => unit.cabang === cabangItem.kecamatan,
     );
 
     setFilteredUnitKerjaOptions(filteredUnits);
@@ -187,7 +195,7 @@ const page = () => {
     setSearchTerm(value);
 
     const filtered = cabangOptions.filter((cabangItem) =>
-      cabangItem.kecamatan.toLowerCase().includes(value)
+      cabangItem.kecamatan.toLowerCase().includes(value),
     );
     setFilteredCabangOptions(filtered);
   };
@@ -195,7 +203,7 @@ const page = () => {
   const handleUnitKerjaSearch = (e) => {
     const searchValue = e.target.value.toLowerCase();
     const filtered = unitKerjaOptions.filter((unit) =>
-      unit.unitKerja.toLowerCase().includes(searchValue)
+      unit.unitKerja.toLowerCase().includes(searchValue),
     );
     setFilteredUnitKerjaOptions(filtered);
   };
@@ -223,9 +231,9 @@ const page = () => {
     if (!idAnggota) {
       console.error("ID tidak ditemukan. Periksa role atau sessionStorage.");
       setNotification({
-        type: 'error',
-        message: 'ID anggota tidak valid. Silakan login ulang.',
-        details: null
+        type: "error",
+        message: "ID anggota tidak valid. Silakan login ulang.",
+        details: null,
       });
       return;
     }
@@ -233,9 +241,9 @@ const page = () => {
     if (!cabang || !selectedUnitKerja) {
       console.error("Cabang atau Unit Kerja tidak boleh kosong");
       setNotification({
-        type: 'error',
-        message: 'Silakan pilih Cabang dan Unit Kerja sebelum menyimpan.',
-        details: null
+        type: "error",
+        message: "Silakan pilih Cabang dan Unit Kerja sebelum menyimpan.",
+        details: null,
       });
       setIsPopupVisible(false);
       return;
@@ -245,17 +253,17 @@ const page = () => {
       const response = await GlobalApi.mutasiCabangUnitKerja(
         idAnggota,
         cabang,
-        selectedUnitKerja
+        selectedUnitKerja,
+        keterangan,
       );
 
-      // Show the new notification component
       setNotification({
-        type: 'success',
-        message: 'Anda telah berhasil pindah cabang dan unit kerja.',
+        type: "success",
+        message: "Anda telah berhasil pindah cabang dan unit kerja.",
         details: {
-          'Cabang': cabang,
-          'Unit Kerja': selectedUnitKerja
-        }
+          Cabang: cabang,
+          "Unit Kerja": selectedUnitKerja,
+        },
       });
 
       handleCreateHistory();
@@ -267,11 +275,11 @@ const page = () => {
       }, 4000);
     } catch (error) {
       console.error("Error saat memutasikan anggota:", error);
-      
+
       setNotification({
-        type: 'error',
+        type: "error",
         message: `Terjadi kesalahan: ${error?.response?.data?.message || "Silakan coba lagi."}`,
-        details: null
+        details: null,
       });
     } finally {
       setIsPopupVisible(false);
@@ -284,20 +292,19 @@ const page = () => {
 
   const handleCreateHistory = async () => {
     const now = new Date();
-    
 
     const hari = now.toLocaleDateString("id-ID", { weekday: "long" });
     const tanggal = now.toISOString().split("T")[0];
     const jam = now.toTimeString().split(" ")[0];
     const bulan = now.toLocaleString("id-ID", { month: "long" });
     const tahun = now.getFullYear();
-  
 
     const userRole = sessionStorage.getItem("role");
-    const namaLengkapUser = userRole === "USER" 
-      ? userData.namaLengkap 
-      : sessionStorage.getItem("nama");
-  
+    const namaLengkapUser =
+      userRole === "USER"
+        ? userData.namaLengkap
+        : sessionStorage.getItem("nama");
+
     const historyData = {
       hari,
       tanggal,
@@ -306,22 +313,23 @@ const page = () => {
       nama: userData.namaLengkap,
       cabang: userData.cabang,
       uraian: "Pindah Cabang",
-      masuk: cabang, 
+      masuk: cabang,
       keluar: userData.cabang,
       bulan,
       tahun,
+      keterangan: keterangan,
       cabang_ke_2: cabang,
       user: namaLengkapUser,
     };
-  
+
     try {
       await GlobalApi.createHistoryData(historyData);
     } catch (error) {
       console.error("Failed to create history data:", error);
       setNotification({
-        type: 'error',
+        type: "error",
         message: "Gagal menyimpan riwayat mutasi",
-        details: null
+        details: null,
       });
     }
   };
@@ -337,7 +345,7 @@ const page = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-  
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -370,7 +378,7 @@ const page = () => {
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 px-4">
       {isMobile ? <HeaderMobile /> : <HeaderMenu />}
       <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-      
+
       {/* This is the original Toaster that you can remove or keep as fallback */}
       <Toaster
         toastOptions={{
@@ -403,7 +411,7 @@ const page = () => {
           },
         }}
       />
-      
+
       {/* Add the new notification component */}
       {notification && (
         <MutationNotification
@@ -413,7 +421,7 @@ const page = () => {
           onClose={() => setNotification(null)}
         />
       )}
-      
+
       <div className="bg-white p-4 rounded shadow-lg w-full sm:w-3/4 md:w-2/4 lg:w-2/5 ">
         <h2 className="text-lg font-bold">MUTASI</h2>
 
@@ -498,6 +506,17 @@ const page = () => {
               </ul>
             </div>
           )}
+        </div>
+
+        <div className="mb-4">
+          <label className="block mb-1">Keterangan:</label>
+          <textarea
+            className="border border-teal-500 rounded-lg p-2 w-full bg-white shadow-sm"
+            placeholder="Masukkan keterangan"
+            rows="3"
+            value={keterangan}
+            onChange={(e) => setKeterangan(e.target.value)}
+          />
         </div>
 
         <div className="flex justify-end">

@@ -1854,11 +1854,19 @@ const pensiunAnggota = async (anggotaId) => {
   }
 };
 
-const mutasiCabangUnitKerja = async (idAnggota, cabang, unitKerja) => {
+const mutasiCabangUnitKerja = async (
+  idAnggota,
+  cabang,
+  unitKerja,
+  keterangan
+) => {
   try {
     const url = `/api/mutasi-anggota/${idAnggota}/update-cabang-unitkerja?cabang=${encodeURIComponent(
-      cabang,
-    )}&unitKerja=${encodeURIComponent(unitKerja)}`;
+      cabang
+    )}&unitKerja=${encodeURIComponent(
+      unitKerja
+    )}&keterangan=${encodeURIComponent(keterangan || "")}`;
+
     const response = await axiosClient.put(url);
     return response.data;
   } catch (error) {

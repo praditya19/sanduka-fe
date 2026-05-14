@@ -108,6 +108,8 @@ const Page = () => {
                     </TableCell>
                     <TableCell className="border border-gray-300 p-2 hidden lg:table-cell">
                       {item.uraian}
+                      <br />
+                      {item.keterangan}
                     </TableCell>
                     <TableCell className="border border-gray-300 p-2 hidden lg:table-cell">
                       <div>Periode: {item.bulan} {item.tahun}</div>
