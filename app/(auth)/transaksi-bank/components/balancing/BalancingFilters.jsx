@@ -20,7 +20,7 @@ const BalancingFilters = ({
   handleUnitKerjaSearch,
   handleUnitKerjaSelect,
   filteredUnitKerja,
- loadingUnitKerja,
+  loadingUnitKerja,
   selectedCabangValue,
   month,
   setMonth,
@@ -35,13 +35,13 @@ const BalancingFilters = ({
   Input,
 }) => {
   const handleMonthChange = (e) => {
-  const value = e.target.value;
-  setMonth(value);
+    const value = e.target.value;
+    setMonth(value);
   };
   const handleYearChange = (e) => {
-  const value = e.target.value;
-  setYear(value);
-};
+    const value = e.target.value;
+    setYear(value);
+  };
   return (
     <div className="p-6 bg-gray-50 border-b border-gray-100">
       <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
@@ -117,59 +117,58 @@ const BalancingFilters = ({
           />
 
           {showUnitKerjaDropdown && (
-  <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-1 w-full">
-    <ul className="max-h-44 overflow-y-auto">
-      
-      {/* SEARCH */}
-      <li className="py-2 px-2">
-        <Input
-          type="text"
-          value={searchUnitKerja}
-          onChange={(e) => handleUnitKerjaSearch(e.target.value)}
-          className="block w-full px-4 py-2 border border-gray-300 rounded-md"
-          placeholder="Cari Unit Kerja..."
-          autoFocus
-        />
-      </li>
-
-      {/* LOADING */}
-      {loadingUnitKerja ? (
-        <li className="px-4 py-2 text-gray-400 text-sm">
-          Memuat data...
-        </li>
-      ) : (
-        <>
-          <li
-            onClick={() => handleUnitKerjaSelect({ unitKerja: "" })}
-            className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-          >
-            Pilih Unit Kerja
-          </li>
-
-          {filteredUnitKerja.length > 0 ? (
-            filteredUnitKerja
-              .sort((a, b) =>
-                a.unitKerja.localeCompare(b.unitKerja, "id")
-              )
-              .map((item) => (
-                <li
-                  key={item.id}
-                  onClick={() => handleUnitKerjaSelect(item)}
-                  className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                >
-                  {item.unitKerja}
+            <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-1 w-full">
+              <ul className="max-h-44 overflow-y-auto">
+                {/* SEARCH */}
+                <li className="py-2 px-2">
+                  <Input
+                    type="text"
+                    value={searchUnitKerja}
+                    onChange={(e) => handleUnitKerjaSearch(e.target.value)}
+                    className="block w-full px-4 py-2 border border-gray-300 rounded-md"
+                    placeholder="Cari Unit Kerja..."
+                    autoFocus
+                  />
                 </li>
-              ))
-          ) : (
-            <li className="px-4 py-2 text-gray-400 text-sm">
-              Tidak ada data
-            </li>
+
+                {/* LOADING */}
+                {loadingUnitKerja ? (
+                  <li className="px-4 py-2 text-gray-400 text-sm">
+                    Memuat data...
+                  </li>
+                ) : (
+                  <>
+                    <li
+                      onClick={() => handleUnitKerjaSelect({ unitKerja: "" })}
+                      className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                    >
+                      Pilih Unit Kerja
+                    </li>
+
+                    {filteredUnitKerja.length > 0 ? (
+                      filteredUnitKerja
+                        .sort((a, b) =>
+                          a.unitKerja.localeCompare(b.unitKerja, "id"),
+                        )
+                        .map((item) => (
+                          <li
+                            key={item.id}
+                            onClick={() => handleUnitKerjaSelect(item)}
+                            className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                          >
+                            {item.unitKerja}
+                          </li>
+                        ))
+                    ) : (
+                      <li className="px-4 py-2 text-gray-400 text-sm">
+                        Tidak ada data
+                      </li>
+                    )}
+                  </>
+                )}
+              </ul>
+            </div>
           )}
-        </>
-      )}
-    </ul>
-  </div>
-)}
         </div>
 
         {/* BULAN */}
@@ -180,7 +179,7 @@ const BalancingFilters = ({
           <select
             className="w-full h-10 px-4 rounded-lg border border-gray-300"
             value={month}
-  onChange={handleMonthChange}
+            onChange={handleMonthChange}
           >
             {bulanList.map((bulan) => (
               <option key={bulan.value} value={bulan.value}>
@@ -197,8 +196,8 @@ const BalancingFilters = ({
           </label>
           <select
             className="w-full h-10 px-4 rounded-lg border border-gray-300"
-             value={year}
-  onChange={handleYearChange}
+            value={year}
+            onChange={handleYearChange}
           >
             {tahunList.map((tahun) => (
               <option key={tahun.value} value={tahun.value}>

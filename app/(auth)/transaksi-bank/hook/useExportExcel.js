@@ -1,6 +1,8 @@
 import GlobalApi from "@/app/_utils/GlobalApi";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const useExportExcel = () => {
   const formatTanggal = (tanggalArray) => {
@@ -110,86 +112,84 @@ const useExportExcel = () => {
   };
 
   const exportBalancingToExcel = async ({
-  selectedCabang,
-  selectedUnitKerja,
-  month,
-  year,
-  paymentNote,
-  searchBalancing,
-  setLoading,
-}) => {
-  try {
-    setLoading(true);
+    selectedCabang,
+    selectedUnitKerja,
+    month,
+    year,
+    paymentNote,
+    searchBalancing,
+    setLoading,
+  }) => {
+    try {
+      setLoading(true);
 
-    const allData = await GlobalApi.getTransaksiBankBalancing(
-      selectedCabang || null,
-      selectedUnitKerja || null,
-      year === "all" ? null : year ? parseInt(year) : null,
-      month === "all" ? null : month ? parseInt(month) : null,
-      paymentNote || null,
-      searchBalancing || null
-    );
+      const allData = await GlobalApi.getTransaksiBankBalancing(
+        selectedCabang || null,
+        selectedUnitKerja || null,
+        year === "all" ? null : year ? parseInt(year) : null,
+        month === "all" ? null : month ? parseInt(month) : null,
+        paymentNote || null,
+        searchBalancing || null,
+      );
 
-    if (!Array.isArray(allData) || allData.length === 0) {
-      console.warn("Tidak ada data untuk diekspor");
-      return;
+      if (!Array.isArray(allData) || allData.length === 0) {
+        console.warn("Tidak ada data untuk diekspor");
+        return;
+      }
+
+      // ✅ filter NPA (dipindah ke sini)
+      const map = new Map();
+      allData.forEach((item) => {
+        if (!map.has(item.npa) || item.id > map.get(item.npa).id) {
+          map.set(item.npa, item);
+        }
+      });
+      const filteredData = Array.from(map.values());
+
+      // ✅ cek duplicate rekening
+      const rekeningCount = {};
+      filteredData.forEach((item) => {
+        if (item.rekening) {
+          rekeningCount[item.rekening] =
+            (rekeningCount[item.rekening] || 0) + 1;
+        }
+      });
+
+      const formattedData = filteredData.map((item, index) => ({
+        No: index + 1,
+        Cabang: item.cabang,
+        "Unit Kerja": item.unitKerja,
+        Nama: item.nama,
+        Rekening: item.rekening,
+        Iuran: item.totalIuranAnggota,
+        Sanduka: item.totalIuranSanduka,
+        Daspen: item.totalIuranDaspen,
+        Derap: item.totalIuranDerap,
+        Kalender: item.totalIuranKalender,
+        "Lain-lain": item.totalIuranSumbangan,
+        "Total Keuangan": item.totalIuran,
+        "Potongan Bank": item.potongan,
+        Selisih: item.selisih,
+        Keterangan: item.keterangan,
+        "Cek Duplicate": rekeningCount[item.rekening] > 1 ? "Duplicate" : "-",
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(formattedData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Balancing");
+
+      const blob = new Blob(
+        [XLSX.write(workbook, { bookType: "xlsx", type: "array" })],
+        { type: "application/octet-stream" },
+      );
+
+      saveAs(blob, "balancing-potongan.xlsx");
+    } catch (err) {
+      console.error("Export balancing error:", err);
+    } finally {
+      setLoading(false);
     }
-
-    // ✅ filter NPA (dipindah ke sini)
-    const map = new Map();
-    allData.forEach((item) => {
-      if (!map.has(item.npa) || item.id > map.get(item.npa).id) {
-        map.set(item.npa, item);
-      }
-    });
-    const filteredData = Array.from(map.values());
-
-    // ✅ cek duplicate rekening
-    const rekeningCount = {};
-    filteredData.forEach((item) => {
-      if (item.rekening) {
-        rekeningCount[item.rekening] =
-          (rekeningCount[item.rekening] || 0) + 1;
-      }
-    });
-
-    const formattedData = filteredData.map((item, index) => ({
-      No: index + 1,
-      Cabang: item.cabang,
-      "Unit Kerja": item.unitKerja,
-      Nama: item.nama,
-      Rekening: item.rekening,
-      Iuran: item.totalIuranAnggota,
-      Sanduka: item.totalIuranSanduka,
-      Daspen: item.totalIuranDaspen,
-      Derap: item.totalIuranDerap,
-      Kalender: item.totalIuranKalender,
-      "Lain-lain": item.totalIuranSumbangan,
-      "Total Keuangan": item.totalIuran,
-      "Potongan Bank": item.potongan,
-      Selisih: item.selisih,
-      Keterangan: item.keterangan,
-      "Cek Duplicate":
-        rekeningCount[item.rekening] > 1 ? "Duplicate" : "-",
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(formattedData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Balancing");
-
-    const blob = new Blob(
-      [XLSX.write(workbook, { bookType: "xlsx", type: "array" })],
-      { type: "application/octet-stream" }
-    );
-
-    saveAs(blob, "balancing-potongan.xlsx");
-
-  } catch (err) {
-    console.error("Export balancing error:", err);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const exportRekapitulasiToExcel = async () => {
     try {
@@ -229,13 +229,91 @@ const useExportExcel = () => {
       setIsLoading(false);
     }
   };
+  const exportBalancingToPDF = async ({
+    selectedCabang,
+    selectedUnitKerja,
+    month,
+    year,
+    paymentNote,
+    searchBalancing,
+    setLoading,
+  }) => {
+    try {
+      setLoading(true);
 
+      const allData = await GlobalApi.getTransaksiBankBalancing(
+        selectedCabang || null,
+        selectedUnitKerja || null,
+        year === "all" ? null : year ? parseInt(year) : null,
+        month === "all" ? null : month ? parseInt(month) : null,
+        paymentNote || null,
+        searchBalancing || null,
+      );
+
+      if (!Array.isArray(allData) || allData.length === 0) {
+        console.warn("Tidak ada data untuk PDF");
+        return;
+      }
+
+      // filter NPA
+      const map = new Map();
+      allData.forEach((item) => {
+        if (!map.has(item.npa) || item.id > map.get(item.npa).id) {
+          map.set(item.npa, item);
+        }
+      });
+      const data = Array.from(map.values());
+
+      const doc = new jsPDF("l", "mm", "a4"); // landscape biar muat banyak kolom
+
+      doc.setFontSize(14);
+      doc.text("Laporan Balancing Potongan", 14, 10);
+
+      const tableColumn = [
+        "No",
+        "Cabang",
+        "Unit",
+        "Nama",
+        "Rekening",
+        "Total",
+        "Potongan",
+        "Selisih",
+        "Keterangan",
+      ];
+
+      const tableRows = data.map((item, index) => [
+        index + 1,
+        item.cabang,
+        item.unitKerja,
+        item.nama,
+        item.rekening,
+        item.totalIuran,
+        item.potongan,
+        item.selisih,
+        item.keterangan,
+      ]);
+
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 15,
+        styles: { fontSize: 7 },
+      });
+
+      doc.save("balancing-potongan.pdf");
+    } catch (err) {
+      console.error("Export PDF error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
   return {
     exportAllToExcel,
     exportToExcel,
     exportBalancingToExcel,
     exportRekapitulasiToExcel,
     formatTanggal,
+    exportBalancingToPDF,
   };
 };
 

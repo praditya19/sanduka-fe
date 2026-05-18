@@ -149,7 +149,7 @@ export default function BankTransactionPage() {
   ];
   const [isLoading, setIsLoading] = useState(false);
   const [onProses, setOnProses] = useState(true);
-
+  const [loading, setLoading] = useState(false);
   const [resetUntukBulan, setResetUntukBulan] = useState("");
   const [totalPagesBalancing, setTotalPagesBalancing] = useState(1);
 
@@ -235,6 +235,7 @@ export default function BankTransactionPage() {
     exportBalancingToExcel,
     exportRekapitulasiToExcel,
     formatTanggal,
+    exportBalancingToPDF,
   } = useExportExcel();
   const {
     handleCabangClick,
@@ -341,6 +342,17 @@ export default function BankTransactionPage() {
     }
 
     return pages;
+  };
+  const handleExportPDF = () => {
+    exportBalancingToPDF({
+      selectedCabang,
+      selectedUnitKerja,
+      month,
+      year,
+      paymentNote,
+      searchBalancing,
+      setLoading,
+    });
   };
   const isFiltering =
     selectedCabang ||
@@ -536,6 +548,7 @@ export default function BankTransactionPage() {
                     setLoading: setIsLoading,
                   })
                 }
+                onExportPDF={handleExportPDF}
                 role={sessionStorage.getItem("role")}
                 onDeleteBalancing={() => setShowDeleteBalancing(true)}
                 onImportBalancing={() => setShowImportBalancing(true)}
