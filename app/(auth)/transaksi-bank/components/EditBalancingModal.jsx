@@ -1,11 +1,68 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { FaTimesCircle, FaSave } from "react-icons/fa";
+import GlobalApi from "@/app/_utils/GlobalApi";
 
 const EditBalancingModal = ({ editData, setEditData, onClose, onSave }) => {
+  if (!editData) return null;
+  const [openCabang, setOpenCabang] = useState(false);
+  const [openUnit, setOpenUnit] = useState(false);
+
+  const [searchDropCabang, setSearchDropCabang] = useState("");
+  const [searchDropUnit, setSearchDropUnit] = useState("");
+
+  const [filteredCabang, setFilteredCabang] = useState([]);
+
+  const [loadingUnitKerja, setLoadingUnitKerja] = useState(false);
+  const [allUnitKerja, setAllUnitKerja] = useState([]);
+const [filterUnitKerja, setFilterUnitKerja] = useState([]);
+  const fetchUnitKerja = async (cabang) => {
+  try {
+    setLoadingUnitKerja(true);
+
+    const res = await GlobalApi.getUnitKerjaByCabang(cabang);
+
+    setAllUnitKerja(res || []);        
+    setFilterUnitKerja(res || []);    
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setLoadingUnitKerja(false);
+  }
+};
+  const [allCabang, setAllCabang] = useState([]);
+
+  useEffect(() => {
+    const fetchCabang = async () => {
+      try {
+        const res = await GlobalApi.getCabang();
+        setAllCabang(res.data || []);
+        setFilteredCabang(res.data || []);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchCabang();
+  }, []);
+ useEffect(() => {
+  const result = allUnitKerja.filter((item) =>
+    item.unitKerja.toLowerCase().includes(searchDropUnit.toLowerCase())
+  );
+
+  setFilterUnitKerja(result);
+}, [searchDropUnit, allUnitKerja]);
+  useEffect(() => {
+    const result = filterUnitKerja.filter((item) =>
+      item.unitKerja.toLowerCase().includes(searchDropUnit.toLowerCase()),
+    );
+
+    setFilterUnitKerja(result);
+  }, [searchDropUnit]);
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
       <div className="relative bg-white rounded-lg shadow-xl w-[600px] max-w-full p-6 overflow-y-auto max-h-[90vh] mt-16">
         <button
-          onClick={() => setShowEditModal(false)}
+          onClick={onClose}
           className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
         >
           <FaTimesCircle className="w-5 h-5 hover:text-red-500" />
@@ -367,7 +424,7 @@ const EditBalancingModal = ({ editData, setEditData, onClose, onSave }) => {
 
         <div className="mt-6 flex justify-end space-x-2">
           <button
-            onClick={() => setShowEditModal(false)}
+            onClick={onClose}
             className="px-4 py-2 border rounded hover:bg-gray-100"
           >
             Batal
@@ -375,7 +432,7 @@ const EditBalancingModal = ({ editData, setEditData, onClose, onSave }) => {
 
           <button
             className="px-4 py-2 bg-[#0B131E] text-white rounded hover:bg-[#101c2c] flex items-center"
-            onClick={handleSaveEdit}
+            onClick={onSave}
           >
             <FaSave className="mr-2" />
             Simpan Perubahan

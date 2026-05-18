@@ -17,6 +17,8 @@ import DeleteBalancingModal from "./components/DeleteBalancingModal";
 import ImportBalancingModal from "./components/ImportBalancingModal";
 import UploadModal from "./components/UploadModal";
 import TebNavigation from "./components/TebNavigation";
+import EditBalancingModal from "./components/EditBalancingModal";
+import DeleteModal from "./components/DeleteModal";
 // component potongan
 import PotonganHeaderActions from "./components/potongan/PotonganHeaderActions";
 import PotonganFilters from "./components/potongan/PotonganFilters";
@@ -107,8 +109,6 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
 export default function BankTransactionPage() {
   const [activeTab, setActiveTab] = useState("potongan");
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editData, setEditData] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -123,7 +123,6 @@ export default function BankTransactionPage() {
   const currentMonth = today.getMonth() + 1;
   const currentYear = today.getFullYear();
   const [displayCount, setDisplayCount] = useState(10);
-
   const [month, setMonth] = useState(currentMonth.toString());
   const [year, setYear] = useState(currentYear.toString());
   const bulanList = [
@@ -160,6 +159,8 @@ export default function BankTransactionPage() {
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [filteredBalancingData, setFilteredBalancingData] = useState([]);
+  const [editData, setEditData] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const formatRupiah = (angka) => {
     const parsed = Number(angka);
@@ -172,7 +173,6 @@ export default function BankTransactionPage() {
     });
   };
 
-  // Callback untuk handle perubahan filter dari dropdown
   const handleBalancingFilterChange = (filteredData) => {
     setFilteredBalancingData(filteredData);
   };
@@ -199,7 +199,10 @@ export default function BankTransactionPage() {
     loader,
     progress,
     handleSubmitUpload,
-  } = useUploadHandler();
+  } = useUploadHandler({
+    setNotification,
+    setShowUploadModal,
+  });
   const {
     handleDelete,
     setFileImport,
@@ -211,15 +214,20 @@ export default function BankTransactionPage() {
     setPaymentNote,
     sortConfig,
     currentPageBalancing,
-    handleEditClick,
     handleDeleteClick,
     dataBalancing,
     loadingBalancing,
     sortedData,
     handleSort,
+    handleSaveEdit,
+    handleEditClick,
   } = useBalancing({
     month,
     year,
+    editData,
+    setEditData,
+    setShowEditModal,
+    setNotification,
   });
   const {
     exportAllToExcel,
@@ -295,7 +303,12 @@ export default function BankTransactionPage() {
     setShowDeleteModal(false);
     setResetData("");
   };
+  const handleConfirmDelete = async () => {
+    if (!selectedId) return;
 
+    await handleDeleteClick(selectedId);
+    setShowDeletePopup(false);
+  };
   const handlePreviousPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
@@ -419,8 +432,17 @@ export default function BankTransactionPage() {
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
               <PotonganHeaderActions
                 isLoading={isLoading}
-                exportAllToExcel={exportAllToExcel}
-                exportToExcel={exportToExcel}
+                exportAllToExcel={() =>
+                  exportAllToExcel({ setLoading: setIsLoading })
+                }
+                exportToExcel={() =>
+                  exportToExcel({
+                    month,
+                    year,
+                    searchQuery,
+                    setLoading: setIsLoading,
+                  })
+                }
                 setShowDeleteModal={setShowDeleteModal}
                 setShowUploadModal={setShowUploadModal}
               />
@@ -503,7 +525,17 @@ export default function BankTransactionPage() {
             <div className="bg-white rounded-xl shadow-sm w-auto">
               <BalancingHeaderActions
                 isLoading={isLoading}
-                onExport={exportBalancingToExcel}
+                onExport={() =>
+                  exportBalancingToExcel({
+                    selectedCabang,
+                    selectedUnitKerja,
+                    month,
+                    year,
+                    paymentNote,
+                    searchBalancing,
+                    setLoading: setIsLoading,
+                  })
+                }
                 role={sessionStorage.getItem("role")}
                 onDeleteBalancing={() => setShowDeleteBalancing(true)}
                 onImportBalancing={() => setShowImportBalancing(true)}
@@ -613,7 +645,7 @@ export default function BankTransactionPage() {
           )}
         </div>
       </div>
-      {showEditModal && editData && (
+      {showEditModal && (
         <EditBalancingModal
           editData={editData}
           setEditData={setEditData}
@@ -624,7 +656,7 @@ export default function BankTransactionPage() {
 
       {showDeletePopup && (
         <DeleteModal
-          onConfirm={() => handleDeleteClick(selectedId)}
+          onConfirm={handleConfirmDelete}
           onCancel={() => setShowDeletePopup(false)}
         />
       )}

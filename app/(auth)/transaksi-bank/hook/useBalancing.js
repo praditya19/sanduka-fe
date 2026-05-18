@@ -1,7 +1,16 @@
 import { useState, useEffect, useMemo } from "react";
 import GlobalApi from "@/app/_utils/GlobalApi";
 
-const useBalancing = ({ selectedCabang, selectedUnitKerja, month, year }) => {
+const useBalancing = ({
+  selectedCabang,
+  selectedUnitKerja,
+  month,
+  year,
+  editData,
+  setEditData,
+  setShowEditModal,
+  setNotification,
+}) => {
   const [dataBalancing, setDataBalancing] = useState([]);
   const [loadingBalancing, setLoadingBalancing] = useState(false);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
@@ -37,8 +46,6 @@ const useBalancing = ({ selectedCabang, selectedUnitKerja, month, year }) => {
         searchBalancing || null,
       );
 
-      console.log(result);
-
       const safeResult = Array.isArray(result) ? result : [];
 
       const finalData = filterDataByNPA(safeResult);
@@ -65,26 +72,21 @@ const useBalancing = ({ selectedCabang, selectedUnitKerja, month, year }) => {
   };
   const handleDeleteClick = async (id) => {
     try {
-      setLoader(true);
-      setProgress(0);
+      await GlobalApi.deleteBalancingById(id);
 
-      await GlobalApi.deleteBalancingById(id, {
-        onDownloadProgress: (progressEvent) => {
-          const total = progressEvent.total;
-          const current = progressEvent.loaded;
-          const percentCompleted = Math.round((current / total) * 100);
-          setProgress(percentCompleted);
-        },
+      setNotification({
+        type: "success",
+        message: "Data berhasil dihapus!",
       });
 
-      alert("Data berhasil dihapus!");
-      setShowDeletePopup(false);
       await getBalancingdata();
     } catch (error) {
       console.error(error);
-      alert("Gagal menghapus data!");
-    } finally {
-      setLoader(false);
+
+      setNotification({
+        type: "error",
+        message: "Gagal menghapus data!",
+      });
     }
   };
   const handleDelete = async (e) => {
@@ -130,7 +132,7 @@ const useBalancing = ({ selectedCabang, selectedUnitKerja, month, year }) => {
   const handleEditClick = async (id) => {
     try {
       const data = await GlobalApi.getBalancingById(id);
-
+      console.log(data);
       setEditData(data);
       setShowEditModal(true);
       await getBalancingdata();
@@ -221,9 +223,6 @@ const useBalancing = ({ selectedCabang, selectedUnitKerja, month, year }) => {
     }
 
     try {
-      console.log("Tagihan Untuk Bulan yang dikirim:", tagihanUntukBulan);
-      console.log("Tipe data:", typeof tagihanUntukBulan);
-
       await GlobalApi.importExcelTargetIuran(fileImport, tagihanUntukBulan);
 
       setNotification({

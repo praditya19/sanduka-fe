@@ -20,53 +20,36 @@ const BalancingHeaderActions = ({
         </div>
 
         <div className="flex gap-3">
-          {/* EXPORT */}
           <button
-            className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${
-              isLoading ? "opacity-60 cursor-not-allowed" : ""
-            }`}
-            onClick={onExport}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <svg
-                  className="animate-spin h-4 w-4 text-black"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    fill="none"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                  />
-                </svg>
-                Memproses...
-              </>
-            ) : (
-              <>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  fill="currentColor"
-                  viewBox="0 0 16 16"
-                >
-                  <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
-                  <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5z" />
-                </svg>
-                Cetak
-              </>
-            )}
-          </button>
+  className={`
+    px-5 py-2.5 rounded-lg font-medium text-sm
+    border-2 border-teal-500 text-teal-600
+    bg-white hover:bg-teal-500 hover:text-white
+    transition-all duration-300 ease-out
+    flex items-center gap-2
+    focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2
+    ${isLoading ? "opacity-60 cursor-not-allowed border-teal-300" : ""}
+  `}
+  onClick={onExport}
+  disabled={isLoading}
+>
+  {isLoading ? (
+    <>
+      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+      </svg>
+      <span>Memproses...</span>
+    </>
+  ) : (
+    <>
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+      </svg>
+      <span>Cetak</span>
+    </>
+  )}
+</button>
 
           {/* SUPERADMIN ACTION */}
           {role === "SUPERADMIN" && (

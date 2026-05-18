@@ -1,12 +1,18 @@
-import { useState, useEffect, useRef, useMemo } from "react";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
 const useExportExcel = () => {
-  const exportAllToExcel = async () => {
+  const formatTanggal = (tanggalArray) => {
+    if (!Array.isArray(tanggalArray) || tanggalArray.length < 3) return "";
+    const [year, month, day] = tanggalArray;
+    return `${String(day).padStart(2, "0")}/${String(month).padStart(2, "0")}/${year}`;
+  };
+
+  const exportAllToExcel = async ({ setLoading }) => {
     try {
-      setIsLoading(true);
+      setLoading(true);
+
       const allData = [];
       let currentPage = 0;
       const pageSize = 100;
@@ -40,28 +46,26 @@ const useExportExcel = () => {
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Potongan Bank");
 
-      const excelBuffer = XLSX.write(workbook, {
-        bookType: "xlsx",
-        type: "array",
-      });
+      const blob = new Blob(
+        [XLSX.write(workbook, { bookType: "xlsx", type: "array" })],
+        { type: "application/octet-stream" },
+      );
 
-      const blob = new Blob([excelBuffer], {
-        type: "application/octet-stream",
-      });
-      saveAs(blob, "potongan-bank.xlsx");
-    } catch (error) {
-      console.error("Gagal mengekspor data:", error);
+      saveAs(blob, "potongan-bank-all.xlsx");
+    } catch (err) {
+      console.error("Export all error:", err);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
-  const exportToExcel = async () => {
+
+  const exportToExcel = async ({ month, year, searchQuery, setLoading }) => {
     try {
-      setIsLoading(true);
+      setLoading(true);
+
       const allData = [];
       let currentPage = 0;
       const pageSize = 100;
-
       let totalPages = 1;
 
       while (currentPage < totalPages) {
@@ -88,102 +92,104 @@ const useExportExcel = () => {
         Transaksi: item.transaksi,
       }));
 
-      const worksheet = XLSX.utils.json_to_sheet(formattedData, {
-        header: [
-          "No",
-          "Rekening",
-          "Nama Anggota",
-          "Rekening Kabupaten",
-          "Potongan",
-          "Tgl. Potongan",
-          "Transaksi",
-        ],
-      });
-
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "potonganbnk");
-
-      const excelBuffer = XLSX.write(workbook, {
-        bookType: "xlsx",
-        type: "array",
-      });
-
-      const blob = new Blob([excelBuffer], {
-        type: "application/octet-stream",
-      });
-      saveAs(blob, "potongan-bank.xlsx");
-    } catch (error) {
-      console.error("Gagal mengekspor data:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const exportBalancingToExcel = async () => {
-    try {
-      setIsLoading(true);
-
-      const allData = await GlobalApi.getTransaksiBankBalancing(
-        selectedCabang,
-        selectedUnitKerja,
-        year === "all" ? null : year ? parseInt(year) : null,
-        month === "all" ? null : month ? parseInt(month) : null,
-        paymentNote,
-        searchBalancing,
-      );
-
-      if (!Array.isArray(allData) || allData.length === 0) {
-        console.warn("Tidak ada data untuk diekspor");
-        return;
-      }
-
-      const filteredData = filterDataByNPA(allData);
-
-      const rekeningCount = {};
-      filteredData.forEach((item) => {
-        if (item.rekening) {
-          rekeningCount[item.rekening] =
-            (rekeningCount[item.rekening] || 0) + 1;
-        }
-      });
-
-      const formattedData = filteredData.map((item, index) => ({
-        No: index + 1,
-        Cabang: item.cabang,
-        "Unit Kerja": item.unitKerja,
-        Nama: item.nama,
-        Rekening: item.rekening,
-        Iuran: item.totalIuranAnggota,
-        Sanduka: item.totalIuranSanduka,
-        Daspen: item.totalIuranDaspen,
-        Derap: item.totalIuranDerap,
-        Kalender: item.totalIuranKalender,
-        "Lain-lain": item.totalIuranSumbangan,
-        "Total Keuangan": item.totalIuran,
-        "Potongan Bank": item.potongan,
-        Selisih: item.selisih,
-        Keterangan: item.keterangan,
-        "Cek Duplicate": rekeningCount[item.rekening] > 1 ? "Duplicate" : "-",
-      }));
-
       const worksheet = XLSX.utils.json_to_sheet(formattedData);
       const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Balancing Potongan");
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Potongan Filter");
 
-      const excelBuffer = XLSX.write(workbook, {
-        bookType: "xlsx",
-        type: "array",
-      });
-      const blob = new Blob([excelBuffer], {
-        type: "application/octet-stream",
-      });
-      saveAs(blob, "balancing-potongan-ByFilter.xlsx");
+      const blob = new Blob(
+        [XLSX.write(workbook, { bookType: "xlsx", type: "array" })],
+        { type: "application/octet-stream" },
+      );
+
+      saveAs(blob, "potongan-bank-filter.xlsx");
     } catch (err) {
-      console.error("Gagal mengekspor data:", err);
+      console.error("Export filter error:", err);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
+
+  const exportBalancingToExcel = async ({
+  selectedCabang,
+  selectedUnitKerja,
+  month,
+  year,
+  paymentNote,
+  searchBalancing,
+  setLoading,
+}) => {
+  try {
+    setLoading(true);
+
+    const allData = await GlobalApi.getTransaksiBankBalancing(
+      selectedCabang || null,
+      selectedUnitKerja || null,
+      year === "all" ? null : year ? parseInt(year) : null,
+      month === "all" ? null : month ? parseInt(month) : null,
+      paymentNote || null,
+      searchBalancing || null
+    );
+
+    if (!Array.isArray(allData) || allData.length === 0) {
+      console.warn("Tidak ada data untuk diekspor");
+      return;
+    }
+
+    // ✅ filter NPA (dipindah ke sini)
+    const map = new Map();
+    allData.forEach((item) => {
+      if (!map.has(item.npa) || item.id > map.get(item.npa).id) {
+        map.set(item.npa, item);
+      }
+    });
+    const filteredData = Array.from(map.values());
+
+    // ✅ cek duplicate rekening
+    const rekeningCount = {};
+    filteredData.forEach((item) => {
+      if (item.rekening) {
+        rekeningCount[item.rekening] =
+          (rekeningCount[item.rekening] || 0) + 1;
+      }
+    });
+
+    const formattedData = filteredData.map((item, index) => ({
+      No: index + 1,
+      Cabang: item.cabang,
+      "Unit Kerja": item.unitKerja,
+      Nama: item.nama,
+      Rekening: item.rekening,
+      Iuran: item.totalIuranAnggota,
+      Sanduka: item.totalIuranSanduka,
+      Daspen: item.totalIuranDaspen,
+      Derap: item.totalIuranDerap,
+      Kalender: item.totalIuranKalender,
+      "Lain-lain": item.totalIuranSumbangan,
+      "Total Keuangan": item.totalIuran,
+      "Potongan Bank": item.potongan,
+      Selisih: item.selisih,
+      Keterangan: item.keterangan,
+      "Cek Duplicate":
+        rekeningCount[item.rekening] > 1 ? "Duplicate" : "-",
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(formattedData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Balancing");
+
+    const blob = new Blob(
+      [XLSX.write(workbook, { bookType: "xlsx", type: "array" })],
+      { type: "application/octet-stream" }
+    );
+
+    saveAs(blob, "balancing-potongan.xlsx");
+
+  } catch (err) {
+    console.error("Export balancing error:", err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const exportRekapitulasiToExcel = async () => {
     try {
@@ -223,22 +229,13 @@ const useExportExcel = () => {
       setIsLoading(false);
     }
   };
-  const formatTanggal = (tanggalArray) => {
-    if (!Array.isArray(tanggalArray) || tanggalArray.length < 3) return "";
 
-    const [year, month, day] = tanggalArray;
-
-    const dd = String(day).padStart(2, "0");
-    const mm = String(month).padStart(2, "0");
-
-    return `${dd}/${mm}/${year}`;
-  };
   return {
     exportAllToExcel,
     exportToExcel,
     exportBalancingToExcel,
-      exportRekapitulasiToExcel,
-     formatTanggal,
+    exportRekapitulasiToExcel,
+    formatTanggal,
   };
 };
 
