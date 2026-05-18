@@ -2,7 +2,11 @@ import * as XLSX from "xlsx";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { processApiResponse, getTotalSumbangan } from "./rekapUtils";
 
-export const handlePrintLogic = async (groupedData, selectedBulan, selectedTahun) => {
+export const handlePrintLogic = async (
+  groupedData,
+  selectedBulan,
+  selectedTahun,
+) => {
   try {
     if (!groupedData || groupedData.length === 0) {
       console.error("Data kosong, tidak dapat mencetak.");
@@ -49,16 +53,22 @@ export const handlePrintLogic = async (groupedData, selectedBulan, selectedTahun
               </tr>
             </thead>
             <tbody>
-              ${groupedData.map((group, index) => {
-                const members = group.members || [];
-                return members.map((member, memberIndex) => {
-                  return `
+              ${groupedData
+                .map((group, index) => {
+                  const members = group.members || [];
+                  return members
+                    .map((member, memberIndex) => {
+                      return `
                     <tr>
-                      ${memberIndex === 0 ? `
+                      ${
+                        memberIndex === 0
+                          ? `
                         <td rowspan="${members.length}">${index + 1}</td>
                         <td rowspan="${members.length}">${group.cabang}</td>
                         <td rowspan="${members.length}">${group.unitKerja}</td>
-                      ` : ""}
+                      `
+                          : ""
+                      }
                       <td class="member-list">
                         <div>${member.namaAnggota}</div>
                         <div>${member.nip || "-"}</div>
@@ -71,48 +81,88 @@ export const handlePrintLogic = async (groupedData, selectedBulan, selectedTahun
                       <td>Rp. ${parseInt(member.derap || 0).toLocaleString("id-ID")}</td>
                       <td>Rp. ${parseInt(member.kalender || 0).toLocaleString("id-ID")}</td>
                       <td>
-                        ${member.detailSumbangan && member.detailSumbangan.length > 0 ? `
+                        ${
+                          member.detailSumbangan &&
+                          member.detailSumbangan.length > 0
+                            ? `
                           <div style="text-align: left; padding: 4px 0;">
-                            ${member.detailSumbangan.map(d => `
+                            ${member.detailSumbangan
+                              .map(
+                                (d) => `
                               <div style="margin-bottom: 4px;">
                                 <strong>${d.namaSumbangan}</strong><br>
                                 Rp. ${parseInt(d.jumlah || 0).toLocaleString("id-ID")}
                               </div>
-                            `).join("")}
+                            `,
+                              )
+                              .join("")}
                           </div>
-                        ` : `Rp. ${parseInt(member.sumbangan || 0).toLocaleString("id-ID")}`}
+                        `
+                            : `Rp. ${parseInt(member.sumbangan || 0).toLocaleString("id-ID")}`
+                        }
                       </td>
                       <td>Rp. ${parseInt(member.totalIuran || 0).toLocaleString("id-ID")}</td>
                     </tr>
                   `;
-                }).join("");
-              }).join("")}
+                    })
+                    .join("");
+                })
+                .join("")}
               <tr class="total-row">
                 <td colspan="4" style="text-align: center">Total Keseluruhan :</td>
                 <td>${groupedData.reduce((sum, group) => sum + parseInt(group.jumlah || 0), 0)}</td>
-                <td>Rp. ${groupedData.flatMap(g => g.members || []).reduce((sum, m) => sum + parseInt(m.pgri || 0), 0).toLocaleString("id-ID")}</td>
-                <td>Rp. ${groupedData.flatMap(g => g.members || []).reduce((sum, m) => sum + parseInt(m.sanduka || 0), 0).toLocaleString("id-ID")}</td>
-                <td>Rp. ${groupedData.flatMap(g => g.members || []).reduce((sum, m) => sum + parseInt(m.daspen || 0), 0).toLocaleString("id-ID")}</td>
-                <td>Rp. ${groupedData.flatMap(g => g.members || []).reduce((sum, m) => sum + parseInt(m.derap || 0), 0).toLocaleString("id-ID")}</td>
-                <td>Rp. ${groupedData.flatMap(g => g.members || []).reduce((sum, m) => sum + parseInt(m.kalender || 0), 0).toLocaleString("id-ID")}</td>
+                <td>Rp. ${groupedData
+                  .flatMap((g) => g.members || [])
+                  .reduce((sum, m) => sum + parseInt(m.pgri || 0), 0)
+                  .toLocaleString("id-ID")}</td>
+                <td>Rp. ${groupedData
+                  .flatMap((g) => g.members || [])
+                  .reduce((sum, m) => sum + parseInt(m.sanduka || 0), 0)
+                  .toLocaleString("id-ID")}</td>
+                <td>Rp. ${groupedData
+                  .flatMap((g) => g.members || [])
+                  .reduce((sum, m) => sum + parseInt(m.daspen || 0), 0)
+                  .toLocaleString("id-ID")}</td>
+                <td>Rp. ${groupedData
+                  .flatMap((g) => g.members || [])
+                  .reduce((sum, m) => sum + parseInt(m.derap || 0), 0)
+                  .toLocaleString("id-ID")}</td>
+                <td>Rp. ${groupedData
+                  .flatMap((g) => g.members || [])
+                  .reduce((sum, m) => sum + parseInt(m.kalender || 0), 0)
+                  .toLocaleString("id-ID")}</td>
                 <td>
                   ${(() => {
-                    const allDetails = groupedData.flatMap(g => g.members || []).flatMap(m => m.detailSumbangan || []);
+                    const allDetails = groupedData
+                      .flatMap((g) => g.members || [])
+                      .flatMap((m) => m.detailSumbangan || []);
                     if (allDetails.length > 0) {
                       const detailByName = {};
-                      allDetails.forEach(d => {
-                        detailByName[d.namaSumbangan] = (detailByName[d.namaSumbangan] || 0) + parseInt(d.jumlah || 0);
+                      allDetails.forEach((d) => {
+                        detailByName[d.namaSumbangan] =
+                          (detailByName[d.namaSumbangan] || 0) +
+                          parseInt(d.jumlah || 0);
                       });
                       return `<div style="text-align: left; padding: 4px 0;">
-                        ${Object.entries(detailByName).map(([name, total]) => `
+                        ${Object.entries(detailByName)
+                          .map(
+                            ([name, total]) => `
                           <div style="margin-bottom: 4px;"><strong>${name}</strong><br>Rp. ${total.toLocaleString("id-ID")}</div>
-                        `).join("")}
+                        `,
+                          )
+                          .join("")}
                       </div>`;
                     }
-                    return `Rp. ${groupedData.flatMap(g => g.members || []).reduce((sum, m) => sum + parseInt(m.sumbangan || 0), 0).toLocaleString("id-ID")}`;
+                    return `Rp. ${groupedData
+                      .flatMap((g) => g.members || [])
+                      .reduce((sum, m) => sum + parseInt(m.sumbangan || 0), 0)
+                      .toLocaleString("id-ID")}`;
                   })()}
                 </td>
-                <td>Rp. ${groupedData.flatMap(g => g.members || []).reduce((sum, m) => sum + parseInt(m.totalIuran || 0), 0).toLocaleString("id-ID")}</td>
+                <td>Rp. ${groupedData
+                  .flatMap((g) => g.members || [])
+                  .reduce((sum, m) => sum + parseInt(m.totalIuran || 0), 0)
+                  .toLocaleString("id-ID")}</td>
               </tr>
             </tbody>
           </table>
@@ -133,7 +183,14 @@ export const handlePrintLogic = async (groupedData, selectedBulan, selectedTahun
   }
 };
 
-export const exportToExcelLogic = async (selectedCabang, selectedUnitKerja, selectedBulan, selectedTahun, namaAnggotaInput, setIsExporting) => {
+export const exportToExcelLogic = async (
+  selectedCabang,
+  selectedUnitKerja,
+  selectedBulan,
+  selectedTahun,
+  namaAnggotaInput,
+  setIsExporting,
+) => {
   try {
     setIsExporting(true);
     const cabangParam = selectedCabang || "";
@@ -141,7 +198,13 @@ export const exportToExcelLogic = async (selectedCabang, selectedUnitKerja, sele
     const bulanParam = selectedBulan || null;
     const tahunParam = selectedTahun || null;
 
-    let allData = await GlobalApi.getNominalAggregatedData(cabangParam, unitKerjaParam, null, bulanParam, tahunParam);
+    let allData = await GlobalApi.getNominalAggregatedData(
+      cabangParam,
+      unitKerjaParam,
+      null,
+      null,
+      null,
+    );
     allData = processApiResponse(allData, null, false);
 
     if (!allData || allData.length === 0) {
@@ -150,38 +213,84 @@ export const exportToExcelLogic = async (selectedCabang, selectedUnitKerja, sele
     }
 
     let filteredData = allData;
-    if (selectedCabang) filteredData = filteredData.filter(item => item.cabang?.toLowerCase().includes(selectedCabang.toLowerCase()));
-    if (selectedUnitKerja) filteredData = filteredData.filter(item => item.unitKerja?.toLowerCase().includes(selectedUnitKerja.toLowerCase()));
-    if (namaAnggotaInput) filteredData = filteredData.filter(item => item.namaAnggota?.toLowerCase().includes(namaAnggotaInput.toLowerCase()));
+    if (selectedCabang)
+      filteredData = filteredData.filter((item) =>
+        item.cabang?.toLowerCase().includes(selectedCabang.toLowerCase()),
+      );
+    if (selectedUnitKerja)
+      filteredData = filteredData.filter((item) =>
+        item.unitKerja?.toLowerCase().includes(selectedUnitKerja.toLowerCase()),
+      );
+    if (namaAnggotaInput)
+      filteredData = filteredData.filter((item) =>
+        item.namaAnggota
+          ?.toLowerCase()
+          .includes(namaAnggotaInput.toLowerCase()),
+      );
 
-    const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    const monthNames = [
+      "Januari",
+      "Februari",
+      "Maret",
+      "April",
+      "Mei",
+      "Juni",
+      "Juli",
+      "Agustus",
+      "September",
+      "Oktober",
+      "November",
+      "Desember",
+    ];
     const namaBulan = monthNames[selectedBulan - 1] || selectedBulan;
 
-    // Menentukan bulan berikutnya untuk nama file
-    let nextMonthIndex = (parseInt(selectedBulan) || (new Date().getMonth() + 1));
-    let nextYear = (parseInt(selectedTahun) || new Date().getFullYear());
-    
-    if (nextMonthIndex >= 12) {
-      nextMonthIndex = 0;
-      nextYear += 1;
+    const now = new Date();
+
+    let monthIndex = now.getMonth();
+    let year = now.getFullYear();
+
+    monthIndex += 1;
+
+    if (monthIndex > 11) {
+      monthIndex = 0;
+      year += 1;
     }
-    const namaBulanBerikutnya = monthNames[nextMonthIndex];
+
+    const namaBulanBerikutnya = monthNames[monthIndex];
 
     const excelData = [
-      [`Tagihan Untuk Bulan ${namaBulanBerikutnya} ${nextYear}`],
+      [`Tagihan Untuk Bulan ${namaBulanBerikutnya} ${year}`],
       [],
       [
-        "No", "Cabang", "Unit Kerja", "Nama Anggota", "NIP", "NPA", "Nomor Rekening",
-        "Default PGRI", "Manual PGRI", "PGRI",
-        "Default Sanduka", "Manual Sanduka", "Sanduka",
-        "Default Daspen", "Manual Daspen", "Daspen",
-        "Default Derap", "Manual Derap", "Derap",
-        "Default Kalender", "Manual Kalender", "Kalender",
-        "Default Lain-Lain", "Manual Lain-Lain", "Lain-Lain",
-        "Total"
-      ]
+        "No",
+        "Cabang",
+        "Unit Kerja",
+        "Nama Anggota",
+        "NIP",
+        "NPA",
+        "Nomor Rekening",
+        "Default PGRI",
+        "Manual PGRI",
+        "PGRI",
+        "Default Sanduka",
+        "Manual Sanduka",
+        "Sanduka",
+        "Default Daspen",
+        "Manual Daspen",
+        "Daspen",
+        "Default Derap",
+        "Manual Derap",
+        "Derap",
+        "Default Kalender",
+        "Manual Kalender",
+        "Kalender",
+        "Default Lain-Lain",
+        "Manual Lain-Lain",
+        "Lain-Lain",
+        "Total",
+      ],
     ];
-    
+
     filteredData.forEach((item, idx) => {
       excelData.push([
         idx + 1,
@@ -209,16 +318,21 @@ export const exportToExcelLogic = async (selectedCabang, selectedUnitKerja, sele
         parseInt(item.defaultLainLain || 0),
         parseInt(item.manualLainLain || 0),
         parseInt(item.lainLain || parseInt(getTotalSumbangan(item) || 0)),
-        parseInt(item.totalIuran || 0)
+        parseInt(item.totalIuran || 0),
       ]);
     });
 
     const ws = XLSX.utils.aoa_to_sheet(excelData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "RekapData");
-    
-    const waktuDownload = new Date().toLocaleString("id-ID", { dateStyle: "short" }).replace(/\//g, "-");
-    XLSX.writeFile(wb, `Backupbynominal_${namaBulanBerikutnya}_${nextYear}_${waktuDownload}.xlsx`);
+
+    const waktuDownload = new Date()
+      .toLocaleString("id-ID", { dateStyle: "short" })
+      .replace(/\//g, "-");
+    XLSX.writeFile(
+      wb,
+      `Backupbynominal_${namaBulanBerikutnya}_${year}_${waktuDownload}.xlsx`,
+    );
   } catch (error) {
     console.error("Gagal ekspor data:", error);
     alert("Terjadi kesalahan saat ekspor.");
@@ -227,13 +341,30 @@ export const exportToExcelLogic = async (selectedCabang, selectedUnitKerja, sele
   }
 };
 
-export const exportPotonganBankLogic = (groupedData, selectedBulan, selectedTahun) => {
+export const exportPotonganBankLogic = (
+  groupedData,
+  selectedBulan,
+  selectedTahun,
+) => {
   if (!groupedData || groupedData.length === 0) {
     console.error("Data kosong, tidak dapat export ke Excel");
     return;
   }
 
-  const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+  const monthNames = [
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
+  ];
   const bulanNama = `${monthNames[selectedBulan - 1]} ${selectedTahun}`;
   const tanggalDownload = new Date().toLocaleDateString("id-ID", {
     day: "2-digit",
@@ -249,7 +380,7 @@ export const exportPotonganBankLogic = (groupedData, selectedBulan, selectedTahu
     ["Pgri Kabupaten Jepara"],
     ["No Rekening : 2.015.15169.5 (PGRI Kabupaten Jepara)"],
     [],
-    ["No", "Cabang", "Nama", "No Rekening", "Total Tagihan", "Keterangan"]
+    ["No", "Cabang", "Nama", "No Rekening", "Total Tagihan", "Keterangan"],
   ];
 
   let rowNumber = 1;
@@ -294,13 +425,30 @@ export const exportPotonganBankLogic = (groupedData, selectedBulan, selectedTahu
   XLSX.writeFile(wb, "Rekap_Laporan_Potongan_Bank.xlsx");
 };
 
-export const exportMandiriLogic = (groupedData, selectedBulan, selectedTahun) => {
+export const exportMandiriLogic = (
+  groupedData,
+  selectedBulan,
+  selectedTahun,
+) => {
   if (!groupedData || groupedData.length === 0) {
     console.error("Data kosong, tidak dapat export ke Excel");
     return;
   }
 
-  const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+  const monthNames = [
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
+  ];
   const bulanNama = `${monthNames[selectedBulan - 1]} ${selectedTahun}`;
   const tanggalDownload = new Date().toLocaleDateString("id-ID", {
     day: "2-digit",
@@ -316,7 +464,7 @@ export const exportMandiriLogic = (groupedData, selectedBulan, selectedTahun) =>
     ["Pgri Kabupaten Jepara"],
     ["No Rekening : 2.015.15169.5 (PGRI Kabupaten Jepara)"],
     [],
-    ["No", "Cabang", "Nama", "No Rekening", "Total Tagihan", "Keterangan"]
+    ["No", "Cabang", "Nama", "No Rekening", "Total Tagihan", "Keterangan"],
   ];
 
   let rowNumber = 1;
