@@ -7,16 +7,15 @@ const BalancingTable = ({
   loadingBalancing,
   sortedData,
   dataBalancing,
-  currentPageBalancing,
   sortConfig,
   handleSort,
   cekRole,
   updatedId,
   updatedRowRef,
   formatRupiah,
-  handleEditClick,
   setSelectedId,
   setShowDeletePopup,
+  handleEditClick,
 }) => {
   const [startIndex, setStartIndex] = useState(0);
 
@@ -102,13 +101,13 @@ const BalancingTable = ({
                   </th>
 
                   {[
-                    { key: "totalIuranAnggota", label: "Iuran Anggota" },
-                    { key: "totalIuranSanduka", label: "Iuran Sanduka" },
-                    { key: "totalIuranDaspen", label: "Iuran Daspen" },
-                    { key: "totalIuranDerap", label: "Iuran Derap" },
-                    { key: "totalIuranKalender", label: "Iuran Kalender" },
-                    { key: "totalIuranSumbangan", label: "Iuran Sumbangan" },
-                    { key: "totalIuran", label: "Total Iuran" },
+                    { key: "totalIuranAnggota", label: "Iuran PGRI" },
+                    { key: "totalIuranSanduka", label: "Sanduka" },
+                    { key: "totalIuranDaspen", label: "Daspen" },
+                    { key: "totalIuranDerap", label: "Derap" },
+                    { key: "totalIuranKalender", label: "Kalender" },
+                    { key: "totalIuranSumbangan", label: "Lain-Lain" },
+                    { key: "totalIuran", label: "Total Keuangan" },
                     { key: "potongan", label: "Potongan" },
                     { key: "selisih", label: "Selisih" },
                   ].map(({ key, label }) => (
