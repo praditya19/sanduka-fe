@@ -213,7 +213,7 @@ function RekapAnggota() {
       initial.daspen += parseInt(item.daspen || 0);
       initial.derap += parseInt(item.derap || 0);
       initial.kalender += parseInt(item.kalender || 0);
-      initial.sumbangan += parseInt(item.sumbangan || 0);
+      initial.sumbangan += parseInt(item.lainLain || 0);
       initial.total += parseInt(item.totalIuran || 0);
       if (item.unitKerja) initial.unitKerjaCount.add(item.unitKerja);
     });

@@ -7,7 +7,8 @@ import {
   FaWallet, 
   FaFileInvoiceDollar, 
   FaCalendarAlt,
-  FaCoins
+  FaCoins,
+  FaEllipsisH
 } from "react-icons/fa";
 
 const StatCard = ({ title, value, icon: Icon, gradient, isLoading }) => {
@@ -45,7 +46,7 @@ const StatCard = ({ title, value, icon: Icon, gradient, isLoading }) => {
 
 const SummaryStats = ({ stats, isLoading }) => {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 2xl:grid-cols-8 gap-3 mb-6 mt-4">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 2xl:grid-cols-9 gap-3 mb-6 mt-4">
       <StatCard 
         title="Anggota" 
         value={stats.memberCount} 
@@ -93,6 +94,13 @@ const SummaryStats = ({ stats, isLoading }) => {
         value={stats.kalender} 
         icon={FaCalendarAlt} 
         gradient="bg-gradient-to-br from-emerald-600 to-teal-500" 
+        isLoading={isLoading}
+      />
+      <StatCard 
+        title="Lain - Lain" 
+        value={stats.sumbangan} 
+        icon={FaEllipsisH} 
+        gradient="bg-gradient-to-br from-fuchsia-500 to-purple-400" 
         isLoading={isLoading}
       />
       <StatCard 
