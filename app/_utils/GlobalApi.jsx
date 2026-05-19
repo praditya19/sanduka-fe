@@ -964,6 +964,17 @@ const createTargetDaspen = async (payload) => {
     throw error;
   }
 };
+const getAllTargetDaspen = async () => {
+  try {
+    const response = await axiosClient.get(
+      `/api/target-daspen`,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching all target:", error);
+    throw error;
+  }
+};
 const getTableDaspen = async (bulan, tahun, cabang) => {
   try {
     const response = await axiosClient.get(
@@ -3921,6 +3932,7 @@ export default {
   createTargetDerap,
   createTargetIuaran,
   getTableIuran,
+  getAllTargetDaspen,
   getTableDaspen,
   getTableDerap,
   getTableKalender,
