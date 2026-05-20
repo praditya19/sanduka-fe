@@ -1,7 +1,15 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import GlobalApi from "@/app/_utils/GlobalApi";
 
-const useRekapitulasi = () => {
+const useRekapitulasi = ({
+  activeTab,
+  selectedCabang,
+  selectedUnitKerja,
+  year,
+  month,
+  paymentNote,
+  searchBalancing,
+}) => {
   const [dataRekapitulasi, setDataRekapitulasi] = useState([]);
   const [loadingRekapitulasi, setLoadingRekapitulasi] = useState(false);
 
@@ -117,15 +125,7 @@ const useRekapitulasi = () => {
         if (activeTab === "rekapitulasi") {
           getRekapitulasiData();
         }
-      }, [
-        activeTab,
-        selectedCabang,
-        selectedUnitKerja,
-        year,
-        month,
-        paymentNote,
-        searchBalancing,
-      ]);
+      }, [activeTab, selectedCabang, selectedUnitKerja, year, month, paymentNote, searchBalancing]);
     return {
   // state
   dataRekapitulasi,

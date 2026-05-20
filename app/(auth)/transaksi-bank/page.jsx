@@ -27,12 +27,17 @@ import PotonganTable from "./components/potongan/PotonganTable";
 import BalancingHeaderActions from "./components/balancing/BalancingHeaderActions";
 import BalancingFilters from "./components/balancing/BalancingFilters";
 import BalancingTable from "./components/balancing/BalancingTable";
+// Compoenent rekap
+import RekapHeader from "./components/rekapitulasi/RekapHeader";
+import RekapFilters from "./components/rekapitulasi/RekapFilters";
+import RekapTable from "./components/rekapitulasi/RekapTable";
 // hook
 import usePotonganBank from "./hook/usePotonganBank";
 import useUploadHandler from "./hook/useUploadHandler";
 import useBalancing from "./hook/useBalancing";
 import useExportExcel from "./hook/useExportExcel";
 import useDropdownFilter from "./hook/useDropdownFilter";
+import useRekapitulasi from "./hook/useRekapitulasi";
 
 const NotificationPopup = ({ type, message, onClose }) => {
   useEffect(() => {
@@ -116,8 +121,6 @@ export default function BankTransactionPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const router = useRouter();
   const [notification, setNotification] = useState(null);
-  const [dataRekapitulasi, setDataRekapitulasi] = useState([]);
-  const [loadingRekapitulasi, setLoadingRekapitulasi] = useState(false);
   const [showImportBalancing, setShowImportBalancing] = useState(false);
   const today = new Date();
   const currentMonth = today.getMonth() + 1;
@@ -262,6 +265,17 @@ export default function BankTransactionPage() {
     handleBalancingFilterChange,
     dataBalancing,
   );
+
+  const { dataRekapitulasi, loadingRekapitulasi, getRekapitulasiData } =
+    useRekapitulasi({
+      activeTab,
+      selectedCabang,
+      selectedUnitKerja,
+      year,
+      month,
+      paymentNote,
+      searchBalancing,
+    });
 
   useEffect(() => {
     const handleResize = () => {
@@ -615,6 +629,12 @@ export default function BankTransactionPage() {
                 <RekapFilters
                   selectedCabang={selectedCabang}
                   handleCabangClick={handleCabangClick}
+                  showCabangDropdown={showCabangDropdown}
+                  handleSelectCabang={handleSelectCabang}
+                  filteredCabangList={filteredCabangList}
+                  cabangRef={cabangRef}
+                  handleCabangSearch={handleCabangSearch}
+                  role={sessionStorage.getItem("role")}
                   bulanList={bulanList}
                   month={month}
                   setMonth={setMonth}
@@ -623,6 +643,7 @@ export default function BankTransactionPage() {
                   setYear={setYear}
                   paymentNote={paymentNote}
                   setPaymentNote={setPaymentNote}
+                  Input={Input}
                 />
               </div>
               {loadingRekapitulasi ? (
@@ -645,7 +666,7 @@ export default function BankTransactionPage() {
                   </p>
                 </div>
               ) : (
-                <div className="w-full">
+                <div className="w-full -mt-12">
                   <div className="p-6 border-b border-gray-100">
                     <RekapTable
                       dataRekapitulasi={dataRekapitulasi}

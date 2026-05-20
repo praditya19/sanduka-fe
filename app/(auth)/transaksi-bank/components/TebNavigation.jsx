@@ -4,7 +4,7 @@ const TebNavigation = ({ activeTab, setActiveTab }) => {
   const tabs = [
     { key: "potongan", label: "Potongan Bank" },
     { key: "balancing", label: "Balancing" },
-    // { key: "rekapitulasi", label: "Rekapitulasi" },
+    { key: "rekapitulasi", label: "Rekapitulasi" },
   ];
 
   return (

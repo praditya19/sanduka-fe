@@ -61,3 +61,5 @@ const RekapHeader = ({ isLoading, exportRekapitulasiToExcel }) => {
                     </div>
   );
 };
+
+export default RekapHeader;
