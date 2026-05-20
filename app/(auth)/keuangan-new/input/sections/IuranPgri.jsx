@@ -505,8 +505,8 @@ const IuranPgriSection = () => {
   const totalIuran = besaran.pb + besaran.propinsi + besaran.kabupaten + besaran.cabang;
   const grandTotal = totalIuran + besaran.sanduka;
 
-  // Pagination Logic
-  const paginatedData = searchQuery ? transactions : transactions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  // Pagination Logic (Show all branches)
+  const paginatedData = transactions;
 
   return (
     <div className="flex flex-col h-full">
@@ -822,7 +822,7 @@ const IuranPgriSection = () => {
                                     const totalTagihanRow = (parseInt(row[2] || 0) + parseInt(row[3] || 0) + parseInt(row[4] || 0) + totalCabang + parseInt(row[8] || 0));
                                     return (
                                       <tr key={i} className="hover:bg-slate-50/80 transition-colors text-center text-[11px] font-bold text-slate-600">
-                                        <td className="px-3 py-4 text-slate-400 font-black">{(currentPage - 1) * itemsPerPage + i + 1}</td>
+                                        <td className="px-3 py-4 text-slate-400 font-black">{i + 1}</td>
                                         <td className="px-3 py-4 font-black text-slate-800 text-left whitespace-nowrap">{row[0]}</td>
                                         <td className="px-3 py-4 text-indigo-600 font-black"><span className="px-2 py-0.5 bg-indigo-50 rounded-md">{row[1]}</span></td>
                                         <td className="px-3 py-4">{formatCurrency(row[2])}</td>
@@ -912,7 +912,7 @@ const IuranPgriSection = () => {
                                 const totalPeruntukan = (parseInt(row[5] || 0) + parseInt(row[6] || 0));
                                 return (
                                   <tr key={i} className="hover:bg-slate-50/80 transition-colors text-center text-[12px] font-bold text-slate-600">
-                                    <td className="px-6 py-5 text-slate-400 font-black">{(currentPage - 1) * itemsPerPage + i + 1}</td>
+                                    <td className="px-6 py-5 text-slate-400 font-black">{i + 1}</td>
                                     <td className="px-6 py-5 font-black text-slate-800 text-left whitespace-nowrap">{row[0]}</td>
                                     <td className="px-6 py-5"><span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg font-black">{row[1]}</span></td>
                                     <td className="px-6 py-5">{formatCurrency(row[5])}</td>

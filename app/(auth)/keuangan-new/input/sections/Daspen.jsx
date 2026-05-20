@@ -1,8 +1,9 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import GlobalApi from "@/app/_utils/GlobalApi";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import toast, { Toaster } from "react-hot-toast";
+import * as XLSX from "xlsx";
 import { 
   FaHandHoldingHeart, 
   FaUsers, 
@@ -10,8 +11,10 @@ import {
   FaSearch, 
   FaCog,
   FaCalculator,
-  FaShieldAlt,
-  FaChartPie
+  FaFileExcel,
+  FaUpload,
+  FaEdit,
+  FaTrash
 } from "react-icons/fa";
 
 const PROVINSI_PERCENTAGE = 0.895;
@@ -19,14 +22,12 @@ const CABANG_PERCENTAGE = 0.065;
 const KABUPATEN_PERCENTAGE = 0.04;
 
 const DaspenSection = () => {
-  // Besaran Daspen State
   const [kuota, setKuota] = useState(700);
   const [katagori1, setKatagori1] = useState(0);
   const [katagori2, setKatagori2] = useState(0);
   const [katagori3, setKatagori3] = useState(0);
   const [showConfig, setShowConfig] = useState(false);
 
-  // Target State
   const [kat1, setKat1] = useState(0);
   const [kat2, setKat2] = useState(0);
   const [kat3, setKat3] = useState(0);
@@ -34,24 +35,23 @@ const DaspenSection = () => {
   const [selectedMonth, setSelectedMonth] = useState("");
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
-  // Lists
   const [cabangList, setCabangList] = useState([]);
   const [bulanList, setBulanList] = useState([]);
   
-  // Table State
   const [tableData, setTableData] = useState([]);
+  const [targetData, setTargetData] = useState([]);
   const [loadingTable, setLoadingTable] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Derived Values
+  const [isUploadingRealisasi, setIsUploadingRealisasi] = useState(false);
+  const [isUploadingDaspen, setIsUploadingDaspen] = useState(false);
+
+  const [editModal, setEditModal] = useState({ show: false, data: null });
+
   const kat1Val = kuota * katagori1;
   const kat2Val = kuota * katagori2;
   const kat3Val = kuota * katagori3;
-
   const totalTarget = (kat1Val * kat1) + (kat2Val * kat2) + (kat3Val * kat3);
-  const perolehanProvinsi = totalTarget * PROVINSI_PERCENTAGE;
-  const perolehanCabang = totalTarget * CABANG_PERCENTAGE;
-  const perolehanKabupaten = totalTarget * KABUPATEN_PERCENTAGE;
 
   useEffect(() => {
     fetchInitialData();
@@ -62,11 +62,15 @@ const DaspenSection = () => {
       const [resBulan, resCabang, resIuran] = await Promise.all([
         GlobalApi.getBulan(),
         GlobalApi.getCabang(),
-        GlobalApi.getDefaultIuranById(4) // Daspen ID = 4
+        GlobalApi.getDefaultIuranById(4)
       ]);
       
       setBulanList(resBulan.data || []);
-      setCabangList(resCabang.data || []);
+      
+      const sortedCabang = (resCabang.data || []).sort((a, b) => 
+        a.kecamatan.localeCompare(b.kecamatan)
+      );
+      setCabangList(sortedCabang);
       
       if (resIuran) {
         setKuota(parseInt(resIuran.pb) || 700);
@@ -88,12 +92,24 @@ const DaspenSection = () => {
     if (!selectedMonth || !selectedYear) return;
     setLoadingTable(true);
     try {
-      const data = await GlobalApi.getTableDaspen(selectedMonth, selectedYear, [], "");
-      // Filter out total rows if necessary
-      const filtered = data.filter(row => row["Cabang/Khusus"] !== "Jumlah");
-      setTableData(filtered);
+      const [resTable, resTargets] = await Promise.all([
+        GlobalApi.getTableDaspen(selectedMonth, selectedYear, [], ""),
+        GlobalApi.getAllTargetDaspen()
+      ]);
+
+      const filteredTable = resTable.filter(row => row["Cabang/Khusus"] !== "Jumlah" && row.cabang !== "Jumlah");
+      setTableData(filteredTable || []);
+
+      const filteredTargets = resTargets.filter(row => 
+        row.bulan?.toUpperCase() === selectedMonth.toUpperCase() &&
+        row.tahun?.toString() === selectedYear.toString()
+      );
+      setTargetData(filteredTargets || []);
+
     } catch (error) {
-      console.error("Error fetching Daspen table:", error);
+      console.error("Error fetching combined Daspen data:", error);
+      setTableData([]);
+      setTargetData([]);
     } finally {
       setLoadingTable(false);
     }
@@ -106,12 +122,8 @@ const DaspenSection = () => {
   const handleSaveBesaran = async () => {
     try {
       const payload = {
-        propinsi: katagori1,
-        kabupaten: katagori2,
-        cabang: katagori3,
-        pb: kuota,
-        sanduka: "",
-        iuran: "DASPEN",
+        propinsi: katagori1, kabupaten: katagori2, cabang: katagori3,
+        pb: kuota, sanduka: "", iuran: "DASPEN",
       };
       await GlobalApi.updateIuranData(4, payload);
       toast.success("Besaran Daspen diperbarui!");
@@ -129,35 +141,228 @@ const DaspenSection = () => {
     }
     try {
       const payload = {
-        bulan: selectedMonth,
-        tahun: selectedYear,
-        cabang: selectedCabang,
-        kategori1: kat1,
-        kategori2: kat2,
-        kategori3: kat3,
-        perolehanCabang: perolehanCabang,
-        perolehanKabupaten: perolehanKabupaten,
-        valueKat1: kat1 * kat1Val,
-        valueKat2: kat2 * kat2Val,
-        valueKat3: kat3 * kat3Val,
+        bulan: selectedMonth, tahun: selectedYear.toString(), cabang: selectedCabang,
+        kategori1: kat1, kategori2: kat2, kategori3: kat3,
+        perolehanCabang: totalTarget * CABANG_PERCENTAGE, 
+        perolehanKabupaten: totalTarget * KABUPATEN_PERCENTAGE,
+        valueKat1: kat1 * kat1Val, valueKat2: kat2 * kat2Val, valueKat3: kat3 * kat3Val,
+        transfer: 0, 
+        jenisData: "SANDUKA" 
       };
       await GlobalApi.createTargetDaspen(payload);
       toast.success(`Berhasil menyimpan Daspen untuk ${selectedCabang}`);
       fetchTableData();
-      // Reset inputs
       setKat1(0); setKat2(0); setKat3(0);
     } catch (error) {
       toast.error("Gagal menyimpan data Daspen.");
     }
   };
 
-  const formatCurrency = (val) => {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val || 0);
+  const parseNumber = (val) => {
+    if (typeof val === 'number') return val;
+    if (!val) return 0;
+    const cleanStr = String(val).replace(/\./g, '');
+    return parseFloat(cleanStr) || 0;
   };
 
+  const handleDownloadTemplate = (namaFile) => {
+    const headers = [
+      ["No", "Cabang/Khusus", "Kat I", "Nominal Kat I", "Kat II", "Nominal Kat II", "Kat III", "Nominal Kat III", "Total Anggota", "Total Nominal", "Transfer", "Selisih", "Status"]
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(headers);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Template Daspen");
+    XLSX.writeFile(wb, `${namaFile}.xlsx`);
+  };
+
+  const processExcelUpload = async (file, jenisDataLabel, toastMessage, isSetUploading) => {
+    if (!selectedMonth || !selectedYear) {
+      toast.error("Gagal! Pastikan Bulan dan Tahun sudah dipilih.");
+      return false;
+    }
+    isSetUploading(true);
+    const toastId = toast.loading(toastMessage);
+    const reader = new FileReader();
+
+    reader.onload = async (evt) => {
+      try {
+        const wb = XLSX.read(evt.target.result, { type: "binary" });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+        const rows = raw.slice(1).filter(r => r[1]); 
+        let successCount = 0;
+
+        for (const r of rows) {
+          const cabang = String(r[1]).trim();
+          const k1 = parseNumber(r[2]);
+          const k2 = parseNumber(r[4]);
+          const k3 = parseNumber(r[6]);
+          const transfer = parseNumber(r[10]);
+
+          const vKat1 = k1 * kat1Val;
+          const vKat2 = k2 * kat2Val;
+          const vKat3 = k3 * kat3Val;
+          const totalTgt = vKat1 + vKat2 + vKat3;
+
+          const payload = {
+            bulan: selectedMonth, tahun: selectedYear.toString(), cabang: cabang,
+            kategori1: k1, kategori2: k2, kategori3: k3,
+            perolehanCabang: totalTgt * CABANG_PERCENTAGE,
+            perolehanKabupaten: totalTgt * KABUPATEN_PERCENTAGE,
+            valueKat1: vKat1, valueKat2: vKat2, valueKat3: vKat3,
+            transfer: transfer,
+            jenisData: jenisDataLabel
+          };
+          await GlobalApi.createTargetDaspen(payload);
+          successCount++;
+        }
+        toast.success(`Selesai! ${successCount} data (${jenisDataLabel}) tersimpan.`, { id: toastId });
+        fetchTableData();
+      } catch (err) {
+        toast.error(`Gagal memproses Excel ${jenisDataLabel}.`, { id: toastId });
+      } finally {
+        isSetUploading(false);
+      }
+    };
+    reader.readAsBinaryString(file);
+    return true;
+  };
+
+  const handleUploadRealisasi = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      await processExcelUpload(file, "SANDUKA", "Menyimpan Realisasi Sanduka...", setIsUploadingRealisasi);
+      e.target.value = "";
+    }
+  };
+
+  const handleExcelUploadProvinsi = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      await processExcelUpload(file, "DASPEN", "Menyimpan Data Provinsi (DASPEN)...", setIsUploadingDaspen);
+      e.target.value = "";
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Apakah Anda yakin ingin menghapus data ini?")) {
+      try {
+        await GlobalApi.deleteTargetDaspen(id);
+        toast.success("Data berhasil dihapus!");
+        fetchTableData();
+      } catch (error) {
+        toast.error("Gagal menghapus data.");
+      }
+    }
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      const { id, kategori1, kategori2, kategori3, transfer } = editModal.data;
+      
+      const k1 = parseInt(kategori1) || 0;
+      const k2 = parseInt(kategori2) || 0;
+      const k3 = parseInt(kategori3) || 0;
+      const t = parseFloat(transfer) || 0;
+
+      const vKat1 = k1 * kat1Val;
+      const vKat2 = k2 * kat2Val;
+      const vKat3 = k3 * kat3Val;
+      const totalTgt = vKat1 + vKat2 + vKat3;
+
+      const payload = {
+        ...editModal.data, 
+        kategori1: k1, kategori2: k2, kategori3: k3, transfer: t,
+        valueKat1: vKat1, valueKat2: vKat2, valueKat3: vKat3,
+        perolehanCabang: totalTgt * CABANG_PERCENTAGE,
+        perolehanKabupaten: totalTgt * KABUPATEN_PERCENTAGE,
+      };
+
+      await GlobalApi.updateTargetDaspen(id, payload);
+      toast.success("Data berhasil diperbarui!");
+      setEditModal({ show: false, data: null });
+      fetchTableData();
+    } catch (error) {
+      toast.error("Gagal memperbarui data.");
+    }
+  };
+
+  const formatCurrency = (val) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val || 0);
+
+  const CellDouble = ({ top, bottom, topClass = "text-slate-700", bottomClass = "text-teal-500" }) => (
+    <div className="flex flex-col justify-center gap-1.5 leading-tight py-1">
+      <div className={`text-[11px] font-bold ${topClass}`}>{top !== null && top !== undefined ? top : "-"}</div>
+      {bottom !== null && bottom !== undefined && (
+        <div className={`text-[11px] font-semibold italic ${bottomClass}`}>{bottom}</div>
+      )}
+    </div>
+  );
+
+  const getUniqueCabangs = () => {
+    const allCabs = [...tableData.map(r => r.cabang || r["Cabang/Khusus"]), ...targetData.map(r => r.cabang)];
+    return Array.from(new Set(allCabs.filter(c => c)));
+  };
+  const uniqueCabangs = getUniqueCabangs();
+
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full relative">
       <Toaster position="top-center" />
+
+      {/* MODAL EDIT */}
+      {editModal.show && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl p-6 md:p-8 w-full max-w-lg shadow-2xl animate-fade-in-up">
+             <div className="flex justify-between items-start mb-6 border-b pb-4">
+               <div>
+                 <h3 className="font-black text-2xl text-slate-800">Edit Data Cabang</h3>
+                 <div className="flex items-center gap-2 mt-2">
+                   <span className="text-sm font-bold text-slate-500">{editModal.data?.cabang}</span>
+                   <span className={`text-[10px] px-2 py-0.5 rounded-full font-black text-white ${editModal.data?.jenisData === 'DASPEN' ? 'bg-teal-500' : 'bg-rose-500'}`}>
+                     {editModal.data?.jenisData || "SANDUKA"}
+                   </span>
+                 </div>
+               </div>
+               <button onClick={() => setEditModal({ show: false, data: null })} className="text-slate-400 hover:text-red-500 transition-colors">
+                 <FaTrash size={20} className="opacity-0" />
+               </button>
+             </div>
+             
+             <form onSubmit={handleUpdate} className="space-y-4">
+               <div className="grid grid-cols-3 gap-4">
+                 {['kategori1', 'kategori2', 'kategori3'].map((kat, idx) => (
+                   <div key={idx}>
+                     <label className="text-[10px] font-black text-slate-500 uppercase">Kat {idx + 1}</label>
+                     <input 
+                       type="number" 
+                       value={editModal.data[kat] || 0} 
+                       onChange={(e) => setEditModal(prev => ({ ...prev, data: { ...prev.data, [kat]: e.target.value } }))}
+                       className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 mt-1 font-bold outline-none focus:border-indigo-500"
+                     />
+                   </div>
+                 ))}
+               </div>
+               <div>
+                 <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">Nominal Transfer Pembayaran</label>
+                 <div className="relative">
+                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">Rp</span>
+                   <input 
+                     type="number" 
+                     value={editModal.data.transfer || 0} 
+                     onChange={(e) => setEditModal(prev => ({ ...prev, data: { ...prev.data, transfer: e.target.value } }))}
+                     className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:border-indigo-500"
+                   />
+                 </div>
+               </div>
+               
+               <div className="flex justify-end gap-3 mt-8">
+                   <button type="button" onClick={() => setEditModal({ show: false, data: null })} className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-black transition-colors">Batal</button>
+                   <button type="submit" className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black transition-colors flex items-center gap-2"><FaSave /> Simpan Perubahan</button>
+               </div>
+             </form>
+          </div>
+        </div>
+      )}
       
       {/* Banner */}
       <div className="bg-rose-500 p-6 text-white">
@@ -170,146 +375,75 @@ const DaspenSection = () => {
               <h2 className="text-xl font-black">Dana Sosial Pensiun (Daspen)</h2>
               <div className="flex items-center gap-2 mt-1">
                 <span className="px-2 py-0.5 bg-white/20 rounded-md text-[10px] font-black uppercase tracking-widest">Periode: {selectedMonth} {selectedYear}</span>
-                <span className="w-1 h-1 bg-white/40 rounded-full" />
-                <p className="text-rose-100 text-[10px] font-medium uppercase tracking-widest">Manajemen kuota dan perolehan per kategori</p>
               </div>
             </div>
           </div>
-          <button 
-            onClick={() => setShowConfig(!showConfig)}
-            className="p-3 bg-white/20 hover:bg-white/30 rounded-2xl backdrop-blur-md transition-all active:scale-95"
-          >
+          <button onClick={() => setShowConfig(!showConfig)} className="p-3 bg-white/20 hover:bg-white/30 rounded-2xl backdrop-blur-md transition-all">
             <FaCog className={showConfig ? "rotate-90 transition-transform" : ""} />
           </button>
         </div>
       </div>
 
       <div className="p-6 space-y-8 overflow-y-auto">
-        {/* Top Section: Configuration (Integrated) */}
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden"
-        >
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden">
           <div className="bg-slate-50/50 p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-rose-500 text-white flex items-center justify-center shadow-lg shadow-rose-100">
-                <FaCalculator className="text-base" />
-              </div>
-              <div>
-                <h3 className="text-base font-black text-slate-800 tracking-tight">Konfigurasi Besaran Daspen</h3>
-                <p className="text-slate-400 text-[9px] font-medium uppercase tracking-widest">Parameter Kuota & Kategori</p>
-              </div>
+              <div className="w-9 h-9 rounded-xl bg-rose-500 text-white flex items-center justify-center"><FaCalculator /></div>
+              <div><h3 className="text-base font-black text-slate-800">Konfigurasi Besaran Daspen</h3></div>
             </div>
-            <button 
-              onClick={() => fetchInitialData()}
-              className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-rose-500 hover:border-rose-200 transition-all shadow-sm"
-            >
-              Reset Default
-            </button>
           </div>
 
           <div className="p-6 sm:p-8">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
               <div>
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Kuota Dasar</label>
+                <label className="text-[9px] font-black text-slate-400 uppercase">Kuota Dasar</label>
                 <div className="relative group">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
-                    <span className="text-slate-300 font-black text-sm">Rp</span>
-                  </div>
-                  <input 
-                    type="number"
-                    value={kuota}
-                    onChange={(e) => setKuota(parseInt(e.target.value) || 0)}
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-rose-500 outline-none font-black text-slate-700 transition-all text-base group-hover:bg-slate-100/50 shadow-inner"
-                  />
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 font-black">Rp</span>
+                  <input type="number" value={kuota} onChange={(e) => setKuota(parseInt(e.target.value) || 0)} className="w-full pl-11 pr-4 py-3 bg-slate-50 rounded-[16px] font-black outline-none" />
                 </div>
               </div>
               {[
-                { label: "Kategori I (X)", key: "katagori1", val: kat1Val },
-                { label: "Kategori II (X)", key: "katagori2", val: kat2Val },
-                { label: "Kategori III (X)", key: "katagori3", val: kat3Val }
+                { label: "Kat I", key: "katagori1", val: kat1Val },
+                { label: "Kat II", key: "katagori2", val: kat2Val },
+                { label: "Kat III", key: "katagori3", val: kat3Val }
               ].map(cat => (
                 <div key={cat.key}>
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">{cat.label}</label>
+                  <label className="text-[9px] font-black text-slate-400 uppercase">{cat.label}</label>
                   <div className="space-y-2">
-                    <input 
-                      type="number" step="0.01"
-                      value={cat.key === "katagori1" ? katagori1 : cat.key === "katagori2" ? katagori2 : katagori3}
-                      onChange={(e) => {
-                        const v = parseFloat(e.target.value) || 0;
-                        if(cat.key === "katagori1") setKatagori1(v);
-                        if(cat.key === "katagori2") setKatagori2(v);
-                        if(cat.key === "katagori3") setKatagori3(v);
-                      }}
-                      className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-rose-500 outline-none font-black text-slate-700 transition-all text-base hover:bg-slate-100/50 shadow-inner text-center"
-                    />
-                    <div className="px-4 py-1.5 bg-rose-50 rounded-lg text-center">
-                      <p className="text-[10px] text-rose-600 font-black">{formatCurrency(cat.val)}</p>
-                    </div>
+                    <input type="number" step="0.01" value={cat.key === "katagori1" ? katagori1 : cat.key === "katagori2" ? katagori2 : katagori3} onChange={(e) => { const v = parseFloat(e.target.value) || 0; if(cat.key === "katagori1") setKatagori1(v); if(cat.key === "katagori2") setKatagori2(v); if(cat.key === "katagori3") setKatagori3(v); }} className="w-full px-4 py-3 bg-slate-50 rounded-[16px] font-black text-center outline-none" />
+                    <div className="px-4 py-1.5 bg-rose-50 rounded-lg text-center"><p className="text-[10px] text-rose-600 font-black">{formatCurrency(cat.val)}</p></div>
                   </div>
                 </div>
               ))}
             </div>
 
-            <button 
-              onClick={handleSaveBesaran}
-              className="w-full py-5 bg-rose-500 hover:bg-rose-600 text-white rounded-[24px] font-black shadow-xl shadow-rose-100 transition-all flex items-center justify-center space-x-2 active:scale-[0.98]"
-            >
-              <FaSave className="text-base" />
-              <span className="text-base tracking-tight">Simpan Konfigurasi Daspen</span>
+            <button onClick={handleSaveBesaran} className="w-full py-4 bg-rose-500 hover:bg-rose-600 text-white rounded-[24px] font-black flex items-center justify-center gap-2">
+              <FaSave /> Simpan Konfigurasi
             </button>
+
+            <div className="mt-6 p-5 bg-blue-50 rounded-[24px]">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 rounded-xl bg-blue-500 text-white flex items-center justify-center"><FaFileExcel /></div>
+                <div><h4 className="text-sm font-black text-blue-800">Upload Data Provinsi (DASPEN)</h4></div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button type="button" onClick={() => handleDownloadTemplate("Template_Provinsi_Daspen")} className="flex items-center gap-2 px-4 py-2.5 bg-white text-blue-600 rounded-xl text-xs font-black"><FaFileExcel /> Download Template</button>
+                <label className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-xs font-black cursor-pointer ${isUploadingDaspen ? 'opacity-50' : ''}`}>
+                  {isUploadingDaspen ? "Menyimpan..." : <><FaUpload /> Upload & Simpan Excel Provinsi</>}
+                  <input type="file" accept=".xlsx,.xls" className="hidden" onChange={handleExcelUploadProvinsi} disabled={isUploadingDaspen} />
+                </label>
+              </div>
+            </div>
           </div>
         </motion.div>
 
-        {/* Bottom Section: Laporan & Input */}
         <div className="space-y-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-[18px] bg-rose-50 text-rose-600 flex items-center justify-center border border-rose-100 shadow-sm">
-                <FaHandHoldingHeart className="text-xl" />
-              </div>
-              <div>
-                <h3 className="text-xl font-black text-slate-800 tracking-tight">Input Realisasi & Monitoring</h3>
-                <p className="text-slate-400 text-xs font-medium">Pengelolaan Daspen per cabang</p>
-              </div>
-            </div>
-          </div>
-
           <div className="space-y-8">
-            {/* Summary Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[
-                { label: "Setor Provinsi (89.5%)", val: perolehanProvinsi, color: "bg-indigo-600", icon: <FaShieldAlt /> },
-                { label: "Bagian Kabupaten (4%)", val: perolehanKabupaten, color: "bg-amber-500", icon: <FaChartPie /> },
-                { label: "Bagian Cabang (6.5%)", val: perolehanCabang, color: "bg-emerald-500", icon: <FaUsers /> }
-              ].map((stat, i) => (
-                <div key={i} className={`${stat.color} p-5 rounded-[28px] text-white shadow-lg flex items-center justify-between group overflow-hidden relative`}>
-                  <div className="relative z-10">
-                    <p className="text-[9px] font-black opacity-60 uppercase tracking-widest mb-0.5">{stat.label}</p>
-                    <h4 className="text-lg font-black">{formatCurrency(stat.val)}</h4>
-                  </div>
-                  <div className="text-3xl opacity-10 group-hover:scale-125 transition-transform duration-500">
-                    {stat.icon}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Horizontal Entry Form */}
-            <form onSubmit={handleSubmitTarget} className="bg-slate-900 p-6 sm:p-8 rounded-[40px] shadow-2xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                <FaHandHoldingHeart className="text-8xl text-white -rotate-12" />
-              </div>
-              
-              <div className="relative z-10 flex flex-col xl:flex-row items-end gap-6">
+            <form onSubmit={handleSubmitTarget} className="bg-slate-900 p-6 sm:p-8 rounded-[40px] shadow-2xl relative overflow-hidden">
+              <div className="relative z-10 flex flex-col xl:flex-row items-center gap-6">
                 <div className="w-full xl:w-1/4 space-y-2">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block px-1">Pilih Cabang</label>
-                  <select 
-                    value={selectedCabang}
-                    onChange={(e) => setSelectedCabang(e.target.value)}
-                    className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-bold text-white text-sm focus:bg-white/10 focus:border-rose-500 transition-all appearance-none"
-                  >
+                  <label className="text-[10px] font-black text-slate-500 uppercase">Pilih Cabang</label>
+                  <select value={selectedCabang} onChange={(e) => setSelectedCabang(e.target.value)} className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-bold text-white text-sm">
                     <option value="" className="text-slate-800">-- Pilih Cabang --</option>
                     {cabangList.map(c => <option key={c.id} value={c.kecamatan} className="text-slate-800">{c.kecamatan}</option>)}
                   </select>
@@ -322,118 +456,171 @@ const DaspenSection = () => {
                     { label: "KAT III", val: kat3, setter: setKat3, color: "border-emerald-500/30" }
                   ].map(cat => (
                     <div key={cat.label} className="space-y-2">
-                      <label className="text-[9px] font-black text-slate-500 uppercase block text-center tracking-widest">{cat.label}</label>
-                      <input 
-                        type="number"
-                        value={cat.val}
-                        onChange={(e) => cat.setter(parseInt(e.target.value) || 0)}
-                        className={`w-full bg-white/5 border ${cat.color} rounded-2xl px-4 py-4 text-white font-black text-center outline-none focus:bg-white/10 focus:border-white/30 transition-all text-base`}
-                      />
+                      <label className="text-[9px] font-black text-slate-500 uppercase text-center block">{cat.label}</label>
+                      <input type="number" value={cat.val} onChange={(e) => cat.setter(parseInt(e.target.value) || 0)} className={`w-full bg-white/5 border ${cat.color} rounded-2xl px-4 py-4 text-white font-black text-center outline-none`} />
                     </div>
                   ))}
                 </div>
 
-                <div className="w-full xl:w-auto flex xl:flex-col items-center xl:items-end justify-between xl:justify-center gap-2 xl:min-w-[180px] px-2">
-                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Total Target</span>
-                  <span className="text-2xl font-black text-emerald-400 tracking-tight">{formatCurrency(totalTarget)}</span>
+                <div className="w-full xl:w-auto flex xl:flex-col items-center justify-between xl:justify-center gap-2 px-2">
+                  <span className="text-[10px] font-black text-slate-500 uppercase">Total Target</span>
+                  <span className="text-2xl font-black text-emerald-400">{formatCurrency(totalTarget)}</span>
                 </div>
 
-                <div className="w-full xl:w-auto">
-                  <button 
-                    type="submit"
-                    className="w-full px-10 py-5 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-black shadow-xl shadow-rose-900/40 transition-all active:scale-[0.98] text-xs uppercase tracking-widest flex items-center justify-center gap-2"
-                  >
-                    <FaSave />
-                    Simpan Realisasi
+                <div className="w-full xl:w-auto flex flex-col gap-3 min-w-[220px]">
+                  <button type="submit" disabled={isUploadingRealisasi} className="w-full px-6 py-4 bg-rose-500 text-white rounded-2xl font-black text-xs uppercase flex items-center justify-center gap-2">
+                    <FaSave /> Simpan (Manual)
                   </button>
+                  <div className="flex gap-2 w-full h-11">
+                    <button type="button" onClick={() => handleDownloadTemplate("Template_Upload_Realisasi")} className="w-11 flex items-center justify-center bg-white/10 text-white rounded-xl"><FaFileExcel /></button>
+                    <label className="flex-1 flex items-center justify-center gap-2 bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase cursor-pointer">
+                      {isUploadingRealisasi ? "Menyimpan..." : <><FaUpload /> Upload Excel</>}
+                      <input type="file" accept=".xlsx,.xls" className="hidden" onChange={handleUploadRealisasi} disabled={isUploadingRealisasi}/>
+                    </label>
+                  </div>
                 </div>
               </div>
             </form>
 
-            {/* Table Card */}
-            <div className="bg-white rounded-[40px] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden">
-                <div className="p-6 border-b border-slate-100 flex flex-col xl:flex-row xl:items-center justify-between gap-6 bg-white">
+            <div className="bg-white rounded-[40px] shadow-2xl overflow-hidden">
+                <div className="p-6 border-b border-slate-100 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-[18px] bg-rose-50 text-rose-600 flex items-center justify-center border border-rose-100 shadow-sm">
-                      <FaHandHoldingHeart className="text-xl" />
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-black text-slate-800 tracking-tight">Rekapitulasi Daspen</h4>
-                      <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Per Cabang - {selectedMonth} {selectedYear}</p>
-                    </div>
+                    <div className="w-11 h-11 rounded-[18px] bg-rose-50 text-rose-600 flex items-center justify-center"><FaHandHoldingHeart className="text-xl" /></div>
+                    <div><h4 className="text-lg font-black text-slate-800">Rekapitulasi Daspen</h4></div>
                   </div>
 
                   <div className="flex flex-wrap items-center gap-3">
-                    <div className="relative min-w-[200px] flex-1 md:flex-none">
-                      <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-sm" />
-                      <input 
-                        type="text" 
-                        placeholder="Cari Cabang..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-rose-500/20 focus:bg-white transition-all text-xs"
-                      />
+                    <div className="relative min-w-[200px]">
+                      <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300" />
+                      <input type="text" placeholder="Cari Cabang..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-slate-50 rounded-xl outline-none font-bold text-xs" />
                     </div>
-                    
                     <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-100">
-                      <select 
-                        value={selectedMonth} 
-                        onChange={(e) => setSelectedMonth(e.target.value)}
-                        className="bg-transparent px-3 py-1.5 outline-none font-black text-slate-600 text-[10px] uppercase tracking-widest cursor-pointer"
-                      >
-                        {bulanList.map(b => <option key={b.id} value={b.namaBulan} className="font-sans normal-case">{b.namaBulan}</option>)}
+                      <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} className="bg-transparent px-3 py-1.5 outline-none font-black text-slate-600 text-[10px] uppercase">
+                        {bulanList.map(b => <option key={b.id} value={b.namaBulan}>{b.namaBulan}</option>)}
                       </select>
-                      <div className="w-[1px] h-4 bg-slate-200" />
-                      <select 
-                        value={selectedYear} 
-                        onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                        className="bg-transparent px-3 py-1.5 outline-none font-black text-slate-600 text-[10px] uppercase tracking-widest cursor-pointer"
-                      >
-                        {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y} className="font-sans normal-case">{y}</option>)}
+                      <select value={selectedYear} onChange={(e) => setSelectedYear(parseInt(e.target.value))} className="bg-transparent px-3 py-1.5 outline-none font-black text-slate-600 text-[10px] uppercase">
+                        {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
                       </select>
                     </div>
                   </div>
                 </div>
+
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
+                  <table className="w-full text-left border-collapse border border-slate-200">
                     <thead>
-                      <tr className="bg-slate-50/50 border-b border-slate-100">
-                        {["No", "Cabang/Khusus", "Kat I", "Kat II", "Kat III", "Total Target", "Status"].map((h, i) => (
-                          <th key={i} className="px-4 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-center whitespace-nowrap">
+                      <tr className="bg-slate-50 border-b border-slate-200">
+                        {["No", "Cabang/Khusus", "Kat I", "Nominal", "Kat II", "Nominal", "Kat III", "Nominal", "Total Anggota", "Total Nominal", "Transfer", "Selisih", "Status", "Aksi"].map((h, i) => (
+                          <th key={i} className="px-3 py-4 text-[9px] font-black uppercase tracking-widest text-slate-500 text-center whitespace-nowrap border-r border-slate-200 bg-slate-100/50">
                             {h}
                           </th>
                         ))}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-50">
+                    <tbody className="divide-y divide-slate-200">
                       {loadingTable ? (
-                        Array(5).fill(0).map((_, i) => <tr key={i} className="animate-pulse"><td colSpan={7} className="p-6"><div className="h-3 bg-slate-100 rounded-full w-full" /></td></tr>)
-                      ) : tableData.filter(r => r["Cabang/Khusus"]?.toLowerCase().includes(searchQuery.toLowerCase())).length > 0 ? (
-                        tableData.filter(r => r["Cabang/Khusus"]?.toLowerCase().includes(searchQuery.toLowerCase())).map((row, i) => (
-                          <tr key={i} className="hover:bg-slate-50/80 transition-colors text-center text-[11px] font-bold text-slate-600">
-                            <td className="px-4 py-4 text-slate-400 font-black">{i + 1}</td>
-                            <td className="px-4 py-4 font-black text-slate-800 text-left whitespace-nowrap">{row["Cabang/Khusus"]}</td>
-                            <td className="px-4 py-4"><span className="px-2 py-0.5 bg-rose-50 text-rose-600 rounded-md">{row["Anggota Kategori I"]}</span></td>
-                            <td className="px-4 py-4"><span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-md">{row["Anggota Kategori II"]}</span></td>
-                            <td className="px-4 py-4"><span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-md">{row["Anggota Kategori III"]}</span></td>
-                            <td className="px-4 py-4 text-slate-900 font-black">{formatCurrency(row["Total Target Perolehan"])}</td>
-                            <td className="px-4 py-4">
-                              <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-full text-[8px] font-black">TERCATAT</span>
-                            </td>
-                          </tr>
-                        ))
+                        Array(5).fill(0).map((_, i) => <tr key={i} className="animate-pulse"><td colSpan={14} className="p-6"><div className="h-3 bg-slate-100 rounded-full w-full" /></td></tr>)
+                      ) : uniqueCabangs.filter(c => c.toLowerCase().includes(searchQuery.toLowerCase())).length > 0 ? (
+                        uniqueCabangs.filter(c => c.toLowerCase().includes(searchQuery.toLowerCase())).map((cabangName, i) => {
+                          
+                          const sanduka = targetData.find(r => r.cabang === cabangName && r.jenisData === 'SANDUKA');
+                          const daspen = targetData.find(r => r.cabang === cabangName && r.jenisData === 'DASPEN');
+
+                          const k1 = sanduka ? parseInt(sanduka.kategori1) : null;
+                          const k2 = sanduka ? parseInt(sanduka.kategori2) : null;
+                          const k3 = sanduka ? parseInt(sanduka.kategori3) : null;
+                          const nomK1 = sanduka ? parseFloat(sanduka.valueKat1) : null;
+                          const nomK2 = sanduka ? parseFloat(sanduka.valueKat2) : null;
+                          const nomK3 = sanduka ? parseFloat(sanduka.valueKat3) : null;
+                          const totAnggota = sanduka ? (k1 + k2 + k3) : null;
+                          const totNominal = sanduka ? (nomK1 + nomK2 + nomK3) : null;
+                          const transfer = sanduka ? parseFloat(sanduka.transfer || 0) : null;
+                          const selisih = sanduka ? (totNominal - transfer) : null;
+
+                          const pk1 = daspen ? parseInt(daspen.kategori1) : null;
+                          const pk2 = daspen ? parseInt(daspen.kategori2) : null;
+                          const pk3 = daspen ? parseInt(daspen.kategori3) : null;
+                          const pNomK1 = daspen ? parseFloat(daspen.valueKat1) : null;
+                          const pNomK2 = daspen ? parseFloat(daspen.valueKat2) : null;
+                          const pNomK3 = daspen ? parseFloat(daspen.valueKat3) : null;
+                          const pTotAnggota = daspen ? (pk1 + pk2 + pk3) : null;
+                          const pTotNominal = daspen ? (pNomK1 + pNomK2 + pNomK3) : null;
+                          const pTransfer = daspen ? parseFloat(daspen.transfer || 0) : null;
+                          const pSelisih = daspen ? (pTotNominal - pTransfer) : null;
+
+                          return (
+                            <tr key={i} className="hover:bg-slate-50/80 transition-colors text-[11px] font-bold text-slate-600">
+                              <td className="px-3 py-2 text-slate-400 font-black border-r border-slate-200 text-center">{i + 1}</td>
+                              <td className="px-3 py-2 font-black text-slate-800 whitespace-nowrap border-r border-slate-200 uppercase">{cabangName}</td>
+                              
+                              <td className="px-3 py-2 border-r border-slate-200 text-center"><CellDouble top={k1} bottom={pk1} /></td>
+                              <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap"><CellDouble top={formatCurrency(nomK1)} bottom={pNomK1 !== null ? formatCurrency(pNomK1) : null} /></td>
+
+                              <td className="px-3 py-2 border-r border-slate-200 text-center"><CellDouble top={k2} bottom={pk2} /></td>
+                              <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap"><CellDouble top={formatCurrency(nomK2)} bottom={pNomK2 !== null ? formatCurrency(pNomK2) : null} /></td>
+
+                              <td className="px-3 py-2 border-r border-slate-200 text-center"><CellDouble top={k3} bottom={pk3} /></td>
+                              <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap"><CellDouble top={formatCurrency(nomK3)} bottom={pNomK3 !== null ? formatCurrency(pNomK3) : null} /></td>
+
+                              <td className="px-3 py-2 border-r border-slate-200 text-center"><CellDouble top={totAnggota} bottom={pTotAnggota} topClass="text-slate-700 text-[12px] font-black" /></td>
+                              <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/50"><CellDouble top={formatCurrency(totNominal)} bottom={pTotNominal !== null ? formatCurrency(pTotNominal) : null} topClass="text-slate-900 font-black" /></td>
+                              <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap"><CellDouble top={formatCurrency(transfer)} bottom={pTransfer !== null ? formatCurrency(pTransfer) : null} topClass="text-indigo-600" /></td>
+                              
+                              <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap">
+                                <CellDouble
+                                  top={formatCurrency(selisih)} bottom={pSelisih !== null ? formatCurrency(pSelisih) : null}
+                                  topClass={selisih === 0 && sanduka ? "text-emerald-600 font-black" : "text-rose-600 font-black"}
+                                  bottomClass={pSelisih === 0 && daspen ? "text-emerald-500 font-normal italic" : "text-rose-400 font-normal italic"}
+                                />
+                              </td>
+                              
+                              <td className="px-3 py-2 text-center border-r border-slate-200">
+                                <div className="flex flex-col gap-1 items-center justify-center">
+                                  {sanduka && (
+                                    <span className={`px-2 py-0.5 rounded-md text-[9px] font-black ${selisih === 0 ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-500"}`}>
+                                      {selisih === 0 ? "LUNAS" : "TERCATAT"}
+                                    </span>
+                                  )}
+                                  {daspen && (
+                                    <span className={`px-2 py-0.5 rounded-md text-[9px] font-black ${pSelisih === 0 ? "bg-emerald-100 text-emerald-600" : "bg-teal-50 text-teal-600"}`}>
+                                      {pSelisih === 0 ? "LUNAS" : "PROV"}
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+
+                              <td className="px-3 py-2 text-center w-24">
+                                <div className="flex flex-col gap-2 items-center justify-center">
+                                  {sanduka && (
+                                    <div className="flex gap-2">
+                                      <button onClick={() => setEditModal({ show: true, data: sanduka })} className="text-slate-400 hover:text-blue-500 transition-colors" title="Edit Sanduka"><FaEdit size={14} /></button>
+                                      <button onClick={() => handleDelete(sanduka.id)} className="text-slate-400 hover:text-red-500 transition-colors" title="Hapus Sanduka"><FaTrash size={14} /></button>
+                                    </div>
+                                  )}
+                                  {daspen && (
+                                    <div className="flex gap-2">
+                                      <button onClick={() => setEditModal({ show: true, data: daspen })} className="text-teal-400 hover:text-teal-600 transition-colors" title="Edit Daspen/Prov"><FaEdit size={14} /></button>
+                                      <button onClick={() => handleDelete(daspen.id)} className="text-teal-400 hover:text-red-500 transition-colors" title="Hapus Daspen/Prov"><FaTrash size={14} /></button>
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+
+                            </tr>
+                          );
+                        })
                       ) : (
-                        <tr><td colSpan={7} className="py-16 text-center text-slate-300 font-black uppercase tracking-widest text-xs">Data Kosong</td></tr>
+                        <tr><td colSpan={14} className="py-16 text-center text-slate-300 font-black uppercase tracking-widest text-xs">Data Kosong</td></tr>
                       )}
                     </tbody>
                   </table>
                 </div>
-              </div>
+
             </div>
           </div>
         </div>
       </div>
-    );
+    </div>
+  );
 };
 
 export default DaspenSection;
