@@ -301,7 +301,7 @@ const DaspenSection = () => {
 
   const getUniqueCabangs = () => {
     const allCabs = [...tableData.map(r => r.cabang || r["Cabang/Khusus"]), ...targetData.map(r => r.cabang)];
-    return Array.from(new Set(allCabs.filter(c => c)));
+    return Array.from(new Set(allCabs.filter(c => c))).sort((a, b) => a.localeCompare(b));
   };
   const uniqueCabangs = getUniqueCabangs();
 
