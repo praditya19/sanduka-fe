@@ -301,7 +301,7 @@ const DaspenSection = () => {
 
   const getUniqueCabangs = () => {
     const allCabs = [...tableData.map(r => r.cabang || r["Cabang/Khusus"]), ...targetData.map(r => r.cabang)];
-    return Array.from(new Set(allCabs.filter(c => c)));
+    return Array.from(new Set(allCabs.filter(c => c))).sort((a, b) => a.localeCompare(b));
   };
   const uniqueCabangs = getUniqueCabangs();
 
@@ -509,7 +509,7 @@ const DaspenSection = () => {
                   <table className="w-full text-left border-collapse border border-slate-200">
                     <thead>
                       <tr className="bg-slate-50 border-b border-slate-200">
-                        {["No", "Cabang/Khusus", "Kat I", "Nominal", "Kat II", "Nominal", "Kat III", "Nominal", "Total Anggota", "Total Nominal", "Transfer", "Selisih", "Status", "Aksi"].map((h, i) => (
+                        {["No", "Cabang/Khusus", "Anggota Cabang", "Kat I", "Nominal", "Kat II", "Nominal", "Kat III", "Nominal", "Total Anggota", "Total Nominal", "Transfer", "Selisih", "Status", "Aksi"].map((h, i) => (
                           <th key={i} className="px-3 py-4 text-[9px] font-black uppercase tracking-widest text-slate-500 text-center whitespace-nowrap border-r border-slate-200 bg-slate-100/50">
                             {h}
                           </th>
@@ -518,7 +518,7 @@ const DaspenSection = () => {
                     </thead>
                     <tbody className="divide-y divide-slate-200">
                       {loadingTable ? (
-                        Array(5).fill(0).map((_, i) => <tr key={i} className="animate-pulse"><td colSpan={14} className="p-6"><div className="h-3 bg-slate-100 rounded-full w-full" /></td></tr>)
+                        Array(5).fill(0).map((_, i) => <tr key={i} className="animate-pulse"><td colSpan={15} className="p-6"><div className="h-3 bg-slate-100 rounded-full w-full" /></td></tr>)
                       ) : uniqueCabangs.filter(c => c.toLowerCase().includes(searchQuery.toLowerCase())).length > 0 ? (
                         uniqueCabangs.filter(c => c.toLowerCase().includes(searchQuery.toLowerCase())).map((cabangName, i) => {
                           
@@ -547,10 +547,13 @@ const DaspenSection = () => {
                           const pTransfer = daspen ? parseFloat(daspen.transfer || 0) : null;
                           const pSelisih = daspen ? (pTotNominal - pTransfer) : null;
 
+                          const activeMembers = tableData.find(r => (r.cabang || r["Cabang/Khusus"]) === cabangName)?.totalAnggota ?? 0;
+
                           return (
                             <tr key={i} className="hover:bg-slate-50/80 transition-colors text-[11px] font-bold text-slate-600">
                               <td className="px-3 py-2 text-slate-400 font-black border-r border-slate-200 text-center">{i + 1}</td>
                               <td className="px-3 py-2 font-black text-slate-800 whitespace-nowrap border-r border-slate-200 uppercase">{cabangName}</td>
+                              <td className="px-3 py-2 border-r border-slate-200 text-center"><span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md font-black">{activeMembers}</span></td>
                               
                               <td className="px-3 py-2 border-r border-slate-200 text-center"><CellDouble top={k1} bottom={pk1} /></td>
                               <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap"><CellDouble top={formatCurrency(nomK1)} bottom={pNomK1 !== null ? formatCurrency(pNomK1) : null} /></td>
@@ -609,7 +612,7 @@ const DaspenSection = () => {
                           );
                         })
                       ) : (
-                        <tr><td colSpan={14} className="py-16 text-center text-slate-300 font-black uppercase tracking-widest text-xs">Data Kosong</td></tr>
+                        <tr><td colSpan={15} className="py-16 text-center text-slate-300 font-black uppercase tracking-widest text-xs">Data Kosong</td></tr>
                       )}
                     </tbody>
                   </table>
