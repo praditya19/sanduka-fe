@@ -338,7 +338,7 @@ const KalenderSection = () => {
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-slate-50/50 border-b border-slate-100">
-                        {["No", "Cabang/Khusus", "Jumlah", "Total Tagihan", "Status"].map((h, i) => (
+                        {["No", "Cabang/Khusus", "Total Anggota", "Jumlah", "Total Tagihan", "Status"].map((h, i) => (
                           <th key={i} className="px-4 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-center whitespace-nowrap">
                             {h}
                           </th>
@@ -347,21 +347,24 @@ const KalenderSection = () => {
                     </thead>
                     <tbody className="divide-y divide-slate-50">
                       {loadingTable ? (
-                        Array(5).fill(0).map((_, i) => <tr key={i} className="animate-pulse"><td colSpan={5} className="p-6"><div className="h-3 bg-slate-100 rounded-full w-full" /></td></tr>)
+                        Array(5).fill(0).map((_, i) => <tr key={i} className="animate-pulse"><td colSpan={6} className="p-6"><div className="h-3 bg-slate-100 rounded-full w-full" /></td></tr>)
                       ) : tableData.filter(r => r.cabang?.toLowerCase().includes(searchQuery.toLowerCase())).length > 0 ? (
                         tableData.filter(r => r.cabang?.toLowerCase().includes(searchQuery.toLowerCase())).map((row, i) => (
                           <tr key={i} className="hover:bg-slate-50/80 transition-colors text-center text-[11px] font-bold text-slate-600">
                             <td className="px-4 py-4 text-slate-400 font-black">{i + 1}</td>
                             <td className="px-4 py-4 font-black text-slate-800 text-left whitespace-nowrap">{row.cabang}</td>
+                            <td className="px-4 py-4"><span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md font-black">{row.totalAnggota ?? 0}</span></td>
                             <td className="px-4 py-4"><span className="px-2 py-0.5 bg-amber-50 text-amber-600 rounded-md">{row.jumlah} Pcs</span></td>
                             <td className="px-4 py-4 text-slate-900 font-black">{formatCurrency(row.total)}</td>
                             <td className="px-4 py-4">
-                              <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full text-[8px] font-black uppercase">Selesai</span>
+                              <span className={row.id > 0 ? "px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full text-[8px] font-black uppercase" : "px-2 py-0.5 bg-slate-100 text-slate-400 rounded-full text-[8px] font-black uppercase"}>
+                                {row.id > 0 ? "Selesai" : "Belum Tercatat"}
+                              </span>
                             </td>
                           </tr>
                         ))
                       ) : (
-                        <tr><td colSpan={5} className="py-16 text-center text-slate-300 font-black uppercase tracking-widest text-xs">Data Kosong</td></tr>
+                        <tr><td colSpan={6} className="py-16 text-center text-slate-300 font-black uppercase tracking-widest text-xs">Data Kosong</td></tr>
                       )}
                     </tbody>
                   </table>
