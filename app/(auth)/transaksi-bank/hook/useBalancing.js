@@ -300,6 +300,7 @@ const useBalancing = ({
     sortedData,
     paymentNote,
     setPaymentNote,
+    setDataBalancing,
   };
 };
 export default useBalancing;

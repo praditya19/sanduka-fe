@@ -206,6 +206,15 @@ export default function BankTransactionPage() {
     setNotification,
     setShowUploadModal,
   });
+
+  // Get dropdown filters first
+  const dropdownFilters = useDropdownFilter(
+    showEditModal,
+    editData,
+    handleBalancingFilterChange,
+    [], // Start with empty data
+  );
+
   const {
     handleDelete,
     setFileImport,
@@ -224,7 +233,10 @@ export default function BankTransactionPage() {
     handleSort,
     handleSaveEdit,
     handleEditClick,
+    paymentNote,
   } = useBalancing({
+    selectedCabang: dropdownFilters.selectedCabang,
+    selectedUnitKerja: dropdownFilters.selectedUnitKerja,
     month,
     year,
     editData,
@@ -240,6 +252,8 @@ export default function BankTransactionPage() {
     formatTanggal,
     exportBalancingToPDF,
   } = useExportExcel();
+
+  // Destructure from dropdown filters
   const {
     handleCabangClick,
     handleCabangSearch,
@@ -257,14 +271,8 @@ export default function BankTransactionPage() {
     cabangRef,
     unitKerjaRef,
     selectedUnitKerja,
-    paymentNote,
     showUnitKerjaDropdown,
-  } = useDropdownFilter(
-    showEditModal,
-    editData,
-    handleBalancingFilterChange,
-    dataBalancing,
-  );
+  } = dropdownFilters;
 
   const { dataRekapitulasi, loadingRekapitulasi, getRekapitulasiData } =
     useRekapitulasi({
