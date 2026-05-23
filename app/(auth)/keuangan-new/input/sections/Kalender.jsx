@@ -91,41 +91,41 @@ const KalenderSection = () => {
       );
 
       const bulanObj = bulanList.find((b) => b.namaBulan === selectedMonth);
-            const monthNumber = bulanObj ? bulanObj.id : new Date().getMonth() + 1;
-      
-            const balancingData = await GlobalApi.getTransaksiBankBalancing(
-              "",
-              null,
-              selectedYear,
-              monthNumber,
-              null,
-              null,
-            );
-      
-            const getTransferCabang = (cabangName, balancingData) => {
-              const parseCurrency = (val) => {
-                if (!val) return 0;
-                const cleaned = val
-                  .toString()
-                  .replace(/[^0-9,-]/g, "")
-                  .replace(",", ".");
-                return parseFloat(cleaned) || 0;
-              };
-      
-              return balancingData.reduce((total, item) => {
-                const cabangMatch =
-                  (item.cabang || "").toLowerCase() === cabangName.toLowerCase();
-      
-                const isSukses = item.keterangan === "Sukses";
-      
-                if (cabangMatch && isSukses) {
-                  return total + parseCurrency(item.potongan);
-                }
-      
-                return total;
-              }, 0);
+      const monthNumber = bulanObj ? bulanObj.id : new Date().getMonth() + 1;
+
+      const balancingData = await GlobalApi.getTransaksiBankBalancing(
+        "",
+        null,
+        selectedYear,
+        monthNumber,
+        null,
+        null,
+      );
+
+      const getTransferCabang = (cabangName, balancingData) => {
+        const parseCurrency = (val) => {
+          if (!val) return 0;
+          const cleaned = val
+            .toString()
+            .replace(/[^0-9,-]/g, "")
+            .replace(",", ".");
+          return parseFloat(cleaned) || 0;
+        };
+
+        return balancingData.reduce((total, item) => {
+          const cabangMatch =
+            (item.cabang || "").toLowerCase() === cabangName.toLowerCase();
+
+          const isSukses = item.keterangan === "Sukses";
+
+          if (cabangMatch && isSukses) {
+            return total + parseCurrency(item.potongan);
+          }
+
+          return total;
+        }, 0);
       };
-      
+
       const mappedData = (data || []).map((item) => {
         const jumlah = item.jumlah ?? 0;
 
@@ -133,24 +133,24 @@ const KalenderSection = () => {
         const peruntukanKabupaten = jumlah * (besaran.kabupaten || 0);
         const peruntukanCabang = jumlah * (besaran.cabang || 0);
 
-       const tambahanCabang = getTambahanCabang(item.cabang, balancingData);
+        const tambahanCabang = getTambahanCabang(item.cabang, balancingData);
 
-const totalCabang = peruntukanCabang + tambahanCabang;
+        const totalCabang = peruntukanCabang + tambahanCabang;
 
-const transfer = getTransferCabang(item.cabang, balancingData);
+        const transfer = getTransferCabang(item.cabang, balancingData);
 
-const kurang = totalCabang - transfer;
+        const kurang = totalCabang - transfer;
 
         return {
-  ...item,
-  peruntukanProvinsi,
-  peruntukanKabupaten,
-  peruntukanCabang,
-  tambahanCabang,
-  totalCabang,
-  transfer,
-  kurang,
-};
+          ...item,
+          peruntukanProvinsi,
+          peruntukanKabupaten,
+          peruntukanCabang,
+          tambahanCabang,
+          totalCabang,
+          transfer,
+          kurang,
+        };
       });
 
       setTableData(mappedData);
@@ -193,7 +193,9 @@ const kurang = totalCabang - transfer;
 
       if (itemDate && !itemDate.toString().includes(selectedPeriod)) return;
 
-      const mKalender = parseCurrency(item.manualKalender || item.manual_Kalender);
+      const mKalender = parseCurrency(
+        item.manualKalender || item.manual_Kalender,
+      );
 
       const currentManual = mKalender;
 
@@ -694,42 +696,42 @@ const kurang = totalCabang - transfer;
                             <td className="px-4 py-4">
                               {formatCurrency(row.peruntukanKabupaten)}
                             </td>
-                             <td className="px-4 py-4">
-                                                          {formatCurrency(row.peruntukanCabang)}
-                                                        </td>
-                                                        <td className="px-4 py-4 text-emerald-600">
-                                                          {formatCurrency(row.tambahanCabang)}
-                                                        </td>
-                                                        <td className="px-4 py-4 text-indigo-600 font-black">
-                                                          {formatCurrency(row.totalCabang)}
-                                                        </td>
-                                                        <td className="px-4 py-4 text-emerald-600 font-bold">
-                                                          {formatCurrency(row.transfer)}
-                                                        </td>
-                                                        <td className="px-4 py-4 text-orange-600 font-bold">
-                                                          {formatCurrency(row.kurang)}
-                                                        </td>
-                                                        <td className="px-4 py-4 text-slate-400">-</td>
-                                                        <td className="px-4 py-4 text-slate-400">-</td>
-                                                        <td className="px-4 py-4">
-                                                          <div className="flex items-center justify-center gap-2">
-                                                            <button
-                                                              onClick={() => handleEditClick(row)}
-                                                              className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
-                                                              title="Edit"
-                                                            >
-                                                              <FaEdit className="text-lg" />
-                                                            </button>
-                                                            <button
-                                                              onClick={() => handleDelete(row.id)}
-                                                              disabled={loadingAction}
-                                                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50"
-                                                              title="Hapus"
-                                                            >
-                                                              <FaTrash className="text-lg" />
-                                                            </button>
-                                                          </div>
-                                                        </td>
+                            <td className="px-4 py-4">
+                              {formatCurrency(row.peruntukanCabang)}
+                            </td>
+                            <td className="px-4 py-4 text-emerald-600">
+                              {formatCurrency(row.tambahanCabang)}
+                            </td>
+                            <td className="px-4 py-4 text-indigo-600 font-black">
+                              {formatCurrency(row.totalCabang)}
+                            </td>
+                            <td className="px-4 py-4 text-emerald-600 font-bold">
+                              {formatCurrency(row.transfer)}
+                            </td>
+                            <td className="px-4 py-4 text-orange-600 font-bold">
+                              {formatCurrency(row.kurang)}
+                            </td>
+                            <td className="px-4 py-4 text-slate-400">-</td>
+                            <td className="px-4 py-4 text-slate-400">-</td>
+                            <td className="px-4 py-4">
+                              <div className="flex items-center justify-center gap-2">
+                                <button
+                                  onClick={() => handleEditClick(row)}
+                                  className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                                  title="Edit"
+                                >
+                                  <FaEdit className="text-lg" />
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(row.id)}
+                                  disabled={loadingAction}
+                                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50"
+                                  title="Hapus"
+                                >
+                                  <FaTrash className="text-lg" />
+                                </button>
+                              </div>
+                            </td>
                           </tr>
                         ))
                     ) : (
