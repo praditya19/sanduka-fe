@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import GlobalApi from "@/app/_utils/GlobalApi";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import toast, { Toaster } from "react-hot-toast";
 import * as XLSX from "xlsx";
 import {
@@ -52,6 +52,8 @@ const DaspenSection = () => {
   const kat2Val = kuota * katagori2;
   const kat3Val = kuota * katagori3;
   const totalTarget = (kat1Val * kat1) + (kat2Val * kat2) + (kat3Val * kat3);
+
+  const [deleteModal, setDeleteModal] = useState({ show: false, id: null, jenis: "", cabang: "" });
 
   useEffect(() => {
     fetchInitialData();
@@ -106,10 +108,10 @@ const DaspenSection = () => {
       try {
         const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
         const monthIndex = monthNames.findIndex(m => m.toLowerCase() === selectedMonth.toLowerCase());
-        const numericMonth = monthIndex !== -1 ? (monthIndex + 1).toString() : "1"; 
+        const numericMonth = monthIndex !== -1 ? (monthIndex + 1).toString() : "1";
 
         const resAggregated = await GlobalApi.getNominalAggregatedData("", "", "", numericMonth, selectedYear);
-        
+
         setRawAggregatedData(resAggregated || []);
       } catch (aggError) {
         console.error("Peringatan: API Aggregated gagal (Error 500).", aggError);
@@ -231,15 +233,21 @@ const DaspenSection = () => {
     reader.readAsBinaryString(file);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Apakah Anda yakin ingin menghapus data manual ini? Sistem akan kembali ke perhitungan otomatis API.")) {
-      try {
-        await GlobalApi.deleteTargetDaspen(id);
-        toast.success("Data berhasil dihapus!");
-        fetchTableData();
-      } catch (error) {
-        toast.error("Gagal menghapus data.");
-      }
+  const handleDelete = (id, jenis, cabang, e) => {
+    if (e) e.stopPropagation();
+    setDeleteModal({ show: true, id: id, jenis: jenis, cabang: cabang });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteModal.id) return;
+    try {
+      await GlobalApi.deleteTargetDaspen(deleteModal.id);
+      toast.success(`Data ${deleteModal.jenis} berhasil dihapus!`);
+      fetchTableData();
+    } catch (error) {
+      toast.error("Gagal menghapus data.");
+    } finally {
+      setDeleteModal({ show: false, id: null, jenis: "", cabang: "" });
     }
   };
 
@@ -284,6 +292,14 @@ const DaspenSection = () => {
       {bottom !== null && bottom !== undefined && (
         <div className={`text-[11px] font-semibold italic ${bottomClass}`}>{bottom}</div>
       )}
+    </div>
+  );
+
+  const CellTriple = ({ top, middle, bottom, topClass = "text-slate-700", middleClass = "text-teal-500", bottomClass = "text-purple-600" }) => (
+    <div className="flex flex-col justify-center gap-1 leading-tight py-1">
+      <div className={`text-[11px] font-bold ${topClass}`}>{top !== null && top !== undefined ? top : "-"}</div>
+      <div className={`text-[11px] font-semibold italic ${middleClass}`}>{middle !== null && middle !== undefined ? middle : "-"}</div>
+      <div className={`text-[11px] font-bold italic ${bottomClass}`}>{bottom !== null && bottom !== undefined ? bottom : "-"}</div>
     </div>
   );
 
@@ -377,6 +393,60 @@ const DaspenSection = () => {
           </div>
         </div>
       )}
+
+      {/* MODAL KONFIRMASI HAPUS */}
+      <AnimatePresence>
+        {deleteModal.show && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-[32px] p-6 md:p-8 w-full max-w-sm shadow-2xl text-center"
+            >
+              <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-5 border-[6px] border-rose-100">
+                <FaTrash className="text-3xl text-rose-500" />
+              </div>
+
+              <h3 className="font-black text-2xl text-slate-800 mb-2">Hapus Data?</h3>
+              <p className="text-xs text-slate-500 font-bold mb-4 leading-relaxed">
+                Anda akan menghapus data ini secara permanen:
+              </p>
+
+              {/* INFO DATA YANG DITARGETKAN (SANGAT PENTING) */}
+              <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 mb-8 text-left">
+                <div className="flex flex-col gap-2">
+                  <div className="flex justify-between items-center border-b border-slate-200 pb-2">
+                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Target Cabang</span>
+                    <span className="text-xs font-black text-slate-700">{deleteModal.cabang}</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-1">
+                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Tipe Data</span>
+                    <span className={`text-[10px] px-2 py-1 rounded-md font-black ${deleteModal.jenis.includes('Realisasi') ? 'bg-purple-100 text-purple-600' : 'bg-teal-50 text-teal-600'}`}>
+                      {deleteModal.jenis}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={() => setDeleteModal({ show: false, id: null, jenis: "", cabang: "" })}
+                  className="flex-1 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl font-black transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="flex-1 px-4 py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-black transition-colors shadow-lg shadow-rose-500/30"
+                >
+                  Ya, Hapus
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Banner */}
       <div className="bg-rose-500 p-6 text-white">
@@ -490,7 +560,7 @@ const DaspenSection = () => {
                 <div className="flex items-center gap-3">
                   <div className="w-11 h-11 rounded-[18px] bg-rose-50 text-rose-600 flex items-center justify-center"><FaHandHoldingHeart className="text-xl" /></div>
                   <div>
-                    <h4 className="text-lg font-black text-slate-800">Rekapitulasi Daspen (Otomatis)</h4>
+                    <h4 className="text-lg font-black text-slate-800">Rekapitulasi Daspen</h4>
                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Data Hitam Digenerate Langsung dari API Balancing</p>
                   </div>
                 </div>
@@ -512,164 +582,242 @@ const DaspenSection = () => {
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse border border-slate-200">
-                  <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200">
-                      {["No", "Cabang/Khusus", "Total Anggota", "Kat I", "Nominal", "Kat II", "Nominal", "Kat III", "Nominal", "Total Nominal", "Transfer", "Selisih", "Pembayaran 1", "Pembayaran 2", "Kurang Setor", "Status", "Aksi"].map((h, i) => (
-                        <th key={i} className="px-3 py-4 text-[9px] font-black uppercase tracking-widest text-slate-500 text-center whitespace-nowrap border-r border-slate-200 bg-slate-100/50">
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200">
-                    {loadingTable ? (
-                      Array(5).fill(0).map((_, i) => <tr key={i} className="animate-pulse"><td colSpan={17} className="p-6"><div className="h-3 bg-slate-100 rounded-full w-full" /></td></tr>)
-                    ) : uniqueCabangs.filter(c => c.toLowerCase().includes(searchQuery.toLowerCase())).length > 0 ? (
-                      uniqueCabangs.filter(c => c.toLowerCase().includes(searchQuery.toLowerCase())).map((cabangName, i) => {
+                {(() => {
+                  // 1. Filter cabang yang sesuai dengan pencarian
+                  const filteredCabangs = uniqueCabangs.filter(c => c.toLowerCase().includes(searchQuery.toLowerCase()));
 
-                          let autoK1 = 0, autoK2 = 0, autoK3 = 0, autoTransfer = 0;
-                          
-                          const targetK1 = Math.round(kat1Val);
-                          const targetK2 = Math.round(kat2Val);
-                          const targetK3 = Math.round(kat3Val);
+                  // 2. Siapkan variabel untuk menampung TOTAL KESELURUHAN
+                  let tAutoAng = 0, tProvAng = 0, tRealAng = 0;
+                  let tAutoK1 = 0, tProvK1 = 0, tRealK1 = 0;
+                  let tAutoNomK1 = 0, tProvNomK1 = 0, tRealNomK1 = 0;
+                  let tAutoK2 = 0, tProvK2 = 0, tRealK2 = 0;
+                  let tAutoNomK2 = 0, tProvNomK2 = 0, tRealNomK2 = 0;
+                  let tAutoK3 = 0, tProvK3 = 0, tRealK3 = 0;
+                  let tAutoNomK3 = 0, tProvNomK3 = 0, tRealNomK3 = 0;
+                  let tAutoTotNom = 0, tProvTotNom = 0, tRealTotNom = 0;
+                  let tAutoTrans = 0, tProvTrans = 0, tRealTrans = 0;
+                  let tAutoSel = 0, tProvSel = 0, tRealSel = 0;
+                  let tProvPemb1 = 0, tRealPemb1 = 0;
+                  let tProvPemb2 = 0, tRealPemb2 = 0;
+                  let tAutoKurang = 0, tProvKurang = 0, tRealKurang = 0;
 
-                          const cabAggregated = rawAggregatedData.filter(r => r.cabang?.toUpperCase() === cabangName.toUpperCase());
-                          
-                          cabAggregated.forEach(item => {
-                            const d = Math.round(parseFloat(item.daspen) || 0);
-                            
-                            if (d === targetK1 && targetK1 > 0) {
-                                autoK1++;
-                            } else if (d === targetK2 && targetK2 > 0) {
-                                autoK2++;
-                            } else if (d === targetK3 && targetK3 > 0) {
-                                autoK3++;
-                            }
-                            
-                            autoTransfer += d; 
-                          });
+                  // 3. Render baris data sembari menjumlahkan nilai ke variabel Total
+                  const renderedRows = loadingTable ? (
+                    Array(5).fill(0).map((_, i) => <tr key={i} className="animate-pulse"><td colSpan={17} className="p-6"><div className="h-3 bg-slate-100 rounded-full w-full" /></td></tr>)
+                  ) : filteredCabangs.length > 0 ? (
+                    filteredCabangs.map((cabangName, i) => {
+                      let autoK1 = 0, autoK2 = 0, autoK3 = 0, autoTransfer = 0;
+                      const targetK1 = Math.round(kat1Val);
+                      const targetK2 = Math.round(kat2Val);
+                      const targetK3 = Math.round(kat3Val);
 
-                          const sandukaDB = targetData.find(r => r.cabang?.toUpperCase() === cabangName.toUpperCase() && r.jenisData === 'SANDUKA');
-                          const daspen = targetData.find(r => r.cabang?.toUpperCase() === cabangName.toUpperCase() && r.jenisData === 'DASPEN');
+                      const cabAggregated = rawAggregatedData.filter(r => r.cabang?.toUpperCase() === cabangName.toUpperCase());
 
-                        const k1 = sandukaDB ? parseInt(sandukaDB.kategori1) : autoK1;
-                        const k2 = sandukaDB ? parseInt(sandukaDB.kategori2) : autoK2;
-                        const k3 = sandukaDB ? parseInt(sandukaDB.kategori3) : autoK3;
+                      cabAggregated.forEach(item => {
+                        const d = Math.round(parseFloat(item.daspen) || 0);
+                        if (d === targetK1 && targetK1 > 0) autoK1++;
+                        else if (d === targetK2 && targetK2 > 0) autoK2++;
+                        else if (d === targetK3 && targetK3 > 0) autoK3++;
+                        autoTransfer += d;
+                      });
 
-                        const nomK1 = sandukaDB ? parseFloat(sandukaDB.valueKat1) : (k1 * kat1Val);
-                        const nomK2 = sandukaDB ? parseFloat(sandukaDB.valueKat2) : (k2 * kat2Val);
-                        const nomK3 = sandukaDB ? parseFloat(sandukaDB.valueKat3) : (k3 * kat3Val);
+                      const sandukaDB = targetData.find(r => r.cabang?.toUpperCase() === cabangName.toUpperCase() && r.jenisData === 'SANDUKA');
+                      const daspen = targetData.find(r => r.cabang?.toUpperCase() === cabangName.toUpperCase() && r.jenisData === 'DASPEN');
 
-                        const totNominal = sandukaDB ? parseFloat(sandukaDB.totalTarget || (nomK1 + nomK2 + nomK3)) : (nomK1 + nomK2 + nomK3);
-                        const transfer = sandukaDB ? parseFloat(sandukaDB.transfer || 0) : autoTransfer;
-                        const selisih = (totNominal - transfer);
+                      // --- DATA HITAM ---
+                      const nomAutoK1 = autoK1 * kat1Val; const nomAutoK2 = autoK2 * kat2Val; const nomAutoK3 = autoK3 * kat3Val;
+                      const totAutoNominal = nomAutoK1 + nomAutoK2 + nomAutoK3;
+                      const autoSelisih = totAutoNominal - autoTransfer;
+                      const autoKurangSetor = totAutoNominal - autoTransfer;
 
-                        const pemb1 = sandukaDB ? parseFloat(sandukaDB.pembayaran1 || 0) : 0;
-                        const pemb2 = sandukaDB ? parseFloat(sandukaDB.pembayaran2 || 0) : 0;
-                        const kurangSetor = (totNominal - transfer - pemb1 - pemb2);
+                      // --- DATA UNGU ---
+                      const dbK1 = sandukaDB ? parseInt(sandukaDB.kategori1) : null;
+                      const dbK2 = sandukaDB ? parseInt(sandukaDB.kategori2) : null;
+                      const dbK3 = sandukaDB ? parseInt(sandukaDB.kategori3) : null;
+                      const nomDbK1 = sandukaDB ? parseFloat(sandukaDB.valueKat1) : null;
+                      const nomDbK2 = sandukaDB ? parseFloat(sandukaDB.valueKat2) : null;
+                      const nomDbK3 = sandukaDB ? parseFloat(sandukaDB.valueKat3) : null;
+                      const totDbNominal = sandukaDB ? parseFloat(sandukaDB.totalTarget || (nomDbK1 + nomDbK2 + nomDbK3)) : null;
+                      const dbTransfer = sandukaDB ? parseFloat(sandukaDB.transfer || 0) : null;
+                      const dbSelisih = sandukaDB ? (totDbNominal - dbTransfer) : null;
+                      const dbPemb1 = sandukaDB ? parseFloat(sandukaDB.pembayaran1 || 0) : null;
+                      const dbPemb2 = sandukaDB ? parseFloat(sandukaDB.pembayaran2 || 0) : null;
+                      const dbKurangSetor = sandukaDB ? (totDbNominal - dbTransfer - dbPemb1 - dbPemb2) : null;
 
-                        const pk1 = daspen ? parseInt(daspen.kategori1) : null;
-                        const pk2 = daspen ? parseInt(daspen.kategori2) : null;
-                        const pk3 = daspen ? parseInt(daspen.kategori3) : null;
-                        const pNomK1 = daspen ? parseFloat(daspen.valueKat1) : null;
-                        const pNomK2 = daspen ? parseFloat(daspen.valueKat2) : null;
-                        const pNomK3 = daspen ? parseFloat(daspen.valueKat3) : null;
-                        const pTotNominal = daspen ? (pNomK1 + pNomK2 + pNomK3) : null;
-                        const pTransfer = daspen ? parseFloat(daspen.transfer || 0) : null;
-                        const pSelisih = daspen ? (pTotNominal - pTransfer) : null;
+                      // --- DATA BIRU ---
+                      const pk1 = daspen ? parseInt(daspen.kategori1) : null;
+                      const pk2 = daspen ? parseInt(daspen.kategori2) : null;
+                      const pk3 = daspen ? parseInt(daspen.kategori3) : null;
+                      const pNomK1 = daspen ? parseFloat(daspen.valueKat1) : null;
+                      const pNomK2 = daspen ? parseFloat(daspen.valueKat2) : null;
+                      const pNomK3 = daspen ? parseFloat(daspen.valueKat3) : null;
+                      const pTotNominal = daspen ? (pNomK1 + pNomK2 + pNomK3) : null;
+                      const pTransfer = daspen ? parseFloat(daspen.transfer || 0) : null;
+                      const pSelisih = daspen ? (pTotNominal - pTransfer) : null;
+                      const pPemb1 = daspen ? parseFloat(daspen.pembayaran1 || 0) : null;
+                      const pPemb2 = daspen ? parseFloat(daspen.pembayaran2 || 0) : null;
+                      const pKurangSetor = daspen ? (pTotNominal - pTransfer - pPemb1 - pPemb2) : null;
 
-                        const pPemb1 = daspen ? parseFloat(daspen.pembayaran1 || 0) : null;
-                        const pPemb2 = daspen ? parseFloat(daspen.pembayaran2 || 0) : null;
-                        const pKurangSetor = daspen ? (pTotNominal - pTransfer - pPemb1 - pPemb2) : null;
+                      // --- TOTAL ANGGOTA ---
+                      const activeMembers = cabAggregated.length > 0 ? cabAggregated.reduce((sum, item) => sum + (parseInt(item.jumlah) || 1), 0) : 0;
+                      const dbTotAnggota = sandukaDB ? (dbK1 + dbK2 + dbK3) : null;
+                      const pTotAnggota = daspen ? (pk1 + pk2 + pk3) : null;
 
-                          const activeMembers = cabAggregated.length > 0 
-                              ? cabAggregated.reduce((sum, item) => sum + (parseInt(item.jumlah) || 1), 0)
-                              : 0;
+                      // --- PENJUMLAHAN AKUMULASI UNTUK BARIS TOTAL REKAP (Di Bawah) ---
+                      tAutoAng += activeMembers; tProvAng += (pTotAnggota || 0); tRealAng += (dbTotAnggota || 0);
 
-                        return (
-                          <tr key={i} className="hover:bg-slate-50/80 transition-colors text-[11px] font-bold text-slate-600">
-                            <td className="px-3 py-2 text-slate-400 font-black border-r border-slate-200 text-center">{i + 1}</td>
-                            <td className="px-3 py-2 font-black text-slate-800 whitespace-nowrap border-r border-slate-200 uppercase">{cabangName}</td>
+                      tAutoK1 += autoK1; tProvK1 += (pk1 || 0); tRealK1 += (dbK1 || 0);
+                      tAutoNomK1 += nomAutoK1; tProvNomK1 += (pNomK1 || 0); tRealNomK1 += (nomDbK1 || 0);
 
-                            <td className="px-3 py-2 border-r border-slate-200 text-center">
-                              <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md font-black">{activeMembers}</span>
-                            </td>
+                      tAutoK2 += autoK2; tProvK2 += (pk2 || 0); tRealK2 += (dbK2 || 0);
+                      tAutoNomK2 += nomAutoK2; tProvNomK2 += (pNomK2 || 0); tRealNomK2 += (nomDbK2 || 0);
 
-                            <td className="px-3 py-2 border-r border-slate-200 text-center"><CellDouble top={k1} bottom={pk1} /></td>
-                            <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap"><CellDouble top={formatCurrency(nomK1)} bottom={pNomK1 !== null ? formatCurrency(pNomK1) : null} /></td>
+                      tAutoK3 += autoK3; tProvK3 += (pk3 || 0); tRealK3 += (dbK3 || 0);
+                      tAutoNomK3 += nomAutoK3; tProvNomK3 += (pNomK3 || 0); tRealNomK3 += (nomDbK3 || 0);
 
-                            <td className="px-3 py-2 border-r border-slate-200 text-center"><CellDouble top={k2} bottom={pk2} /></td>
-                            <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap"><CellDouble top={formatCurrency(nomK2)} bottom={pNomK2 !== null ? formatCurrency(pNomK2) : null} /></td>
+                      tAutoTotNom += totAutoNominal; tProvTotNom += (pTotNominal || 0); tRealTotNom += (totDbNominal || 0);
+                      tAutoTrans += autoTransfer; tProvTrans += (pTransfer || 0); tRealTrans += (dbTransfer || 0);
+                      tAutoSel += autoSelisih; tProvSel += (pSelisih || 0); tRealSel += (dbSelisih || 0);
 
-                            <td className="px-3 py-2 border-r border-slate-200 text-center"><CellDouble top={k3} bottom={pk3} /></td>
-                            <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap"><CellDouble top={formatCurrency(nomK3)} bottom={pNomK3 !== null ? formatCurrency(pNomK3) : null} /></td>
+                      tProvPemb1 += (pPemb1 || 0); tRealPemb1 += (dbPemb1 || 0);
+                      tProvPemb2 += (pPemb2 || 0); tRealPemb2 += (dbPemb2 || 0);
 
-                            <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/50"><CellDouble top={formatCurrency(totNominal)} bottom={pTotNominal !== null ? formatCurrency(pTotNominal) : null} topClass="text-slate-900 font-black" /></td>
-                            <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap"><CellDouble top={formatCurrency(transfer)} bottom={pTransfer !== null ? formatCurrency(pTransfer) : null} topClass="text-indigo-600" /></td>
+                      tAutoKurang += autoKurangSetor; tProvKurang += (pKurangSetor || 0); tRealKurang += (dbKurangSetor || 0);
 
-                            <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap">
-                              <CellDouble
-                                top={formatCurrency(selisih)} bottom={pSelisih !== null ? formatCurrency(pSelisih) : null}
-                                topClass={selisih === 0 ? "text-emerald-600 font-black" : "text-amber-600 font-black"}
-                                bottomClass={pSelisih === 0 && daspen ? "text-emerald-500 font-normal italic" : "text-amber-500 font-normal italic"}
-                              />
-                            </td>
+                      return (
+                        <tr key={i} className="hover:bg-slate-50/80 transition-colors text-[11px] font-bold text-slate-600">
+                          <td className="px-3 py-2 text-slate-400 font-black border-r border-slate-200 text-center">{i + 1}</td>
+                          <td className="px-3 py-2 font-black text-slate-800 whitespace-nowrap border-r border-slate-200 uppercase">{cabangName}</td>
 
-                            <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap"><CellDouble top={formatCurrency(pemb1)} bottom={pPemb1 !== null ? formatCurrency(pPemb1) : null} topClass="text-slate-700" /></td>
-                            <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap"><CellDouble top={formatCurrency(pemb2)} bottom={pPemb2 !== null ? formatCurrency(pPemb2) : null} topClass="text-slate-700" /></td>
+                          <td className="px-3 py-2 border-r border-slate-200 text-center"><CellTriple top={activeMembers} middle={pTotAnggota} bottom={dbTotAnggota} /></td>
 
-                            <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap">
-                              <CellDouble
-                                top={formatCurrency(kurangSetor)} bottom={pKurangSetor !== null ? formatCurrency(pKurangSetor) : null}
-                                topClass={kurangSetor === 0 ? "text-emerald-600 font-black" : "text-rose-600 font-black"}
-                                bottomClass={pKurangSetor === 0 && daspen ? "text-emerald-500 font-normal italic" : "text-rose-400 font-normal italic"}
-                              />
-                            </td>
+                          <td className="px-3 py-2 border-r border-slate-200 text-center"><CellTriple top={autoK1} middle={pk1} bottom={dbK1} /></td>
+                          <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap"><CellTriple top={formatCurrency(nomAutoK1)} middle={pNomK1 !== null ? formatCurrency(pNomK1) : null} bottom={nomDbK1 !== null ? formatCurrency(nomDbK1) : null} /></td>
 
-                            <td className="px-3 py-2 text-center border-r border-slate-200">
-                              <div className="flex flex-col gap-1 items-center justify-center">
-                                <span className={`px-2 py-0.5 rounded-md text-[9px] font-black ${kurangSetor === 0 ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-500"}`}>
-                                  {kurangSetor === 0 ? "LUNAS" : "TERCATAT"}
-                                </span>
-                                {daspen && (
-                                  <span className={`px-2 py-0.5 rounded-md text-[9px] font-black ${pKurangSetor === 0 ? "bg-emerald-100 text-emerald-600" : "bg-teal-50 text-teal-600"}`}>
-                                    {pKurangSetor === 0 ? "LUNAS" : "PROV"}
-                                  </span>
-                                )}
-                              </div>
-                            </td>
+                          <td className="px-3 py-2 border-r border-slate-200 text-center"><CellTriple top={autoK2} middle={pk2} bottom={dbK2} /></td>
+                          <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap"><CellTriple top={formatCurrency(nomAutoK2)} middle={pNomK2 !== null ? formatCurrency(pNomK2) : null} bottom={nomDbK2 !== null ? formatCurrency(nomDbK2) : null} /></td>
 
-                            <td className="px-3 py-2 text-center w-24">
-                              <div className="flex flex-col gap-2 items-center justify-center">
+                          <td className="px-3 py-2 border-r border-slate-200 text-center"><CellTriple top={autoK3} middle={pk3} bottom={dbK3} /></td>
+                          <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap"><CellTriple top={formatCurrency(nomAutoK3)} middle={pNomK3 !== null ? formatCurrency(pNomK3) : null} bottom={nomDbK3 !== null ? formatCurrency(nomDbK3) : null} /></td>
+
+                          <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/50"><CellTriple top={formatCurrency(totAutoNominal)} middle={pTotNominal !== null ? formatCurrency(pTotNominal) : null} bottom={totDbNominal !== null ? formatCurrency(totDbNominal) : null} topClass="text-slate-900 font-black" /></td>
+                          <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap"><CellTriple top={formatCurrency(autoTransfer)} middle={pTransfer !== null ? formatCurrency(pTransfer) : null} bottom={dbTransfer !== null ? formatCurrency(dbTransfer) : null} topClass="text-indigo-600" /></td>
+
+                          <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap">
+                            <CellTriple
+                              top={formatCurrency(autoSelisih)} middle={pSelisih !== null ? formatCurrency(pSelisih) : null} bottom={dbSelisih !== null ? formatCurrency(dbSelisih) : null}
+                              topClass={autoSelisih === 0 ? "text-emerald-600 font-black" : "text-amber-600 font-black"}
+                              middleClass={pSelisih === 0 ? "text-emerald-500 font-normal italic" : "text-amber-500 font-normal italic"}
+                              bottomClass={dbSelisih === 0 ? "text-emerald-600 font-black" : "text-purple-600 font-black"}
+                            />
+                          </td>
+
+                          <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap"><CellTriple top={formatCurrency(0)} middle={pPemb1 !== null ? formatCurrency(pPemb1) : null} bottom={dbPemb1 !== null ? formatCurrency(dbPemb1) : null} /></td>
+                          <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap"><CellTriple top={formatCurrency(0)} middle={pPemb2 !== null ? formatCurrency(pPemb2) : null} bottom={dbPemb2 !== null ? formatCurrency(dbPemb2) : null} /></td>
+
+                          <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap">
+                            <CellTriple
+                              top={formatCurrency(autoKurangSetor)} middle={pKurangSetor !== null ? formatCurrency(pKurangSetor) : null} bottom={dbKurangSetor !== null ? formatCurrency(dbKurangSetor) : null}
+                              topClass={autoKurangSetor === 0 ? "text-emerald-600 font-black" : "text-rose-600 font-black"}
+                              middleClass={pKurangSetor === 0 ? "text-emerald-500 font-normal italic" : "text-rose-400 font-normal italic"}
+                              bottomClass={dbKurangSetor === 0 ? "text-emerald-600 font-black" : "text-purple-600 font-black"}
+                            />
+                          </td>
+
+                          <td className="px-3 py-2 text-center border-r border-slate-200">
+                            <div className="flex flex-col gap-1 items-center justify-center">
+                              <span className="text-[9px] font-black text-slate-500">AUTO</span>
+                              {daspen && <span className="px-2 py-0.5 rounded-md text-[9px] font-black bg-teal-50 text-teal-600">DASPEN</span>}
+                              {sandukaDB && <span className="px-2 py-0.5 rounded-md text-[9px] font-black bg-purple-100 text-purple-600">REALISASI</span>}
+                            </div>
+                          </td>
+
+                          <td className="px-3 py-2 text-center w-24">
+                            <div className="flex flex-col gap-2 items-center justify-center">
+
+                              {daspen && (
                                 <div className="flex gap-2">
-                                  <button
-                                    onClick={() => setEditModal({ show: true, data: sandukaDB || { isAuto: true, cabang: cabangName, jenisData: 'SANDUKA', kategori1: k1, kategori2: k2, kategori3: k3, transfer: transfer, pembayaran1: pemb1, pembayaran2: pemb2 } })}
-                                    className="text-slate-400 hover:text-blue-500 transition-colors" title="Edit Sanduka"
-                                  ><FaEdit size={14} /></button>
-
-                                  {sandukaDB && (
-                                    <button onClick={() => handleDelete(sandukaDB.id)} className="text-slate-400 hover:text-red-500 transition-colors" title="Kembalikan ke Auto-API"><FaTrash size={14} /></button>
-                                  )}
+                                  <button onClick={() => setEditModal({ show: true, data: daspen })} className="text-teal-400 hover:text-teal-600 transition-colors" title="Edit Daspen/Prov"><FaEdit size={14} /></button>
+                                  <button onClick={(e) => handleDelete(daspen.id, "Upload Provinsi", cabangName, e)} className="text-teal-400 hover:text-red-500 transition-colors" title="Hapus Daspen/Prov"><FaTrash size={14} /></button>
                                 </div>
+                              )}
 
-                                {daspen && (
-                                  <div className="flex gap-2">
-                                    <button onClick={() => setEditModal({ show: true, data: daspen })} className="text-teal-400 hover:text-teal-600 transition-colors" title="Edit Daspen/Prov"><FaEdit size={14} /></button>
-                                    <button onClick={() => handleDelete(daspen.id)} className="text-teal-400 hover:text-red-500 transition-colors" title="Hapus Daspen/Prov"><FaTrash size={14} /></button>
-                                  </div>
+                              <div className="flex gap-2">
+                                <button onClick={() => setEditModal({ show: true, data: sandukaDB || { isAuto: true, cabang: cabangName, jenisData: 'SANDUKA', kategori1: autoK1, kategori2: autoK2, kategori3: autoK3, transfer: autoTransfer, pembayaran1: 0, pembayaran2: 0 } })} className="text-purple-500 hover:text-purple-700 transition-colors" title="Edit / Input Simpan Realisasi"><FaEdit size={14} /></button>
+                                {sandukaDB && (
+                                  <button onClick={(e) => handleDelete(sandukaDB.id, "Realisasi / Manual", cabangName, e)} className="text-red-400 hover:text-red-600 transition-colors" title="Hapus Data Simpan Realisasi"><FaTrash size={14} /></button>
                                 )}
                               </div>
+
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr><td colSpan={17} className="py-16 text-center text-slate-300 font-black uppercase tracking-widest text-xs">Data Kosong</td></tr>
+                  );
+
+                  // 4. Return struktur HTML Table beserta TFOOT (Footer Baris Total)
+                  return (
+                    <table className="w-full text-left border-collapse border border-slate-200">
+                      <thead>
+                        <tr className="bg-slate-50 border-b border-slate-200">
+                          {["No", "Cabang/Khusus", "Total Anggota", "Kat I", "Nominal", "Kat II", "Nominal", "Kat III", "Nominal", "Total Nominal", "Transfer", "Selisih", "Pembayaran 1", "Pembayaran 2", "Kurang Setor", "Status", "Aksi"].map((h, i) => (
+                            <th key={i} className="px-3 py-4 text-[9px] font-black uppercase tracking-widest text-slate-500 text-center whitespace-nowrap border-r border-slate-200 bg-slate-100/50">
+                              {h}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200">
+                        {renderedRows}
+                      </tbody>
+
+                      {/* BARIS TOTAL REKAP MUNCUL JIKA DATA ADA */}
+                      {!loadingTable && filteredCabangs.length > 0 && (
+                        <tfoot className="bg-slate-100/80 border-t-4 border-slate-300 shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
+                          <tr className="text-[11px] font-black text-slate-800">
+                            <td colSpan={2} className="px-3 py-4 text-center text-xs uppercase tracking-widest border-r border-slate-300">TOTAL REKAPITULASI</td>
+
+                            <td className="px-3 py-2 border-r border-slate-300 text-center"><CellTriple top={tAutoAng} middle={tProvAng} bottom={tRealAng} /></td>
+
+                            <td className="px-3 py-2 border-r border-slate-300 text-center"><CellTriple top={tAutoK1} middle={tProvK1} bottom={tRealK1} /></td>
+                            <td className="px-3 py-2 border-r border-slate-300 text-right"><CellTriple top={formatCurrency(tAutoNomK1)} middle={formatCurrency(tProvNomK1)} bottom={formatCurrency(tRealNomK1)} /></td>
+
+                            <td className="px-3 py-2 border-r border-slate-300 text-center"><CellTriple top={tAutoK2} middle={tProvK2} bottom={tRealK2} /></td>
+                            <td className="px-3 py-2 border-r border-slate-300 text-right"><CellTriple top={formatCurrency(tAutoNomK2)} middle={formatCurrency(tProvNomK2)} bottom={formatCurrency(tRealNomK2)} /></td>
+
+                            <td className="px-3 py-2 border-r border-slate-300 text-center"><CellTriple top={tAutoK3} middle={tProvK3} bottom={tRealK3} /></td>
+                            <td className="px-3 py-2 border-r border-slate-300 text-right"><CellTriple top={formatCurrency(tAutoNomK3)} middle={formatCurrency(tProvNomK3)} bottom={formatCurrency(tRealNomK3)} /></td>
+
+                            <td className="px-3 py-2 border-r border-slate-300 text-right bg-slate-200/50"><CellTriple top={formatCurrency(tAutoTotNom)} middle={formatCurrency(tProvTotNom)} bottom={formatCurrency(tRealTotNom)} topClass="text-slate-900" /></td>
+                            <td className="px-3 py-2 border-r border-slate-300 text-right"><CellTriple top={formatCurrency(tAutoTrans)} middle={formatCurrency(tProvTrans)} bottom={formatCurrency(tRealTrans)} topClass="text-indigo-600" /></td>
+
+                            <td className="px-3 py-2 border-r border-slate-300 text-right">
+                              <CellTriple
+                                top={formatCurrency(tAutoSel)} middle={formatCurrency(tProvSel)} bottom={formatCurrency(tRealSel)}
+                                topClass={tAutoSel === 0 ? "text-emerald-600" : "text-amber-600"}
+                              />
                             </td>
 
+                            <td className="px-3 py-2 border-r border-slate-300 text-right"><CellTriple top={formatCurrency(0)} middle={formatCurrency(tProvPemb1)} bottom={formatCurrency(tRealPemb1)} /></td>
+                            <td className="px-3 py-2 border-r border-slate-300 text-right"><CellTriple top={formatCurrency(0)} middle={formatCurrency(tProvPemb2)} bottom={formatCurrency(tRealPemb2)} /></td>
+
+                            <td className="px-3 py-2 border-r border-slate-300 text-right">
+                              <CellTriple
+                                top={formatCurrency(tAutoKurang)} middle={formatCurrency(tProvKurang)} bottom={formatCurrency(tRealKurang)}
+                                topClass={tAutoKurang === 0 ? "text-emerald-600" : "text-rose-600"}
+                              />
+                            </td>
+
+                            <td colSpan={2} className="px-3 py-2 border-r border-slate-300 bg-slate-200/30"></td>
                           </tr>
-                        );
-                      })
-                    ) : (
-                      <tr><td colSpan={17} className="py-16 text-center text-slate-300 font-black uppercase tracking-widest text-xs">Data Kosong</td></tr>
-                    )}
-                  </tbody>
-                </table>
+                        </tfoot>
+                      )}
+                    </table>
+                  );
+                })()}
               </div>
 
             </div>
