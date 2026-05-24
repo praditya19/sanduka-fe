@@ -161,7 +161,13 @@ const LainLainSection = () => {
         </div>
         {!showForm && (
           <button 
-            onClick={() => setShowForm(true)}
+            onClick={() => {
+              setShowForm(true);
+              setIsManualInput(true); 
+              setFormData({ tipe: "", keterangan: "", nominal: "", rawNominal: "" });
+              setIsEditing(false);
+              setEditingId(null);
+            }}
             className="flex items-center space-x-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black rounded-xl transition-all shadow-lg shadow-emerald-900/20"
           >
             <FaPlus />
