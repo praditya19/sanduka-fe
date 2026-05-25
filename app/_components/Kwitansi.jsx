@@ -647,7 +647,7 @@ function Pengeluaran() {
 </body>
 </html> `
       )
-      .join("");
+      .join(`<div class="separator"></div>`);
 
     return `
       <html>
@@ -664,6 +664,10 @@ function Pengeluaran() {
               justify-content: space-between;
               height: 100%;
             }
+              .separator {
+        border-top: 2px dashed #999;
+        margin: 30px 0;
+      }
           </style>
         </head>
         <body>
