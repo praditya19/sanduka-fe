@@ -1841,10 +1841,13 @@ const getAnggotaMeninggal = async (year, month) => {
 };
 
 // Mutasi
-const keluarAnggota = async (anggotaId) => {
+const keluarAnggota = async (anggotaId, keterangan) => {
   try {
     const response = await axiosClient.put(
       `api/mutasi-anggota/${anggotaId}/keluar`,
+      {
+        keterangan: keterangan,
+      }
     );
     return response.data;
   } catch (error) {
