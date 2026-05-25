@@ -1,9 +1,11 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { motion, AnimatePresence } from "framer-motion";
 import toast, { Toaster } from "react-hot-toast";
-import * as XLSX from "xlsx";
+import * as XLSX from 'xlsx-js-style';
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 import {
   FaHandHoldingHeart,
   FaUsers,
@@ -12,6 +14,7 @@ import {
   FaCog,
   FaCalculator,
   FaFileExcel,
+  FaFilePdf,
   FaUpload,
   FaEdit,
   FaTrash
@@ -54,6 +57,273 @@ const DaspenSection = () => {
   const totalTarget = (kat1Val * kat1) + (kat2Val * kat2) + (kat3Val * kat3);
 
   const [deleteModal, setDeleteModal] = useState({ show: false, id: null, jenis: "", cabang: "" });
+
+  const tableRef = useRef(null); 
+  const printRef = useRef(null); 
+
+  const handleExportExcel = () => {
+    const toastId = toast.loading("Menyiapkan data Excel yang rapi...");
+    try {
+      const filteredCabangs = uniqueCabangs.filter(c => c.toLowerCase().includes(searchQuery.toLowerCase()));
+      const excelData = [];
+
+      let tAutoAng = 0, tProvAng = 0, tRealAng = 0;
+      let tAutoK1 = 0, tProvK1 = 0, tRealK1 = 0;
+      let tAutoNomK1 = 0, tProvNomK1 = 0, tRealNomK1 = 0;
+      let tAutoK2 = 0, tProvK2 = 0, tRealK2 = 0;
+      let tAutoNomK2 = 0, tProvNomK2 = 0, tRealNomK2 = 0;
+      let tAutoK3 = 0, tProvK3 = 0, tRealK3 = 0;
+      let tAutoNomK3 = 0, tProvNomK3 = 0, tRealNomK3 = 0;
+      let tAutoTotNom = 0, tProvTotNom = 0, tRealTotNom = 0;
+      let tAutoTrans = 0, tAutoSel = 0, tAutoKurang = 0;
+
+      filteredCabangs.forEach((cabangName, i) => {
+        let autoK1 = 0, autoK2 = 0, autoK3 = 0, autoTransfer = 0;
+        const targetK1 = Math.round(kat1Val);
+        const targetK2 = Math.round(kat2Val);
+        const targetK3 = Math.round(kat3Val);
+
+        const cabAggregated = rawAggregatedData.filter(r => r.cabang?.toUpperCase() === cabangName.toUpperCase());
+
+        cabAggregated.forEach(item => {
+          const d = Math.round(parseFloat(item.totalIuranDaspen) || 0);
+          if (d === targetK1 && targetK1 > 0) autoK1++;
+          else if (d === targetK2 && targetK2 > 0) autoK2++;
+          else if (d === targetK3 && targetK3 > 0) autoK3++;
+          autoTransfer += d;
+        });
+
+        const sandukaDB = targetData.find(r => r.cabang?.toUpperCase() === cabangName.toUpperCase() && r.jenisData === 'SANDUKA');
+        const daspen = targetData.find(r => r.cabang?.toUpperCase() === cabangName.toUpperCase() && r.jenisData === 'DASPEN');
+
+        const nomAutoK1 = autoK1 * kat1Val; const nomAutoK2 = autoK2 * kat2Val; const nomAutoK3 = autoK3 * kat3Val;
+        const totAutoNominal = nomAutoK1 + nomAutoK2 + nomAutoK3;
+        const autoSelisih = totAutoNominal - autoTransfer;
+        const autoKurangSetor = totAutoNominal - autoTransfer;
+
+        const pk1 = daspen ? parseInt(daspen.kategori1) : 0;
+        const pk2 = daspen ? parseInt(daspen.kategori2) : 0;
+        const pk3 = daspen ? parseInt(daspen.kategori3) : 0;
+        const pNomK1 = daspen ? parseFloat(daspen.valueKat1) : 0;
+        const pNomK2 = daspen ? parseFloat(daspen.valueKat2) : 0;
+        const pNomK3 = daspen ? parseFloat(daspen.valueKat3) : 0;
+        const pTotNominal = daspen ? (pNomK1 + pNomK2 + pNomK3) : 0;
+
+        const dbK1 = sandukaDB ? parseInt(sandukaDB.kategori1) : 0;
+        const dbK2 = sandukaDB ? parseInt(sandukaDB.kategori2) : 0;
+        const dbK3 = sandukaDB ? parseInt(sandukaDB.kategori3) : 0;
+        const nomDbK1 = sandukaDB ? parseFloat(sandukaDB.valueKat1) : 0;
+        const nomDbK2 = sandukaDB ? parseFloat(sandukaDB.valueKat2) : 0;
+        const nomDbK3 = sandukaDB ? parseFloat(sandukaDB.valueKat3) : 0;
+        const totDbNominal = sandukaDB ? parseFloat(sandukaDB.totalTarget || (nomDbK1 + nomDbK2 + nomDbK3)) : 0;
+        const dbTransfer = sandukaDB ? parseFloat(sandukaDB.transfer || 0) : 0;
+        const dbSelisih = sandukaDB ? (totDbNominal - dbTransfer) : 0;
+        const dbPemb1 = sandukaDB ? parseFloat(sandukaDB.pembayaran1 || 0) : 0;
+        const dbPemb2 = sandukaDB ? parseFloat(sandukaDB.pembayaran2 || 0) : 0;
+        const dbKurangSetor = sandukaDB ? (totDbNominal - dbTransfer - dbPemb1 - dbPemb2) : 0;
+
+        const activeTransfer = sandukaDB ? dbTransfer : autoTransfer;
+        const activeSelisih = sandukaDB ? dbSelisih : autoSelisih;
+        const activePemb1 = sandukaDB ? dbPemb1 : 0;
+        const activePemb2 = sandukaDB ? dbPemb2 : 0;
+        const activeKurang = sandukaDB ? dbKurangSetor : autoKurangSetor;
+
+        const activeMembers = cabAggregated.length > 0 ? cabAggregated.reduce((sum, item) => sum + (parseInt(item.jumlah) || 1), 0) : 0;
+        const pTotAnggota = daspen ? (pk1 + pk2 + pk3) : 0;
+        const dbTotAnggota = sandukaDB ? (dbK1 + dbK2 + dbK3) : 0;
+
+        tAutoAng += activeMembers; tProvAng += pTotAnggota; tRealAng += dbTotAnggota;
+        tAutoK1 += autoK1; tProvK1 += pk1; tRealK1 += dbK1;
+        tAutoNomK1 += nomAutoK1; tProvNomK1 += pNomK1; tRealNomK1 += nomDbK1;
+        tAutoK2 += autoK2; tProvK2 += pk2; tRealK2 += dbK2;
+        tAutoNomK2 += nomAutoK2; tProvNomK2 += pNomK2; tRealNomK2 += nomDbK2;
+        tAutoK3 += autoK3; tProvK3 += pk3; tRealK3 += dbK3;
+        tAutoNomK3 += nomAutoK3; tProvNomK3 += pNomK3; tRealNomK3 += nomDbK3;
+        tAutoTotNom += totAutoNominal; tProvTotNom += pTotNominal; tRealTotNom += totDbNominal;
+        tAutoTrans += autoTransfer; tAutoSel += autoSelisih; tAutoKurang += autoKurangSetor;
+
+        excelData.push({
+          "No": i + 1,
+          "Cabang / Khusus": cabangName,
+          "Tipe Data": "AUTO",
+          "Total Anggota": activeMembers,
+          "Kat I": autoK1, "Nominal I": nomAutoK1,
+          "Kat II": autoK2, "Nominal II": nomAutoK2,
+          "Kat III": autoK3, "Nominal III": nomAutoK3,
+          "Total Nominal": totAutoNominal,
+          "Transfer": activeTransfer,
+          "Selisih": activeSelisih,
+          "Pembayaran 1": activePemb1,
+          "Pembayaran 2": activePemb2,
+          "Kurang Setor": activeKurang
+        });
+
+        excelData.push({
+          "No": "",
+          "Cabang / Khusus": "",
+          "Tipe Data": "DASPEN",
+          "Total Anggota": pTotAnggota,
+          "Kat I": pk1, "Nominal I": pNomK1,
+          "Kat II": pk2, "Nominal II": pNomK2,
+          "Kat III": pk3, "Nominal III": pNomK3,
+          "Total Nominal": pTotNominal,
+          "Transfer": "", "Selisih": "", "Pembayaran 1": "", "Pembayaran 2": "", "Kurang Setor": ""
+        });
+
+        excelData.push({
+          "No": "",
+          "Cabang / Khusus": "",
+          "Tipe Data": "REALISASI",
+          "Total Anggota": dbTotAnggota,
+          "Kat I": dbK1, "Nominal I": nomDbK1,
+          "Kat II": dbK2, "Nominal II": nomDbK2,
+          "Kat III": dbK3, "Nominal III": nomDbK3,
+          "Total Nominal": totDbNominal,
+          "Transfer": "", "Selisih": "", "Pembayaran 1": "", "Pembayaran 2": "", "Kurang Setor": ""
+        });
+      });
+
+      excelData.push({});
+
+      excelData.push({
+        "No": "", "Cabang / Khusus": "TOTAL REKAPITULASI", "Tipe Data": "AUTO",
+        "Total Anggota": tAutoAng,
+        "Kat I": tAutoK1, "Nominal I": tAutoNomK1,
+        "Kat II": tAutoK2, "Nominal II": tAutoNomK2,
+        "Kat III": tAutoK3, "Nominal III": tAutoNomK3,
+        "Total Nominal": tAutoTotNom,
+        "Transfer": tAutoTrans, "Selisih": tAutoSel, "Pembayaran 1": 0, "Pembayaran 2": 0, "Kurang Setor": tAutoKurang
+      });
+
+      excelData.push({
+        "No": "", "Cabang / Khusus": "", "Tipe Data": "DASPEN",
+        "Total Anggota": tProvAng,
+        "Kat I": tProvK1, "Nominal I": tProvNomK1,
+        "Kat II": tProvK2, "Nominal II": tProvNomK2,
+        "Kat III": tProvK3, "Nominal III": tProvNomK3,
+        "Total Nominal": tProvTotNom,
+        "Transfer": "", "Selisih": "", "Pembayaran 1": "", "Pembayaran 2": "", "Kurang Setor": ""
+      });
+
+      excelData.push({
+        "No": "", "Cabang / Khusus": "", "Tipe Data": "REALISASI",
+        "Total Anggota": tRealAng,
+        "Kat I": tRealK1, "Nominal I": tRealNomK1,
+        "Kat II": tRealK2, "Nominal II": tRealNomK2,
+        "Kat III": tRealK3, "Nominal III": tRealNomK3,
+        "Total Nominal": tRealTotNom,
+        "Transfer": "", "Selisih": "", "Pembayaran 1": "", "Pembayaran 2": "", "Kurang Setor": ""
+      });
+
+      const ws = XLSX.utils.json_to_sheet(excelData);
+
+      const range = XLSX.utils.decode_range(ws['!ref']);
+
+      for (let R = range.s.r; R <= range.e.r; ++R) {
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+          const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+
+          if (!ws[cellAddress]) ws[cellAddress] = { t: 's', v: '' };
+
+          ws[cellAddress].s = {
+            border: {
+              top: { style: "thin", color: { rgb: "000000" } },
+              bottom: { style: "thin", color: { rgb: "000000" } },
+              left: { style: "thin", color: { rgb: "000000" } },
+              right: { style: "thin", color: { rgb: "000000" } }
+            },
+            alignment: { vertical: "center", horizontal: "right" }
+          };
+
+          if (R === 0) {
+            ws[cellAddress].s.font = { bold: true, color: { rgb: "FFFFFF" } }; 
+            ws[cellAddress].s.fill = { fgColor: { rgb: "1E293B" } }; 
+            ws[cellAddress].s.alignment = { horizontal: "center", vertical: "center" };
+          }
+
+          if (C <= 2 && R > 0) {
+            ws[cellAddress].s.alignment = { horizontal: "center", vertical: "center" };
+            ws[cellAddress].s.font = { bold: true };
+          }
+        }
+      }
+
+      ws['!cols'] = [
+        { wch: 5 },  
+        { wch: 25 }, 
+        { wch: 15 }, 
+        { wch: 15 }, { wch: 8 }, { wch: 15 }, { wch: 8 }, { wch: 15 }, { wch: 8 }, { wch: 15 }, 
+        { wch: 18 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 } 
+      ];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Rekap Daspen");
+      XLSX.writeFile(wb, `Rekap_Daspen_${selectedMonth}_${selectedYear}.xlsx`);
+
+      toast.success("File Excel super rapi berhasil diunduh!", { id: toastId });
+    } catch (error) {
+      console.error(error);
+      toast.error("Gagal membuat Excel", { id: toastId });
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    const element = printRef.current;
+    if (!element) return;
+
+    const toastId = toast.loading("Mengunduh dokumen PDF secara utuh...");
+
+    try {
+      const tableContainer = element.querySelector('.overflow-x-auto');
+
+      element.classList.remove('overflow-hidden'); 
+      if (tableContainer) {
+        tableContainer.classList.remove('overflow-x-auto');
+        tableContainer.style.overflow = 'visible';
+      }
+
+      const canvas = await html2canvas(element, {
+        scale: 2, 
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        width: element.scrollWidth, 
+        height: element.scrollHeight, 
+        windowWidth: element.scrollWidth,
+        windowHeight: element.scrollHeight,
+        scrollY: -window.scrollY 
+      });
+
+      element.classList.add('overflow-hidden');
+      if (tableContainer) {
+        tableContainer.classList.add('overflow-x-auto');
+        tableContainer.style.overflow = '';
+      }
+
+      const imgData = canvas.toDataURL('image/png');
+
+      const pdf = new jsPDF({
+        orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+        unit: 'px',
+        format: [canvas.width, canvas.height]
+      });
+
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+      pdf.save(`Rekap_Daspen_${selectedMonth}_${selectedYear}.pdf`);
+
+      toast.success("PDF utuh berhasil diunduh!", { id: toastId });
+    } catch (error) {
+      console.error(error);
+
+      element.classList.add('overflow-hidden');
+      const tableContainer = element.querySelector('.overflow-x-auto');
+      if (tableContainer) {
+        tableContainer.classList.add('overflow-x-auto');
+        tableContainer.style.overflow = '';
+      }
+
+      toast.error("Gagal membuat PDF", { id: toastId });
+    }
+  };
 
   useEffect(() => {
     fetchInitialData();
@@ -106,13 +376,23 @@ const DaspenSection = () => {
       setTargetData(filteredTargets || []);
 
       try {
-        const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-        const monthIndex = monthNames.findIndex(m => m.toLowerCase() === selectedMonth.toLowerCase());
-        const numericMonth = monthIndex !== -1 ? (monthIndex + 1).toString() : "1";
+      const monthNames = [
+        "Januari", "Februari", "Maret", "April", "Mei", "Juni", 
+        "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+      ];
+      
+      const numericMonth = monthNames.indexOf(selectedMonth) !== -1 
+        ? monthNames.indexOf(selectedMonth) + 1 
+        : null;
 
-        const resAggregated = await GlobalApi.getNominalAggregatedData("", "", "", numericMonth, selectedYear);
+      const aggRes = await GlobalApi.getTransaksiBankBalancing(
+        null, 
+        null, 
+        selectedYear, 
+        numericMonth 
+      );
 
-        setRawAggregatedData(resAggregated || []);
+        setRawAggregatedData(aggRes.data || aggRes);
       } catch (aggError) {
         console.error("Peringatan: API Aggregated gagal (Error 500).", aggError);
         setRawAggregatedData([]);
@@ -519,43 +799,113 @@ const DaspenSection = () => {
 
         <div className="space-y-6">
           <div className="space-y-8">
-            <form onSubmit={handleSubmitTarget} className="bg-slate-900 p-6 sm:p-8 rounded-[40px] shadow-2xl relative overflow-hidden">
-              <div className="relative z-10 flex flex-col xl:flex-row items-center gap-6">
-                <div className="w-full xl:w-1/4 space-y-2">
-                  <label className="text-[10px] font-black text-slate-500 uppercase">Pilih Cabang (Manual Override)</label>
-                  <select value={selectedCabang} onChange={(e) => setSelectedCabang(e.target.value)} className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-bold text-white text-sm">
-                    <option value="" className="text-slate-800">-- Pilih Cabang --</option>
-                    {cabangList.map(c => <option key={c.id} value={c.kecamatan} className="text-slate-800">{c.kecamatan}</option>)}
-                  </select>
+
+            <style dangerouslySetInnerHTML={{
+              __html: `
+              .hover-spinner::-webkit-inner-spin-button,
+              .hover-spinner::-webkit-outer-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
+              }
+              .hover-spinner:hover::-webkit-inner-spin-button,
+              .hover-spinner:hover::-webkit-outer-spin-button {
+                -webkit-appearance: inner-spin-button;
+                opacity: 1;
+              }
+              .hover-spinner {
+                -moz-appearance: textfield;
+              }
+              .hover-spinner:hover {
+                -moz-appearance: number-input;
+              }
+            `}} />
+            <form onSubmit={handleSubmitTarget} className="bg-[#0f172a] rounded-[2rem] p-5 sm:p-6 shadow-2xl border border-slate-800 w-full">
+              {/* KITA HAPUS xl:flex-nowrap AGAR BISA TURUN KE BAWAH JIKA LAYAR SEMPIT */}
+              <div className="flex flex-wrap items-center justify-center lg:justify-between gap-5 sm:gap-6 w-full">
+
+                {/* 1. BAGIAN PILIH CABANG */}
+                <div className="flex flex-col gap-2 w-full md:w-auto md:flex-1 min-w-[180px]">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">
+                    Pilih Cabang <br className="hidden md:block" />
+                    <span className="text-slate-500 font-bold text-[9px] md:ml-1">(Manual Override)</span>
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={selectedCabang}
+                      onChange={(e) => setSelectedCabang(e.target.value)}
+                      className="w-full pl-4 pr-8 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-black text-sm focus:border-indigo-500 outline-none appearance-none cursor-pointer transition-all hover:bg-white/10"
+                    >
+                      <option value="" className="text-slate-800">-- Pilih Cabang --</option>
+                      {cabangList.map(c => <option key={c.id} value={c.kecamatan} className="text-slate-800">{c.kecamatan}</option>)}
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">▼</div>
+                  </div>
                 </div>
 
-                <div className="w-full xl:flex-1 grid grid-cols-3 gap-4">
-                  {[
-                    { label: "KAT I", val: kat1, setter: setKat1, color: "border-rose-500/30" },
-                    { label: "KAT II", val: kat2, setter: setKat2, color: "border-blue-500/30" },
-                    { label: "KAT III", val: kat3, setter: setKat3, color: "border-emerald-500/30" }
-                  ].map(cat => (
-                    <div key={cat.label} className="space-y-2">
-                      <label className="text-[9px] font-black text-slate-500 uppercase text-center block">{cat.label}</label>
-                      <input type="number" value={cat.val} onChange={(e) => cat.setter(parseInt(e.target.value) || 0)} className={`w-full bg-white/5 border ${cat.color} rounded-2xl px-4 py-4 text-white font-black text-center outline-none`} />
+                {/* 2. BAGIAN INPUT KATEGORI */}
+                <div className="flex items-center justify-center gap-3 sm:gap-4 w-full md:w-auto shrink-0">
+                  <div className="flex flex-col items-center gap-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">KAT I</label>
+                    <input
+                      type="number"
+                      value={kat1}
+                      onChange={(e) => setKat1(parseInt(e.target.value) || 0)}
+                      className="w-[72px] h-14 sm:h-16 text-xl sm:text-2xl font-black text-center text-white bg-transparent border-2 border-rose-500/50 focus:border-rose-500 rounded-xl outline-none transition-all focus:bg-rose-500/10 [appearance:textfield] hover:[appearance:auto] [&::-webkit-inner-spin-button]:appearance-none hover:[&::-webkit-inner-spin-button]:appearance-auto"
+                    />
+                  </div>
+
+                  <div className="flex flex-col items-center gap-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">KAT II</label>
+                    <input
+                      type="number"
+                      value={kat2}
+                      onChange={(e) => setKat2(parseInt(e.target.value) || 0)}
+                      className="w-[72px] h-14 sm:h-16 text-xl sm:text-2xl font-black text-center text-white bg-transparent border-2 border-blue-500/50 focus:border-blue-500 rounded-xl outline-none transition-all focus:bg-blue-500/10 [appearance:textfield] hover:[appearance:auto] [&::-webkit-inner-spin-button]:appearance-none hover:[&::-webkit-inner-spin-button]:appearance-auto"
+                    />
+                  </div>
+
+                  <div className="flex flex-col items-center gap-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">KAT III</label>
+                    <input
+                      type="number"
+                      value={kat3}
+                      onChange={(e) => setKat3(parseInt(e.target.value) || 0)}
+                      className="w-[72px] h-14 sm:h-16 text-xl sm:text-2xl font-black text-center text-white bg-transparent border-2 border-emerald-500/50 focus:border-emerald-500 rounded-xl outline-none transition-all focus:bg-emerald-500/10 [appearance:textfield] hover:[appearance:auto] [&::-webkit-inner-spin-button]:appearance-none hover:[&::-webkit-inner-spin-button]:appearance-auto"
+                    />
+                  </div>
+                </div>
+
+                {/* 3. BAGIAN PREVIEW DATA (Lebih kompak) */}
+                <div className="flex flex-row items-center justify-center gap-4 px-5 py-3 bg-white/5 border border-white/10 rounded-2xl w-full md:w-auto shrink-0">
+                  <div className="text-center">
+                    <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Total Anggota</div>
+                    <div className="text-lg font-black text-purple-400 mt-0.5 leading-none">
+                      {kat1 + kat2 + kat3} <span className="text-[9px] text-slate-500 font-bold uppercase">Org</span>
                     </div>
-                  ))}
+                  </div>
+
+                  <div className="w-px h-8 bg-white/10"></div> {/* Garis pembatas */}
+
+                  <div className="text-center">
+                    <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Total Target</div>
+                    <div className="text-lg font-black text-emerald-400 mt-0.5 leading-none">{formatCurrency(totalTarget)}</div>
+                  </div>
                 </div>
 
-                <div className="w-full xl:w-auto flex xl:flex-col items-center justify-between xl:justify-center gap-2 px-2">
-                  <span className="text-[10px] font-black text-slate-500 uppercase">Total Target</span>
-                  <span className="text-2xl font-black text-emerald-400">{formatCurrency(totalTarget)}</span>
-                </div>
-
-                <div className="w-full xl:w-auto flex flex-col gap-3 min-w-[220px]">
-                  <button type="submit" className="w-full px-6 py-4 bg-rose-500 text-white rounded-2xl font-black text-xs uppercase flex items-center justify-center gap-2">
-                    <FaSave /> Simpan Realisasi
+                {/* 4. BAGIAN TOMBOL SIMPAN */}
+                <div className="w-full md:w-auto shrink-0 flex-grow md:flex-grow-0">
+                  <button type="submit" className="w-full px-6 py-4 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-black shadow-lg shadow-rose-500/30 transition-all flex items-center justify-center gap-2 whitespace-nowrap active:scale-95">
+                    <FaSave className="text-lg" />
+                    <span className="tracking-wide text-sm">SIMPAN</span>
                   </button>
                 </div>
+
               </div>
             </form>
 
-            <div className="bg-white rounded-[40px] shadow-2xl overflow-hidden">
+            {/* TAMBAHKAN ref={printRef} DI SINI */}
+            <div ref={printRef} className="bg-white rounded-[40px] shadow-2xl overflow-hidden border border-slate-100 p-2">
+
               <div className="p-6 border-b border-slate-100 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
                 <div className="flex items-center gap-3">
                   <div className="w-11 h-11 rounded-[18px] bg-rose-50 text-rose-600 flex items-center justify-center"><FaHandHoldingHeart className="text-xl" /></div>
@@ -565,7 +915,8 @@ const DaspenSection = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3">
+                {/* ABAIKAN BAGIAN INI SAAT JADI PDF MENGGUNAKAN data-html2canvas-ignore */}
+                <div data-html2canvas-ignore="true" className="flex flex-wrap items-center gap-3">
                   <div className="relative min-w-[200px]">
                     <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300" />
                     <input type="text" placeholder="Cari Cabang..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-slate-50 rounded-xl outline-none font-bold text-xs" />
@@ -581,12 +932,26 @@ const DaspenSection = () => {
                 </div>
               </div>
 
-              <div className="overflow-x-auto">
+              {/* ABAIKAN TOMBOL EXCEL & PDF SAAT JADI PDF */}
+              <div data-html2canvas-ignore="true" className="flex justify-end gap-3 px-6 pt-4">
+                <button
+                  onClick={handleExportExcel}
+                  className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-emerald-600/20 active:scale-95"
+                >
+                  <FaFileExcel className="text-sm" /> Export Excel
+                </button>
+                <button
+                  onClick={handleDownloadPDF} /* <-- Panggil fungsi baru di sini */
+                  className="flex items-center gap-2 px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white text-[11px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-rose-500/20 active:scale-95"
+                >
+                  <FaFilePdf className="text-sm" /> Cetak PDF
+                </button>
+              </div>
+
+              <div className="overflow-x-auto p-6 pt-4">
                 {(() => {
-                  // 1. Filter cabang yang sesuai dengan pencarian
                   const filteredCabangs = uniqueCabangs.filter(c => c.toLowerCase().includes(searchQuery.toLowerCase()));
 
-                  // 2. Siapkan variabel untuk menampung TOTAL KESELURUHAN
                   let tAutoAng = 0, tProvAng = 0, tRealAng = 0;
                   let tAutoK1 = 0, tProvK1 = 0, tRealK1 = 0;
                   let tAutoNomK1 = 0, tProvNomK1 = 0, tRealNomK1 = 0;
@@ -601,7 +966,6 @@ const DaspenSection = () => {
                   let tProvPemb2 = 0, tRealPemb2 = 0;
                   let tAutoKurang = 0, tProvKurang = 0, tRealKurang = 0;
 
-                  // 3. Render baris data sembari menjumlahkan nilai ke variabel Total
                   const renderedRows = loadingTable ? (
                     Array(5).fill(0).map((_, i) => <tr key={i} className="animate-pulse"><td colSpan={17} className="p-6"><div className="h-3 bg-slate-100 rounded-full w-full" /></td></tr>)
                   ) : filteredCabangs.length > 0 ? (
@@ -614,7 +978,7 @@ const DaspenSection = () => {
                       const cabAggregated = rawAggregatedData.filter(r => r.cabang?.toUpperCase() === cabangName.toUpperCase());
 
                       cabAggregated.forEach(item => {
-                        const d = Math.round(parseFloat(item.daspen) || 0);
+                        const d = Math.round(parseFloat(item.totalIuranDaspen) || 0);
                         if (d === targetK1 && targetK1 > 0) autoK1++;
                         else if (d === targetK2 && targetK2 > 0) autoK2++;
                         else if (d === targetK3 && targetK3 > 0) autoK3++;
@@ -624,13 +988,11 @@ const DaspenSection = () => {
                       const sandukaDB = targetData.find(r => r.cabang?.toUpperCase() === cabangName.toUpperCase() && r.jenisData === 'SANDUKA');
                       const daspen = targetData.find(r => r.cabang?.toUpperCase() === cabangName.toUpperCase() && r.jenisData === 'DASPEN');
 
-                      // --- DATA HITAM ---
                       const nomAutoK1 = autoK1 * kat1Val; const nomAutoK2 = autoK2 * kat2Val; const nomAutoK3 = autoK3 * kat3Val;
                       const totAutoNominal = nomAutoK1 + nomAutoK2 + nomAutoK3;
                       const autoSelisih = totAutoNominal - autoTransfer;
                       const autoKurangSetor = totAutoNominal - autoTransfer;
 
-                      // --- DATA UNGU ---
                       const dbK1 = sandukaDB ? parseInt(sandukaDB.kategori1) : null;
                       const dbK2 = sandukaDB ? parseInt(sandukaDB.kategori2) : null;
                       const dbK3 = sandukaDB ? parseInt(sandukaDB.kategori3) : null;
@@ -644,7 +1006,6 @@ const DaspenSection = () => {
                       const dbPemb2 = sandukaDB ? parseFloat(sandukaDB.pembayaran2 || 0) : null;
                       const dbKurangSetor = sandukaDB ? (totDbNominal - dbTransfer - dbPemb1 - dbPemb2) : null;
 
-                      // --- DATA BIRU ---
                       const pk1 = daspen ? parseInt(daspen.kategori1) : null;
                       const pk2 = daspen ? parseInt(daspen.kategori2) : null;
                       const pk3 = daspen ? parseInt(daspen.kategori3) : null;
@@ -658,12 +1019,10 @@ const DaspenSection = () => {
                       const pPemb2 = daspen ? parseFloat(daspen.pembayaran2 || 0) : null;
                       const pKurangSetor = daspen ? (pTotNominal - pTransfer - pPemb1 - pPemb2) : null;
 
-                      // --- TOTAL ANGGOTA ---
                       const activeMembers = cabAggregated.length > 0 ? cabAggregated.reduce((sum, item) => sum + (parseInt(item.jumlah) || 1), 0) : 0;
                       const dbTotAnggota = sandukaDB ? (dbK1 + dbK2 + dbK3) : null;
                       const pTotAnggota = daspen ? (pk1 + pk2 + pk3) : null;
 
-                      // --- PENJUMLAHAN AKUMULASI UNTUK BARIS TOTAL REKAP (Di Bawah) ---
                       tAutoAng += activeMembers; tProvAng += (pTotAnggota || 0); tRealAng += (dbTotAnggota || 0);
 
                       tAutoK1 += autoK1; tProvK1 += (pk1 || 0); tRealK1 += (dbK1 || 0);
@@ -684,6 +1043,12 @@ const DaspenSection = () => {
 
                       tAutoKurang += autoKurangSetor; tProvKurang += (pKurangSetor || 0); tRealKurang += (dbKurangSetor || 0);
 
+                      const activeTransfer = sandukaDB ? parseFloat(sandukaDB.transfer || 0) : autoTransfer;
+                      const activeSelisih = sandukaDB ? (totDbNominal - activeTransfer) : autoSelisih;
+                      const activePemb1 = sandukaDB ? parseFloat(sandukaDB.pembayaran1 || 0) : 0;
+                      const activePemb2 = sandukaDB ? parseFloat(sandukaDB.pembayaran2 || 0) : 0;
+                      const activeKurang = sandukaDB ? (totDbNominal - activeTransfer - activePemb1 - activePemb2) : autoKurangSetor;
+
                       return (
                         <tr key={i} className="hover:bg-slate-50/80 transition-colors text-[11px] font-bold text-slate-600">
                           <td className="px-3 py-2 text-slate-400 font-black border-r border-slate-200 text-center">{i + 1}</td>
@@ -701,27 +1066,29 @@ const DaspenSection = () => {
                           <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap"><CellTriple top={formatCurrency(nomAutoK3)} middle={pNomK3 !== null ? formatCurrency(pNomK3) : null} bottom={nomDbK3 !== null ? formatCurrency(nomDbK3) : null} /></td>
 
                           <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/50"><CellTriple top={formatCurrency(totAutoNominal)} middle={pTotNominal !== null ? formatCurrency(pTotNominal) : null} bottom={totDbNominal !== null ? formatCurrency(totDbNominal) : null} topClass="text-slate-900 font-black" /></td>
-                          <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap"><CellTriple top={formatCurrency(autoTransfer)} middle={pTransfer !== null ? formatCurrency(pTransfer) : null} bottom={dbTransfer !== null ? formatCurrency(dbTransfer) : null} topClass="text-indigo-600" /></td>
 
-                          <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap">
-                            <CellTriple
-                              top={formatCurrency(autoSelisih)} middle={pSelisih !== null ? formatCurrency(pSelisih) : null} bottom={dbSelisih !== null ? formatCurrency(dbSelisih) : null}
-                              topClass={autoSelisih === 0 ? "text-emerald-600 font-black" : "text-amber-600 font-black"}
-                              middleClass={pSelisih === 0 ? "text-emerald-500 font-normal italic" : "text-amber-500 font-normal italic"}
-                              bottomClass={dbSelisih === 0 ? "text-emerald-600 font-black" : "text-purple-600 font-black"}
-                            />
+                          <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/30">
+                            <span className="text-[11px] font-black text-slate-800">{formatCurrency(activeTransfer)}</span>
                           </td>
 
-                          <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap"><CellTriple top={formatCurrency(0)} middle={pPemb1 !== null ? formatCurrency(pPemb1) : null} bottom={dbPemb1 !== null ? formatCurrency(dbPemb1) : null} /></td>
-                          <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap"><CellTriple top={formatCurrency(0)} middle={pPemb2 !== null ? formatCurrency(pPemb2) : null} bottom={dbPemb2 !== null ? formatCurrency(dbPemb2) : null} /></td>
+                          <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/30">
+                            <span className={`text-[11px] font-black ${activeSelisih === 0 ? "text-emerald-600" : "text-slate-800"}`}>
+                              {formatCurrency(activeSelisih)}
+                            </span>
+                          </td>
 
-                          <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap">
-                            <CellTriple
-                              top={formatCurrency(autoKurangSetor)} middle={pKurangSetor !== null ? formatCurrency(pKurangSetor) : null} bottom={dbKurangSetor !== null ? formatCurrency(dbKurangSetor) : null}
-                              topClass={autoKurangSetor === 0 ? "text-emerald-600 font-black" : "text-rose-600 font-black"}
-                              middleClass={pKurangSetor === 0 ? "text-emerald-500 font-normal italic" : "text-rose-400 font-normal italic"}
-                              bottomClass={dbKurangSetor === 0 ? "text-emerald-600 font-black" : "text-purple-600 font-black"}
-                            />
+                          <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/30">
+                            <span className="text-[11px] font-black text-slate-800">{formatCurrency(activePemb1)}</span>
+                          </td>
+
+                          <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/30">
+                            <span className="text-[11px] font-black text-slate-800">{formatCurrency(activePemb2)}</span>
+                          </td>
+
+                          <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/30">
+                            <span className={`text-[11px] font-black ${activeKurang === 0 ? "text-emerald-600" : "text-slate-800"}`}>
+                              {formatCurrency(activeKurang)}
+                            </span>
                           </td>
 
                           <td className="px-3 py-2 text-center border-r border-slate-200">
@@ -732,8 +1099,18 @@ const DaspenSection = () => {
                             </div>
                           </td>
 
-                          <td className="px-3 py-2 text-center w-24">
-                            <div className="flex flex-col gap-2 items-center justify-center">
+                          {/* ABAIKAN KOLOM AKSI INI SAAT JADI PDF */}
+                          <td data-html2canvas-ignore="true" className="px-3 py-2 text-center w-24">
+                            <div className="flex flex-col gap-1.5 items-center justify-center py-1">
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => setEditModal({ show: true, data: { isAuto: true, cabang: cabangName, jenisData: 'SANDUKA', kategori1: autoK1, kategori2: autoK2, kategori3: autoK3, transfer: autoTransfer, pembayaran1: 0, pembayaran2: 0 } })}
+                                  className="text-slate-400 hover:text-slate-700 transition-colors"
+                                  title="Gunakan & Simpan Data Auto"
+                                >
+                                  <FaEdit size={14} />
+                                </button>
+                              </div>
 
                               {daspen && (
                                 <div className="flex gap-2">
@@ -742,13 +1119,12 @@ const DaspenSection = () => {
                                 </div>
                               )}
 
-                              <div className="flex gap-2">
-                                <button onClick={() => setEditModal({ show: true, data: sandukaDB || { isAuto: true, cabang: cabangName, jenisData: 'SANDUKA', kategori1: autoK1, kategori2: autoK2, kategori3: autoK3, transfer: autoTransfer, pembayaran1: 0, pembayaran2: 0 } })} className="text-purple-500 hover:text-purple-700 transition-colors" title="Edit / Input Simpan Realisasi"><FaEdit size={14} /></button>
-                                {sandukaDB && (
+                              {sandukaDB && (
+                                <div className="flex gap-2">
+                                  <button onClick={() => setEditModal({ show: true, data: sandukaDB })} className="text-purple-500 hover:text-purple-700 transition-colors" title="Edit Simpan Realisasi"><FaEdit size={14} /></button>
                                   <button onClick={(e) => handleDelete(sandukaDB.id, "Realisasi / Manual", cabangName, e)} className="text-red-400 hover:text-red-600 transition-colors" title="Hapus Data Simpan Realisasi"><FaTrash size={14} /></button>
-                                )}
-                              </div>
-
+                                </div>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -758,13 +1134,17 @@ const DaspenSection = () => {
                     <tr><td colSpan={17} className="py-16 text-center text-slate-300 font-black uppercase tracking-widest text-xs">Data Kosong</td></tr>
                   );
 
-                  // 4. Return struktur HTML Table beserta TFOOT (Footer Baris Total)
                   return (
-                    <table className="w-full text-left border-collapse border border-slate-200">
+                    <table ref={tableRef} className="w-full text-left border-collapse border border-slate-200">
                       <thead>
                         <tr className="bg-slate-50 border-b border-slate-200">
+                          {/* MAPPING HEADER, JIKA H === 'Aksi', TAMBAHKAN data-html2canvas-ignore */}
                           {["No", "Cabang/Khusus", "Total Anggota", "Kat I", "Nominal", "Kat II", "Nominal", "Kat III", "Nominal", "Total Nominal", "Transfer", "Selisih", "Pembayaran 1", "Pembayaran 2", "Kurang Setor", "Status", "Aksi"].map((h, i) => (
-                            <th key={i} className="px-3 py-4 text-[9px] font-black uppercase tracking-widest text-slate-500 text-center whitespace-nowrap border-r border-slate-200 bg-slate-100/50">
+                            <th
+                              key={i}
+                              data-html2canvas-ignore={h === 'Aksi' ? "true" : undefined}
+                              className="px-3 py-4 text-[9px] font-black uppercase tracking-widest text-slate-500 text-center whitespace-nowrap border-r border-slate-200 bg-slate-100/50"
+                            >
                               {h}
                             </th>
                           ))}
@@ -774,44 +1154,27 @@ const DaspenSection = () => {
                         {renderedRows}
                       </tbody>
 
-                      {/* BARIS TOTAL REKAP MUNCUL JIKA DATA ADA */}
                       {!loadingTable && filteredCabangs.length > 0 && (
                         <tfoot className="bg-slate-100/80 border-t-4 border-slate-300 shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
                           <tr className="text-[11px] font-black text-slate-800">
                             <td colSpan={2} className="px-3 py-4 text-center text-xs uppercase tracking-widest border-r border-slate-300">TOTAL REKAPITULASI</td>
-
                             <td className="px-3 py-2 border-r border-slate-300 text-center"><CellTriple top={tAutoAng} middle={tProvAng} bottom={tRealAng} /></td>
-
                             <td className="px-3 py-2 border-r border-slate-300 text-center"><CellTriple top={tAutoK1} middle={tProvK1} bottom={tRealK1} /></td>
                             <td className="px-3 py-2 border-r border-slate-300 text-right"><CellTriple top={formatCurrency(tAutoNomK1)} middle={formatCurrency(tProvNomK1)} bottom={formatCurrency(tRealNomK1)} /></td>
-
                             <td className="px-3 py-2 border-r border-slate-300 text-center"><CellTriple top={tAutoK2} middle={tProvK2} bottom={tRealK2} /></td>
                             <td className="px-3 py-2 border-r border-slate-300 text-right"><CellTriple top={formatCurrency(tAutoNomK2)} middle={formatCurrency(tProvNomK2)} bottom={formatCurrency(tRealNomK2)} /></td>
-
                             <td className="px-3 py-2 border-r border-slate-300 text-center"><CellTriple top={tAutoK3} middle={tProvK3} bottom={tRealK3} /></td>
                             <td className="px-3 py-2 border-r border-slate-300 text-right"><CellTriple top={formatCurrency(tAutoNomK3)} middle={formatCurrency(tProvNomK3)} bottom={formatCurrency(tRealNomK3)} /></td>
-
                             <td className="px-3 py-2 border-r border-slate-300 text-right bg-slate-200/50"><CellTriple top={formatCurrency(tAutoTotNom)} middle={formatCurrency(tProvTotNom)} bottom={formatCurrency(tRealTotNom)} topClass="text-slate-900" /></td>
-                            <td className="px-3 py-2 border-r border-slate-300 text-right"><CellTriple top={formatCurrency(tAutoTrans)} middle={formatCurrency(tProvTrans)} bottom={formatCurrency(tRealTrans)} topClass="text-indigo-600" /></td>
 
-                            <td className="px-3 py-2 border-r border-slate-300 text-right">
-                              <CellTriple
-                                top={formatCurrency(tAutoSel)} middle={formatCurrency(tProvSel)} bottom={formatCurrency(tRealSel)}
-                                topClass={tAutoSel === 0 ? "text-emerald-600" : "text-amber-600"}
-                              />
-                            </td>
+                            <td className="px-3 py-2 border-r border-slate-300 text-right"><span className="text-[11px] font-black text-indigo-600">{formatCurrency(tAutoTrans)}</span></td>
+                            <td className="px-3 py-2 border-r border-slate-300 text-right"><span className={`text-[11px] font-black ${tAutoSel === 0 ? "text-emerald-600" : "text-amber-600"}`}>{formatCurrency(tAutoSel)}</span></td>
+                            <td className="px-3 py-2 border-r border-slate-300 text-right"><span className="text-[11px] font-black text-slate-800">{formatCurrency(0)}</span></td>
+                            <td className="px-3 py-2 border-r border-slate-300 text-right"><span className="text-[11px] font-black text-slate-800">{formatCurrency(0)}</span></td>
+                            <td className="px-3 py-2 border-r border-slate-300 text-right"><span className={`text-[11px] font-black ${tAutoKurang === 0 ? "text-emerald-600" : "text-rose-600"}`}>{formatCurrency(tAutoKurang)}</span></td>
 
-                            <td className="px-3 py-2 border-r border-slate-300 text-right"><CellTriple top={formatCurrency(0)} middle={formatCurrency(tProvPemb1)} bottom={formatCurrency(tRealPemb1)} /></td>
-                            <td className="px-3 py-2 border-r border-slate-300 text-right"><CellTriple top={formatCurrency(0)} middle={formatCurrency(tProvPemb2)} bottom={formatCurrency(tRealPemb2)} /></td>
-
-                            <td className="px-3 py-2 border-r border-slate-300 text-right">
-                              <CellTriple
-                                top={formatCurrency(tAutoKurang)} middle={formatCurrency(tProvKurang)} bottom={formatCurrency(tRealKurang)}
-                                topClass={tAutoKurang === 0 ? "text-emerald-600" : "text-rose-600"}
-                              />
-                            </td>
-
-                            <td colSpan={2} className="px-3 py-2 border-r border-slate-300 bg-slate-200/30"></td>
+                            {/* ABAIKAN JUGA DI FOOTER */}
+                            <td data-html2canvas-ignore="true" colSpan={2} className="px-3 py-2 border-r border-slate-300 bg-slate-200/30"></td>
                           </tr>
                         </tfoot>
                       )}
@@ -819,7 +1182,6 @@ const DaspenSection = () => {
                   );
                 })()}
               </div>
-
             </div>
           </div>
         </div>
