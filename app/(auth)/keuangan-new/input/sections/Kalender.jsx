@@ -14,6 +14,8 @@ import {
   FaUsers,
   FaEdit,
   FaTrash,
+  FaFileExcel,
+  FaFilePdf,
 } from "react-icons/fa";
 
 const KalenderSection = () => {
@@ -26,14 +28,13 @@ const KalenderSection = () => {
   const [loadingBesaran, setLoadingBesaran] = useState(false);
 
   const [selectedCabang, setSelectedCabang] = useState("");
-  const [jumlahPesanan, setJumlahPesanan] = useState(0);
+  const [jumlahPesanan, setJumlahPesanan] = useState("0");
   const [selectedMonth, setSelectedMonth] = useState("");
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   const [cabangList, setCabangList] = useState([]);
   const [bulanList, setBulanList] = useState([]);
   const [tableData, setTableData] = useState([]);
-  const [rawBalancingData, setRawBalancingData] = useState([]);
   const [loadingTable, setLoadingTable] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [editingRow, setEditingRow] = useState(null);
@@ -127,7 +128,7 @@ const KalenderSection = () => {
       };
 
       const mappedData = (data || []).map((item) => {
-        const jumlah = item.jumlah ?? 0;
+        const jumlah = parseInt(item.jumlah) || 0;
 
         const peruntukanProvinsi = jumlah * (besaran.provinsi || 0);
         const peruntukanKabupaten = jumlah * (besaran.kabupaten || 0);
@@ -185,7 +186,6 @@ const KalenderSection = () => {
         return;
       if (!item.npa) return;
 
-      // ✅ FILTER PERIODE (WAJIB)
       let itemDate = item.tagihanUntukBulan || item.tagihan_untuk_bulan || "";
       if (Array.isArray(itemDate) && itemDate.length >= 2) {
         itemDate = `${itemDate[0]}-${String(itemDate[1]).padStart(2, "0")}`;
@@ -233,6 +233,9 @@ const KalenderSection = () => {
 
   const handleSubmitTarget = async (e) => {
     e.preventDefault();
+
+    const jumlah = parseInt(jumlahPesanan, 10) || 0;
+
     if (!selectedCabang || !jumlahPesanan) {
       toast.error("Pilih Cabang dan Jumlah Pesanan!");
       return;
@@ -249,7 +252,7 @@ const KalenderSection = () => {
       await GlobalApi.createTargetKalender(payload);
       toast.success(`Kalender ${selectedCabang} berhasil disimpan!`);
       fetchTableData();
-      setJumlahPesanan(0);
+      setJumlahPesanan("0");
     } catch (error) {
       toast.error("Gagal menyimpan data Kalender.");
     }
@@ -313,6 +316,170 @@ const KalenderSection = () => {
       toast.error("Gagal menghapus data Kalender.");
     } finally {
       setLoadingAction(false);
+    }
+  };
+
+  const handleDownloadExcel = () => {
+    try {
+      const filteredData = tableData.filter((r) =>
+        r.cabang?.toLowerCase().includes(searchQuery.toLowerCase()),
+      );
+
+      if (filteredData.length === 0) {
+        toast.error("Tidak ada data untuk diunduh!");
+        return;
+      }
+
+      const excelData = filteredData.map((row, index) => ({
+        No: index + 1,
+        "Cabang/Khusus": row.cabang,
+        "Total Pesanan": row.jumlah,
+        "Peruntukan Provinsi": row.peruntukanProvinsi,
+        "Peruntukan Kabupaten": row.peruntukanKabupaten,
+        "Peruntukan Cabang": row.peruntukanCabang,
+        "Tambahan Cabang": row.tambahanCabang,
+        "Total Cabang": row.totalCabang,
+        Transfer: row.transfer,
+        Kurang: row.kurang,
+        "Setoran Tunai": "-",
+        Selisih: "-",
+      }));
+
+      import("xlsx").then((XLSX) => {
+        const worksheet = XLSX.utils.json_to_sheet(excelData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Kalender");
+        worksheet["!cols"] = [
+          { wch: 5 },
+          { wch: 20 },
+          { wch: 15 },
+          { wch: 18 },
+          { wch: 18 },
+          { wch: 18 },
+          { wch: 16 },
+          { wch: 15 },
+          { wch: 12 },
+          { wch: 12 },
+          { wch: 15 },
+          { wch: 12 },
+        ];
+
+        XLSX.writeFile(
+          workbook,
+          `Kalender_${selectedMonth}_${selectedYear}.xlsx`,
+        );
+        toast.success("File Excel berhasil diunduh!");
+      });
+    } catch (error) {
+      console.error("Error downloading Excel:", error);
+      toast.error("Gagal mengunduh file Excel.");
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      const filteredData = tableData.filter((r) =>
+        r.cabang?.toLowerCase().includes(searchQuery.toLowerCase()),
+      );
+
+      if (filteredData.length === 0) {
+        toast.error("Tidak ada data untuk diunduh!");
+        return;
+      }
+
+      const jsPDFModule = await import("jspdf");
+      const autoTable = (await import("jspdf-autotable")).default;
+
+      const doc = new jsPDFModule.jsPDF();
+
+      const pageWidth = doc.internal.pageSize.getWidth();
+
+      doc.setFontSize(16);
+      doc.text("Laporan Distribusi Kalender", pageWidth / 2, 15, {
+        align: "center",
+      });
+
+      doc.setFontSize(10);
+      doc.text(`Periode: ${selectedMonth} ${selectedYear}`, pageWidth / 2, 25, {
+        align: "center",
+      });
+
+      const tableBody = filteredData.map((row, index) => [
+        index + 1,
+        row.cabang,
+        row.jumlah,
+        formatCurrency(row.peruntukanProvinsi),
+        formatCurrency(row.peruntukanKabupaten),
+        formatCurrency(row.peruntukanCabang),
+        formatCurrency(row.tambahanCabang),
+        formatCurrency(row.totalCabang),
+        formatCurrency(row.transfer),
+        formatCurrency(row.kurang),
+      ]);
+
+      autoTable(doc, {
+        head: [
+          [
+            "No",
+            "Cabang",
+            "Total",
+            "Provinsi",
+            "Kabupaten",
+            "Cabang",
+            "Tambahan",
+            "Total Cab",
+            "Transfer",
+            "Kurang",
+          ],
+        ],
+
+        body: tableBody,
+
+        startY: 35,
+
+        theme: "grid",
+
+        styles: {
+          fontSize: 7,
+          cellPadding: 2,
+          valign: "middle",
+        },
+
+        headStyles: {
+          fillColor: [79, 70, 229],
+          textColor: 255,
+          halign: "center",
+          fontStyle: "bold",
+        },
+
+        columnStyles: {
+          0: { halign: "center", cellWidth: 10 },
+          1: { halign: "left", cellWidth: 30 },
+          2: { halign: "center", cellWidth: 18 },
+
+          3: { halign: "right" },
+          4: { halign: "right" },
+          5: { halign: "right" },
+          6: { halign: "right" },
+          7: { halign: "right" },
+          8: { halign: "right" },
+          9: { halign: "right" },
+        },
+
+        alternateRowStyles: {
+          fillColor: [245, 245, 245],
+        },
+
+        didParseCell: function (data) {
+          data.cell.styles.overflow = "linebreak";
+        },
+      });
+
+      doc.save(`Kalender_${selectedMonth}_${selectedYear}.pdf`);
+      toast.success("File PDF berhasil diunduh!");
+    } catch (error) {
+      console.error("Error PDF:", error);
+      toast.error("Gagal membuat PDF");
     }
   };
 
@@ -409,20 +576,35 @@ const KalenderSection = () => {
               ))}
             </div>
 
-            <button
-              onClick={handleSaveBesaran}
-              disabled={loadingBesaran}
-              className="w-full py-5 bg-amber-500 hover:bg-amber-600 text-white rounded-[24px] font-black shadow-xl shadow-amber-100 transition-all flex items-center justify-center space-x-2 active:scale-[0.98]"
-            >
-              {loadingBesaran ? (
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <FaSave className="text-base" />
-              )}
-              <span className="text-base tracking-tight">
-                Simpan Konfigurasi Kalender
-              </span>
-            </button>
+            <div className="space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {/* Card Total - kiri */}
+                <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 px-4 py-3 rounded-2xl border border-amber-200 shadow-sm">
+                  <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-wider mb-0.5">
+                    Total Konfigurasi Kalender
+                  </p>
+                  <span className="text-xl font-bold text-amber-600">
+                    {formatCurrency(totalPerUnit)}
+                  </span>
+                </div>
+
+                {/* Tombol Simpan - kanan */}
+                <button
+                  onClick={handleSaveBesaran}
+                  disabled={loadingBesaran}
+                  className="w-full px-6 py-3 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl font-bold shadow-sm transition-all flex items-center justify-center gap-2 active:scale-[0.97]"
+                >
+                  {loadingBesaran ? (
+                    <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <FaSave className="text-xs" />
+                  )}
+                  <span className="text-base font-semibold tracking-tight">
+                    Simpan Konfigurasi
+                  </span>
+                </button>
+              </div>
+            </div>
           </div>
         </motion.div>
 
@@ -529,9 +711,15 @@ const KalenderSection = () => {
                     <input
                       type="number"
                       value={jumlahPesanan}
-                      onChange={(e) =>
-                        setJumlahPesanan(parseInt(e.target.value) || 0)
-                      }
+                      onFocus={() => {
+                        if (jumlahPesanan === "0") setJumlahPesanan("");
+                      }}
+                      onBlur={() => {
+                        if (jumlahPesanan === "") setJumlahPesanan("0");
+                      }}
+                      onChange={(e) => {
+                        setJumlahPesanan(e.target.value);
+                      }}
                       className="w-full pl-11 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-black text-white text-base focus:bg-white/10 focus:border-amber-500 transition-all"
                     />
                   </div>
@@ -552,7 +740,7 @@ const KalenderSection = () => {
                     className="w-full px-10 py-5 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-black shadow-xl shadow-amber-900/40 transition-all active:scale-[0.98] text-xs uppercase tracking-widest flex items-center justify-center gap-2"
                   >
                     <FaSave />
-                    Kunci Distribusi
+                    Kunci Pesanan
                   </button>
                 </div>
               </div>
@@ -622,6 +810,25 @@ const KalenderSection = () => {
                       ))}
                     </select>
                   </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleDownloadExcel}
+                      className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black shadow-sm transition-all active:scale-95 text-xs uppercase tracking-widest flex items-center gap-2"
+                      title="Unduh Excel"
+                    >
+                      <FaFileExcel className="text-sm" />
+                      Excel
+                    </button>
+                    <button
+                      onClick={handleDownloadPDF}
+                      className="px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-black shadow-sm transition-all active:scale-95 text-xs uppercase tracking-widest flex items-center gap-2"
+                      title="Unduh PDF"
+                    >
+                      <FaFilePdf className="text-sm" />
+                      PDF
+                    </button>
+                  </div>
                 </div>
               </div>
               <div className="overflow-x-auto">
@@ -658,7 +865,7 @@ const KalenderSection = () => {
                         .fill(0)
                         .map((_, i) => (
                           <tr key={i} className="animate-pulse">
-                            <td colSpan={8} className="p-6">
+                            <td colSpan={13} className="p-6">
                               <div className="h-3 bg-slate-100 rounded-full w-full" />
                             </td>
                           </tr>
@@ -737,11 +944,146 @@ const KalenderSection = () => {
                     ) : (
                       <tr>
                         <td
-                          colSpan={8}
+                          colSpan={13}
                           className="py-16 text-center text-slate-300 font-black uppercase tracking-widest text-xs"
                         >
                           Data Kosong
                         </td>
+                      </tr>
+                    )}
+
+                    {tableData.filter((r) =>
+                      r.cabang
+                        ?.toLowerCase()
+                        .includes(searchQuery.toLowerCase()),
+                    ).length > 0 && (
+                      <tr className="bg-amber-50 border-t-2 border-amber-200 font-black text-center text-[11px]">
+                        <td
+                          colSpan={2}
+                          className="px-4 py-4 text-amber-700 font-black text-right"
+                        >
+                          TOTAL REKAP
+                        </td>
+                        <td className="px-4 py-4 text-amber-600">
+                          {tableData
+                            .filter((r) =>
+                              r.cabang
+                                ?.toLowerCase()
+                                .includes(searchQuery.toLowerCase()),
+                            )
+                            .reduce(
+                              (sum, row) => sum + (parseInt(row.jumlah) || 0),
+                              0,
+                            )}
+                        </td>
+                        <td className="px-4 py-4 text-amber-600">
+                          {formatCurrency(
+                            tableData
+                              .filter((r) =>
+                                r.cabang
+                                  ?.toLowerCase()
+                                  .includes(searchQuery.toLowerCase()),
+                              )
+                              .reduce(
+                                (sum, row) =>
+                                  sum + (parseInt(row.peruntukanProvinsi) || 0),
+                                0,
+                              ),
+                          )}
+                        </td>
+                        <td className="px-4 py-4 text-amber-600">
+                          {formatCurrency(
+                            tableData
+                              .filter((r) =>
+                                r.cabang
+                                  ?.toLowerCase()
+                                  .includes(searchQuery.toLowerCase()),
+                              )
+                              .reduce(
+                                (sum, row) =>
+                                  sum +
+                                  (parseInt(row.peruntukanKabupaten) || 0),
+                                0,
+                              ),
+                          )}
+                        </td>
+                        <td className="px-4 py-4 text-amber-600">
+                          {formatCurrency(
+                            tableData
+                              .filter((r) =>
+                                r.cabang
+                                  ?.toLowerCase()
+                                  .includes(searchQuery.toLowerCase()),
+                              )
+                              .reduce(
+                                (sum, row) =>
+                                  sum + (parseInt(row.peruntukanCabang) || 0),
+                                0,
+                              ),
+                          )}
+                        </td>
+                        <td className="px-4 py-4 text-emerald-600 font-black">
+                          {formatCurrency(
+                            tableData
+                              .filter((r) =>
+                                r.cabang
+                                  ?.toLowerCase()
+                                  .includes(searchQuery.toLowerCase()),
+                              )
+                              .reduce(
+                                (sum, row) =>
+                                  sum + (parseInt(row.tambahanCabang) || 0),
+                                0,
+                              ),
+                          )}
+                        </td>
+                        <td className="px-4 py-4 text-amber-600 font-black">
+                          {formatCurrency(
+                            tableData
+                              .filter((r) =>
+                                r.cabang
+                                  ?.toLowerCase()
+                                  .includes(searchQuery.toLowerCase()),
+                              )
+                              .reduce(
+                                (sum, row) =>
+                                  sum + (parseInt(row.totalCabang) || 0),
+                                0,
+                              ),
+                          )}
+                        </td>
+                        <td className="px-4 py-4 text-emerald-600 font-black">
+                          {formatCurrency(
+                            tableData
+                              .filter((r) =>
+                                r.cabang
+                                  ?.toLowerCase()
+                                  .includes(searchQuery.toLowerCase()),
+                              )
+                              .reduce(
+                                (sum, row) =>
+                                  sum + (parseInt(row.transfer) || 0),
+                                0,
+                              ),
+                          )}
+                        </td>
+                        <td className="px-4 py-4 text-orange-600 font-black">
+                          {formatCurrency(
+                            tableData
+                              .filter((r) =>
+                                r.cabang
+                                  ?.toLowerCase()
+                                  .includes(searchQuery.toLowerCase()),
+                              )
+                              .reduce(
+                                (sum, row) => sum + (parseInt(row.kurang) || 0),
+                                0,
+                              ),
+                          )}
+                        </td>
+                        <td className="px-4 py-4 text-slate-400">-</td>
+                        <td className="px-4 py-4 text-slate-400">-</td>
+                        <td className="px-4 py-4 text-slate-400">-</td>
                       </tr>
                     )}
                   </tbody>

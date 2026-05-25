@@ -1064,7 +1064,8 @@ const DataTable = ({
   const profileImageUrl = "/profile.png";
   const [zoomedImage, setZoomedImage] = useState(null);
   const router = useRouter();
-
+  const [keteranganKeluar, setKeteranganKeluar] = useState("");
+  
   const handleOpenPopup = () => {
     setIsPopupVisible(true);
   };
@@ -1387,111 +1388,38 @@ const DataTable = ({
   };
 
   const handleKeluarAnggota = async () => {
-    try {
-      const anggotaId = sessionStorage.getItem("anggotaId");
+  try {
+    const anggotaId = sessionStorage.getItem("anggotaId");
 
-      if (!anggotaId) {
-        toast.error(
-          <div className="flex flex-col items-center space-y-4">
-            <div className="animate-bounce">
-              <FaExclamationCircle className="text-red-500 text-5xl" />
-            </div>
-            <h4 className="text-xl font-bold text-red-800">Gagal!</h4>
-            <div className="text-red-800 text-center">
-              ID anggota tidak ditemukan.
-            </div>
-          </div>,
-          {
-            icon: null,
-            duration: 3000,
-            style: {
-              background: "rgb(254, 226, 226)",
-              borderRadius: "0.5rem",
-              padding: "2rem",
-              width: "24rem",
-              maxWidth: "90%",
-              boxShadow:
-                "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-              position: "relative",
-              zIndex: 50,
-            },
-            closeButton: true,
-            closeOnClick: true,
-          },
-        );
-        return;
-      }
-
-      const result = await GlobalApi.keluarAnggota(anggotaId);
-
-      toast.success(
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-bounce">
-            <FaCheckCircle className="text-green-500 text-5xl" />
-          </div>
-          <h4 className="text-xl font-bold text-green-800">Berhasil!</h4>
-          <div className="text-green-800 text-center">
-            Data anggota berhasil dihapus.
-          </div>
-        </div>,
-        {
-          icon: null,
-          duration: 3000,
-          style: {
-            background: "rgb(220, 252, 231)",
-            borderRadius: "0.5rem",
-            padding: "2rem",
-            width: "24rem",
-            maxWidth: "90%",
-            boxShadow:
-              "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-            position: "relative",
-            zIndex: 50,
-          },
-          closeButton: true,
-          closeOnClick: true,
-        },
-      );
-
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
-
-      setTimeout(() => {
-        setIsPopupVisible(false);
-      }, 2000);
-    } catch (error) {
-      console.error("Gagal Menghapus Data:", error);
-      toast.error(
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-bounce">
-            <FaExclamationCircle className="text-red-500 text-5xl" />
-          </div>
-          <h4 className="text-xl font-bold text-red-800">Gagal!</h4>
-          <div className="text-red-800 text-center">
-            Gagal menghapus data anggota.
-          </div>
-        </div>,
-        {
-          icon: null,
-          duration: 3000,
-          style: {
-            background: "rgb(254, 226, 226)",
-            borderRadius: "0.5rem",
-            padding: "2rem",
-            width: "24rem",
-            maxWidth: "90%",
-            boxShadow:
-              "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-            position: "relative",
-            zIndex: 50,
-          },
-          closeButton: true,
-          closeOnClick: true,
-        },
-      );
+    if (!anggotaId) {
+      toast.error("ID anggota tidak ditemukan");
+      return;
     }
-  };
+
+    if (!keteranganKeluar.trim()) {
+      toast.error("Keterangan wajib diisi!");
+      return;
+    }
+
+    const result = await GlobalApi.keluarAnggota(
+      anggotaId,
+      keteranganKeluar
+    );
+
+    toast.success("Anggota berhasil keluar");
+
+    setKeteranganKeluar("");
+    setPopupVisibleKeluar(false);
+
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
+
+  } catch (error) {
+    console.error("Gagal Menghapus Data:", error);
+    toast.error("Gagal mengeluarkan anggota");
+  }
+};
 
   const handleDeleteClick = async () => {
     try {
@@ -3055,31 +2983,43 @@ const DataTable = ({
               </Button>
 
               {popupVisibleKeluar && (
-                <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
-                  <div className="bg-white rounded-lg p-6 w-11/12 sm:w-2/5 md:w-1/3 lg:w-1/4 text-center shadow-lg max-w-md">
-                    <h2 className="text-lg font-semibold text-gray-800">
-                      Apakah Anda yakin?
-                    </h2>
-                    <p className="text-gray-600 mt-2 mb-4">
-                      Apakah Anda yakin akan menghapus anggota ini?
-                    </p>
-                    <div className="flex justify-center gap-4">
-                      <button
-                        onClick={handleCancelKeluar}
-                        className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
-                      >
-                        Batal
-                      </button>
-                      <button
-                        onClick={handleKeluarAnggota}
-                        className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
-                      >
-                        Ya, Saya Yakin
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
+  <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
+    <div className="bg-white rounded-lg p-6 w-11/12 sm:w-2/5 md:w-1/3 lg:w-1/4 text-center shadow-lg max-w-md">
+      <h2 className="text-lg font-semibold text-gray-800">
+        Konfirmasi Keluar Anggota
+      </h2>
+
+      <p className="text-gray-600 mt-2 mb-4">
+        Silakan isi keterangan alasan anggota keluar.
+      </p>
+
+      {/* 🔥 INPUT KETERANGAN */}
+      <textarea
+        value={keteranganKeluar}
+        onChange={(e) => setKeteranganKeluar(e.target.value)}
+        placeholder="Contoh: Pindah domisili / Mengundurkan diri"
+        className="w-full border border-gray-300 rounded-md p-2 text-sm mb-4 focus:ring-2 focus:ring-teal-500 outline-none"
+        rows={3}
+      />
+
+      <div className="flex justify-center gap-4">
+        <button
+          onClick={handleCancelKeluar}
+          className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
+        >
+          Batal
+        </button>
+
+        <button
+          onClick={handleKeluarAnggota}
+          className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
+        >
+          Ya, Saya Yakin
+        </button>
+      </div>
+    </div>
+  </div>
+)}
             </div>
             <div>
               <Button

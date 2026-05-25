@@ -3,6 +3,33 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 
 const RekapTable = ({ dataRekapitulasi, formatRupiah }) => {
+  const totals = dataRekapitulasi.reduce(
+    (acc, item) => {
+      acc.iuran += item.iuran || 0;
+      acc.sanduka += item.sanduka || 0;
+      acc.daspen += item.daspen || 0;
+      acc.derap += item.derap || 0;
+      acc.kalender += item.kalender || 0;
+      acc.lainLain += item.lainLain || 0;
+      acc.totalIuran += item.totalIuran || 0;
+      acc.potonganBank += item.potonganBank || 0;
+      acc.selisih += item.selisih || 0;
+      acc.jumlahAnggota += item.jumlahAnggota || 0;
+      return acc;
+    },
+    {
+      iuran: 0,
+      sanduka: 0,
+      daspen: 0,
+      derap: 0,
+      kalender: 0,
+      lainLain: 0,
+      totalIuran: 0,
+      potonganBank: 0,
+      selisih: 0,
+      jumlahAnggota: 0,
+    },
+  );
   return (
     <div className="w-full overflow-x-auto">
       <table className="min-w-full">
@@ -116,6 +143,52 @@ const RekapTable = ({ dataRekapitulasi, formatRupiah }) => {
                   </p>
                 </div>
               </td>
+            </tr>
+          )}
+          {dataRekapitulasi.length > 0 && (
+            <tr className="bg-blue-100 border-t-2 font-bold text-xs">
+              <td colSpan={3} className="px-4 py-3 text-right text-blue-800">
+                TOTAL
+              </td>
+
+              <td className="px-4 py-3 text-right">
+                {formatRupiah(totals.iuran)}
+              </td>
+              <td className="px-4 py-3 text-right">
+                {formatRupiah(totals.sanduka)}
+              </td>
+              <td className="px-4 py-3 text-right">
+                {formatRupiah(totals.daspen)}
+              </td>
+              <td className="px-4 py-3 text-right">
+                {formatRupiah(totals.derap)}
+              </td>
+              <td className="px-4 py-3 text-right">
+                {formatRupiah(totals.kalender)}
+              </td>
+              <td className="px-4 py-3 text-right">
+                {formatRupiah(totals.lainLain)}
+              </td>
+
+              <td className="px-4 py-3 text-right bg-blue-200">
+                {formatRupiah(totals.totalIuran)}
+              </td>
+
+              <td className="px-4 py-3 text-right">
+                {formatRupiah(totals.potonganBank)}
+              </td>
+
+              <td
+                className={`px-4 py-3 text-right ${
+                  totals.selisih >= 0
+                    ? "text-green-600 bg-green-100"
+                    : "text-red-600 bg-red-100"
+                }`}
+              >
+                {formatRupiah(totals.selisih)}
+              </td>
+
+              <td className="px-4 py-3 text-center">{totals.jumlahAnggota}</td>
             </tr>
           )}
         </tbody>

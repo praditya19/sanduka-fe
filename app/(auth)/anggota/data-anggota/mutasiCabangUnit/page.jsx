@@ -508,17 +508,6 @@ const page = () => {
           )}
         </div>
 
-        <div className="mb-4">
-          <label className="block mb-1">Keterangan:</label>
-          <textarea
-            className="border border-teal-500 rounded-lg p-2 w-full bg-white shadow-sm"
-            placeholder="Masukkan keterangan"
-            rows="3"
-            value={keterangan}
-            onChange={(e) => setKeterangan(e.target.value)}
-          />
-        </div>
-
         <div className="flex justify-end">
           <Button
             type="button"
