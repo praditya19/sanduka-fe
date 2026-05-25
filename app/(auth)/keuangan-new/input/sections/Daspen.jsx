@@ -58,8 +58,8 @@ const DaspenSection = () => {
 
   const [deleteModal, setDeleteModal] = useState({ show: false, id: null, jenis: "", cabang: "" });
 
-  const tableRef = useRef(null); 
-  const printRef = useRef(null); 
+  const tableRef = useRef(null);
+  const printRef = useRef(null);
 
   const handleExportExcel = () => {
     const toastId = toast.loading("Menyiapkan data Excel yang rapi...");
@@ -236,8 +236,8 @@ const DaspenSection = () => {
           };
 
           if (R === 0) {
-            ws[cellAddress].s.font = { bold: true, color: { rgb: "FFFFFF" } }; 
-            ws[cellAddress].s.fill = { fgColor: { rgb: "1E293B" } }; 
+            ws[cellAddress].s.font = { bold: true, color: { rgb: "FFFFFF" } };
+            ws[cellAddress].s.fill = { fgColor: { rgb: "1E293B" } };
             ws[cellAddress].s.alignment = { horizontal: "center", vertical: "center" };
           }
 
@@ -249,11 +249,11 @@ const DaspenSection = () => {
       }
 
       ws['!cols'] = [
-        { wch: 5 },  
-        { wch: 25 }, 
-        { wch: 15 }, 
-        { wch: 15 }, { wch: 8 }, { wch: 15 }, { wch: 8 }, { wch: 15 }, { wch: 8 }, { wch: 15 }, 
-        { wch: 18 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 } 
+        { wch: 5 },
+        { wch: 25 },
+        { wch: 15 },
+        { wch: 15 }, { wch: 8 }, { wch: 15 }, { wch: 8 }, { wch: 15 }, { wch: 8 }, { wch: 15 },
+        { wch: 18 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }
       ];
 
       const wb = XLSX.utils.book_new();
@@ -276,21 +276,21 @@ const DaspenSection = () => {
     try {
       const tableContainer = element.querySelector('.overflow-x-auto');
 
-      element.classList.remove('overflow-hidden'); 
+      element.classList.remove('overflow-hidden');
       if (tableContainer) {
         tableContainer.classList.remove('overflow-x-auto');
         tableContainer.style.overflow = 'visible';
       }
 
       const canvas = await html2canvas(element, {
-        scale: 2, 
+        scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
-        width: element.scrollWidth, 
-        height: element.scrollHeight, 
+        width: element.scrollWidth,
+        height: element.scrollHeight,
         windowWidth: element.scrollWidth,
         windowHeight: element.scrollHeight,
-        scrollY: -window.scrollY 
+        scrollY: -window.scrollY
       });
 
       element.classList.add('overflow-hidden');
@@ -376,21 +376,21 @@ const DaspenSection = () => {
       setTargetData(filteredTargets || []);
 
       try {
-      const monthNames = [
-        "Januari", "Februari", "Maret", "April", "Mei", "Juni", 
-        "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-      ];
-      
-      const numericMonth = monthNames.indexOf(selectedMonth) !== -1 
-        ? monthNames.indexOf(selectedMonth) + 1 
-        : null;
+        const monthNames = [
+          "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+          "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+        ];
 
-      const aggRes = await GlobalApi.getTransaksiBankBalancing(
-        null, 
-        null, 
-        selectedYear, 
-        numericMonth 
-      );
+        const numericMonth = monthNames.indexOf(selectedMonth) !== -1
+          ? monthNames.indexOf(selectedMonth) + 1
+          : null;
+
+        const aggRes = await GlobalApi.getTransaksiBankBalancing(
+          null,
+          null,
+          selectedYear,
+          numericMonth
+        );
 
         setRawAggregatedData(aggRes.data || aggRes);
       } catch (aggError) {
@@ -1068,29 +1068,24 @@ const DaspenSection = () => {
                           <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/50"><CellTriple top={formatCurrency(totAutoNominal)} middle={pTotNominal !== null ? formatCurrency(pTotNominal) : null} bottom={totDbNominal !== null ? formatCurrency(totDbNominal) : null} topClass="text-slate-900 font-black" /></td>
 
                           <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/30">
-                            <span className="text-[11px] font-black text-slate-800">{formatCurrency(activeTransfer)}</span>
+                            <CellTriple top={formatCurrency(autoTransfer)} middle={pTransfer !== null ? formatCurrency(pTransfer) : null} bottom={dbTransfer !== null ? formatCurrency(dbTransfer) : null} />
                           </td>
 
                           <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/30">
-                            <span className={`text-[11px] font-black ${activeSelisih === 0 ? "text-emerald-600" : "text-slate-800"}`}>
-                              {formatCurrency(activeSelisih)}
-                            </span>
+                            <CellTriple top={formatCurrency(autoSelisih)} middle={pSelisih !== null ? formatCurrency(pSelisih) : null} bottom={dbSelisih !== null ? formatCurrency(dbSelisih) : null} />
                           </td>
 
                           <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/30">
-                            <span className="text-[11px] font-black text-slate-800">{formatCurrency(activePemb1)}</span>
+                            <CellTriple top={formatCurrency(0)} middle={pPemb1 !== null ? formatCurrency(pPemb1) : null} bottom={dbPemb1 !== null ? formatCurrency(dbPemb1) : null} />
                           </td>
 
                           <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/30">
-                            <span className="text-[11px] font-black text-slate-800">{formatCurrency(activePemb2)}</span>
+                            <CellTriple top={formatCurrency(0)} middle={pPemb2 !== null ? formatCurrency(pPemb2) : null} bottom={dbPemb2 !== null ? formatCurrency(dbPemb2) : null} />
                           </td>
 
                           <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/30">
-                            <span className={`text-[11px] font-black ${activeKurang === 0 ? "text-emerald-600" : "text-slate-800"}`}>
-                              {formatCurrency(activeKurang)}
-                            </span>
+                            <CellTriple top={formatCurrency(autoKurangSetor)} middle={pKurangSetor !== null ? formatCurrency(pKurangSetor) : null} bottom={dbKurangSetor !== null ? formatCurrency(dbKurangSetor) : null} />
                           </td>
-
                           <td className="px-3 py-2 text-center border-r border-slate-200">
                             <div className="flex flex-col gap-1 items-center justify-center">
                               <span className="text-[9px] font-black text-slate-500">AUTO</span>
@@ -1167,12 +1162,25 @@ const DaspenSection = () => {
                             <td className="px-3 py-2 border-r border-slate-300 text-right"><CellTriple top={formatCurrency(tAutoNomK3)} middle={formatCurrency(tProvNomK3)} bottom={formatCurrency(tRealNomK3)} /></td>
                             <td className="px-3 py-2 border-r border-slate-300 text-right bg-slate-200/50"><CellTriple top={formatCurrency(tAutoTotNom)} middle={formatCurrency(tProvTotNom)} bottom={formatCurrency(tRealTotNom)} topClass="text-slate-900" /></td>
 
-                            <td className="px-3 py-2 border-r border-slate-300 text-right"><span className="text-[11px] font-black text-indigo-600">{formatCurrency(tAutoTrans)}</span></td>
-                            <td className="px-3 py-2 border-r border-slate-300 text-right"><span className={`text-[11px] font-black ${tAutoSel === 0 ? "text-emerald-600" : "text-amber-600"}`}>{formatCurrency(tAutoSel)}</span></td>
-                            <td className="px-3 py-2 border-r border-slate-300 text-right"><span className="text-[11px] font-black text-slate-800">{formatCurrency(0)}</span></td>
-                            <td className="px-3 py-2 border-r border-slate-300 text-right"><span className="text-[11px] font-black text-slate-800">{formatCurrency(0)}</span></td>
-                            <td className="px-3 py-2 border-r border-slate-300 text-right"><span className={`text-[11px] font-black ${tAutoKurang === 0 ? "text-emerald-600" : "text-rose-600"}`}>{formatCurrency(tAutoKurang)}</span></td>
+                            <td className="px-3 py-2 border-r border-slate-300 text-right">
+                              <CellTriple top={formatCurrency(tAutoTrans)} middle={formatCurrency(tProvTrans)} bottom={formatCurrency(tRealTrans)} />
+                            </td>
 
+                            <td className="px-3 py-2 border-r border-slate-300 text-right">
+                              <CellTriple top={formatCurrency(tAutoSel)} middle={formatCurrency(tProvSel)} bottom={formatCurrency(tRealSel)} />
+                            </td>
+
+                            <td className="px-3 py-2 border-r border-slate-300 text-right">
+                              <CellTriple top={formatCurrency(0)} middle={formatCurrency(tProvPemb1)} bottom={formatCurrency(tRealPemb1)} />
+                            </td>
+
+                            <td className="px-3 py-2 border-r border-slate-300 text-right">
+                              <CellTriple top={formatCurrency(0)} middle={formatCurrency(tProvPemb2)} bottom={formatCurrency(tRealPemb2)} />
+                            </td>
+
+                            <td className="px-3 py-2 border-r border-slate-300 text-right">
+                              <CellTriple top={formatCurrency(tAutoKurang)} middle={formatCurrency(tProvKurang)} bottom={formatCurrency(tRealKurang)} />
+                            </td>
                             {/* ABAIKAN JUGA DI FOOTER */}
                             <td data-html2canvas-ignore="true" colSpan={2} className="px-3 py-2 border-r border-slate-300 bg-slate-200/30"></td>
                           </tr>
