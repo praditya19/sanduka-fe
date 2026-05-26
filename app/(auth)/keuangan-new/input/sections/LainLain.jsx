@@ -1,86 +1,106 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import GlobalApi from "@/app/_utils/GlobalApi";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import toast, { Toaster } from "react-hot-toast";
 import {
-  FaEllipsisH,
-  FaPlus,
-  FaSave,
-  FaTrash,
+  FaChartLine,
   FaEdit,
+  FaEllipsisH,
   FaFileInvoiceDollar,
-  FaPlusCircle,
   FaHistory,
+  FaMoneyBillWave,
+  FaPlusCircle,
+  FaSave,
   FaSearch,
-  FaChevronDown,
-  FaChevronRight
+  FaShoppingCart,
+  FaTrash,
+  FaUsers,
 } from "react-icons/fa";
 
 const LainLainSection = () => {
+  const defaultConfigId = 5;
+  const [besaran, setBesaran] = useState({
+    provinsi: 0,
+    kabupaten: 0,
+    cabang: 0,
+  });
+  const [configId, setConfigId] = useState(defaultConfigId);
+  const [loadingBesaran, setLoadingBesaran] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState(null);
-
   const [formData, setFormData] = useState({
+    tipe: "",
     keterangan: "",
-    rawProvinsi: "",
-    rawKabupaten: "",
-    rawCabang: ""
+    rawNominal: "",
   });
 
   const [keteranganOptions, setKeteranganOptions] = useState([]);
   const [isManualInput, setIsManualInput] = useState(false);
   const [tableData, setTableData] = useState([]);
+  const [cabangList, setCabangList] = useState([]);
+  const [selectedCabang, setSelectedCabang] = useState("");
+  const [jumlahPesanan, setJumlahPesanan] = useState("0");
+  const [loadingTarget, setLoadingTarget] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState("");
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [searchQuery, setSearchQuery] = useState("");
   const [bulanList, setBulanList] = useState([]);
-
-  const [cabangList, setCabangList] = useState([]);
-  const [expandedRows, setExpandedRows] = useState({});
-  const toggleRow = (id) => {
-    setExpandedRows(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
-  };
-
-  const fetchCabang = async () => {
-    try {
-      const res = await GlobalApi.getCabang();
-      const dataCabang = res.data || [];
-
-      // --- PROSES URUT ABJAD (A-Z) BERDASARKAN KECAMATAN ---
-      const sortedCabang = dataCabang.sort((a, b) => {
-        const namaA = (a.kecamatan || "").toUpperCase();
-        const namaB = (b.kecamatan || "").toUpperCase();
-        return namaA.localeCompare(namaB);
-      });
-
-      setCabangList(sortedCabang);
-    } catch (error) {
-      console.error("Error fetching cabang:", error);
-    }
-  };
+  const totalPerUnit = besaran.kabupaten;
+  const totalAkhir = totalPerUnit * (parseInt(jumlahPesanan, 10) || 0);
 
   useEffect(() => {
-    fetchData();
-    fetchOptions();
-    fetchBulan();
-    fetchCabang();
+    fetchInitialData();
   }, []);
 
-  const fetchBulan = async () => {
+  const fetchInitialData = async () => {
     try {
-      const res = await GlobalApi.getBulan();
-      setBulanList(res.data || []);
-      setSelectedMonth("ALL");
-      setSelectedYear("ALL");
+      const [bulanRes, cabangRes, lainLainRes, keteranganRes, iuranRes] = await Promise.all([
+        GlobalApi.getBulan(),
+        GlobalApi.getCabang(),
+        GlobalApi.getLainlain(),
+        GlobalApi.getKeteranganLainlain(),
+        fetchDefaultConfig(),
+      ]);
+
+      const bulan = bulanRes.data || [];
+      setBulanList(bulan);
+      setCabangList(cabangRes.data || []);
+      setTableData(lainLainRes || []);
+      setKeteranganOptions(keteranganRes || []);
+      applyDefaultConfig(iuranRes);
+
+      const currentMonth = new Date().getMonth();
+      if (bulan[currentMonth]) {
+        setSelectedMonth(bulan[currentMonth].namaBulan);
+      }
     } catch (error) {
-      console.error("Error fetching bulan:", error);
+      console.error("Error fetching Lain-lain data:", error);
     }
+  };
+
+  const fetchDefaultConfig = async () => {
+    try {
+      const filtered = await GlobalApi.getIuranByFilter("LAIN-LAIN");
+      const lainLainConfig = Array.isArray(filtered) ? filtered[0] : filtered;
+      if (lainLainConfig) return lainLainConfig;
+
+      return await GlobalApi.getDefaultIuranById(defaultConfigId);
+    } catch (error) {
+      console.error("Error fetching default Lain-lain config:", error);
+      return null;
+    }
+  };
+
+  const applyDefaultConfig = (config) => {
+    if (!config) return;
+    setConfigId(config.id || defaultConfigId);
+    setBesaran({
+      provinsi: 0,
+      kabupaten: parseInt(config.kabupaten, 10) || 0,
+      cabang: 0,
+    });
   };
 
   const fetchData = async () => {
@@ -92,94 +112,175 @@ const LainLainSection = () => {
     }
   };
 
-  const fetchOptions = async () => {
+  const filteredData = useMemo(() => {
+    return tableData.filter((item) => {
+      const kategori = item.propinsi ? "Provinsi" : item.kabupaten ? "Kabupaten" : "Cabang";
+      const keyword = searchQuery.toLowerCase();
+      const matchMonth = !selectedMonth || item.bulan === selectedMonth;
+      const matchYear = parseInt(item.tahun, 10) === parseInt(selectedYear, 10);
+      const matchSearch =
+        item.keterangan?.toLowerCase().includes(keyword) ||
+        kategori.toLowerCase().includes(keyword);
+
+      return matchMonth && matchYear && matchSearch;
+    });
+  }, [tableData, selectedMonth, selectedYear, searchQuery]);
+
+  const totalProvinsi = filteredData.reduce(
+    (sum, item) => sum + (item.propinsi ? parseInt(item.jumlahNominal, 10) || 0 : 0),
+    0,
+  );
+  const totalKabupaten = filteredData.reduce(
+    (sum, item) => sum + (item.kabupaten ? parseInt(item.jumlahNominal, 10) || 0 : 0),
+    0,
+  );
+  const totalCabang = filteredData.reduce(
+    (sum, item) => sum + (item.cabang === "Cabang" ? parseInt(item.jumlahNominal, 10) || 0 : 0),
+    0,
+  );
+  const totalNominal = totalProvinsi + totalKabupaten + totalCabang;
+
+  const formatCurrency = (val) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      maximumFractionDigits: 0,
+    }).format(val || 0);
+  };
+
+  const resetForm = () => {
+    setFormData({ tipe: "", keterangan: "", rawNominal: "" });
+    setIsEditing(false);
+    setEditingId(null);
+    setIsManualInput(false);
+  };
+
+  const handleResetDefault = async () => {
+    const config = await fetchDefaultConfig();
+    applyDefaultConfig(config);
+  };
+
+  const handleSaveBesaran = async () => {
+    setLoadingBesaran(true);
     try {
-      const res = await GlobalApi.getKeteranganLainlain();
-      setKeteranganOptions(res || []);
+      const payload = {
+        pb: "",
+        propinsi: "",
+        kabupaten: besaran.kabupaten,
+        cabang: "",
+        sanduka: "",
+        iuran: "LAIN-LAIN",
+      };
+      await GlobalApi.updateIuranData(configId, payload);
+      toast.success("Besaran Lain-lain diperbarui!");
     } catch (error) {
-      console.error("Error fetching options:", error);
+      toast.error("Gagal memperbarui besaran Lain-lain.");
+    } finally {
+      setLoadingBesaran(false);
     }
   };
 
-  const handleSave = async () => {
-    // Validasi: Wajib ada keterangan dan minimal salah satu nominal terisi
-    if (!formData.keterangan || (!formData.rawProvinsi && !formData.rawKabupaten && !formData.rawCabang)) {
-      toast.error("Keterangan dan minimal satu nominal wajib diisi!");
+  const handleSubmitTarget = async (e) => {
+    e.preventDefault();
+
+    const jumlah = parseInt(jumlahPesanan, 10) || 0;
+    if (!selectedCabang || jumlah <= 0) {
+      toast.error("Pilih Cabang dan Jumlah Lain-lain!");
+      return;
+    }
+
+    if (!selectedMonth || !selectedYear) {
+      toast.error("Pilih periode bulan dan tahun!");
+      return;
+    }
+
+    setLoadingTarget(true);
+    try {
+      const payload = {
+        propinsi: "",
+        kabupaten: "Kabupaten",
+        cabang: selectedCabang,
+        keterangan: `Target Lain-Lain ${selectedCabang}`,
+        jumlahNominal: totalAkhir,
+        bulan: selectedMonth,
+        tahun: selectedYear,
+      };
+
+      await GlobalApi.postLainlain(payload);
+      toast.success(`Lain-lain ${selectedCabang} berhasil dikunci!`);
+      setJumlahPesanan("0");
+      fetchData();
+    } catch (error) {
+      toast.error("Gagal menyimpan target Lain-lain.");
+    } finally {
+      setLoadingTarget(false);
+    }
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+
+    if (!formData.tipe || !formData.keterangan || !formData.rawNominal) {
+      toast.error("Semua field wajib diisi!");
+      return;
+    }
+
+    if (!selectedMonth || !selectedYear) {
+      toast.error("Pilih periode bulan dan tahun!");
       return;
     }
 
     setLoading(true);
-    const now = new Date();
-
-    // Payload mengirim nominal ke masing-masing peruntukan
     const payload = {
+      propinsi: formData.tipe === "Provinsi" ? "Provinsi" : "",
+      kabupaten: formData.tipe === "Kabupaten" ? "Kabupaten" : "",
+      cabang: formData.tipe === "Cabang" ? "Cabang" : "",
       keterangan: formData.keterangan,
-      propinsi: parseInt(formData.rawProvinsi) || 0,
-      kabupaten: parseInt(formData.rawKabupaten) || 0,
-      cabang: parseInt(formData.rawCabang) || 0,
-      // Total nominal bisa dijumlahkan jika backend masih membutuhkannya
-      jumlahNominal: (parseInt(formData.rawProvinsi) || 0) + (parseInt(formData.rawKabupaten) || 0) + (parseInt(formData.rawCabang) || 0),
-      bulan: now.toLocaleString("id-ID", { month: "long" }),
-      tahun: now.getFullYear(),
+      jumlahNominal: formData.rawNominal,
+      bulan: selectedMonth,
+      tahun: selectedYear,
     };
 
     try {
       if (isEditing) {
         await GlobalApi.updateLainlain(editingId, payload);
-        toast.success("Data berhasil diperbarui!");
+        toast.success("Data Lain-lain berhasil diperbarui!");
       } else {
         await GlobalApi.postLainlain(payload);
-        toast.success("Data berhasil disimpan!");
+        toast.success("Data Lain-lain berhasil disimpan!");
       }
       resetForm();
       fetchData();
     } catch (error) {
-      toast.error("Gagal memproses data.");
+      toast.error("Gagal memproses data Lain-lain.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm("Yakin ingin menghapus data ini?")) return;
-    try {
-      await GlobalApi.deleteLainlain(id);
-      toast.success("Data berhasil dihapus");
-      fetchData();
-    } catch (error) {
-      toast.error("Gagal menghapus data");
-    }
-  };
-
   const handleEdit = (item) => {
-    // Fungsi bantuan jika data lama masih pakai teks "Provinsi", kita ambil dari jumlahNominal
-    const getSafeNominal = (val, fallback) => {
-      if (!val) return "";
-      if (typeof val === 'string' && val.match(/^[a-zA-Z]+$/)) return fallback?.toString() || "";
-      return val.toString();
-    };
-
+    const tipe = item.propinsi ? "Provinsi" : item.kabupaten ? "Kabupaten" : "Cabang";
     setFormData({
+      tipe,
       keterangan: item.keterangan || "",
-      rawProvinsi: getSafeNominal(item.propinsi, item.jumlahNominal),
-      rawKabupaten: getSafeNominal(item.kabupaten, item.jumlahNominal),
-      rawCabang: getSafeNominal(item.cabang, item.jumlahNominal)
+      rawNominal: item.jumlahNominal?.toString() || "",
     });
+    setSelectedMonth(item.bulan || selectedMonth);
+    setSelectedYear(item.tahun || selectedYear);
     setEditingId(item.id);
     setIsEditing(true);
-    setShowForm(true);
+    setIsManualInput(!keteranganOptions.includes(item.keterangan));
   };
 
-  const resetForm = () => {
-    setFormData({ keterangan: "", rawProvinsi: "", rawKabupaten: "", rawCabang: "" });
-    setIsEditing(false);
-    setEditingId(null);
-    setShowForm(false);
-    setIsManualInput(false);
-  };
-
-  const formatCurrency = (val) => {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val || 0);
+  const handleDelete = async (id) => {
+    if (!window.confirm("Apakah Anda yakin ingin menghapus data ini?")) return;
+    try {
+      await GlobalApi.deleteLainlain(id);
+      toast.success("Data Lain-lain berhasil dihapus!");
+      fetchData();
+    } catch (error) {
+      toast.error("Gagal menghapus data Lain-lain.");
+    }
   };
 
   return (
@@ -193,31 +294,99 @@ const LainLainSection = () => {
           <div>
             <h2 className="text-xl font-black">Lain-Lain</h2>
             <div className="flex items-center gap-2 mt-1">
-              <span className="px-2 py-0.5 bg-white/20 rounded-md text-[10px] font-black uppercase tracking-widest">Periode: {selectedMonth} {selectedYear}</span>
+              <span className="px-2 py-0.5 bg-white/20 rounded-md text-[10px] font-black uppercase tracking-widest">
+                Periode: {selectedMonth} {selectedYear}
+              </span>
               <span className="w-1 h-1 bg-white/40 rounded-full" />
-              <p className="text-slate-300 text-[10px] font-medium uppercase tracking-widest">Pencatatan transaksi keuangan kategori lainnya</p>
+              <p className="text-slate-300 text-[10px] font-medium uppercase tracking-widest">
+                Manajemen transaksi keuangan kategori lainnya
+              </p>
             </div>
           </div>
         </div>
-        {!showForm && (
-          <button
-            onClick={() => {
-              setShowForm(true);
-              setIsManualInput(true);
-              setFormData({ tipe: "", keterangan: "", nominal: "", rawNominal: "" });
-              setIsEditing(false);
-              setEditingId(null);
-            }}
-            className="flex items-center space-x-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black rounded-xl transition-all shadow-lg shadow-emerald-900/20"
-          >
-            <FaPlus />
-            <span>Tambah Baru</span>
-          </button>
-        )}
       </div>
 
       <div className="p-6 space-y-8 overflow-y-auto">
-        {/* Top Section: Form Entry (Integrated) */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-[24px] border border-slate-100 shadow-lg shadow-slate-200/40 p-4"
+        >
+          <div className="flex flex-col xl:flex-row xl:items-end gap-4">
+            <div className="flex items-center gap-3 xl:w-64">
+              <div className="w-10 h-10 rounded-2xl bg-slate-700 text-white flex items-center justify-center shadow-lg shadow-slate-200">
+                <FaMoneyBillWave className="text-sm" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-slate-800 tracking-tight">
+                  Konfigurasi Harga
+                </h3>
+                <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest">
+                  Lain-Lain
+                </p>
+              </div>
+            </div>
+
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-[minmax(220px,1fr)_minmax(180px,0.7fr)_auto_auto] gap-3 items-end">
+              <div>
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">
+                  Porsi Kabupaten
+                </label>
+                <div className="relative group">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
+                    <span className="text-slate-300 font-black text-sm">
+                      Rp
+                    </span>
+                  </div>
+                  <input
+                    type="number"
+                    value={besaran.kabupaten}
+                    onChange={(e) =>
+                      setBesaran({
+                        provinsi: 0,
+                        kabupaten: parseInt(e.target.value, 10) || 0,
+                        cabang: 0,
+                      })
+                    }
+                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-slate-500 outline-none font-black text-slate-700 transition-all text-base group-hover:bg-slate-100/50 shadow-inner"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-slate-50 px-4 py-3 rounded-2xl border border-slate-100">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">
+                  Total
+                </p>
+                <span className="text-base font-black text-slate-700">
+                  {formatCurrency(totalPerUnit)}
+                </span>
+              </div>
+
+              <button
+                onClick={handleResetDefault}
+                className="h-[50px] px-4 bg-white border border-slate-200 rounded-2xl text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-slate-700 hover:border-slate-300 transition-all shadow-sm"
+              >
+                Reset
+              </button>
+
+              <button
+                onClick={handleSaveBesaran}
+                disabled={loadingBesaran}
+                className="h-[50px] px-5 bg-slate-700 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl font-bold shadow-sm transition-all flex items-center justify-center gap-2 active:scale-[0.97]"
+              >
+                {loadingBesaran ? (
+                  <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <FaSave className="text-xs" />
+                )}
+                <span className="text-xs font-black uppercase tracking-widest">
+                  Simpan
+                </span>
+              </button>
+            </div>
+          </div>
+        </motion.div>
+
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -229,8 +398,12 @@ const LainLainSection = () => {
                 <FaPlusCircle className="text-base" />
               </div>
               <div>
-                <h3 className="text-base font-black text-slate-800 tracking-tight">{isEditing ? "Edit Transaksi Lain-Lain" : "Entri Transaksi Baru"}</h3>
-                <p className="text-slate-400 text-[9px] font-medium uppercase tracking-widest">Pencatatan Keuangan Kategori Lainnya</p>
+                <h3 className="text-base font-black text-slate-800 tracking-tight">
+                  {isEditing ? "Edit Transaksi Lain-Lain" : "Entri Transaksi Lain-Lain"}
+                </h3>
+                <p className="text-slate-400 text-[9px] font-medium uppercase tracking-widest">
+                  Input berdasarkan periode aktif
+                </p>
               </div>
             </div>
             {isEditing && (
@@ -243,343 +416,401 @@ const LainLainSection = () => {
             )}
           </div>
 
-          <div className="p-6 sm:p-8">
-            {/* KETERANGAN TRANSAKSI FULL WIDTH */}
-            <div className="space-y-4 mb-6">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block px-1">Keterangan Transaksi</label>
-              <div className="flex gap-2">
+          <form onSubmit={handleSave} className="bg-slate-900 p-6 sm:p-8 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+              <FaEllipsisH className="text-8xl text-white -rotate-12" />
+            </div>
+
+            <div className="relative z-10 grid grid-cols-1 xl:grid-cols-12 gap-5 items-end">
+              <div className="xl:col-span-3 space-y-2">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block px-1">
+                  Tipe Kategori
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {["Provinsi", "Kabupaten", "Cabang"].map((tipe) => (
+                    <button
+                      type="button"
+                      key={tipe}
+                      onClick={() => setFormData({ ...formData, tipe })}
+                      className={`py-4 rounded-2xl text-[10px] font-black transition-all border ${formData.tipe === tipe
+                        ? "bg-white text-slate-900 border-white shadow-lg"
+                        : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
+                        }`}
+                    >
+                      {tipe}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="xl:col-span-3 space-y-2">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block px-1">
+                  Keterangan
+                </label>
                 {!isManualInput ? (
-                  <div className="flex-1 relative group">
+                  <div className="relative">
                     <select
                       value={formData.keterangan}
                       onChange={(e) => setFormData({ ...formData, keterangan: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-slate-500 outline-none font-black text-slate-700 transition-all text-base group-hover:bg-slate-100/50 shadow-inner appearance-none"
+                      className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-bold text-white text-sm focus:bg-white/10 focus:border-slate-400 transition-all appearance-none"
                     >
-                      <option value="">-- Pilih Keterangan --</option>
-                      {keteranganOptions.map((opt, i) => <option key={i} value={opt}>{opt}</option>)}
+                      <option value="" className="text-slate-800">
+                        -- Pilih Keterangan --
+                      </option>
+                      {keteranganOptions.map((opt, index) => (
+                        <option key={index} value={opt} className="text-slate-800">
+                          {opt}
+                        </option>
+                      ))}
                     </select>
                     <button
+                      type="button"
                       onClick={() => setIsManualInput(true)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-[9px] font-black text-slate-400 uppercase hover:text-slate-800 hover:border-slate-300 transition-all shadow-sm"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-white/10 border border-white/10 rounded-lg text-[8px] font-black text-slate-300 uppercase hover:bg-white/20"
                     >
-                      Input Manual
+                      Manual
                     </button>
                   </div>
                 ) : (
-                  <div className="flex-1 relative group">
+                  <div className="relative">
                     <input
                       type="text"
                       value={formData.keterangan}
                       onChange={(e) => setFormData({ ...formData, keterangan: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-slate-500 outline-none font-black text-slate-700 transition-all text-base group-hover:bg-slate-100/50 shadow-inner"
-                      placeholder="Ketik keterangan transaksi baru..."
+                      className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-bold text-white text-sm focus:bg-white/10 focus:border-slate-400 transition-all"
+                      placeholder="Ketik keterangan..."
                     />
                     <button
+                      type="button"
                       onClick={() => setIsManualInput(false)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-[9px] font-black text-slate-400 uppercase hover:text-slate-800 hover:border-slate-300 transition-all shadow-sm"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-white/10 border border-white/10 rounded-lg text-[8px] font-black text-slate-300 uppercase hover:bg-white/20"
                     >
-                      Pilih Opsi
+                      Opsi
                     </button>
                   </div>
                 )}
               </div>
+
+              <div className="xl:col-span-2 space-y-2">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block px-1">
+                  Nominal
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-black text-sm">
+                    Rp
+                  </span>
+                  <input
+                    type="number"
+                    value={formData.rawNominal}
+                    onChange={(e) => setFormData({ ...formData, rawNominal: e.target.value })}
+                    className="w-full pl-11 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-black text-white text-base focus:bg-white/10 focus:border-slate-400 transition-all"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              <div className="xl:col-span-2 grid grid-cols-2 gap-2">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block px-1">
+                    Bulan
+                  </label>
+                  <select
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(e.target.value)}
+                    className="w-full px-3 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-black text-white text-[10px] uppercase tracking-widest focus:bg-white/10 focus:border-slate-400 transition-all"
+                  >
+                    {bulanList.map((b) => (
+                      <option key={b.id} value={b.namaBulan} className="text-slate-800 normal-case">
+                        {b.namaBulan}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block px-1">
+                    Tahun
+                  </label>
+                  <select
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
+                    className="w-full px-3 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-black text-white text-[10px] uppercase tracking-widest focus:bg-white/10 focus:border-slate-400 transition-all"
+                  >
+                    {[2024, 2025, 2026, 2027].map((year) => (
+                      <option key={year} value={year} className="text-slate-800 normal-case">
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="xl:col-span-2 w-full px-8 py-5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl font-black shadow-xl shadow-emerald-900/30 transition-all active:scale-[0.98] text-xs uppercase tracking-widest flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <FaSave />
+                )}
+                {isEditing ? "Perbarui" : "Simpan"}
+              </button>
             </div>
-
-            {/* 3 KOLOM INPUT NOMINAL */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-
-              {/* Nominal Provinsi */}
-              <div className="space-y-4">
-                <label className="text-[9px] font-black text-indigo-400 uppercase tracking-widest block px-1">Nominal Provinsi</label>
-                <div className="relative group">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
-                    <span className="text-slate-300 font-black text-sm">Rp</span>
-                  </div>
-                  <input
-                    type="number"
-                    value={formData.rawProvinsi}
-                    onChange={(e) => setFormData({ ...formData, rawProvinsi: e.target.value })}
-                    className="w-full pl-11 pr-4 py-3 bg-indigo-50/30 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-indigo-500 outline-none font-black text-slate-700 transition-all text-base group-hover:bg-indigo-50/50 shadow-inner"
-                    placeholder="0"
-                  />
-                </div>
-              </div>
-
-              {/* Nominal Kabupaten */}
-              <div className="space-y-4">
-                <label className="text-[9px] font-black text-amber-500 uppercase tracking-widest block px-1">Nominal Kabupaten</label>
-                <div className="relative group">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
-                    <span className="text-slate-300 font-black text-sm">Rp</span>
-                  </div>
-                  <input
-                    type="number"
-                    value={formData.rawKabupaten}
-                    onChange={(e) => setFormData({ ...formData, rawKabupaten: e.target.value })}
-                    className="w-full pl-11 pr-4 py-3 bg-amber-50/30 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-amber-500 outline-none font-black text-slate-700 transition-all text-base group-hover:bg-amber-50/50 shadow-inner"
-                    placeholder="0"
-                  />
-                </div>
-              </div>
-
-              {/* Nominal Cabang */}
-              <div className="space-y-4">
-                <label className="text-[9px] font-black text-emerald-500 uppercase tracking-widest block px-1">Nominal Cabang</label>
-                <div className="relative group">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
-                    <span className="text-slate-300 font-black text-sm">Rp</span>
-                  </div>
-                  <input
-                    type="number"
-                    value={formData.rawCabang}
-                    onChange={(e) => setFormData({ ...formData, rawCabang: e.target.value })}
-                    className="w-full pl-11 pr-4 py-3 bg-emerald-50/30 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-emerald-500 outline-none font-black text-slate-700 transition-all text-base group-hover:bg-emerald-50/50 shadow-inner"
-                    placeholder="0"
-                  />
-                </div>
-              </div>
-
-            </div>
-
-            <button
-              onClick={handleSave}
-              disabled={loading}
-              className="w-full py-5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-[24px] font-black shadow-xl shadow-emerald-100 transition-all flex items-center justify-center space-x-2 active:scale-[0.98]"
-            >
-              {loading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <FaSave className="text-base" />}
-              <span className="text-base tracking-tight">{isEditing ? "Perbarui Data Transaksi" : "Simpan Data Transaksi"}</span>
-            </button>
-          </div>
+          </form>
         </motion.div>
 
-        {/* Bottom Section: Laporan & History */}
-        <div className="space-y-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-[18px] bg-slate-50 text-slate-600 flex items-center justify-center border border-slate-100 shadow-sm">
-                <FaHistory className="text-xl" />
-              </div>
-              <div>
-                <h3 className="text-xl font-black text-slate-800 tracking-tight">Riwayat Transaksi</h3>
-                <p className="text-slate-400 text-xs font-medium">Monitoring seluruh entri keuangan lain-lain</p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="relative group">
-                <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-xs" />
-                <input
-                  type="text"
-                  placeholder="Cari transaksi..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-slate-500/20 focus:bg-white transition-all text-[10px] w-48"
-                />
-              </div>
-              <select
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                className="px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-slate-700 text-[10px] appearance-none"
-              >
-                <option value="ALL">Semua Bulan</option>
-                {bulanList.map(b => <option key={b.id} value={b.namaBulan}>{b.namaBulan}</option>)}
-              </select>
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(e.target.value)}
-                className="px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-slate-700 text-[10px] appearance-none"
-              >
-                <option value="ALL">Semua Tahun</option>
-                {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
-              </select>
-            </div>
+        <form
+          onSubmit={handleSubmitTarget}
+          className="bg-slate-900 p-6 sm:p-8 rounded-[40px] shadow-2xl relative overflow-hidden group"
+        >
+          <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+            <FaEllipsisH className="text-8xl text-white -rotate-12" />
           </div>
 
-          <div className="bg-white rounded-[32px] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden">
+          <div className="relative z-10 flex flex-col xl:flex-row items-end gap-6">
+            <div className="w-full xl:w-1/3 space-y-2">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block px-1">
+                Pilih Cabang
+              </label>
+              <select
+                value={selectedCabang}
+                onChange={(e) => setSelectedCabang(e.target.value)}
+                className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-bold text-white text-sm focus:bg-white/10 focus:border-slate-500 transition-all appearance-none"
+              >
+                <option value="" className="text-slate-800">
+                  -- Pilih Cabang --
+                </option>
+                {cabangList.map((c) => (
+                  <option
+                    key={c.id}
+                    value={c.kecamatan}
+                    className="text-slate-800"
+                  >
+                    {c.kecamatan}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="w-full xl:w-1/4 space-y-2">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block px-1">
+                Jumlah Lain-Lain
+              </label>
+              <div className="relative">
+                <FaShoppingCart className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm" />
+                <input
+                  type="number"
+                  value={jumlahPesanan}
+                  onFocus={() => {
+                    if (jumlahPesanan === "0") setJumlahPesanan("");
+                  }}
+                  onBlur={() => {
+                    if (jumlahPesanan === "") setJumlahPesanan("0");
+                  }}
+                  onChange={(e) => setJumlahPesanan(e.target.value)}
+                  className="w-full pl-11 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-black text-white text-base focus:bg-white/10 focus:border-slate-500 transition-all"
+                />
+              </div>
+            </div>
+
+            <div className="w-full xl:flex-1 flex xl:flex-col items-center xl:items-end justify-between xl:justify-center gap-2 px-2">
+              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                Grand Total
+              </span>
+              <span className="text-2xl font-black text-slate-200 tracking-tight">
+                {formatCurrency(totalAkhir)}
+              </span>
+            </div>
+
+            <div className="w-full xl:w-auto">
+              <button
+                type="submit"
+                disabled={loadingTarget}
+                className="w-full px-10 py-5 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl font-black shadow-xl shadow-slate-950/40 transition-all active:scale-[0.98] text-xs uppercase tracking-widest flex items-center justify-center gap-2"
+              >
+                {loadingTarget ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <FaSave />
+                )}
+                Kunci Pesanan
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {[
+              { label: "Total Provinsi", val: totalProvinsi, color: "bg-indigo-600", icon: <FaMoneyBillWave /> },
+              { label: "Total Kabupaten", val: totalKabupaten, color: "bg-amber-500", icon: <FaChartLine /> },
+              { label: "Total Cabang", val: totalCabang, color: "bg-emerald-500", icon: <FaUsers /> },
+              { label: "Total Lain-Lain", val: totalNominal, color: "bg-slate-700", icon: <FaEllipsisH /> },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                className={`${stat.color} p-5 rounded-[28px] text-white shadow-lg flex items-center justify-between group overflow-hidden relative`}
+              >
+                <div className="relative z-10">
+                  <p className="text-[9px] font-black opacity-60 uppercase tracking-widest mb-0.5">
+                    {stat.label}
+                  </p>
+                  <h4 className="text-lg font-black">{formatCurrency(stat.val)}</h4>
+                </div>
+                <div className="text-3xl opacity-10 group-hover:scale-125 transition-transform duration-500">
+                  {stat.icon}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-white rounded-[40px] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden">
+            <div className="p-6 border-b border-slate-100 flex flex-col xl:flex-row xl:items-center justify-between gap-6 bg-white">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-[18px] bg-slate-50 text-slate-600 flex items-center justify-center border border-slate-100 shadow-sm">
+                  <FaHistory className="text-xl" />
+                </div>
+                <div>
+                  <h4 className="text-lg font-black text-slate-800 tracking-tight">
+                    Riwayat Transaksi
+                  </h4>
+                  <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                    Lain-Lain - {selectedMonth} {selectedYear}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="relative min-w-[200px] flex-1 md:flex-none">
+                  <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-sm" />
+                  <input
+                    type="text"
+                    placeholder="Cari transaksi..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-slate-500/20 focus:bg-white transition-all text-xs"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-100">
+                  <select
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(e.target.value)}
+                    className="bg-transparent px-3 py-1.5 outline-none font-black text-slate-600 text-[10px] uppercase tracking-widest cursor-pointer"
+                  >
+                    {bulanList.map((b) => (
+                      <option key={b.id} value={b.namaBulan} className="font-sans normal-case">
+                        {b.namaBulan}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="w-[1px] h-4 bg-slate-200" />
+                  <select
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
+                    className="bg-transparent px-3 py-1.5 outline-none font-black text-slate-600 text-[10px] uppercase tracking-widest cursor-pointer"
+                  >
+                    {[2024, 2025, 2026, 2027].map((year) => (
+                      <option key={year} value={year} className="font-sans normal-case">
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50/50 border-b border-slate-100">
-                    <th className="px-3 py-3 w-8 text-center"></th>
-                    {["Keterangan", "Bulan/Tahun", "Peruntukan Provinsi", "Peruntukan Kabupaten", "Peruntukan Cabang", "Aksi"].map((h, i) => (
+                    {["No", "Kategori", "Keterangan", "Bulan/Tahun", "Nominal", "Action"].map((heading, index) => (
                       <th
-                        key={i}
-                        // Padding dikecilkan ke px-3, teks dikecilkan ke text-[8px]
-                        className={`px-3 py-3 text-[8px] font-black uppercase tracking-widest text-slate-400 ${h === 'Aksi' ? 'text-center' : h.includes('Peruntukan') ? 'text-right' : 'text-left'
-                          } whitespace-nowrap`}
+                        key={index}
+                        className="px-4 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-center whitespace-nowrap"
                       >
-                        {h}
+                        {heading}
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {(() => {
-                    const filteredData = tableData.filter(item => {
-                      const matchMonth = selectedMonth === "ALL" || item.bulan === selectedMonth;
-                      const matchYear = selectedYear === "ALL" || parseInt(item.tahun) === parseInt(selectedYear);
-                      const matchSearch = item.keterangan?.toLowerCase().includes(searchQuery.toLowerCase());
-                      return matchMonth && matchYear && matchSearch;
-                    });
+                  {filteredData.length > 0 ? (
+                    filteredData.map((item, index) => {
+                      const kategori = item.propinsi ? "Provinsi" : item.kabupaten ? "Kabupaten" : "Cabang";
 
-                    return filteredData.length > 0 ? (
-                      filteredData.map((item, i) => (
-                        <React.Fragment key={i}>
-                          {/* BARIS UTAMA (Dibuat Lebih Compact) */}
-                          <tr
-                            onClick={() => toggleRow(item.id)}
-                            className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
-                          >
-                            <td className="px-3 py-3 text-slate-400 text-center w-8">
-                              {expandedRows[item.id] ? <FaChevronDown size={10} /> : <FaChevronRight size={10} />}
-                            </td>
+                      return (
+                        <tr
+                          key={item.id || index}
+                          className="hover:bg-slate-50/80 transition-colors text-center text-[11px] font-bold text-slate-600"
+                        >
+                          <td className="px-4 py-4 text-slate-400 font-black">{index + 1}</td>
+                          <td className="px-4 py-4">
+                            <span
+                              className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tight ${item.propinsi
+                                ? "bg-indigo-50 text-indigo-600"
+                                : item.kabupaten
+                                  ? "bg-amber-50 text-amber-600"
+                                  : "bg-emerald-50 text-emerald-600"
+                                }`}
+                            >
+                              {kategori}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 font-black text-slate-800 text-left whitespace-nowrap">
+                            {item.keterangan}
+                          </td>
+                          <td className="px-4 py-4 text-slate-400">
+                            {item.bulan} {item.tahun}
+                          </td>
+                          <td className="px-4 py-4 text-slate-900 font-black text-right">
+                            {formatCurrency(item.jumlahNominal)}
+                          </td>
+                          <td className="px-4 py-4">
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                onClick={() => handleEdit(item)}
+                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                title="Edit"
+                              >
+                                <FaEdit className="text-lg" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(item.id)}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                title="Hapus"
+                              >
+                                <FaTrash className="text-lg" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={6} className="py-16 text-center">
+                        <div className="flex flex-col items-center justify-center space-y-3 text-slate-300">
+                          <FaFileInvoiceDollar className="text-4xl" />
+                          <p className="text-xs font-black uppercase tracking-widest">Data Kosong</p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
 
-                            {/* Keterangan: Dihilangkan whitespace-nowrap agar bisa turun ke bawah, diberi min-w agar tidak terlalu gepeng */}
-                            <td className="px-3 py-3 font-black text-slate-800 text-xs min-w-[150px] max-w-[250px] leading-tight">
-                              {item.keterangan}
-                            </td>
-
-                            <td className="px-3 py-3 text-[10px] font-bold text-slate-400 whitespace-nowrap">
-                              {item.bulan} {item.tahun}
-                            </td>
-
-                            <td className="px-3 py-3 text-right font-black text-indigo-600 text-xs whitespace-nowrap bg-indigo-50/20">
-                              {parseFloat(item.propinsi) > 0 ? formatCurrency(item.propinsi) : <span className="text-slate-300">-</span>}
-                            </td>
-
-                            <td className="px-3 py-3 text-right font-black text-amber-600 text-xs whitespace-nowrap bg-amber-50/20">
-                              {parseFloat(item.kabupaten) > 0 ? formatCurrency(item.kabupaten) : <span className="text-slate-300">-</span>}
-                            </td>
-
-                            <td className="px-3 py-3 text-right font-black text-emerald-600 text-xs whitespace-nowrap bg-emerald-50/20">
-                              {parseFloat(item.cabang) > 0 ? formatCurrency(item.cabang) : <span className="text-slate-300">-</span>}
-                            </td>
-
-                            <td className="px-3 py-3 w-20">
-                              <div className="flex items-center justify-center space-x-1.5">
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); handleEdit(item); }}
-                                  className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all shadow-sm"
-                                  title="Edit"
-                                >
-                                  <FaEdit className="text-[10px]" />
-                                </button>
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}
-                                  className="p-2 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-600 hover:text-white transition-all shadow-sm"
-                                  title="Hapus"
-                                >
-                                  <FaTrash className="text-[10px]" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-
-                          {/* BARIS SUB-TABEL TERSENDIRI */}
-                          <AnimatePresence>
-                            {expandedRows[item.id] && (
-                              <tr className="bg-slate-50/80 border-b border-slate-200">
-                                <td colSpan="7" className="p-0 w-full max-w-[1px]">
-
-                                  <div className="p-4 sm:p-6 w-full">
-                                    <motion.div
-                                      initial={{ opacity: 0, y: -10 }}
-                                      animate={{ opacity: 1, y: 0 }}
-                                      exit={{ opacity: 0, y: -10 }}
-                                      className="bg-white border border-slate-200 rounded-2xl shadow-inner overflow-hidden w-full flex flex-col"
-                                    >
-                                      <div className="bg-slate-800 px-5 py-3 flex items-center justify-between z-20 relative shrink-0">
-                                        <h5 className="text-xs font-black text-white uppercase tracking-widest">
-                                          Detail Peruntukan Cabang - {item.keterangan}
-                                        </h5>
-                                      </div>
-
-                                      <div className="overflow-x-auto overflow-y-auto max-h-[320px] custom-scrollbar w-full">
-                                        <table className="w-full text-left border-collapse relative">
-                                          <thead className="sticky top-0 z-10 shadow-sm">
-                                            <tr className="bg-slate-100 border-b border-slate-200">
-                                              {["No", "Cabang/Khusus", "Jumlah", "Peruntukan Provinsi", "Peruntukan Kabupaten", "Peruntukan Cabang", "Tambahan Cabang", "Total Peruntukan Cabang", "Total Tagihan", "Transfer", "Kurang", "Pembayaran I", "Pembayaran II", "Selisih", "Aksi"].map((h, subIdx) => (
-                                                <th key={subIdx} className="px-4 py-3 text-[8px] font-black uppercase tracking-widest text-slate-500 whitespace-nowrap border-r border-slate-200 last:border-r-0 text-center bg-slate-100">
-                                                  {h}
-                                                </th>
-                                              ))}
-                                            </tr>
-                                          </thead>
-                                          
-                                          <tbody className="divide-y divide-slate-100">
-                                            {cabangList.map((cabang, idx) => (
-                                              <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                                                <td className="px-4 py-3 text-xs text-slate-400 font-bold border-r border-slate-100 text-center">{idx + 1}</td>
-                                                <td className="px-4 py-3 text-xs font-black text-slate-700 whitespace-nowrap uppercase border-r border-slate-100">{cabang.kecamatan}</td>
-                                                
-                                                {/* Dummy Data Area */}
-                                                <td className="px-4 py-3 text-xs font-bold text-slate-600 text-center border-r border-slate-100">0</td>
-                                                <td className="px-4 py-3 text-xs font-bold text-indigo-500 text-right border-r border-slate-100">Rp 0</td>
-                                                <td className="px-4 py-3 text-xs font-bold text-amber-500 text-right border-r border-slate-100">Rp 0</td>
-                                                <td className="px-4 py-3 text-xs font-bold text-emerald-500 text-right border-r border-slate-100">Rp 0</td>
-                                                <td className="px-4 py-3 text-xs font-bold text-emerald-600 text-right border-r border-slate-100">Rp 0</td>
-                                                <td className="px-4 py-3 text-xs font-black text-emerald-700 text-right bg-emerald-50/50 border-r border-slate-100">Rp 0</td>
-                                                <td className="px-4 py-3 text-xs font-black text-slate-800 text-right bg-slate-50 border-r border-slate-100">Rp 0</td>
-                                                <td className="px-4 py-3 text-xs font-bold text-blue-600 text-right border-r border-slate-100">Rp 0</td>
-                                                <td className="px-4 py-3 text-xs font-bold text-rose-500 text-right border-r border-slate-100">Rp 0</td>
-                                                <td className="px-4 py-3 text-xs font-bold text-slate-500 text-right border-r border-slate-100">Rp 0</td>
-                                                <td className="px-4 py-3 text-xs font-bold text-slate-500 text-right border-r border-slate-100">Rp 0</td>
-                                                <td className="px-4 py-3 text-xs font-black text-amber-600 text-right bg-amber-50/30 border-r border-slate-100">Rp 0</td>
-                                                <td className="px-4 py-3 text-center">
-                                                  <button className="p-1.5 text-blue-500 hover:bg-blue-100 rounded-md transition-all">
-                                                    <FaEdit size={12} />
-                                                  </button>
-                                                </td>
-                                              </tr>
-                                            ))}
-                                          </tbody>
-
-                                          <tfoot className="sticky bottom-0 z-10 bg-slate-100 border-t-2 border-slate-300 shadow-[0_-3px_10px_rgba(0,0,0,0.05)] font-black text-[11px] text-slate-800">
-                                            <tr>
-                                              <td colSpan={2} className="px-4 py-3 text-center text-[10px] font-black uppercase tracking-widest border-r border-slate-200 bg-slate-100">
-                                                TOTAL REKAPITULASI
-                                              </td>
-                                              
-                                              <td className="px-4 py-3 text-center border-r border-slate-200 bg-slate-100">0</td>
-                                              
-                                              <td className="px-4 py-3 text-right text-indigo-600 border-r border-slate-200 bg-slate-100">Rp 0</td>
-                                              <td className="px-4 py-3 text-right text-amber-600 border-r border-slate-200 bg-slate-100">Rp 0</td>
-                                              <td className="px-4 py-3 text-right text-emerald-600 border-r border-slate-200 bg-slate-100">Rp 0</td>
-                                              <td className="px-4 py-3 text-right text-emerald-600 border-r border-slate-200 bg-slate-100">Rp 0</td>
-                                              
-                                              <td className="px-4 py-3 text-right text-emerald-700 bg-emerald-100/60 border-r border-slate-200">Rp 0</td>
-                                              <td className="px-4 py-3 text-right text-slate-900 bg-slate-200/60 border-r border-slate-200">Rp 0</td>
-                                              
-                                              <td className="px-4 py-3 text-right text-blue-600 border-r border-slate-200 bg-slate-100">Rp 0</td>
-                                              <td className="px-4 py-3 text-right text-rose-600 border-r border-slate-200 bg-slate-100">Rp 0</td>
-                                              <td className="px-4 py-3 text-right text-slate-600 border-r border-slate-200 bg-slate-100">Rp 0</td>
-                                              <td className="px-4 py-3 text-right text-slate-600 border-r border-slate-200 bg-slate-100">Rp 0</td>
-                                              <td className="px-4 py-3 text-right text-amber-700 bg-amber-100/50 border-r border-slate-200">Rp 0</td>
-                                              
-                                              <td className="bg-slate-100"></td>
-                                            </tr>
-                                          </tfoot>
-                                        </table>
-                                      </div>
-                                    </motion.div>
-                                  </div>
-                                </td>
-                              </tr>
-                            )}
-                          </AnimatePresence>
-                        </React.Fragment>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="7" className="py-20 text-center">
-                          <div className="flex flex-col items-center justify-center space-y-3 opacity-20">
-                            <FaFileInvoiceDollar className="text-4xl" />
-                            <p className="text-xs font-black uppercase tracking-widest">Belum Ada Transaksi</p>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })()}
+                  {filteredData.length > 0 && (
+                    <tr className="bg-slate-50 border-t-2 border-slate-200 font-black text-center text-[11px]">
+                      <td colSpan={4} className="px-4 py-4 text-slate-700 font-black text-right">
+                        TOTAL REKAP
+                      </td>
+                      <td className="px-4 py-4 text-slate-700 font-black text-right">
+                        {formatCurrency(totalNominal)}
+                      </td>
+                      <td className="px-4 py-4 text-slate-400 text-center">-</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
