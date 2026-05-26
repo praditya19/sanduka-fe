@@ -75,7 +75,7 @@ const LainLainSection = () => {
 
       const bulan = bulanRes.data || [];
       setBulanList(bulan);
-      setCabangList(cabangRes.data || []);
+      setCabangList((cabangRes.data || []).sort((a, b) => (a.kecamatan || "").localeCompare(b.kecamatan || "")));
       setTableData(lainLainRes || []);
       setKeteranganOptions(keteranganRes || []);
       applyDefaultConfig(iuranRes);
