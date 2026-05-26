@@ -152,17 +152,24 @@ const IuranPgriSection = () => {
       const monthObj = bulanList.find(b => b.namaBulan === selectedMonth);
       const monthNumber = monthObj ? monthObj.id : (new Date().getMonth() + 1);
 
-      // Fetch both bank balancing data dan organisasi transaction data
+      // Fetch bank balancing data dan pemasukan organisasi untuk pembayaran.
       const [bankData, orgData] = await Promise.all([
         GlobalApi.getTransaksiBankBalancing("", null, selectedYear, monthNumber, null, null),
-        GlobalApi.getTableUmum(monthNumber, selectedYear)
+        GlobalApi.getPemasukanUmum()
       ]);
 
       setRawBalancingData(bankData || []);
 
       const normalizeText = (value) => (value || "").toString().trim().toLowerCase();
+      const normalizeCabangKey = (value) => (value || "").toString().trim().replace(/\s+/g, " ").toUpperCase();
+      const parseCurrency = (value) => {
+        if (!value) return 0;
+        if (typeof value === "number") return value;
+        const cleaned = value.toString().replace(/[^0-9,-]/g, "").replace(",", ".");
+        return parseFloat(cleaned) || 0;
+      };
 
-      // Parse organisasi data untuk mapping per cabang
+      // Parse pemasukan_organisasi untuk mapping pembayaran per cabang.
       // Format: { "CABANG_NAME": pembayaran_amount }
       const orgMap = {};
       if (orgData && Array.isArray(orgData)) {
@@ -176,20 +183,22 @@ const IuranPgriSection = () => {
 
           if (posPenerimaan !== "sumbangan anggota") return;
 
-          // Extract cabang name from keterangan yang format: "Sumbangan Anggota Cabang NAMA_CABANG ..."
+          const setoranBulan = Number(item.setoranBulan || item.setoran_bulan || 0);
+          const setoranTahun = Number(item.setoranTahun || item.setoran_tahun || 0);
+          if (setoranBulan !== Number(monthNumber) || setoranTahun !== Number(selectedYear)) return;
+
           const keterangan = item.keterangan || "";
-          const cabangMatch = keterangan.match(/Cabang\s+([A-Z\s]+?)\s*\(/);
-          if (cabangMatch) {
-            const cabangName = cabangMatch[1].trim();
-            // Parse debet - bisa jadi "Rp 13.928.250" atau number
-            let debet = 0;
-            if (typeof item.debet === 'string') {
-              debet = parseFloat(item.debet.replace(/[^0-9,-]/g, '').replace(',', '.')) || 0;
-            } else {
-              debet = parseFloat(item.debet) || 0;
-            }
-            orgMap[cabangName] = (orgMap[cabangName] || 0) + debet;
-          }
+          const cabangMatch = keterangan.match(/Cabang\s+(.+?)(?:\s*\(|\s+untuk|\s+periode|$)/i);
+          const cabangValue =
+            typeof item.cabang === "object"
+              ? item.cabang?.kecamatan || item.cabang?.cabang || item.cabang?.namaCabang
+              : item.cabang;
+          const cabangName = cabangValue || item.namaCabang || item.nama_cabang || cabangMatch?.[1] || "";
+          const cabangKey = normalizeCabangKey(cabangName);
+          if (!cabangKey) return;
+
+          const nominal = parseCurrency(item.nominal || item.debet || item.debit);
+          orgMap[cabangKey] = (orgMap[cabangKey] || 0) + nominal;
         });
       }
       setOrganisasiTransaksiData(orgMap);
@@ -288,8 +297,8 @@ const IuranPgriSection = () => {
       const totalTagihan = pb + prov + kab + totalCabang + sanduka;
       const potBank = group.potBank;
       const tunai = group.tunai;
-      // Ambil pembayaran dari Jurnal Organisasi Transaksi
-      const pembayaran = organisasiTransaksiData[cabName] || 0;
+      // Ambil pembayaran dari pemasukan_organisasi.
+      const pembayaran = organisasiTransaksiData[(cabName || "").toString().trim().replace(/\s+/g, " ").toUpperCase()] || 0;
       const selisih = totalTagihan - pembayaran;
 
       return [
