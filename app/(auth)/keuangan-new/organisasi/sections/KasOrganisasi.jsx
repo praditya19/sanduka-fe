@@ -52,6 +52,8 @@ const KasOrganisasi = () => {
     { value: "09", label: "September" }, { value: "10", label: "Oktober" },
     { value: "11", label: "November" }, { value: "12", label: "Desember" }
   ];
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: 11 }, (_, index) => currentYear - 5 + index);
 
   // Modal States
   const [showModalIn, setShowModalIn] = useState(false);
@@ -80,7 +82,7 @@ const KasOrganisasi = () => {
     jenisPenerimaan: "Transfer",
     posPenerimaan: "",
     cabang: "",
-    setoranBulan: months[new Date().getMonth()].label,
+    setoranBulan: months[new Date().getMonth()].value,
     setoranTahun: new Date().getFullYear(),
     nominal: 0,
     keterangan: ""
@@ -91,8 +93,8 @@ const KasOrganisasi = () => {
     jenisPengeluaran: "Tunai",
     posPengeluaran: "",
     cabang: "",
-    pengeluaranBulan: months[new Date().getMonth()].label,
-    pengeluaranTahun: new Date().getFullYear(),
+    setoranBulan: months[new Date().getMonth()].value,
+    setoranTahun: new Date().getFullYear(),
     nominal: 0,
     keterangan: ""
   });
@@ -345,13 +347,18 @@ const KasOrganisasi = () => {
 
   const handleSubmitIn = async (e) => {
     e.preventDefault();
-    if (!formIn.posPenerimaan || !formIn.cabang || formIn.nominal <= 0) {
+    if (!formIn.posPenerimaan || !formIn.setoranBulan || !formIn.setoranTahun || formIn.nominal <= 0) {
       toast.error("Harap isi semua field yang wajib!");
       return;
     }
     setSubmitting(true);
     try {
-      await GlobalApi.createPemasukanUmum(formIn);
+      await GlobalApi.createPemasukanUmum({
+        ...formIn,
+        setoranBulan: Number(formIn.setoranBulan),
+        setoranTahun: Number(formIn.setoranTahun),
+        nominal: Number(formIn.nominal),
+      });
       toast.success("Pemasukan kas berhasil dicatat!");
       setShowModalIn(false);
       resetFormIn();
@@ -366,13 +373,22 @@ const KasOrganisasi = () => {
 
   const handleSubmitOut = async (e) => {
     e.preventDefault();
-    if (!formOut.posPengeluaran || !formOut.cabang || formOut.nominal <= 0) {
+    if (!formOut.posPengeluaran || !formOut.setoranBulan || !formOut.setoranTahun || formOut.nominal <= 0) {
       toast.error("Harap isi semua field yang wajib!");
       return;
     }
     setSubmitting(true);
     try {
-      await GlobalApi.createPengeluaranUmum(formOut);
+      await GlobalApi.createPengeluaranUmum({
+        tanggalTransaksi: formOut.tanggalTransaksi,
+        posPengeluaran: formOut.posPengeluaran,
+        setoranBulan: Number(formOut.setoranBulan),
+        setoranTahun: Number(formOut.setoranTahun),
+        jenisPegeluaran: formOut.jenisPengeluaran,
+        cabang: formOut.cabang,
+        nominal: Number(formOut.nominal),
+        keterangan: formOut.keterangan,
+      });
       toast.success("Pengeluaran kas berhasil dicatat!");
       setShowModalOut(false);
       resetFormOut();
@@ -391,7 +407,7 @@ const KasOrganisasi = () => {
       jenisPenerimaan: "Transfer",
       posPenerimaan: "",
       cabang: "",
-      setoranBulan: months[new Date().getMonth()].label,
+      setoranBulan: months[new Date().getMonth()].value,
       setoranTahun: new Date().getFullYear(),
       nominal: 0,
       keterangan: ""
@@ -404,8 +420,8 @@ const KasOrganisasi = () => {
       jenisPengeluaran: "Tunai",
       posPengeluaran: "",
       cabang: "",
-      pengeluaranBulan: months[new Date().getMonth()].label,
-      pengeluaranTahun: new Date().getFullYear(),
+      setoranBulan: months[new Date().getMonth()].value,
+      setoranTahun: new Date().getFullYear(),
       nominal: 0,
       keterangan: ""
     });
@@ -639,6 +655,24 @@ const KasOrganisasi = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-6">
                   <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Bulan Pembayaran</label>
+                    <select required value={formIn.setoranBulan} onChange={(e) => setFormIn({ ...formIn, setoranBulan: e.target.value })} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
+                      {months.map((month) => (
+                        <option key={month.value} value={month.value}>{month.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tahun Pembayaran</label>
+                    <select required value={formIn.setoranTahun} onChange={(e) => setFormIn({ ...formIn, setoranTahun: Number(e.target.value) })} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
+                      {yearOptions.map((year) => (
+                        <option key={year} value={year}>{year}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Pos</label>
                     <select required value={formIn.posPenerimaan} onChange={(e) => setFormIn({ ...formIn, posPenerimaan: e.target.value })} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
                       <option value="">Pilih Pos</option>
@@ -647,7 +681,7 @@ const KasOrganisasi = () => {
                   </div>
                    <div>
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Cabang</label>
-                    <select required value={formIn.cabang} onChange={(e) => setFormIn({ ...formIn, cabang: e.target.value })} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
+                    <select value={formIn.cabang} onChange={(e) => setFormIn({ ...formIn, cabang: e.target.value })} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
                       <option value="">Pilih Cabang</option>
                       {cabangList.map(c => <option key={c.id} value={c.kecamatan}>{c.kecamatan}</option>)}
                     </select>
@@ -699,6 +733,24 @@ const KasOrganisasi = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-6">
                   <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Bulan Pembayaran</label>
+                    <select required value={formOut.setoranBulan} onChange={(e) => setFormOut({ ...formOut, setoranBulan: e.target.value })} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
+                      {months.map((month) => (
+                        <option key={month.value} value={month.value}>{month.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tahun Pembayaran</label>
+                    <select required value={formOut.setoranTahun} onChange={(e) => setFormOut({ ...formOut, setoranTahun: Number(e.target.value) })} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
+                      {yearOptions.map((year) => (
+                        <option key={year} value={year}>{year}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Pos</label>
                     <select required value={formOut.posPengeluaran} onChange={(e) => setFormOut({ ...formOut, posPengeluaran: e.target.value })} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
                       <option value="">Pilih Pos</option>
@@ -707,7 +759,7 @@ const KasOrganisasi = () => {
                   </div>
                    <div>
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Cabang</label>
-                    <select required value={formOut.cabang} onChange={(e) => setFormOut({ ...formOut, cabang: e.target.value })} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
+                    <select value={formOut.cabang} onChange={(e) => setFormOut({ ...formOut, cabang: e.target.value })} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
                       <option value="">Pilih Cabang</option>
                       {cabangList.map(c => <option key={c.id} value={c.kecamatan}>{c.kecamatan}</option>)}
                     </select>
