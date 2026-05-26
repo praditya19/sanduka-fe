@@ -47,12 +47,21 @@ const LainLainSection = () => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [searchQuery, setSearchQuery] = useState("");
   const [bulanList, setBulanList] = useState([]);
+  const [targetTableData, setTargetTableData] = useState([]);
+  const [loadingTargetTable, setLoadingTargetTable] = useState(false);
+  const [editingTargetRow, setEditingTargetRow] = useState(null);
+  const [editTargetData, setEditTargetData] = useState({ cabang: "", jumlah: 0, bulan: "", tahun: new Date().getFullYear() });
+  const [showEditTargetModal, setShowEditTargetModal] = useState(false);
   const totalPerUnit = besaran.kabupaten;
   const totalAkhir = totalPerUnit * (parseInt(jumlahPesanan, 10) || 0);
 
   useEffect(() => {
     fetchInitialData();
   }, []);
+
+  useEffect(() => {
+    fetchTargetTable();
+  }, [selectedMonth, selectedYear, selectedCabang]);
 
   const fetchInitialData = async () => {
     try {
@@ -109,6 +118,23 @@ const LainLainSection = () => {
       setTableData(res || []);
     } catch (error) {
       console.error("Error fetching Lain-lain:", error);
+    }
+  };
+
+  const fetchTargetTable = async () => {
+    if (!selectedMonth || !selectedYear) return;
+    setLoadingTargetTable(true);
+    try {
+      const data = await GlobalApi.getTableTargetLainLain(
+        selectedMonth,
+        selectedYear,
+        selectedCabang || "",
+      );
+      setTargetTableData(data || []);
+    } catch (error) {
+      console.error("Error fetching target lain-lain table:", error);
+    } finally {
+      setLoadingTargetTable(false);
     }
   };
 
@@ -197,19 +223,17 @@ const LainLainSection = () => {
     setLoadingTarget(true);
     try {
       const payload = {
-        propinsi: "",
-        kabupaten: "Kabupaten",
         cabang: selectedCabang,
-        keterangan: `Target Lain-Lain ${selectedCabang}`,
-        jumlahNominal: totalAkhir,
+        jumlah: String(jumlah),
         bulan: selectedMonth,
-        tahun: selectedYear,
+        tahun: String(selectedYear),
+        perolehanKabupaten: totalAkhir,
       };
 
-      await GlobalApi.postLainlain(payload);
-      toast.success(`Lain-lain ${selectedCabang} berhasil dikunci!`);
+      await GlobalApi.createTargetLainLain(payload);
+      toast.success(`Target Lain-lain ${selectedCabang} berhasil dikunci!`);
       setJumlahPesanan("0");
-      fetchData();
+      fetchTargetTable();
     } catch (error) {
       toast.error("Gagal menyimpan target Lain-lain.");
     } finally {
@@ -280,6 +304,46 @@ const LainLainSection = () => {
       fetchData();
     } catch (error) {
       toast.error("Gagal menghapus data Lain-lain.");
+    }
+  };
+
+  const handleDeleteTarget = async (id) => {
+    if (!id || id === 0) return;
+    if (!window.confirm("Hapus data target lain-lain ini?")) return;
+    try {
+      await GlobalApi.deleteTargetLainLain(id);
+      toast.success("Target Lain-lain berhasil dihapus!");
+      fetchTargetTable();
+    } catch (error) {
+      toast.error("Gagal menghapus target Lain-lain.");
+    }
+  };
+
+  const handleEditTarget = (item) => {
+    setEditingTargetRow(item.id);
+    setEditTargetData({
+      cabang: item.cabang,
+      jumlah: parseInt(item.jumlah, 10) || 0,
+      bulan: item.bulan,
+      tahun: parseInt(item.tahun, 10) || selectedYear,
+    });
+    setShowEditTargetModal(true);
+  };
+
+  const handleUpdateTarget = async () => {
+    try {
+      await GlobalApi.updateTargetLainLain(editingTargetRow, {
+        cabang: editTargetData.cabang,
+        jumlah: String(editTargetData.jumlah),
+        bulan: editTargetData.bulan,
+        tahun: String(editTargetData.tahun),
+        perolehanKabupaten: editTargetData.jumlah * besaran.kabupaten,
+      });
+      toast.success("Target Lain-lain berhasil diperbarui!");
+      setShowEditTargetModal(false);
+      fetchTargetTable();
+    } catch (error) {
+      toast.error("Gagal memperbarui target Lain-lain.");
     }
   };
 
@@ -642,6 +706,181 @@ const LainLainSection = () => {
         </form>
 
         <div className="space-y-8">
+          {/* Target Lain-Lain Table */}
+          <div className="bg-white rounded-[40px] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden">
+            <div className="p-6 border-b border-slate-100 flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-[18px] bg-slate-700 text-white flex items-center justify-center shadow-lg shadow-slate-200">
+                  <FaChartLine className="text-xl" />
+                </div>
+                <div>
+                  <h4 className="text-lg font-black text-slate-800 tracking-tight">
+                    Target Lain-Lain
+                  </h4>
+                  <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                    Per Cabang — {selectedMonth} {selectedYear}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={fetchTargetTable}
+                disabled={loadingTargetTable}
+                className="px-4 py-2 bg-slate-700 hover:bg-slate-800 disabled:opacity-50 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2"
+              >
+                {loadingTargetTable ? (
+                  <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <FaSearch className="text-xs" />
+                )}
+                Refresh
+              </button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50/50 border-b border-slate-100">
+                    {["No", "Cabang", "Jumlah", "Perolehan Kabupaten", "Total Anggota", "Bulan/Tahun", "Aksi"].map((h, i) => (
+                      <th key={i} className="px-4 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-center whitespace-nowrap">
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {loadingTargetTable ? (
+                    <tr>
+                      <td colSpan={7} className="py-12 text-center">
+                        <div className="flex items-center justify-center gap-2 text-slate-400">
+                          <div className="w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+                          <span className="text-xs font-black uppercase tracking-widest">Memuat...</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : targetTableData.length > 0 ? (
+                    targetTableData.map((item, index) => (
+                      <tr key={item.id || index} className="hover:bg-slate-50/80 transition-colors text-center text-[11px] font-bold text-slate-600">
+                        <td className="px-4 py-4 text-slate-400 font-black">{index + 1}</td>
+                        <td className="px-4 py-4 font-black text-slate-800 text-left whitespace-nowrap">{item.cabang}</td>
+                        <td className="px-4 py-4">{parseInt(item.jumlah, 10) || 0}</td>
+                        <td className="px-4 py-4 text-right font-black text-slate-900">{formatCurrency(item.perolehanKabupaten)}</td>
+                        <td className="px-4 py-4">{item.totalAnggota ?? "-"}</td>
+                        <td className="px-4 py-4 text-slate-400">{item.bulan} {item.tahun}</td>
+                        <td className="px-4 py-4">
+                          <div className="flex items-center justify-center gap-2">
+                            <button
+                              onClick={() => handleEditTarget(item)}
+                              disabled={!item.id || item.id === 0}
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                              title="Edit"
+                            >
+                              <FaEdit className="text-lg" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteTarget(item.id)}
+                              disabled={!item.id || item.id === 0}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                              title="Hapus"
+                            >
+                              <FaTrash className="text-lg" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={7} className="py-16 text-center">
+                        <div className="flex flex-col items-center justify-center space-y-3 text-slate-300">
+                          <FaChartLine className="text-4xl" />
+                          <p className="text-xs font-black uppercase tracking-widest">Belum ada target</p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  {targetTableData.length > 0 && (
+                    <tr className="bg-slate-50 border-t-2 border-slate-200 font-black text-center text-[11px]">
+                      <td colSpan={3} className="px-4 py-4 text-slate-700 font-black text-right">TOTAL</td>
+                      <td className="px-4 py-4 text-slate-700 font-black text-right">
+                        {formatCurrency(targetTableData.reduce((s, i) => s + (i.perolehanKabupaten || 0), 0))}
+                      </td>
+                      <td colSpan={3} className="px-4 py-4 text-slate-400 text-center">-</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Edit Target Modal */}
+          {showEditTargetModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+              <div className="bg-white rounded-[32px] shadow-2xl p-8 w-full max-w-md mx-4">
+                <h3 className="text-lg font-black text-slate-800 mb-6">Edit Target Lain-Lain</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Cabang</label>
+                    <input
+                      type="text"
+                      value={editTargetData.cabang}
+                      readOnly
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-600 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Jumlah</label>
+                    <input
+                      type="number"
+                      value={editTargetData.jumlah}
+                      onChange={(e) => setEditTargetData({ ...editTargetData, jumlah: parseInt(e.target.value, 10) || 0 })}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 text-sm focus:outline-none focus:border-slate-500"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Bulan</label>
+                      <select
+                        value={editTargetData.bulan}
+                        onChange={(e) => setEditTargetData({ ...editTargetData, bulan: e.target.value })}
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 text-sm focus:outline-none focus:border-slate-500"
+                      >
+                        {bulanList.map((b) => (
+                          <option key={b.id} value={b.namaBulan}>{b.namaBulan}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Tahun</label>
+                      <select
+                        value={editTargetData.tahun}
+                        onChange={(e) => setEditTargetData({ ...editTargetData, tahun: parseInt(e.target.value, 10) })}
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 text-sm focus:outline-none focus:border-slate-500"
+                      >
+                        {[2024, 2025, 2026, 2027].map((y) => (
+                          <option key={y} value={y}>{y}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={() => setShowEditTargetModal(false)}
+                    className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-black text-xs uppercase tracking-widest transition-all"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    onClick={handleUpdateTarget}
+                    className="flex-1 py-3 bg-slate-700 hover:bg-slate-800 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all"
+                  >
+                    Simpan
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {[
               { label: "Total Provinsi", val: totalProvinsi, color: "bg-indigo-600", icon: <FaMoneyBillWave /> },
