@@ -160,11 +160,22 @@ const IuranPgriSection = () => {
 
       setRawBalancingData(bankData || []);
 
+      const normalizeText = (value) => (value || "").toString().trim().toLowerCase();
+
       // Parse organisasi data untuk mapping per cabang
       // Format: { "CABANG_NAME": pembayaran_amount }
       const orgMap = {};
       if (orgData && Array.isArray(orgData)) {
         orgData.forEach(item => {
+          const posPenerimaan = normalizeText(
+            item.posPenerimaan ||
+            item.pos_penerimaan ||
+            item.namaPosPenerimaan ||
+            item.nama_pos_penerimaan
+          );
+
+          if (posPenerimaan !== "sumbangan anggota") return;
+
           // Extract cabang name from keterangan yang format: "Sumbangan Anggota Cabang NAMA_CABANG ..."
           const keterangan = item.keterangan || "";
           const cabangMatch = keterangan.match(/Cabang\s+([A-Z\s]+?)\s*\(/);
