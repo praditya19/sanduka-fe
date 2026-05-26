@@ -347,7 +347,7 @@ const KasOrganisasi = () => {
 
   const handleSubmitIn = async (e) => {
     e.preventDefault();
-    if (!formIn.posPenerimaan || !formIn.cabang || !formIn.setoranBulan || !formIn.setoranTahun || formIn.nominal <= 0) {
+    if (!formIn.posPenerimaan || !formIn.setoranBulan || !formIn.setoranTahun || formIn.nominal <= 0) {
       toast.error("Harap isi semua field yang wajib!");
       return;
     }
@@ -373,7 +373,7 @@ const KasOrganisasi = () => {
 
   const handleSubmitOut = async (e) => {
     e.preventDefault();
-    if (!formOut.posPengeluaran || !formOut.cabang || !formOut.setoranBulan || !formOut.setoranTahun || formOut.nominal <= 0) {
+    if (!formOut.posPengeluaran || !formOut.setoranBulan || !formOut.setoranTahun || formOut.nominal <= 0) {
       toast.error("Harap isi semua field yang wajib!");
       return;
     }
@@ -681,7 +681,7 @@ const KasOrganisasi = () => {
                   </div>
                    <div>
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Cabang</label>
-                    <select required value={formIn.cabang} onChange={(e) => setFormIn({ ...formIn, cabang: e.target.value })} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
+                    <select value={formIn.cabang} onChange={(e) => setFormIn({ ...formIn, cabang: e.target.value })} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
                       <option value="">Pilih Cabang</option>
                       {cabangList.map(c => <option key={c.id} value={c.kecamatan}>{c.kecamatan}</option>)}
                     </select>
@@ -759,7 +759,7 @@ const KasOrganisasi = () => {
                   </div>
                    <div>
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Cabang</label>
-                    <select required value={formOut.cabang} onChange={(e) => setFormOut({ ...formOut, cabang: e.target.value })} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
+                    <select value={formOut.cabang} onChange={(e) => setFormOut({ ...formOut, cabang: e.target.value })} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
                       <option value="">Pilih Cabang</option>
                       {cabangList.map(c => <option key={c.id} value={c.kecamatan}>{c.kecamatan}</option>)}
                     </select>
