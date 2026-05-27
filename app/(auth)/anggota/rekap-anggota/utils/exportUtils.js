@@ -184,28 +184,15 @@ export const handlePrintLogic = async (
 };
 
 export const exportToExcelLogic = async (
+  data,
   selectedCabang,
   selectedUnitKerja,
-  selectedBulan,
-  selectedTahun,
   namaAnggotaInput,
   setIsExporting,
 ) => {
   try {
     setIsExporting(true);
-    const cabangParam = selectedCabang || "";
-    const unitKerjaParam = selectedUnitKerja || "";
-    const bulanParam = selectedBulan || null;
-    const tahunParam = selectedTahun || null;
-
-    let allData = await GlobalApi.getNominalAggregatedData(
-      cabangParam,
-      unitKerjaParam,
-      null,
-      null,
-      null,
-    );
-    allData = processApiResponse(allData, null, false);
+    let allData = data;
 
     if (!allData || allData.length === 0) {
       alert("Tidak ada data anggota ditemukan.");
@@ -242,20 +229,15 @@ export const exportToExcelLogic = async (
       "November",
       "Desember",
     ];
-    const namaBulan = monthNames[selectedBulan - 1] || selectedBulan;
 
     const now = new Date();
-
     let monthIndex = now.getMonth();
     let year = now.getFullYear();
-
     monthIndex += 1;
-
     if (monthIndex > 11) {
       monthIndex = 0;
       year += 1;
     }
-
     const namaBulanBerikutnya = monthNames[monthIndex];
 
     const excelData = [
@@ -321,6 +303,81 @@ export const exportToExcelLogic = async (
         parseInt(item.totalIuran || 0),
       ]);
     });
+
+    // Tambahkan total row untuk konsistensi dengan SummaryStats
+    const totalRow = [
+      "",
+      "",
+      "",
+      "TOTAL KESELURUHAN",
+      "",
+      "",
+      "",
+      filteredData.reduce(
+        (sum, item) => sum + parseInt(item.defaultPgri || 0),
+        0,
+      ),
+      filteredData.reduce(
+        (sum, item) => sum + parseInt(item.manualPgri || 0),
+        0,
+      ),
+      filteredData.reduce((sum, item) => sum + parseInt(item.pgri || 0), 0),
+      filteredData.reduce(
+        (sum, item) => sum + parseInt(item.defaultSanduka || 0),
+        0,
+      ),
+      filteredData.reduce(
+        (sum, item) => sum + parseInt(item.manualSanduka || 0),
+        0,
+      ),
+      filteredData.reduce((sum, item) => sum + parseInt(item.sanduka || 0), 0),
+      filteredData.reduce(
+        (sum, item) => sum + parseInt(item.defaultDaspen || 0),
+        0,
+      ),
+      filteredData.reduce(
+        (sum, item) => sum + parseInt(item.manualDaspen || 0),
+        0,
+      ),
+      filteredData.reduce((sum, item) => sum + parseInt(item.daspen || 0), 0),
+      filteredData.reduce(
+        (sum, item) => sum + parseInt(item.defaultDerap || 0),
+        0,
+      ),
+      filteredData.reduce(
+        (sum, item) => sum + parseInt(item.manualDerap || 0),
+        0,
+      ),
+      filteredData.reduce((sum, item) => sum + parseInt(item.derap || 0), 0),
+      filteredData.reduce(
+        (sum, item) => sum + parseInt(item.defaultKalender || 0),
+        0,
+      ),
+      filteredData.reduce(
+        (sum, item) => sum + parseInt(item.manualKalender || 0),
+        0,
+      ),
+      filteredData.reduce((sum, item) => sum + parseInt(item.kalender || 0), 0),
+      filteredData.reduce(
+        (sum, item) => sum + parseInt(item.defaultLainLain || 0),
+        0,
+      ),
+      filteredData.reduce(
+        (sum, item) => sum + parseInt(item.manualLainLain || 0),
+        0,
+      ),
+      filteredData.reduce(
+        (sum, item) =>
+          sum +
+          parseInt(item.lainLain || parseInt(getTotalSumbangan(item) || 0), 0),
+        0,
+      ),
+      filteredData.reduce(
+        (sum, item) => sum + parseInt(item.totalIuran || 0),
+        0,
+      ),
+    ];
+    excelData.push(totalRow);
 
     const ws = XLSX.utils.aoa_to_sheet(excelData);
     const wb = XLSX.utils.book_new();
