@@ -1172,6 +1172,51 @@ const deleteLainlain = async (id) => {
     }
   }
 };
+// Target Lain-Lain
+const createTargetLainLain = async (payload) => {
+  try {
+    const response = await axiosClient.post("/api/target-lain-lain", payload);
+    return response.data;
+  } catch (error) {
+    console.error("Error creating target lain-lain data:", error);
+    throw error;
+  }
+};
+
+const getTableTargetLainLain = async (bulan, tahun, cabang) => {
+  try {
+    const response = await axiosClient.get(
+      `/api/target-lain-lain/tabel?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching target lain-lain table:", error);
+    throw error;
+  }
+};
+
+const updateTargetLainLain = async (id, updatedData) => {
+  try {
+    const response = await axiosClient.put(
+      `/api/target-lain-lain/${id}`,
+      updatedData,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating target lain-lain data:", error);
+    throw error;
+  }
+};
+
+const deleteTargetLainLain = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/target-lain-lain/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting target lain-lain data:", error);
+    throw error;
+  }
+};
 // END
 
 // Transaksi Bank (data utama)
@@ -4038,6 +4083,10 @@ export default {
   getAllPeserta,
   deleteKalender,
   updateKalender,
+  createTargetLainLain,
+  getTableTargetLainLain,
+  updateTargetLainLain,
+  deleteTargetLainLain,
   deleteTargetDaspen,
   getIuranAnggotaAll,
   updateTargetDaspen,

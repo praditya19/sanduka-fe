@@ -9,6 +9,15 @@ const nextConfig = {
     ],
   },
   reactStrictMode: false,
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.externals = {
+        ...config.externals,
+        "jspdf-autotable": "jspdf-autotable",
+      };
+    }
+    return config;
+  },
 };
 
 export default nextConfig;

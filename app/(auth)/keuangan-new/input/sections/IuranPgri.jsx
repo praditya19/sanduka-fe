@@ -51,6 +51,7 @@ const IuranPgriSection = () => {
 
   // Table State
   const [rawBalancingData, setRawBalancingData] = useState([]);
+  const [organisasiTransaksiData, setOrganisasiTransaksiData] = useState({}); // Map pembayaran per cabang
   const [loadingTable, setLoadingTable] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -151,11 +152,59 @@ const IuranPgriSection = () => {
       const monthObj = bulanList.find(b => b.namaBulan === selectedMonth);
       const monthNumber = monthObj ? monthObj.id : (new Date().getMonth() + 1);
 
-      const data = await GlobalApi.getTransaksiBankBalancing("", null, selectedYear, monthNumber, null, null);
-      setRawBalancingData(data || []);
+      // Fetch bank balancing data dan pemasukan organisasi untuk pembayaran.
+      const [bankData, orgData] = await Promise.all([
+        GlobalApi.getTransaksiBankBalancing("", null, selectedYear, monthNumber, null, null),
+        GlobalApi.getPemasukanUmum()
+      ]);
+
+      setRawBalancingData(bankData || []);
+
+      const normalizeText = (value) => (value || "").toString().trim().toLowerCase();
+      const normalizeCabangKey = (value) => (value || "").toString().trim().replace(/\s+/g, " ").toUpperCase();
+      const parseCurrency = (value) => {
+        if (!value) return 0;
+        if (typeof value === "number") return value;
+        const cleaned = value.toString().replace(/[^0-9,-]/g, "").replace(",", ".");
+        return parseFloat(cleaned) || 0;
+      };
+
+      // Parse pemasukan_organisasi untuk mapping pembayaran per cabang.
+      // Format: { "CABANG_NAME": pembayaran_amount }
+      const orgMap = {};
+      if (orgData && Array.isArray(orgData)) {
+        orgData.forEach(item => {
+          const posPenerimaan = normalizeText(
+            item.posPenerimaan ||
+            item.pos_penerimaan ||
+            item.namaPosPenerimaan ||
+            item.nama_pos_penerimaan
+          );
+
+          if (posPenerimaan !== "sumbangan anggota") return;
+
+          const setoranBulan = Number(item.setoranBulan || item.setoran_bulan || 0);
+          const setoranTahun = Number(item.setoranTahun || item.setoran_tahun || 0);
+          if (setoranBulan !== Number(monthNumber) || setoranTahun !== Number(selectedYear)) return;
+
+          const keterangan = item.keterangan || "";
+          const cabangMatch = keterangan.match(/Cabang\s+(.+?)(?:\s*\(|\s+untuk|\s+periode|$)/i);
+          const cabangValue =
+            typeof item.cabang === "object"
+              ? item.cabang?.kecamatan || item.cabang?.cabang || item.cabang?.namaCabang
+              : item.cabang;
+          const cabangName = cabangValue || item.namaCabang || item.nama_cabang || cabangMatch?.[1] || "";
+          const cabangKey = normalizeCabangKey(cabangName);
+          if (!cabangKey) return;
+
+          const nominal = parseCurrency(item.nominal || item.debet || item.debit);
+          orgMap[cabangKey] = (orgMap[cabangKey] || 0) + nominal;
+        });
+      }
+      setOrganisasiTransaksiData(orgMap);
       setCurrentPage(1);
     } catch (error) {
-      console.error("Error fetching balancing data:", error);
+      console.error("Error fetching data:", error);
     } finally {
       setLoadingTable(false);
     }
@@ -168,17 +217,17 @@ const IuranPgriSection = () => {
     const grouped = rawBalancingData.reduce((acc, item) => {
       const cab = item.cabang || "Lainnya";
       if (!acc[cab]) {
-        acc[cab] = { 
-          members: new Set(), 
-          potBank: 0, 
-          tunai: 0, 
+        acc[cab] = {
+          members: new Set(),
+          potBank: 0,
+          tunai: 0,
           manualByNpa: {} // Store manual sum per NPA to pick the most complete data
         };
       }
 
       if (item.npa) {
         acc[cab].members.add(item.npa);
-        
+
         // Helper untuk membersihkan format Rupiah
         const parseCurrency = (val) => {
           if (!val) return 0;
@@ -191,7 +240,7 @@ const IuranPgriSection = () => {
         if (Array.isArray(itemDate) && itemDate.length >= 2) {
           itemDate = `${itemDate[0]}-${String(itemDate[1]).padStart(2, "0")}`;
         }
-        
+
         // Hanya hitung jika periode cocok (Mei 2026 -> 2026-05)
         const selectedPeriod = `${selectedYear}-${String(bulanList.find(b => b.namaBulan === selectedMonth)?.id || "").padStart(2, "0")}`;
         if (itemDate && !itemDate.toString().includes(selectedPeriod)) return acc;
@@ -203,10 +252,10 @@ const IuranPgriSection = () => {
         const mDerap = parseCurrency(item.manualDerap || item.manual_derap);
         const mKalender = parseCurrency(item.manualKalender || item.manual_kalender);
         const mLain = parseCurrency(item.manualLainLain || item.manual_lain_lain);
-        
+
         // Jumlahkan hanya komponen manual
         const currentManual = mPgri + mSanduka + mDaspen + mDerap + mKalender + mLain;
-        
+
         // Simpan nilai manual tertinggi yang ditemukan untuk NPA ini
         if (!acc[cab].manualByNpa[item.npa] || currentManual > acc[cab].manualByNpa[item.npa]) {
           acc[cab].manualByNpa[item.npa] = currentManual;
@@ -248,7 +297,9 @@ const IuranPgriSection = () => {
       const totalTagihan = pb + prov + kab + totalCabang + sanduka;
       const potBank = group.potBank;
       const tunai = group.tunai;
-      const selisih = totalTagihan - (potBank + tunai);
+      // Ambil pembayaran dari pemasukan_organisasi.
+      const pembayaran = organisasiTransaksiData[(cabName || "").toString().trim().replace(/\s+/g, " ").toUpperCase()] || 0;
+      const selisih = totalTagihan - pembayaran;
 
       return [
         cabName,        // 0: Cabang
@@ -263,13 +314,14 @@ const IuranPgriSection = () => {
         totalTagihan,   // 9: Total Tagihan
         potBank,        // 10: Potongan Bank
         tunai,          // 11: Setoran Tunai
-        selisih         // 12: Selisih
+        pembayaran,     // 12: Pembayaran
+        selisih         // 13: Selisih
       ];
     }).filter(row => {
       if (!searchQuery) return true;
       return row[0].toLowerCase().includes(searchQuery.toLowerCase());
     });
-  }, [rawBalancingData, besaran, searchQuery]);
+  }, [rawBalancingData, besaran, searchQuery, organisasiTransaksiData]);
 
   useEffect(() => {
     fetchTransactions();
@@ -277,47 +329,47 @@ const IuranPgriSection = () => {
 
   // Calculate Totals for Footer
   const columnTotals = useMemo(() => {
-    if (!transactions.length) return Array(13).fill(0);
+    if (!transactions.length) return Array(14).fill(0);
     return transactions.reduce((acc, row) => {
-      for (let i = 1; i <= 12; i++) {
+      for (let i = 1; i <= 13; i++) {
         acc[i] += parseFloat(row[i]) || 0;
       }
       return acc;
-    }, Array(13).fill(0));
+    }, Array(14).fill(0));
   }, [transactions]);
 
   // Calculate Summary Stats
   useEffect(() => {
     if (transactions.length > 0) {
       const isFiltered = !!searchQuery;
-      
+
       const stats = transactions.reduce((acc, row) => {
         // row structure from the map:
-        // [cabName, totalAnggota, pb, prov, kab, cabPeruntukan, tambahan, totalCabang, sanduka, totalTagihanRow, potBank, tunai, selisih]
-        // Indices: 0:cab, 1:members, 2:pb, 3:prov, 4:kab, 5:peruntukan, 6:tambahan, 7:totalCab, 8:sanduka, 9:tagihan, 10:bank, 11:tunai, 12:selisih
-        
+        // [cabName, totalAnggota, pb, prov, kab, cabPeruntukan, tambahan, totalCabang, sanduka, totalTagihanRow, potBank, tunai, pembayaran, selisih]
+        // Indices: 0:cab, 1:members, 2:pb, 3:prov, 4:kab, 5:peruntukan, 6:tambahan, 7:totalCab, 8:sanduka, 9:tagihan, 10:bank, 11:tunai, 12:pembayaran, 13:selisih
+
         const pb = row[2] || 0;
         const prov = row[3] || 0;
         const kab = row[4] || 0;
         const totalCab = row[7] || 0;
         const sanduka = row[8] || 0;
-        
+
         // Rumus user: pb + provinsi + kabupaten
         // Jika percabang: tambahkan porsi cabang itu sendiri (totalCab) dan sanduka
-        const tagihanDisplay = isFiltered 
+        const tagihanDisplay = isFiltered
           ? (pb + prov + kab + totalCab + sanduka)
           : (pb + prov + kab);
 
         const potBank = row[10] || 0;
         const tunai = row[11] || 0;
-        const dibayar = potBank + tunai;
+        const pembayaran = row[12] || 0; // Pembayaran dari Jurnal Organisasi
 
         acc.totalTagihan += tagihanDisplay;
-        acc.totalSetoran += dibayar;
-        acc.totalSelisih += (tagihanDisplay - dibayar);
+        acc.totalSetoran += pembayaran;
+        acc.totalSelisih += (tagihanDisplay - pembayaran);
         acc.potonganBank += potBank;
         acc.setoranTunai += tunai;
-        acc.totalDibayar += dibayar;
+        acc.totalDibayar += pembayaran; // Gunakan pembayaran dari Jurnal Organisasi
         return acc;
       }, {
         totalTagihan: 0,
@@ -364,7 +416,8 @@ const IuranPgriSection = () => {
         totalTagihan: Math.round(row[9]) || 0,
         potonganBank: Math.round(row[10]) || 0,
         setoranTunai: Math.round(row[11]) || 0,
-        selisih: Math.round(row[12]) || 0,
+        pembayaran: Math.round(row[12]) || 0,
+        selisih: Math.round(row[13]) || 0,
         bulan: selectedMonth,
         bulanId: monthId,
         tahun: selectedYear,
@@ -805,7 +858,7 @@ const IuranPgriSection = () => {
                           <table className="w-full text-left border-collapse">
                             <thead>
                               <tr className="bg-slate-50/50 border-b border-slate-100">
-                                {["No", "Cabang/Khusus", "Total Anggota", "Pusat (PB)", "Peruntukan Provinsi", "Peruntukan Kabupaten", "Peruntukan Cabang", "Tambahan Cabang", "Total Cabang", "Sanduka", "Total Tagihan", "Potongan Bank", "Setoran Tunai", "Selisih", "Action"].map((h, i) => (
+                                {["No", "Cabang/Khusus", "Total Anggota", "Pusat (PB)", "Peruntukan Provinsi", "Peruntukan Kabupaten", "Peruntukan Cabang", "Tambahan Cabang", "Total Cabang", "Sanduka", "Total Tagihan", "Potongan Bank", "Dana Tunai", "Pembayaran", "Selisih", "Action"].map((h, i) => (
                                   <th key={i} className="px-3 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-center whitespace-nowrap">
                                     {h}
                                   </th>
@@ -835,7 +888,8 @@ const IuranPgriSection = () => {
                                         <td className="px-3 py-4 text-slate-900 bg-slate-50/50 font-black">{formatCurrency(row[9] || totalTagihanRow)}</td>
                                         <td className="px-3 py-4 text-rose-500">{formatCurrency(row[10] || 0)}</td>
                                         <td className="px-3 py-4 text-blue-600">{formatCurrency(row[11] || 0)}</td>
-                                        <td className="px-3 py-4"><span className="px-2 py-0.5 bg-rose-50 text-rose-600 rounded-md">{formatCurrency(row[12] || totalTagihanRow)}</span></td>
+                                        <td className="px-3 py-4">{formatCurrency(row[12] || 0)}</td>
+                                        <td className="px-3 py-4"><span className="px-2 py-0.5 bg-rose-50 text-rose-600 rounded-md">{formatCurrency(row[13] || totalTagihanRow)}</span></td>
                                         <td className="px-3 py-4">
                                           <div className="flex items-center justify-center gap-2">
                                             <button
@@ -871,7 +925,8 @@ const IuranPgriSection = () => {
                                     <td className="px-3 py-5 bg-slate-800 font-black text-amber-400">{formatCurrency(columnTotals[9])}</td>
                                     <td className="px-3 py-5 text-rose-400">{formatCurrency(columnTotals[10])}</td>
                                     <td className="px-3 py-5 text-blue-400">{formatCurrency(columnTotals[11])}</td>
-                                    <td className="px-3 py-5 bg-rose-500/20 text-white">{formatCurrency(columnTotals[12])}</td>
+                                    <td className="px-3 py-5">{formatCurrency(columnTotals[12])}</td>
+                                    <td className="px-3 py-5 bg-rose-500/20 text-white">{formatCurrency(columnTotals[13])}</td>
                                     <td className="px-3 py-5">-</td>
                                   </tr>
                                 </>

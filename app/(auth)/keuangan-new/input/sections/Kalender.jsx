@@ -65,7 +65,7 @@ const KalenderSection = () => {
         GlobalApi.getDefaultIuranById(1), // Kalender ID = 1
       ]);
       setBulanList(resBulan.data || []);
-      setCabangList(resCabang.data || []);
+      setCabangList((resCabang.data || []).sort((a, b) => (a.kecamatan || "").localeCompare(b.kecamatan || "")));
       if (resIuran) {
         setBesaran({
           provinsi: parseInt(resIuran.propinsi) || 0,
@@ -871,10 +871,10 @@ const KalenderSection = () => {
                           </tr>
                         ))
                     ) : tableData.filter((r) =>
-                        r.cabang
-                          ?.toLowerCase()
-                          .includes(searchQuery.toLowerCase()),
-                      ).length > 0 ? (
+                      r.cabang
+                        ?.toLowerCase()
+                        .includes(searchQuery.toLowerCase()),
+                    ).length > 0 ? (
                       tableData
                         .filter((r) =>
                           r.cabang
@@ -957,135 +957,135 @@ const KalenderSection = () => {
                         ?.toLowerCase()
                         .includes(searchQuery.toLowerCase()),
                     ).length > 0 && (
-                      <tr className="bg-amber-50 border-t-2 border-amber-200 font-black text-center text-[11px]">
-                        <td
-                          colSpan={2}
-                          className="px-4 py-4 text-amber-700 font-black text-right"
-                        >
-                          TOTAL REKAP
-                        </td>
-                        <td className="px-4 py-4 text-amber-600">
-                          {tableData
-                            .filter((r) =>
-                              r.cabang
-                                ?.toLowerCase()
-                                .includes(searchQuery.toLowerCase()),
-                            )
-                            .reduce(
-                              (sum, row) => sum + (parseInt(row.jumlah) || 0),
-                              0,
+                        <tr className="bg-amber-50 border-t-2 border-amber-200 font-black text-center text-[11px]">
+                          <td
+                            colSpan={2}
+                            className="px-4 py-4 text-amber-700 font-black text-right"
+                          >
+                            TOTAL REKAP
+                          </td>
+                          <td className="px-4 py-4 text-amber-600">
+                            {tableData
+                              .filter((r) =>
+                                r.cabang
+                                  ?.toLowerCase()
+                                  .includes(searchQuery.toLowerCase()),
+                              )
+                              .reduce(
+                                (sum, row) => sum + (parseInt(row.jumlah) || 0),
+                                0,
+                              )}
+                          </td>
+                          <td className="px-4 py-4 text-amber-600">
+                            {formatCurrency(
+                              tableData
+                                .filter((r) =>
+                                  r.cabang
+                                    ?.toLowerCase()
+                                    .includes(searchQuery.toLowerCase()),
+                                )
+                                .reduce(
+                                  (sum, row) =>
+                                    sum + (parseInt(row.peruntukanProvinsi) || 0),
+                                  0,
+                                ),
                             )}
-                        </td>
-                        <td className="px-4 py-4 text-amber-600">
-                          {formatCurrency(
-                            tableData
-                              .filter((r) =>
-                                r.cabang
-                                  ?.toLowerCase()
-                                  .includes(searchQuery.toLowerCase()),
-                              )
-                              .reduce(
-                                (sum, row) =>
-                                  sum + (parseInt(row.peruntukanProvinsi) || 0),
-                                0,
-                              ),
-                          )}
-                        </td>
-                        <td className="px-4 py-4 text-amber-600">
-                          {formatCurrency(
-                            tableData
-                              .filter((r) =>
-                                r.cabang
-                                  ?.toLowerCase()
-                                  .includes(searchQuery.toLowerCase()),
-                              )
-                              .reduce(
-                                (sum, row) =>
-                                  sum +
-                                  (parseInt(row.peruntukanKabupaten) || 0),
-                                0,
-                              ),
-                          )}
-                        </td>
-                        <td className="px-4 py-4 text-amber-600">
-                          {formatCurrency(
-                            tableData
-                              .filter((r) =>
-                                r.cabang
-                                  ?.toLowerCase()
-                                  .includes(searchQuery.toLowerCase()),
-                              )
-                              .reduce(
-                                (sum, row) =>
-                                  sum + (parseInt(row.peruntukanCabang) || 0),
-                                0,
-                              ),
-                          )}
-                        </td>
-                        <td className="px-4 py-4 text-emerald-600 font-black">
-                          {formatCurrency(
-                            tableData
-                              .filter((r) =>
-                                r.cabang
-                                  ?.toLowerCase()
-                                  .includes(searchQuery.toLowerCase()),
-                              )
-                              .reduce(
-                                (sum, row) =>
-                                  sum + (parseInt(row.tambahanCabang) || 0),
-                                0,
-                              ),
-                          )}
-                        </td>
-                        <td className="px-4 py-4 text-amber-600 font-black">
-                          {formatCurrency(
-                            tableData
-                              .filter((r) =>
-                                r.cabang
-                                  ?.toLowerCase()
-                                  .includes(searchQuery.toLowerCase()),
-                              )
-                              .reduce(
-                                (sum, row) =>
-                                  sum + (parseInt(row.totalCabang) || 0),
-                                0,
-                              ),
-                          )}
-                        </td>
-                        <td className="px-4 py-4 text-emerald-600 font-black">
-                          {formatCurrency(
-                            tableData
-                              .filter((r) =>
-                                r.cabang
-                                  ?.toLowerCase()
-                                  .includes(searchQuery.toLowerCase()),
-                              )
-                              .reduce(
-                                (sum, row) =>
-                                  sum + (parseInt(row.transfer) || 0),
-                                0,
-                              ),
-                          )}
-                        </td>
-                        <td className="px-4 py-4 text-orange-600 font-black">
-                          {formatCurrency(
-                            tableData
-                              .filter((r) =>
-                                r.cabang
-                                  ?.toLowerCase()
-                                  .includes(searchQuery.toLowerCase()),
-                              )
-                              .reduce(
-                                (sum, row) => sum + (parseInt(row.kurang) || 0),
-                                0,
-                              ),
-                          )}
-                        </td>
-                        <td className="px-4 py-4 text-slate-400">-</td>
-                        <td className="px-4 py-4 text-slate-400">-</td>
-                        <td className="px-4 py-4 text-slate-400">-</td>
-                      </tr>
-                    )}
+                          </td>
+                          <td className="px-4 py-4 text-amber-600">
+                            {formatCurrency(
+                              tableData
+                                .filter((r) =>
+                                  r.cabang
+                                    ?.toLowerCase()
+                                    .includes(searchQuery.toLowerCase()),
+                                )
+                                .reduce(
+                                  (sum, row) =>
+                                    sum +
+                                    (parseInt(row.peruntukanKabupaten) || 0),
+                                  0,
+                                ),
+                            )}
+                          </td>
+                          <td className="px-4 py-4 text-amber-600">
+                            {formatCurrency(
+                              tableData
+                                .filter((r) =>
+                                  r.cabang
+                                    ?.toLowerCase()
+                                    .includes(searchQuery.toLowerCase()),
+                                )
+                                .reduce(
+                                  (sum, row) =>
+                                    sum + (parseInt(row.peruntukanCabang) || 0),
+                                  0,
+                                ),
+                            )}
+                          </td>
+                          <td className="px-4 py-4 text-emerald-600 font-black">
+                            {formatCurrency(
+                              tableData
+                                .filter((r) =>
+                                  r.cabang
+                                    ?.toLowerCase()
+                                    .includes(searchQuery.toLowerCase()),
+                                )
+                                .reduce(
+                                  (sum, row) =>
+                                    sum + (parseInt(row.tambahanCabang) || 0),
+                                  0,
+                                ),
+                            )}
+                          </td>
+                          <td className="px-4 py-4 text-amber-600 font-black">
+                            {formatCurrency(
+                              tableData
+                                .filter((r) =>
+                                  r.cabang
+                                    ?.toLowerCase()
+                                    .includes(searchQuery.toLowerCase()),
+                                )
+                                .reduce(
+                                  (sum, row) =>
+                                    sum + (parseInt(row.totalCabang) || 0),
+                                  0,
+                                ),
+                            )}
+                          </td>
+                          <td className="px-4 py-4 text-emerald-600 font-black">
+                            {formatCurrency(
+                              tableData
+                                .filter((r) =>
+                                  r.cabang
+                                    ?.toLowerCase()
+                                    .includes(searchQuery.toLowerCase()),
+                                )
+                                .reduce(
+                                  (sum, row) =>
+                                    sum + (parseInt(row.transfer) || 0),
+                                  0,
+                                ),
+                            )}
+                          </td>
+                          <td className="px-4 py-4 text-orange-600 font-black">
+                            {formatCurrency(
+                              tableData
+                                .filter((r) =>
+                                  r.cabang
+                                    ?.toLowerCase()
+                                    .includes(searchQuery.toLowerCase()),
+                                )
+                                .reduce(
+                                  (sum, row) => sum + (parseInt(row.kurang) || 0),
+                                  0,
+                                ),
+                            )}
+                          </td>
+                          <td className="px-4 py-4 text-slate-400">-</td>
+                          <td className="px-4 py-4 text-slate-400">-</td>
+                          <td className="px-4 py-4 text-slate-400">-</td>
+                        </tr>
+                      )}
                   </tbody>
                 </table>
               </div>
