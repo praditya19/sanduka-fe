@@ -1,8 +1,6 @@
 import GlobalApi from "@/app/_utils/GlobalApi";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 
 const useExportExcel = () => {
   const formatTanggal = (tanggalArray) => {
@@ -240,6 +238,9 @@ const useExportExcel = () => {
   }) => {
     try {
       setLoading(true);
+
+      const { default: jsPDF } = await import("jspdf");
+      const { default: autoTable } = await import("jspdf-autotable");
 
       const allData = await GlobalApi.getTransaksiBankBalancing(
         selectedCabang || null,
