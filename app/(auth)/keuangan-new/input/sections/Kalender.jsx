@@ -120,7 +120,7 @@ const KalenderSection = () => {
           const isSukses = item.keterangan === "Sukses";
 
           if (cabangMatch && isSukses) {
-            return total + parseCurrency(item.potongan);
+            return total + parseCurrency(item.totalIuranKalender);
           }
 
           return total;
