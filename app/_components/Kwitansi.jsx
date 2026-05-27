@@ -101,7 +101,7 @@ function Pengeluaran() {
 
   const years = Array.from(
     { length: currentYear - startYear + 1 },
-    (_, index) => startYear + index
+    (_, index) => startYear + index,
   );
 
   const handleSearch = (e) => {
@@ -113,7 +113,7 @@ function Pengeluaran() {
     }));
 
     const filtered = allNames.filter((name) =>
-      name.namaLengkap.toLowerCase().includes(searchTerm)
+      name.namaLengkap.toLowerCase().includes(searchTerm),
     );
 
     setFilteredNames(filtered);
@@ -142,7 +142,7 @@ function Pengeluaran() {
       }));
 
       const userDataByName = await GlobalApi.searchUsersByName(
-        name.namaLengkap
+        name.namaLengkap,
       );
 
       setIsDropdownVisible(false);
@@ -158,7 +158,7 @@ function Pengeluaran() {
     setFormValues((prev) => ({
       ...prev,
       daftarYangMeninggal: [...daftarYangMeninggal, yangMeninggal],
-      yangMeninggal: "", // Kosongkan input
+      yangMeninggal: "",
     }));
   };
 
@@ -248,22 +248,22 @@ function Pengeluaran() {
 
     if (number < 1000)
       return `${satuan[Math.floor(number / 100)]} ratus ${convertToTerbilang(
-        number % 100
+        number % 100,
       )}`.trim();
 
     if (number < 1000000)
       return `${convertToTerbilang(
-        Math.floor(number / 1000)
+        Math.floor(number / 1000),
       )} ${ribuan} ${convertToTerbilang(number % 1000)}`.trim();
 
     if (number < 1000000000)
       return `${convertToTerbilang(
-        Math.floor(number / 1000000)
+        Math.floor(number / 1000000),
       )} ${jutaan} ${convertToTerbilang(number % 1000000)}`.trim();
 
     if (number < 1000000000000)
       return `${convertToTerbilang(
-        Math.floor(number / 1000000000)
+        Math.floor(number / 1000000000),
       )} ${miliaran} ${convertToTerbilang(number % 1000000000)}`.trim();
 
     return "Jumlah terlalu besar";
@@ -278,7 +278,6 @@ function Pengeluaran() {
     try {
       const selectedNames = formValues.yangMeninggalList;
 
-      // Validasi minimal satu nama harus dipilih
       if (!selectedNames || selectedNames.length < 1) {
         alert("Harap pilih setidaknya satu nama.");
         return;
@@ -287,10 +286,8 @@ function Pengeluaran() {
       const kwitansiDataList = [];
 
       for (const name of selectedNames) {
-        // Panggil API untuk mencari pengguna berdasarkan nama
         const userDataList = await GlobalApi.searchUsersByName(name);
 
-        // Validasi jika API mengembalikan data
         if (
           userDataList.data &&
           userDataList.data.users &&
@@ -298,7 +295,6 @@ function Pengeluaran() {
         ) {
           const userData = userDataList.data.users[0];
 
-          // Helper untuk format tanggal
           const formatDate = (dateArray, separator = "-") => {
             if (!Array.isArray(dateArray) || dateArray.length !== 3) {
               return "Tanggal tidak valid";
@@ -306,18 +302,17 @@ function Pengeluaran() {
             const [year, month, day] = dateArray;
             return `${year}${separator}${String(month).padStart(
               2,
-              "0"
+              "0",
             )}${separator}${String(day).padStart(2, "0")}`;
           };
 
-          // Helper untuk menghitung umur
           const calculateAge = (tanggalLahir) => {
-            if (!tanggalLahir || !Array.isArray(tanggalLahir)) return 0; // Tambahan validasi
+            if (!tanggalLahir || !Array.isArray(tanggalLahir)) return 0;
             const today = new Date();
             const birthDate = new Date(
               tanggalLahir[0],
               tanggalLahir[1] - 1,
-              tanggalLahir[2]
+              tanggalLahir[2],
             );
 
             let age = today.getFullYear() - birthDate.getFullYear();
@@ -331,14 +326,12 @@ function Pengeluaran() {
             return age;
           };
 
-          // Format tanggal meninggal dan mulai menjadi anggota
           const tanggalMeninggal = formatDate(userData.waktuMeninggalTerlapor);
           const umur = calculateAge(userData.tanggalLahir);
           const mulaiJadiAnggotaPgri = formatDate(
-            userData.mulaiJadiAnggotaPgri
+            userData.mulaiJadiAnggotaPgri,
           );
 
-          // Tambahkan data kwitansi ke daftar
           kwitansiDataList.push({
             noBukti: formValues.noBukti,
             dataPelaporan: formValues.tanggalTransaksi,
@@ -360,16 +353,13 @@ function Pengeluaran() {
         }
       }
 
-      // Jika tidak ada data valid, tampilkan pesan
       if (kwitansiDataList.length === 0) {
         alert("Tidak ada data kwitansi yang valid untuk digenerate.");
         return;
       }
 
-      // Generate HTML kwitansi
       const htmlContent = generateKwitansiHTML(kwitansiDataList);
 
-      // Buat blob untuk kwitansi
       const blob = new Blob([htmlContent], { type: "text/html" });
       const blobUrl = URL.createObjectURL(blob);
 
@@ -495,6 +485,8 @@ function Pengeluaran() {
         font-family: Arial, sans-serif;
         margin: 20px;
         background-color: #fff;
+        padding: 60px;
+        font-size: 12px;
     }
     .header {
         display: flex;
@@ -533,7 +525,7 @@ function Pengeluaran() {
         text-align: center;
     }
     .signature {
-        margin-top: 80px;
+        margin-top: 40px;
         width: 100%;
         display: flex;
         justify-content: space-between;
@@ -645,7 +637,7 @@ function Pengeluaran() {
   </table>
 </footer>
 </body>
-</html> `
+</html> `,
       )
       .join(`<div class="separator"></div>`);
 
@@ -666,7 +658,7 @@ function Pengeluaran() {
             }
               .separator {
         border-top: 2px dashed #999;
-        margin: 30px 0;
+        margin: 50px 0;
       }
           </style>
         </head>
@@ -678,169 +670,6 @@ function Pengeluaran() {
       </html>
     `;
   };
-
-  //   const generateKwitansiHTML = (data) => {
-  //     const template = `<!DOCTYPE html>
-  // <html lang="id">
-  // <head>
-  //   <meta charset="UTF-8" />
-  //   <title>Kwitansi</title>
-  //   <style>
-  //     body {
-  //         font-family: Arial, sans-serif;
-  //         margin: 20px;
-  //         background-color: #fff;
-  //     }
-  //     .header {
-  //         display: flex;
-  //         justify-content: space-between;
-  //         align-items: center;
-  //         margin-bottom: 20px;
-  //         border-bottom: 2px solid #000;
-  //         padding-bottom: 10px;
-  //     }
-  //     .left-header p, .right-header img {
-  //         margin: 0;
-  //     }
-  //     .title {
-  //         font-size: 20px;
-  //         font-weight: bold;
-  //         text-align: center;
-  //     }
-  //     .info, .footer {
-  //         width: 100%;
-  //         margin-top: 20px;
-  //     }
-  //     .info td{
-  //         padding: 10px;
-  //         vertical-align: top;
-  //         border: 1px solid #ccc;
-  //     }
-  //     .nominal {
-  //         font-weight: bold;
-  //         background-color: #000;
-  //         color: white;
-  //         text-align: center;
-  //     }
-  //     .terbilang {
-  //         font-weight: bold;
-  //         color: black;
-  //         text-align: center;
-  //     }
-  //     .signature {
-  //         margin-top: 40px;
-  //         width: 100%;
-  //         display: flex;
-  //         justify-content: space-between;
-  //     }
-  //     .signature div {
-  //         text-align: center;
-  //         width: 30%;
-  //     }
-  //     .footer {
-  //         font-size: 12px;
-  //         text-align: center;
-  //     }
-
-  //     .data-meninggal {
-  //         display: flex;
-  //         justify-content: space-between;
-  //     }
-
-  //     .data-item {
-  //         width: 22%;
-  //     }
-  // .kwitansi {
-  //     width: 210mm; /* Lebar A4 */
-  //     height: 297mm; /* Tinggi A4 */
-  //     margin: 0 auto; /* Pusatkan di halaman */
-  //     padding: 20px; /* Tambahkan padding */
-  //     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Tambahkan bayangan */
-  //     background-color: #fff; /* Warna latar belakang putih */
-  //   }
-  //     .data-item p {
-  //   margin: 4px 0; /* Mengurangi jarak antar paragraf */
-  //   line-height: 1.4; /* Menyesuaikan jarak antar teks */
-  // }
-
-  //     @media (max-width: 600px) {
-  //       .data-meninggal {
-  //         flex-direction: column;
-  //       }
-  //       .data-item {
-  //         width: 100%;
-  //       }
-  //     }
-  //   </style>
-  // </head>
-  // <body>
-  // <div class="header">
-  //   <div class="left-header">
-  //     <p>Nomor Transaksi: ${data.noBukti}</p>
-  //     <p>Tanggal Transaksi: ${data.dataPelaporan}</p>
-  //   </div>
-  //   <div class="title">TANDA TERIMA</div>
-  //   <div class="right-header">
-  //     <img src="https://sanduka-fe.vercel.app/_next/image?url=%2Fsanduka.png&amp;w=256&amp;q=75" alt="SANDUKA Logo" style="height: 50px;" />
-  //   </div>
-  // </div>
-
-  // <div class="data-meninggal">
-  //   <div class="data-item">
-  //     <p>Data Meninggal</p>
-  //     <p><strong>${data.nama}</strong></p>
-  //             <p>${data.umur} Tahun</p>
-  //             <p>${data.alamat}</p>
-  //             <p>${data.nomorHp}</p>
-  //   </div>
-  //   <div class="data-item">
-  //     <p>Data Dukung</p>
-  //      <p><strong>${data.dataDukung}</strong></p>
-  //             <p>${data.jabatan}</p>
-  //             <p>Sejak Menjadi Anggota</p>
-  //             <p>${data.sejakMenjadiAnggota}</p>
-  //   </div>
-  //   <div class="data-item">
-  //     <p>Data Pelaporan</p>
-  //     <p><strong>${data.dataPelaporan}</strong></p>
-  //             <p><strong>Tanggal Meninggal:</strong> ${data.tanggalMeninggal}</p>
-  //   </div>
-  // </div>
-
-  // <table class="info">
-  //   <tr>
-  //     <td class="nominal">Terbilang</td>
-  //     <td class="nominal">Nominal</td>
-  //   </tr>
-  //   <tr>
-  //     <td class="terbilang"><strong>${data.terbilang}</strong></td>
-  //             <td class="terbilang"><strong>Rp ${data.nominal}</strong></td>
-  //   </tr>
-  // </table>
-
-  // <div class="signature">
-  //   <div>
-  //     <p>Yang Menyerahkan,</p>
-
-  //   </div>
-  //   <div>
-  //   ................., ..................
-  //     <p>Penerima,</p>
-
-  //   </div>
-  // </div>
-
-  // <footer>
-  //   <table class="footer">
-  //     <tr>
-  //       <td>Sekretariat PGRI: <br /> Jalan Bata Putih VI, Kelurahan Demaan, Kecamatan Jepara, Kabupaten Jepara, Jawa Tengah, Telp/Fax : 0291 592479, email : pgrijepara@gmail.com</td>
-  //     </tr>
-  //   </table>
-  // </footer>
-  // </body>
-  // </html>`;
-  //     return template;
-  //   };
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
@@ -1024,7 +853,7 @@ function Pengeluaran() {
                       if (
                         formValues.yangMeninggal &&
                         !formValues.yangMeninggalList.includes(
-                          formValues.yangMeninggal
+                          formValues.yangMeninggal,
                         )
                       ) {
                         setFormValues({
@@ -1056,7 +885,7 @@ function Pengeluaran() {
                               ...formValues,
                               yangMeninggalList:
                                 formValues.yangMeninggalList.filter(
-                                  (n) => n !== name
+                                  (n) => n !== name,
                                 ),
                             });
                           }}
