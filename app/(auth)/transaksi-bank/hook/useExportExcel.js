@@ -58,7 +58,6 @@ const useExportExcel = () => {
       setLoading(false);
     }
   };
-
   const exportToExcel = async ({ month, year, searchQuery, setLoading }) => {
     try {
       setLoading(true);
@@ -108,7 +107,6 @@ const useExportExcel = () => {
       setLoading(false);
     }
   };
-
   const exportBalancingToExcel = async ({
     selectedCabang,
     selectedUnitKerja,
@@ -118,6 +116,23 @@ const useExportExcel = () => {
     searchBalancing,
     setLoading,
   }) => {
+    const defaultKalender = await GlobalApi.getDefaultIuranById(1);
+    const defaultPgri = await GlobalApi.getDefaultIuranById(2);
+    const defaultDerap = await GlobalApi.getDefaultIuranById(3);
+    const defaultDaspen = await GlobalApi.getDefaultIuranById(4);
+    const sumDefault = (data) => {
+      return (
+        Number(data.pb || 0) +
+        Number(data.propinsi || 0) +
+        Number(data.kabupaten || 0) +
+        Number(data.cabang || 0) +
+        Number(data.sanduka || 0)
+      );
+    };
+    const totalDefaultKalender = sumDefault(defaultKalender);
+    const totalDefaultPgri = sumDefault(defaultPgri);
+    const totalDefaultDerap = sumDefault(defaultDerap);
+    const totalDefaultDaspen = sumDefault(defaultDaspen);
     try {
       setLoading(true);
 
@@ -135,7 +150,6 @@ const useExportExcel = () => {
         return;
       }
 
-      // ✅ filter NPA (dipindah ke sini)
       const map = new Map();
       allData.forEach((item) => {
         if (!map.has(item.npa) || item.id > map.get(item.npa).id) {
@@ -144,7 +158,6 @@ const useExportExcel = () => {
       });
       const filteredData = Array.from(map.values());
 
-      // ✅ cek duplicate rekening
       const rekeningCount = {};
       filteredData.forEach((item) => {
         if (item.rekening) {
@@ -158,18 +171,35 @@ const useExportExcel = () => {
         Cabang: item.cabang,
         "Unit Kerja": item.unitKerja,
         Nama: item.nama,
-        Rekening: item.rekening,
-        Iuran: item.totalIuranAnggota,
+        "Nomor Rekening": item.rekening,
+
+        "Default PGRI": totalDefaultPgri,
+        "Manual PGRI": item.manualPgri,
+        PGRI: item.totalIuranAnggota,
+
+        "Default Sanduka": 3000,
+        "Manual Sanduka": item.manualSanduka,
         Sanduka: item.totalIuranSanduka,
+
+        "Default Daspen": 0,
+        "Manual Daspen": item.manualDaspen,
         Daspen: item.totalIuranDaspen,
+
+        "Default Derap": totalDefaultDerap,
+        "Manual Derap": item.manualDerap,
         Derap: item.totalIuranDerap,
+
+        "Default Kalender": totalDefaultKalender,
+        "Manual Kalender": item.manualKalender,
         Kalender: item.totalIuranKalender,
+
         "Lain-lain": item.totalIuranSumbangan,
         "Total Keuangan": item.totalIuran,
         "Potongan Bank": item.potongan,
         Selisih: item.selisih,
         Keterangan: item.keterangan,
-        "Cek Duplicate": rekeningCount[item.rekening] > 1 ? "Duplicate" : "-",
+
+        // "Cek Duplicate": rekeningCount[item.rekening] > 1 ? "Duplicate" : "-",
       }));
 
       const worksheet = XLSX.utils.json_to_sheet(formattedData);
@@ -188,7 +218,6 @@ const useExportExcel = () => {
       setLoading(false);
     }
   };
-
   const exportRekapitulasiToExcel = async () => {
     try {
       setIsLoading(true);

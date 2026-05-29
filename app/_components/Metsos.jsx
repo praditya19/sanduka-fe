@@ -1,6 +1,6 @@
 "use client";
 import { Instagram, Facebook, Youtube } from "lucide-react";
-import { FaXTwitter, FaThreads, FaTiktok } from "react-icons/fa6";
+import { FaTiktok } from "react-icons/fa6";
 import { motion } from "framer-motion";
 import { FaTelegramPlane } from "react-icons/fa";
 
@@ -34,7 +34,7 @@ const SocialMediaSection = () => {
     {
       icon: <FaTelegramPlane size={22} />,
       bg: "bg-gradient-to-br from-sky-400 via-sky-500 to-blue-600",
-      link: "https://t.me/6285649590078",
+      link: "https://telegram.me/+6285649590078",
       label: "Telegram",
     },
   ];

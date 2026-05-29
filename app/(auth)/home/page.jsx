@@ -175,6 +175,32 @@ export default function IconGrid() {
   const [totalNominal, setTotalNominal] = useState(0);
 
   const icons = [
+    // Menu Keuangan - Prioritas Utama
+    {
+      icon: faUbuntu,
+      label: "Rekap By Nominal",
+      href: "/anggota/rekap-anggota",
+      color: "text-gray-500",
+    },
+    {
+      icon: faMoneyBillTransfer,
+      label: "Transaksi Bank",
+      href: "/transaksi-bank",
+      color: "text-green-600",
+    },
+    {
+      icon: faWallet,
+      label: "Keuangan",
+      href: "/keuangan/home",
+      color: "text-lime-500",
+    },
+    {
+      icon: faMoneyBillTransfer,
+      label: "Keuangan New",
+      href: "/keuangan-new",
+      color: "text-emerald-500",
+    },
+    // Menu Lainnya
     { icon: faBullhorn, label: "Lapor", href: "/lapor", color: "text-red-500" },
     {
       icon: faCheckCircle,
@@ -187,12 +213,6 @@ export default function IconGrid() {
       label: "Data Anggota",
       href: "/anggota/data-anggota",
       color: "text-orange-500",
-    },
-    {
-      icon: faUbuntu,
-      label: "Rekap By Nominal",
-      href: "/anggota/rekap-anggota",
-      color: "text-gray-500",
     },
     {
       icon: faSyncAlt,
@@ -229,18 +249,6 @@ export default function IconGrid() {
       label: "Pensiun",
       href: "/pensiun",
       color: "text-rose-500",
-    },
-    {
-      icon: faWallet,
-      label: "Keuangan",
-      href: "/keuangan/home",
-      color: "text-lime-500",
-    },
-    {
-      icon: faMoneyBillTransfer,
-      label: "Keuangan New",
-      href: "/keuangan-new",
-      color: "text-emerald-500",
     },
     {
       icon: faClipboardCheck,
@@ -284,12 +292,6 @@ export default function IconGrid() {
       href: "/pengaduan",
       color: "text-red-700",
       badge: newPengaduanCount > 0 ? newPengaduanCount : null,
-    },
-    {
-      icon: faMoneyBillTransfer,
-      label: "Transaksi Bank",
-      href: "/transaksi-bank",
-      color: "text-green-600",
     },
     {
       icon: faImages,
@@ -923,10 +925,7 @@ export default function IconGrid() {
                   item.label !== "Eksport Foto" &&
                   item.label !== "Keuangan",
               )
-            : icons.filter(
-                (item) =>
-                  item.label !== "Tour & Travel",
-              );
+            : icons.filter((item) => item.label !== "Tour & Travel");
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -940,8 +939,6 @@ export default function IconGrid() {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-          
-      
           {notification && (
             <NotificationPopup
               type={notification.type}
@@ -1153,18 +1150,18 @@ export default function IconGrid() {
                   <div key={index} className="relative">
                     <div
                       onClick={(e) => handleMainMenuClick(e, index, item.href)}
-                      className="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-50 transition-all duration-300 cursor-pointer"
+                      className="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-50 transition-all duration-300 cursor-pointer hover:shadow-2xl hover:shadow-indigo-200 hover:-translate-y-1"
                     >
                       <div
                         className={`w-14 h-14 ${
                           item.color.includes("text-")
                             ? item.color.replace("text-", "bg-") + "/10"
                             : "bg-gray-100"
-                        } rounded-full flex items-center justify-center mb-3 shadow-sm`}
+                        } rounded-full flex items-center justify-center mb-3 shadow-sm transition-all duration-300 group-hover:shadow-md`}
                       >
                         <FontAwesomeIcon
                           icon={item.icon}
-                          className={`${item.color} text-2xl`}
+                          className={`${item.color} text-2xl transition-transform duration-300 group-hover:scale-110`}
                         />
                         {item.badge && (
                           <div className="absolute top-0 right-0 bg-red-500 text-white rounded-full px-2 py-1 text-xs">
@@ -1172,7 +1169,7 @@ export default function IconGrid() {
                           </div>
                         )}
                       </div>
-                      <span className="text-sm font-medium text-gray-700 text-center">
+                      <span className="text-sm font-medium text-gray-700 text-center transition-colors duration-300 group-hover:text-gray-900">
                         {item.label}
                       </span>
                     </div>
