@@ -357,7 +357,7 @@ const LainLainSection = () => {
     }
   };
 
-const availableKeteranganList = useMemo(() => {
+  const availableKeteranganList = useMemo(() => {
     const currentMonthData = tableData.filter(item => {
       const matchMonth = selectedMonth === "ALL" || !selectedMonth || item.bulan === selectedMonth;
       const matchYear = selectedYear === "ALL" || !selectedYear || parseInt(item.tahun, 10) === parseInt(selectedYear, 10);
@@ -791,7 +791,7 @@ const availableKeteranganList = useMemo(() => {
           </div>
 
           <div className="relative z-10 flex flex-col xl:flex-row items-end gap-4 xl:gap-6">
-            
+
             <div className="w-full xl:w-1/4 space-y-2">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block px-1">
                 Pilih Cabang
@@ -828,9 +828,9 @@ const availableKeteranganList = useMemo(() => {
                 <option value="" className="text-slate-800">
                   -- Pilih Keterangan --
                 </option>
-                {availableKeteranganList.map((ket, idx) => (
-                  <option key={idx} value={ket} className="text-slate-800">
-                    {ket}
+                {keteranganOptions.map((opt, idx) => (
+                  <option key={idx} value={opt} className="text-slate-800">
+                    {opt}
                   </option>
                 ))}
               </select>
@@ -900,25 +900,23 @@ const availableKeteranganList = useMemo(() => {
                   </p>
                 </div>
               </div>
-              
+
               <div data-html2canvas-ignore="true" className="flex items-center gap-2 flex-wrap">
-                
-                {/* --- DROPDOWN KETERANGAN BARU --- */}
-                {availableKeteranganList.length > 0 && (
+
+                {keteranganOptions.length > 0 && (
                   <select
                     value={selectedTargetKeterangan}
                     onChange={(e) => setSelectedTargetKeterangan(e.target.value)}
                     className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none font-black text-slate-600 text-[10px] uppercase tracking-widest cursor-pointer shadow-sm transition-all focus:border-slate-400"
                   >
                     <option value="" className="normal-case font-sans">-- Semua Keterangan --</option>
-                    {availableKeteranganList.map((ket, idx) => (
+                    {keteranganOptions.map((ket, idx) => (
                       <option key={idx} value={ket} className="normal-case font-sans">
                         {ket}
                       </option>
                     ))}
                   </select>
                 )}
-                {/* -------------------------------- */}
 
                 <button
                   onClick={handleExportExcelTarget}
@@ -952,8 +950,8 @@ const availableKeteranganList = useMemo(() => {
                 <thead>
                   <tr className="bg-slate-50/50 border-b border-slate-100">
                     {["No", "Cabang", "Total Anggota", "Jumlah", "Peruntukan Kabupaten", "Peruntukan Cabang", "Total", "Transfer", "Pembayaran", "Selisih", "Action"].map((h, i) => (
-                      <th 
-                        key={i} 
+                      <th
+                        key={i}
                         data-html2canvas-ignore={h === 'Action' ? "true" : undefined}
                         className="px-4 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-center whitespace-nowrap"
                       >
@@ -985,7 +983,7 @@ const availableKeteranganList = useMemo(() => {
                         <td className="px-4 py-4 text-right font-black text-blue-600 whitespace-nowrap">{formatCurrency(item.transfer || 0)}</td>
                         <td className="px-4 py-4 text-right font-black text-slate-600 whitespace-nowrap">{formatCurrency(item.pembayaran || 0)}</td>
                         <td className="px-4 py-4 text-right font-black text-rose-600 whitespace-nowrap">{formatCurrency(item.selisih || 0)}</td>
-                        
+
                         <td data-html2canvas-ignore="true" className="px-4 py-4">
                           <div className="flex items-center justify-center gap-2">
                             <button
