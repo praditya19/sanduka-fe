@@ -1743,10 +1743,16 @@ const postToBackup = async (tagihanUntukBulan) => {
   }
 };
 
-const postToBackupNew = async () => {
+const postToBackupNew = async (tagihanUntukBulan = null) => {
   try {
+    const params = new URLSearchParams();
+    if (tagihanUntukBulan) {
+      params.append("tagihanUntukBulan", tagihanUntukBulan);
+    }
+
+    const query = params.toString();
     const response = await axiosClient.post(
-      `/api/by-nominal-new/create-from-by-nominal`,
+      `/api/by-nominal-new/create-from-by-nominal${query ? `?${query}` : ""}`,
       {},
     );
     return response.data;

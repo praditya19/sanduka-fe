@@ -87,6 +87,25 @@ function RekapAnggota() {
     nextMonthDate.getMonth() + 1,
   );
   const [selectedYear, setSelectedYear] = useState(nextMonthDate.getFullYear());
+  const monthNames = [
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
+  ];
+  const currentYear = new Date().getFullYear();
+  const yearOptions = useMemo(() => {
+    const start = currentYear - 5;
+    return Array.from({ length: 11 }, (_, i) => start + i);
+  }, [currentYear]);
   const [nominalBaruList, setNominalBaruList] = useState({});
   const [resetKeys, setResetKeys] = useState([]);
   const [sumbanganList, setSumbanganList] = useState([]);
@@ -622,7 +641,7 @@ function RekapAnggota() {
             ? parseInt(dataIuran.defaultSanduka)
             : dataIuran.sanduka && parseInt(dataIuran.sanduka) > 0
               ? parseInt(dataIuran.sanduka) -
-                (parseInt(dataIuran.manualSanduka) || 0)
+              (parseInt(dataIuran.manualSanduka) || 0)
               : member.sanduka > 0
                 ? parseInt(member.sanduka)
                 : parseInt(profile.sanduka) || 3000,
@@ -631,7 +650,7 @@ function RekapAnggota() {
             ? parseInt(dataIuran.defaultDaspen)
             : dataIuran.daspen && parseInt(dataIuran.daspen) > 0
               ? parseInt(dataIuran.daspen) -
-                (parseInt(dataIuran.manualDaspen) || 0)
+              (parseInt(dataIuran.manualDaspen) || 0)
               : member.daspen > 0
                 ? parseInt(member.daspen)
                 : parseInt(profile.daspen) || 0,
@@ -640,7 +659,7 @@ function RekapAnggota() {
             ? parseInt(dataIuran.defaultDerap)
             : dataIuran.derap && parseInt(dataIuran.derap) > 0
               ? parseInt(dataIuran.derap) -
-                (parseInt(dataIuran.manualDerap) || 0)
+              (parseInt(dataIuran.manualDerap) || 0)
               : member.derap > 0
                 ? parseInt(member.derap)
                 : parseInt(profile.derap) || 0,
@@ -649,7 +668,7 @@ function RekapAnggota() {
             ? parseInt(dataIuran.defaultKalender)
             : dataIuran.kalender && parseInt(dataIuran.kalender) > 0
               ? parseInt(dataIuran.kalender) -
-                (parseInt(dataIuran.manualKalender) || 0)
+              (parseInt(dataIuran.manualKalender) || 0)
               : member.kalender > 0
                 ? parseInt(member.kalender)
                 : parseInt(profile.kalender) || 0,
@@ -913,9 +932,9 @@ function RekapAnggota() {
       if (selectedKategori === "pgri") {
         initialValue = pgriItem
           ? parseInt(pgriItem.pb || 0) +
-            parseInt(pgriItem.propinsi || 0) +
-            parseInt(pgriItem.kabupaten || 0) +
-            parseInt(pgriItem.cabang || 0)
+          parseInt(pgriItem.propinsi || 0) +
+          parseInt(pgriItem.kabupaten || 0) +
+          parseInt(pgriItem.cabang || 0)
           : 8000;
       } else {
         initialValue = pgriItem?.sanduka
@@ -1110,25 +1129,11 @@ function RekapAnggota() {
   };
 
   const confirmBackupTarget = async () => {
-    const monthNames = [
-      "Januari",
-      "Februari",
-      "Maret",
-      "April",
-      "Mei",
-      "Juni",
-      "Juli",
-      "Agustus",
-      "September",
-      "Oktober",
-      "November",
-      "Desember",
-    ];
-    const tagihanUntukBulan = `${monthNames[selectedMonth - 1]} ${selectedYear}`;
+    const tagihanUntukBulan = `${selectedYear}-${String(selectedMonth).padStart(2, "0")}-01`;
 
     try {
       setIsExporting(true);
-      const res = await GlobalApi.postToBackupNew();
+      const res = await GlobalApi.postToBackupNew(tagihanUntukBulan);
       setNotification({
         type: "success",
         message:
@@ -1179,6 +1184,33 @@ function RekapAnggota() {
               </h1>
 
               <div className="flex flex-wrap gap-2 w-full lg:w-auto">
+                <div className="flex items-center gap-2 mr-2">
+                  <label className="sr-only">Bulan</label>
+                  <select
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                    className="px-3 py-2 border border-gray-200 rounded-lg bg-white text-sm"
+                  >
+                    {monthNames.map((m, idx) => (
+                      <option key={m} value={idx + 1}>
+                        {m}
+                      </option>
+                    ))}
+                  </select>
+
+                  <label className="sr-only">Tahun</label>
+                  <select
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(Number(e.target.value))}
+                    className="px-3 py-2 border border-gray-200 rounded-lg bg-white text-sm"
+                  >
+                    {yearOptions.map((y) => (
+                      <option key={y} value={y}>
+                        {y}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <button
                   onClick={handlePrint}
                   className="flex-1 lg:flex-none px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors flex items-center justify-center gap-2 text-sm shadow-sm"
@@ -1456,6 +1488,12 @@ function RekapAnggota() {
         onClose={() => setIsBackupModalVisible(false)}
         onConfirm={confirmBackupTarget}
         isProcessing={isExporting}
+        selectedMonth={selectedMonth}
+        selectedYear={selectedYear}
+        monthNames={monthNames}
+        yearOptions={yearOptions}
+        onMonthChange={setSelectedMonth}
+        onYearChange={setSelectedYear}
       />
     </div>
   );
