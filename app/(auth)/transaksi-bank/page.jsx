@@ -113,7 +113,7 @@ const NotificationPopup = ({ type, message, onClose }) => {
 };
 
 export default function BankTransactionPage() {
-  const [activeTab, setActiveTab] = useState("balancing");
+  const [activeTab, setActiveTab] = useState("potongan");
   const [isMobile, setIsMobile] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
