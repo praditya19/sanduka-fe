@@ -55,12 +55,13 @@ const BalancingFilters = ({
               type="text"
               value={selectedCabang}
               readOnly
+              disabled={role === "ADMIN"}
               onClick={handleCabangClick}
               className="block w-full px-4 py-2 border border-gray-300 rounded-md"
               placeholder="Pilih Cabang"
             />
 
-            {showCabangDropdown && (
+            {showCabangDropdown && role !== "ADMIN" && (
               <div className="absolute z-50 border rounded-lg bg-white shadow-sm mt-1 w-full">
                 <ul className="max-h-44 overflow-y-auto">
                   <li className="py-2 px-2">

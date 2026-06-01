@@ -37,8 +37,12 @@ const useDropdownFilter = (
       setFilteredCabangOptions(cabangResponse.data);
 
       const storedRole = sessionStorage.getItem("role");
+      const storedCabang = sessionStorage.getItem("cabang");
 
       setRole(storedRole || "");
+      if (storedRole === "ADMIN" && storedCabang) {
+        setSelectedCabang(storedCabang);
+      }
     } catch (error) {
       console.error("Error fetching cabang data:", error);
     }
