@@ -113,7 +113,7 @@ const NotificationPopup = ({ type, message, onClose }) => {
 };
 
 export default function BankTransactionPage() {
-  const [activeTab, setActiveTab] = useState("potongan");
+  const [activeTab, setActiveTab] = useState("balancing");
   const [isMobile, setIsMobile] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -244,6 +244,47 @@ export default function BankTransactionPage() {
     setShowEditModal,
     setNotification,
   });
+
+  const balancingSummary = useMemo(() => {
+    const source = Array.isArray(dataBalancing) ? dataBalancing : [];
+    const potonganRows = source.filter(
+      (item) => !String(item.keterangan || "").toLowerCase().startsWith("tunai"),
+    );
+    const tunaiRows = source.filter((item) =>
+      String(item.keterangan || "").toLowerCase().startsWith("tunai"),
+    );
+
+    return {
+      jumlahPotonganBank: potonganRows.length,
+      totalNominalPotonganBank: potonganRows.reduce(
+        (sum, item) => sum + Number(item.potongan || 0),
+        0,
+      ),
+      jumlahSetorTunai: tunaiRows.length,
+      totalNominalSetorTunai: tunaiRows.reduce(
+        (sum, item) => sum + Number(item.totalIuran || 0),
+        0,
+      ),
+      totalTerfilter: source.length,
+      totalNominalTerfilter: source.reduce(
+        (sum, item) => sum + Number(item.totalIuran || 0),
+        0,
+      ),
+    };
+  }, [dataBalancing]);
+
+  const summaryValues =
+    activeTab === "potongan"
+      ? {
+          jumlahPotonganBank,
+          totalNominalPotonganBank,
+          jumlahSetorTunai,
+          totalNominalSetorTunai,
+          totalTerfilter,
+          totalNominalTerfilter,
+        }
+      : balancingSummary;
+
   const {
     exportAllToExcel,
     exportToExcel,
@@ -414,12 +455,12 @@ export default function BankTransactionPage() {
 
           <SummaryCards
             activeTab={activeTab}
-            jumlahPotonganBank={jumlahPotonganBank}
-            totalNominalPotonganBank={totalNominalPotonganBank}
-            jumlahSetorTunai={jumlahSetorTunai}
-            totalNominalSetorTunai={totalNominalSetorTunai}
-            totalTerfilter={totalTerfilter}
-            totalNominalTerfilter={totalNominalTerfilter}
+            jumlahPotonganBank={summaryValues.jumlahPotonganBank}
+            totalNominalPotonganBank={summaryValues.totalNominalPotonganBank}
+            jumlahSetorTunai={summaryValues.jumlahSetorTunai}
+            totalNominalSetorTunai={summaryValues.totalNominalSetorTunai}
+            totalTerfilter={summaryValues.totalTerfilter}
+            totalNominalTerfilter={summaryValues.totalNominalTerfilter}
             formatRupiah={formatRupiah}
           />
 
