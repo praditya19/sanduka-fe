@@ -55,7 +55,6 @@ const BalancingFilters = ({
               type="text"
               value={selectedCabang}
               readOnly
-              disabled={role === "ADMIN"}
               onClick={handleCabangClick}
               className="block w-full px-4 py-2 border border-gray-300 rounded-md"
               placeholder="Pilih Cabang"

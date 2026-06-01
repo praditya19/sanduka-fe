@@ -23,22 +23,11 @@ const useBalancing = ({
     setLoadingBalancing(true);
 
     try {
-      const storedRole = sessionStorage.getItem("role");
-      const storedCabang = sessionStorage.getItem("cabang");
-
-      let cabangFilter = "";
-
-      if (storedRole === "ADMIN") {
-        cabangFilter = storedCabang || "";
-      } else {
-        cabangFilter = selectedCabang || "";
-      }
-
       const parsedYear = year !== "all" ? Number(year) : null;
       const parsedMonth = month !== "all" ? Number(month) : null;
 
       const result = await GlobalApi.getTransaksiBankBalancing(
-        cabangFilter || null,
+        selectedCabang || null,
         selectedUnitKerja || null,
         parsedYear,
         parsedMonth,
