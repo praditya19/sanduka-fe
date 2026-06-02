@@ -666,7 +666,7 @@ const LainLainSection = () => {
 
               <div className="xl:col-span-3 space-y-2">
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block px-1">
-                  Keterangan
+                  Pos Lain-lain
                 </label>
                 {!isManualInput ? (
                   <div className="relative">
@@ -676,7 +676,7 @@ const LainLainSection = () => {
                       className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-bold text-white text-sm focus:bg-white/10 focus:border-slate-400 transition-all appearance-none"
                     >
                       <option value="" className="text-slate-800">
-                        -- Pilih Keterangan --
+                        -- Pilih Pos Lain-lain --
                       </option>
                       {keteranganOptions.map((opt, index) => (
                         <option key={index} value={opt} className="text-slate-800">
@@ -818,7 +818,7 @@ const LainLainSection = () => {
 
             <div className="w-full xl:w-1/4 space-y-2">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block px-1">
-                Keterangan
+                Pos Lain-lain
               </label>
               <select
                 value={targetKeterangan}
@@ -826,7 +826,7 @@ const LainLainSection = () => {
                 className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-bold text-white text-sm focus:bg-white/10 focus:border-slate-500 transition-all appearance-none"
               >
                 <option value="" className="text-slate-800">
-                  -- Pilih Keterangan --
+                  -- Pilih Pos Lain-lain --
                 </option>
                 {keteranganOptions.map((opt, idx) => (
                   <option key={idx} value={opt} className="text-slate-800">
@@ -909,7 +909,7 @@ const LainLainSection = () => {
                     onChange={(e) => setSelectedTargetKeterangan(e.target.value)}
                     className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none font-black text-slate-600 text-[10px] uppercase tracking-widest cursor-pointer shadow-sm transition-all focus:border-slate-400"
                   >
-                    <option value="" className="normal-case font-sans">-- Semua Keterangan --</option>
+                    <option value="" className="normal-case font-sans">-- Semua Pos Lain-lain --</option>
                     {keteranganOptions.map((ket, idx) => (
                       <option key={idx} value={ket} className="normal-case font-sans">
                         {ket}
