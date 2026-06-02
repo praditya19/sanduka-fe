@@ -787,7 +787,7 @@ const DerapSection = () => {
                   </div>
                   <div>
                     <h4 className="text-lg font-black text-slate-800 tracking-tight">
-                      Riwayat Distribusi
+                    REKAPITULASI DERAP
                     </h4>
                     <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
                       Derap - {selectedMonth} {selectedYear}

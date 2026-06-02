@@ -26,31 +26,6 @@ import Link from "next/link";
 import GlobalApi from "@/app/_utils/GlobalApi";
 
 const icons = [
-  // Menu Keuangan - Prioritas Utama
-  {
-    icon: faUbuntu,
-    label: "Rekap By Nominal",
-    href: "/anggota/rekap-anggota",
-    color: "text-gray-500",
-  },
-  {
-    icon: faFileInvoiceDollar,
-    label: "Transaksi Bank",
-    href: "/transaksi-bank",
-    color: "text-blue-600",
-  },
-  {
-    icon: faWallet,
-    label: "Keuangan",
-    href: "/keuangan/home",
-    color: "text-lime-500",
-  },
-  {
-    icon: faFileInvoiceDollar,
-    label: "Keuangan New",
-    href: "/keuangan-new",
-    color: "text-emerald-500",
-  },
   // Menu lainnya
   { icon: faBullhorn, label: "Lapor", href: "/lapor", color: "text-red-500" },
   {
@@ -102,6 +77,37 @@ const icons = [
     color: "text-rose-500",
   },
   {
+    icon: faSitemap,
+    label: "Data Ranting",
+    href: "/ranting",
+    color: "text-blue-500",
+  },
+  // Menu Keuangan - Prioritas Utama
+  {
+    icon: faUbuntu,
+    label: "Rekap By Nominal",
+    href: "/anggota/rekap-anggota",
+    color: "text-gray-500",
+  },
+  {
+    icon: faFileInvoiceDollar,
+    label: "Transaksi Bank",
+    href: "/transaksi-bank",
+    color: "text-blue-600",
+  },
+  {
+    icon: faWallet,
+    label: "Keuangan",
+    href: "/keuangan/home",
+    color: "text-lime-500",
+  },
+  {
+    icon: faFileInvoiceDollar,
+    label: "Keuangan New",
+    href: "/keuangan-new",
+    color: "text-emerald-500",
+  },
+  {
     icon: faClipboardCheck,
     label: "Ketentuan",
     href: "/ketentuan",
@@ -112,12 +118,6 @@ const icons = [
     label: "Bantuan",
     href: "/bantuan",
     color: "text-purple-500",
-  },
-  {
-    icon: faSitemap,
-    label: "Data Ranting",
-    href: "/ranting",
-    color: "text-blue-500",
   },
   {
     icon: faCog,
