@@ -34,6 +34,9 @@ const DaspenSection = () => {
   const [kat1, setKat1] = useState(0);
   const [kat2, setKat2] = useState(0);
   const [kat3, setKat3] = useState(0);
+  const [autoKat1, setAutoKat1] = useState(0);
+  const [autoKat2, setAutoKat2] = useState(0);
+  const [autoKat3, setAutoKat3] = useState(0);
   const [selectedCabang, setSelectedCabang] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -55,6 +58,9 @@ const DaspenSection = () => {
   const kat2Val = kuota * katagori2;
   const kat3Val = kuota * katagori3;
   const totalTarget = (kat1Val * kat1) + (kat2Val * kat2) + (kat3Val * kat3);
+
+  const autoTotalAnggota = autoKat1 + autoKat2 + autoKat3;
+  const autoTotalTarget = (autoKat1 * kat1Val) + (autoKat2 * kat2Val) + (autoKat3 * kat3Val);
 
   const [deleteModal, setDeleteModal] = useState({ show: false, id: null, jenis: "", cabang: "" });
 
@@ -86,11 +92,24 @@ const DaspenSection = () => {
         const cabAggregated = rawAggregatedData.filter(r => r.cabang?.toUpperCase() === cabangName.toUpperCase());
 
         cabAggregated.forEach(item => {
-          const d = Math.round(parseFloat(item.totalIuranDaspen) || 0);
-          if (d === targetK1 && targetK1 > 0) autoK1++;
-          else if (d === targetK2 && targetK2 > 0) autoK2++;
-          else if (d === targetK3 && targetK3 > 0) autoK3++;
-          autoTransfer += d;
+          const tagihan = Math.round(parseFloat(item.totalIuranDaspen) || 0);
+
+          if (tagihan === targetK1 && targetK1 > 0) {
+            autoK1++;
+          } else if (tagihan === targetK2 && targetK2 > 0) {
+            autoK2++;
+          } else if (tagihan === targetK3 && targetK3 > 0) {
+            autoK3++;
+          }
+
+          const manualDaspen = parseFloat(item.manualDaspen || item.manual_daspen) || 0;
+          const isSukses = item.keterangan === "Sukses" || item.keterangan === "Tunai";
+
+          if (manualDaspen > 0) {
+            autoTransfer += manualDaspen;
+          } else if (isSukses) {
+            autoTransfer += tagihan;
+          }
         });
 
         const sandukaDB = targetData.find(r => r.cabang?.toUpperCase() === cabangName.toUpperCase() && r.jenisData === 'SANDUKA');
@@ -410,6 +429,88 @@ const DaspenSection = () => {
   useEffect(() => {
     fetchTableData();
   }, [fetchTableData]);
+
+  useEffect(() => {
+    const targetK1 = Math.round(kat1Val);
+    const targetK2 = Math.round(kat2Val);
+    const targetK3 = Math.round(kat3Val);
+
+    if (!selectedCabang) {
+      const allCabs = [
+        ...tableData.map(r => r.cabang || r["Cabang/Khusus"]),
+        ...targetData.map(r => r.cabang),
+        ...rawAggregatedData.map(r => r.cabang)
+      ];
+      const uniqueCabs = Array.from(new Set(allCabs.filter(c => c)));
+
+      let tAutoK1 = 0, tAutoK2 = 0, tAutoK3 = 0;
+      let tProvK1 = 0, tProvK2 = 0, tProvK3 = 0;
+
+      uniqueCabs.forEach(cabangName => {
+        const cabAggregated = rawAggregatedData.filter(
+          (r) => r.cabang?.toUpperCase() === cabangName.toUpperCase()
+        );
+
+        cabAggregated.forEach((item) => {
+          const tagihan = Math.round(parseFloat(item.totalIuranDaspen) || 0);
+          if (tagihan === targetK1 && targetK1 > 0) tAutoK1++;
+          else if (tagihan === targetK2 && targetK2 > 0) tAutoK2++;
+          else if (tagihan === targetK3 && targetK3 > 0) tAutoK3++;
+        });
+
+        const daspen = targetData.find(
+          (r) => r.cabang?.toUpperCase() === cabangName.toUpperCase() && r.jenisData === 'DASPEN'
+        );
+
+        if (daspen) {
+          tProvK1 += parseInt(daspen.kategori1, 10) || 0;
+          tProvK2 += parseInt(daspen.kategori2, 10) || 0;
+          tProvK3 += parseInt(daspen.kategori3, 10) || 0;
+        }
+      });
+
+      setAutoKat1(tAutoK1);
+      setAutoKat2(tAutoK2);
+      setAutoKat3(tAutoK3);
+
+      setKat1(tProvK1);
+      setKat2(tProvK2);
+      setKat3(tProvK3);
+
+      return;
+    }
+
+    const cabAggregated = rawAggregatedData.filter(
+      (r) => r.cabang?.toUpperCase() === selectedCabang.toUpperCase()
+    );
+
+    let calcAutoK1 = 0, calcAutoK2 = 0, calcAutoK3 = 0;
+
+    cabAggregated.forEach((item) => {
+      const tagihan = Math.round(parseFloat(item.totalIuranDaspen) || 0);
+      if (tagihan === targetK1 && targetK1 > 0) calcAutoK1++;
+      else if (tagihan === targetK2 && targetK2 > 0) calcAutoK2++;
+      else if (tagihan === targetK3 && targetK3 > 0) calcAutoK3++;
+    });
+
+    setAutoKat1(calcAutoK1);
+    setAutoKat2(calcAutoK2);
+    setAutoKat3(calcAutoK3);
+
+    const daspenUploaded = targetData.find(
+      (r) => r.cabang?.toUpperCase() === selectedCabang.toUpperCase() && r.jenisData === 'DASPEN'
+    );
+
+    if (daspenUploaded) {
+      setKat1(parseInt(daspenUploaded.kategori1, 10) || 0);
+      setKat2(parseInt(daspenUploaded.kategori2, 10) || 0);
+      setKat3(parseInt(daspenUploaded.kategori3, 10) || 0);
+    } else {
+      setKat1(calcAutoK1);
+      setKat2(calcAutoK2);
+      setKat3(calcAutoK3);
+    }
+  }, [selectedCabang, targetData, rawAggregatedData, tableData, kat1Val, kat2Val, kat3Val]);
 
   const handleSaveBesaran = async () => {
     try {
@@ -821,85 +922,103 @@ const DaspenSection = () => {
             `}} />
             <form onSubmit={handleSubmitTarget} className="bg-[#0f172a] rounded-[2rem] p-5 sm:p-6 shadow-2xl border border-slate-800 w-full">
               {/* KITA HAPUS xl:flex-nowrap AGAR BISA TURUN KE BAWAH JIKA LAYAR SEMPIT */}
-              <div className="flex flex-wrap items-center justify-center lg:justify-between gap-5 sm:gap-6 w-full">
+              {/* PANEL DASHBOARD PEMBANDING DATA (VIEW ONLY) */}
+              <div className="bg-[#0f172a] rounded-[2rem] p-5 sm:p-6 shadow-2xl border border-slate-800 w-full mb-8">
+                <div className="flex flex-wrap items-center justify-center lg:justify-between gap-5 sm:gap-6 w-full">
 
-                {/* 1. BAGIAN PILIH CABANG */}
-                <div className="flex flex-col gap-2 w-full md:w-auto md:flex-1 min-w-[180px]">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">
-                    Pilih Cabang <br className="hidden md:block" />
-                    <span className="text-slate-500 font-bold text-[9px] md:ml-1">(Manual Override)</span>
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={selectedCabang}
-                      onChange={(e) => setSelectedCabang(e.target.value)}
-                      className="w-full pl-4 pr-8 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-black text-sm focus:border-indigo-500 outline-none appearance-none cursor-pointer transition-all hover:bg-white/10"
-                    >
-                      <option value="" className="text-slate-800">-- Pilih Cabang --</option>
-                      {cabangList.map(c => <option key={c.id} value={c.kecamatan} className="text-slate-800">{c.kecamatan}</option>)}
-                    </select>
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">▼</div>
-                  </div>
-                </div>
-
-                {/* 2. BAGIAN INPUT KATEGORI */}
-                <div className="flex items-center justify-center gap-3 sm:gap-4 w-full md:w-auto shrink-0">
-                  <div className="flex flex-col items-center gap-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">KAT I</label>
-                    <input
-                      type="number"
-                      value={kat1}
-                      onChange={(e) => setKat1(parseInt(e.target.value) || 0)}
-                      className="w-[72px] h-14 sm:h-16 text-xl sm:text-2xl font-black text-center text-white bg-transparent border-2 border-rose-500/50 focus:border-rose-500 rounded-xl outline-none transition-all focus:bg-rose-500/10 [appearance:textfield] hover:[appearance:auto] [&::-webkit-inner-spin-button]:appearance-none hover:[&::-webkit-inner-spin-button]:appearance-auto"
-                    />
-                  </div>
-
-                  <div className="flex flex-col items-center gap-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">KAT II</label>
-                    <input
-                      type="number"
-                      value={kat2}
-                      onChange={(e) => setKat2(parseInt(e.target.value) || 0)}
-                      className="w-[72px] h-14 sm:h-16 text-xl sm:text-2xl font-black text-center text-white bg-transparent border-2 border-blue-500/50 focus:border-blue-500 rounded-xl outline-none transition-all focus:bg-blue-500/10 [appearance:textfield] hover:[appearance:auto] [&::-webkit-inner-spin-button]:appearance-none hover:[&::-webkit-inner-spin-button]:appearance-auto"
-                    />
-                  </div>
-
-                  <div className="flex flex-col items-center gap-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">KAT III</label>
-                    <input
-                      type="number"
-                      value={kat3}
-                      onChange={(e) => setKat3(parseInt(e.target.value) || 0)}
-                      className="w-[72px] h-14 sm:h-16 text-xl sm:text-2xl font-black text-center text-white bg-transparent border-2 border-emerald-500/50 focus:border-emerald-500 rounded-xl outline-none transition-all focus:bg-emerald-500/10 [appearance:textfield] hover:[appearance:auto] [&::-webkit-inner-spin-button]:appearance-none hover:[&::-webkit-inner-spin-button]:appearance-auto"
-                    />
-                  </div>
-                </div>
-
-                {/* 3. BAGIAN PREVIEW DATA (Lebih kompak) */}
-                <div className="flex flex-row items-center justify-center gap-4 px-5 py-3 bg-white/5 border border-white/10 rounded-2xl w-full md:w-auto shrink-0">
-                  <div className="text-center">
-                    <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Total Anggota</div>
-                    <div className="text-lg font-black text-purple-400 mt-0.5 leading-none">
-                      {kat1 + kat2 + kat3} <span className="text-[9px] text-slate-500 font-bold uppercase">Org</span>
+                  {/* 1. BAGIAN PILIH CABANG */}
+                  <div className="flex flex-col gap-2 w-full md:w-auto md:flex-1 min-w-[180px]">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">
+                      Data Pembanding <br className="hidden md:block" />
+                      <span className="text-slate-500 font-bold text-[9px] md:ml-1">(Pilih Cabang)</span>
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={selectedCabang}
+                        onChange={(e) => setSelectedCabang(e.target.value)}
+                        className="w-full pl-4 pr-8 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-black text-sm focus:border-indigo-500 outline-none appearance-none cursor-pointer transition-all hover:bg-white/10"
+                      >
+                        <option value="" className="text-slate-800">-- Semua Cabang (Total) --</option>
+                        {cabangList.map(c => <option key={c.id} value={c.kecamatan} className="text-slate-800">{c.kecamatan}</option>)}
+                      </select>
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">▼</div>
                     </div>
                   </div>
 
-                  <div className="w-px h-8 bg-white/10"></div> {/* Garis pembatas */}
+                  {/* 2. BAGIAN KATEGORI (VIEW ONLY - Tidak bisa diedit) */}
+                  <div className="flex items-start justify-center gap-3 sm:gap-4 w-full md:w-auto shrink-0">
 
-                  <div className="text-center">
-                    <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Total Target</div>
-                    <div className="text-lg font-black text-emerald-400 mt-0.5 leading-none">{formatCurrency(totalTarget)}</div>
+                    {/* KAT I */}
+                    <div className="flex flex-col items-center gap-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">KAT I</label>
+                      <div className="w-[72px] h-14 sm:h-16 flex items-center justify-center bg-transparent border-2 border-slate-600 rounded-xl">
+                        <span className="text-xl sm:text-2xl font-black text-teal-400">{kat1}</span>
+                      </div>
+                      {/* LABEL DATA ASLI */}
+                      <div className="bg-slate-800 border border-slate-700 w-full py-1.5 rounded-lg text-center shadow-inner">
+                        <span className="text-[8px] font-black uppercase text-slate-400 block mb-0.5">Data Asli</span>
+                        <span className="text-sm font-black text-white">{autoKat1}</span>
+                      </div>
+                    </div>
+
+                    {/* KAT II */}
+                    <div className="flex flex-col items-center gap-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">KAT II</label>
+                      <div className="w-[72px] h-14 sm:h-16 flex items-center justify-center bg-transparent border-2 border-slate-600 rounded-xl">
+                        <span className="text-xl sm:text-2xl font-black text-teal-400">{kat2}</span>
+                      </div>
+                      {/* LABEL DATA ASLI */}
+                      <div className="bg-slate-800 border border-slate-700 w-full py-1.5 rounded-lg text-center shadow-inner">
+                        <span className="text-[8px] font-black uppercase text-slate-400 block mb-0.5">Data Asli</span>
+                        <span className="text-sm font-black text-white">{autoKat2}</span>
+                      </div>
+                    </div>
+
+                    {/* KAT III */}
+                    <div className="flex flex-col items-center gap-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">KAT III</label>
+                      <div className="w-[72px] h-14 sm:h-16 flex items-center justify-center bg-transparent border-2 border-slate-600 rounded-xl">
+                        <span className="text-xl sm:text-2xl font-black text-teal-400">{kat3}</span>
+                      </div>
+                      {/* LABEL DATA ASLI */}
+                      <div className="bg-slate-800 border border-slate-700 w-full py-1.5 rounded-lg text-center shadow-inner">
+                        <span className="text-[8px] font-black uppercase text-slate-400 block mb-0.5">Data Asli</span>
+                        <span className="text-sm font-black text-white">{autoKat3}</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
 
-                {/* 4. BAGIAN TOMBOL SIMPAN */}
-                <div className="w-full md:w-auto shrink-0 flex-grow md:flex-grow-0">
-                  <button type="submit" className="w-full px-6 py-4 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-black shadow-lg shadow-rose-500/30 transition-all flex items-center justify-center gap-2 whitespace-nowrap active:scale-95">
-                    <FaSave className="text-lg" />
-                    <span className="tracking-wide text-sm">SIMPAN</span>
-                  </button>
-                </div>
+                  {/* 3. BAGIAN PREVIEW DATA (Dilengkapi Pembanding) */}
+                  <div className="flex flex-row items-start justify-center gap-4 px-5 py-4 bg-white/5 border border-white/10 rounded-2xl w-full md:w-auto shrink-0 h-full">
+                    <div className="text-center flex flex-col justify-between h-full">
+                      <div>
+                        <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Tot. Daspen</div>
+                        <div className="text-xl font-black text-teal-400 mt-1 leading-none">
+                          {kat1 + kat2 + kat3} <span className="text-[10px] text-slate-500 font-bold uppercase">Org</span>
+                        </div>
+                      </div>
+                      <div className="mt-3 bg-slate-800 px-3 py-1 rounded-lg border border-slate-700 inline-block mx-auto">
+                        <span className="text-[9px] text-slate-400 font-bold uppercase">Data Asli: </span>
+                        <span className="text-[11px] text-white font-black">{autoTotalAnggota}</span>
+                      </div>
+                    </div>
 
+                    <div className="w-px h-16 bg-white/10 self-center"></div> {/* Garis pembatas */}
+
+                    <div className="text-center flex flex-col justify-between h-full">
+                      <div>
+                        <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Total Target</div>
+                        <div className="text-xl font-black text-teal-400 mt-1 leading-none">{formatCurrency(totalTarget)}</div>
+                      </div>
+                      <div className="mt-3 bg-slate-800 px-3 py-1 rounded-lg border border-slate-700 inline-block mx-auto">
+                        <span className="text-[9px] text-slate-400 font-bold uppercase">Data Asli: </span>
+                        <span className="text-[11px] text-white font-black">{formatCurrency(autoTotalTarget)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* (Bagian Tombol Simpan Sengaja Dihilangkan karena ini View Only) */}
+                </div>
               </div>
             </form>
 
@@ -978,11 +1097,24 @@ const DaspenSection = () => {
                       const cabAggregated = rawAggregatedData.filter(r => r.cabang?.toUpperCase() === cabangName.toUpperCase());
 
                       cabAggregated.forEach(item => {
-                        const d = Math.round(parseFloat(item.totalIuranDaspen) || 0);
-                        if (d === targetK1 && targetK1 > 0) autoK1++;
-                        else if (d === targetK2 && targetK2 > 0) autoK2++;
-                        else if (d === targetK3 && targetK3 > 0) autoK3++;
-                        autoTransfer += d;
+                        const tagihan = Math.round(parseFloat(item.totalIuranDaspen) || 0);
+
+                        if (tagihan === targetK1 && targetK1 > 0) {
+                          autoK1++;
+                        } else if (tagihan === targetK2 && targetK2 > 0) {
+                          autoK2++;
+                        } else if (tagihan === targetK3 && targetK3 > 0) {
+                          autoK3++;
+                        }
+
+                        const manualDaspen = parseFloat(item.manualDaspen || item.manual_daspen) || 0;
+                        const isSukses = item.keterangan === "Sukses" || item.keterangan === "Tunai";
+
+                        if (manualDaspen > 0) {
+                          autoTransfer += manualDaspen;
+                        } else if (isSukses) {
+                          autoTransfer += tagihan;
+                        }
                       });
 
                       const sandukaDB = targetData.find(r => r.cabang?.toUpperCase() === cabangName.toUpperCase() && r.jenisData === 'SANDUKA');

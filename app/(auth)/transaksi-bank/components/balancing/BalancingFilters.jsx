@@ -61,7 +61,7 @@ const BalancingFilters = ({
               placeholder="Pilih Cabang"
             />
 
-            {showCabangDropdown && (
+            {showCabangDropdown && role !== "ADMIN" && (
               <div className="absolute z-50 border rounded-lg bg-white shadow-sm mt-1 w-full">
                 <ul className="max-h-44 overflow-y-auto">
                   <li className="py-2 px-2">

@@ -23,22 +23,11 @@ const useBalancing = ({
     setLoadingBalancing(true);
 
     try {
-      const storedRole = sessionStorage.getItem("role");
-      const storedCabang = sessionStorage.getItem("cabang");
-
-      let cabangFilter = "";
-
-      if (storedRole === "ADMIN") {
-        cabangFilter = storedCabang || "";
-      } else {
-        cabangFilter = selectedCabang || "";
-      }
-
       const parsedYear = year !== "all" ? Number(year) : null;
       const parsedMonth = month !== "all" ? Number(month) : null;
 
       const result = await GlobalApi.getTransaksiBankBalancing(
-        cabangFilter || null,
+        selectedCabang || null,
         selectedUnitKerja || null,
         parsedYear,
         parsedMonth,
@@ -48,9 +37,7 @@ const useBalancing = ({
 
       const safeResult = Array.isArray(result) ? result : [];
 
-      const finalData = filterDataByNPA(safeResult);
-
-      setDataBalancing(finalData);
+      setDataBalancing(safeResult);
     } catch (err) {
       console.error("❌ Gagal memuat data:", err);
       setDataBalancing([]);
@@ -59,17 +46,6 @@ const useBalancing = ({
     }
   };
 
-  const filterDataByNPA = (data) => {
-    const map = new Map();
-
-    data.forEach((item) => {
-      if (!map.has(item.npa) || item.id > map.get(item.npa).id) {
-        map.set(item.npa, item);
-      }
-    });
-
-    return Array.from(map.values());
-  };
   const handleDeleteClick = async (id) => {
     try {
       await GlobalApi.deleteBalancingById(id);

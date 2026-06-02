@@ -1,7 +1,11 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import GlobalApi from "@/app/_utils/GlobalApi";
 
-const usePotonganBank = (month, year) => {
+const usePotonganBank = (
+  month,
+  year,
+  { selectedCabang = "", unitKerjaInput = "", searchBalancing = "" } = {},
+) => {
   const [data, setData] = useState([]);
   const [loadingFilter, setLoadingFilter] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -122,6 +126,9 @@ const usePotonganBank = (month, year) => {
     displayCount,
     displayCountPotongan,
     currentPage,
+    selectedCabang,
+    unitKerjaInput,
+    searchBalancing,
   ]);
 
   return {

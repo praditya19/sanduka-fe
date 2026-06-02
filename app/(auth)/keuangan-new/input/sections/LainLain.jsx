@@ -1,8 +1,11 @@
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import GlobalApi from "@/app/_utils/GlobalApi";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import toast, { Toaster } from "react-hot-toast";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
+import * as XLSX from "xlsx-js-style";
 import {
   FaChartLine,
   FaEdit,
@@ -16,6 +19,8 @@ import {
   FaShoppingCart,
   FaTrash,
   FaUsers,
+  FaFileExcel,
+  FaFilePdf
 } from "react-icons/fa";
 
 const LainLainSection = () => {
@@ -52,6 +57,9 @@ const LainLainSection = () => {
   const [editingTargetRow, setEditingTargetRow] = useState(null);
   const [editTargetData, setEditTargetData] = useState({ cabang: "", jumlah: 0, bulan: "", tahun: new Date().getFullYear() });
   const [showEditTargetModal, setShowEditTargetModal] = useState(false);
+  const [selectedTargetKeterangan, setSelectedTargetKeterangan] = useState("");
+  const [targetKeterangan, setTargetKeterangan] = useState("");
+  const printTargetRef = useRef(null);
   const totalPerUnit = besaran.kabupaten;
   const totalAkhir = totalPerUnit * (parseInt(jumlahPesanan, 10) || 0);
 
@@ -210,8 +218,8 @@ const LainLainSection = () => {
     e.preventDefault();
 
     const jumlah = parseInt(jumlahPesanan, 10) || 0;
-    if (!selectedCabang || jumlah <= 0) {
-      toast.error("Pilih Cabang dan Jumlah Lain-lain!");
+    if (!selectedCabang || !targetKeterangan || jumlah <= 0) {
+      toast.error("Pilih Cabang, Keterangan, dan Jumlah Lain-lain!");
       return;
     }
 
@@ -224,6 +232,7 @@ const LainLainSection = () => {
     try {
       const payload = {
         cabang: selectedCabang,
+        keterangan: targetKeterangan,
         jumlah: String(jumlah),
         bulan: selectedMonth,
         tahun: String(selectedYear),
@@ -233,6 +242,7 @@ const LainLainSection = () => {
       await GlobalApi.createTargetLainLain(payload);
       toast.success(`Target Lain-lain ${selectedCabang} berhasil dikunci!`);
       setJumlahPesanan("0");
+      setTargetKeterangan("");
       fetchTargetTable();
     } catch (error) {
       toast.error("Gagal menyimpan target Lain-lain.");
@@ -344,6 +354,153 @@ const LainLainSection = () => {
       fetchTargetTable();
     } catch (error) {
       toast.error("Gagal memperbarui target Lain-lain.");
+    }
+  };
+
+  const availableKeteranganList = useMemo(() => {
+    const currentMonthData = tableData.filter(item => {
+      const matchMonth = selectedMonth === "ALL" || !selectedMonth || item.bulan === selectedMonth;
+      const matchYear = selectedYear === "ALL" || !selectedYear || parseInt(item.tahun, 10) === parseInt(selectedYear, 10);
+      return matchMonth && matchYear;
+    });
+
+    return [...new Set(currentMonthData.map(item => item.keterangan).filter(Boolean))];
+  }, [tableData, selectedMonth, selectedYear]);
+
+  const filteredTargetData = useMemo(() => {
+    if (!selectedTargetKeterangan) return targetTableData;
+    return targetTableData.filter(item => item.keterangan === selectedTargetKeterangan);
+  }, [targetTableData, selectedTargetKeterangan]);
+
+  const handleExportExcelTarget = () => {
+    if (filteredTargetData.length === 0) {
+      toast.error("Tidak ada data untuk diexport");
+      return;
+    }
+    const toastId = toast.loading("Menyiapkan file Excel...");
+
+    try {
+      const excelData = filteredTargetData.map((item, index) => ({
+        "No": index + 1,
+        "Cabang": item.cabang,
+        "Total Anggota": parseInt(item.totalAnggota, 10) || 0,
+        "Jumlah": parseInt(item.jumlah, 10) || 0,
+        "Peruntukan Kabupaten": item.perolehanKabupaten || 0,
+        "Peruntukan Cabang": item.perolehanCabang || 0,
+        "Total": (item.perolehanKabupaten || 0) + (item.perolehanCabang || 0),
+        "Transfer": item.transfer || 0,
+        "Pembayaran": item.pembayaran || 0,
+        "Selisih": item.selisih || 0
+      }));
+
+      excelData.push({});
+      excelData.push({
+        "No": "", "Cabang": "TOTAL",
+        "Total Anggota": filteredTargetData.reduce((s, i) => s + (parseInt(i.totalAnggota, 10) || 0), 0),
+        "Jumlah": filteredTargetData.reduce((s, i) => s + (parseInt(i.jumlah, 10) || 0), 0),
+        "Peruntukan Kabupaten": filteredTargetData.reduce((s, i) => s + (i.perolehanKabupaten || 0), 0),
+        "Peruntukan Cabang": filteredTargetData.reduce((s, i) => s + (i.perolehanCabang || 0), 0),
+        "Total": filteredTargetData.reduce((s, i) => s + (i.perolehanKabupaten || 0) + (i.perolehanCabang || 0), 0),
+        "Transfer": filteredTargetData.reduce((s, i) => s + (i.transfer || 0), 0),
+        "Pembayaran": filteredTargetData.reduce((s, i) => s + (i.pembayaran || 0), 0),
+        "Selisih": filteredTargetData.reduce((s, i) => s + (i.selisih || 0), 0)
+      });
+
+      const ws = XLSX.utils.json_to_sheet(excelData);
+      const range = XLSX.utils.decode_range(ws['!ref']);
+
+      for (let R = range.s.r; R <= range.e.r; ++R) {
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+          const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+          if (!ws[cellAddress]) ws[cellAddress] = { t: 's', v: '' };
+
+          ws[cellAddress].s = {
+            border: {
+              top: { style: "thin", color: { rgb: "000000" } },
+              bottom: { style: "thin", color: { rgb: "000000" } },
+              left: { style: "thin", color: { rgb: "000000" } },
+              right: { style: "thin", color: { rgb: "000000" } }
+            },
+            alignment: { vertical: "center", horizontal: C >= 3 ? "right" : "center" }
+          };
+
+          if (R === 0) {
+            ws[cellAddress].s.font = { bold: true, color: { rgb: "FFFFFF" } };
+            ws[cellAddress].s.fill = { fgColor: { rgb: "1E293B" } };
+            ws[cellAddress].s.alignment = { horizontal: "center", vertical: "center" };
+          }
+        }
+      }
+
+      ws['!cols'] = [
+        { wch: 5 }, { wch: 25 }, { wch: 15 }, { wch: 10 }, { wch: 20 },
+        { wch: 20 }, { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 }
+      ];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Target Lain-Lain");
+      XLSX.writeFile(wb, `Target_LainLain_${selectedMonth}_${selectedYear}.xlsx`);
+      toast.success("Excel berhasil diunduh!", { id: toastId });
+    } catch (error) {
+      console.error(error);
+      toast.error("Gagal membuat Excel", { id: toastId });
+    }
+  };
+
+  const handleDownloadPDFTarget = async () => {
+    if (filteredTargetData.length === 0) {
+      toast.error("Tidak ada data untuk dicetak");
+      return;
+    }
+    const element = printTargetRef.current;
+    if (!element) return;
+
+    const toastId = toast.loading("Memproses dokumen PDF...");
+
+    try {
+      const tableContainer = element.querySelector('.overflow-x-auto');
+      element.classList.remove('overflow-hidden');
+      if (tableContainer) {
+        tableContainer.classList.remove('overflow-x-auto');
+        tableContainer.style.overflow = 'visible';
+      }
+
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        width: element.scrollWidth,
+        height: element.scrollHeight,
+        windowWidth: element.scrollWidth,
+        windowHeight: element.scrollHeight,
+        scrollY: -window.scrollY
+      });
+
+      element.classList.add('overflow-hidden');
+      if (tableContainer) {
+        tableContainer.classList.add('overflow-x-auto');
+        tableContainer.style.overflow = '';
+      }
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+        unit: 'px',
+        format: [canvas.width, canvas.height]
+      });
+
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+      pdf.save(`Target_LainLain_${selectedMonth}_${selectedYear}.pdf`);
+      toast.success("PDF berhasil diunduh!", { id: toastId });
+    } catch (error) {
+      console.error(error);
+      element.classList.add('overflow-hidden');
+      const tableContainer = element.querySelector('.overflow-x-auto');
+      if (tableContainer) {
+        tableContainer.classList.add('overflow-x-auto');
+        tableContainer.style.overflow = '';
+      }
+      toast.error("Gagal membuat PDF", { id: toastId });
     }
   };
 
@@ -509,7 +666,7 @@ const LainLainSection = () => {
 
               <div className="xl:col-span-3 space-y-2">
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block px-1">
-                  Keterangan
+                  Pos Lain-lain
                 </label>
                 {!isManualInput ? (
                   <div className="relative">
@@ -519,7 +676,7 @@ const LainLainSection = () => {
                       className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-bold text-white text-sm focus:bg-white/10 focus:border-slate-400 transition-all appearance-none"
                     >
                       <option value="" className="text-slate-800">
-                        -- Pilih Keterangan --
+                        -- Pilih Pos Lain-lain --
                       </option>
                       {keteranganOptions.map((opt, index) => (
                         <option key={index} value={opt} className="text-slate-800">
@@ -633,8 +790,9 @@ const LainLainSection = () => {
             <FaEllipsisH className="text-8xl text-white -rotate-12" />
           </div>
 
-          <div className="relative z-10 flex flex-col xl:flex-row items-end gap-6">
-            <div className="w-full xl:w-1/3 space-y-2">
+          <div className="relative z-10 flex flex-col xl:flex-row items-end gap-4 xl:gap-6">
+
+            <div className="w-full xl:w-1/4 space-y-2">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block px-1">
                 Pilih Cabang
               </label>
@@ -653,6 +811,26 @@ const LainLainSection = () => {
                     className="text-slate-800"
                   >
                     {c.kecamatan}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="w-full xl:w-1/4 space-y-2">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block px-1">
+                Pos Lain-lain
+              </label>
+              <select
+                value={targetKeterangan}
+                onChange={(e) => setTargetKeterangan(e.target.value)}
+                className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-bold text-white text-sm focus:bg-white/10 focus:border-slate-500 transition-all appearance-none"
+              >
+                <option value="" className="text-slate-800">
+                  -- Pilih Pos Lain-lain --
+                </option>
+                {keteranganOptions.map((opt, idx) => (
+                  <option key={idx} value={opt} className="text-slate-800">
+                    {opt}
                   </option>
                 ))}
               </select>
@@ -679,11 +857,11 @@ const LainLainSection = () => {
               </div>
             </div>
 
-            <div className="w-full xl:flex-1 flex xl:flex-col items-center xl:items-end justify-between xl:justify-center gap-2 px-2">
-              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+            <div className="w-full xl:flex-1 flex xl:flex-col items-center xl:items-end justify-between xl:justify-center gap-1 px-2 mb-2 xl:mb-0">
+              <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
                 Grand Total
               </span>
-              <span className="text-2xl font-black text-slate-200 tracking-tight">
+              <span className="text-xl font-black text-slate-200 tracking-tight whitespace-nowrap">
                 {formatCurrency(totalAkhir)}
               </span>
             </div>
@@ -692,12 +870,12 @@ const LainLainSection = () => {
               <button
                 type="submit"
                 disabled={loadingTarget}
-                className="w-full px-10 py-5 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl font-black shadow-xl shadow-slate-950/40 transition-all active:scale-[0.98] text-xs uppercase tracking-widest flex items-center justify-center gap-2"
+                className="w-full px-6 py-5 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl font-black shadow-xl shadow-slate-950/40 transition-all active:scale-[0.98] text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 whitespace-nowrap"
               >
                 {loadingTarget ? (
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
-                  <FaSave />
+                  <FaSave className="text-sm" />
                 )}
                 Kunci Pesanan
               </button>
@@ -707,7 +885,7 @@ const LainLainSection = () => {
 
         <div className="space-y-8">
           {/* Target Lain-Lain Table */}
-          <div className="bg-white rounded-[40px] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden">
+          <div ref={printTargetRef} className="bg-white rounded-[40px] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden p-2">
             <div className="p-6 border-b border-slate-100 flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white">
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-[18px] bg-slate-700 text-white flex items-center justify-center shadow-lg shadow-slate-200">
@@ -722,26 +900,61 @@ const LainLainSection = () => {
                   </p>
                 </div>
               </div>
-              <button
-                onClick={fetchTargetTable}
-                disabled={loadingTargetTable}
-                className="px-4 py-2 bg-slate-700 hover:bg-slate-800 disabled:opacity-50 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2"
-              >
-                {loadingTargetTable ? (
-                  <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <FaSearch className="text-xs" />
+
+              <div data-html2canvas-ignore="true" className="flex items-center gap-2 flex-wrap">
+
+                {keteranganOptions.length > 0 && (
+                  <select
+                    value={selectedTargetKeterangan}
+                    onChange={(e) => setSelectedTargetKeterangan(e.target.value)}
+                    className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none font-black text-slate-600 text-[10px] uppercase tracking-widest cursor-pointer shadow-sm transition-all focus:border-slate-400"
+                  >
+                    <option value="" className="normal-case font-sans">-- Semua Pos Lain-lain --</option>
+                    {keteranganOptions.map((ket, idx) => (
+                      <option key={idx} value={ket} className="normal-case font-sans">
+                        {ket}
+                      </option>
+                    ))}
+                  </select>
                 )}
-                Refresh
-              </button>
+
+                <button
+                  onClick={handleExportExcelTarget}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-sm"
+                >
+                  <FaFileExcel className="text-xs" /> Excel
+                </button>
+                <button
+                  onClick={handleDownloadPDFTarget}
+                  className="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-sm"
+                >
+                  <FaFilePdf className="text-xs" /> PDF
+                </button>
+                <button
+                  onClick={fetchTargetTable}
+                  disabled={loadingTargetTable}
+                  className="px-4 py-2 bg-slate-700 hover:bg-slate-800 disabled:opacity-50 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-sm"
+                >
+                  {loadingTargetTable ? (
+                    <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <FaSearch className="text-xs" />
+                  )}
+                  Refresh
+                </button>
+              </div>
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto p-4 pt-0">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50/50 border-b border-slate-100">
-                    {["No", "Cabang", "Jumlah", "Perolehan Kabupaten", "Total Anggota", "Bulan/Tahun", "Aksi"].map((h, i) => (
-                      <th key={i} className="px-4 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-center whitespace-nowrap">
+                    {["No", "Cabang", "Total Anggota", "Jumlah", "Peruntukan Kabupaten", "Peruntukan Cabang", "Total", "Transfer", "Pembayaran", "Selisih", "Action"].map((h, i) => (
+                      <th
+                        key={i}
+                        data-html2canvas-ignore={h === 'Action' ? "true" : undefined}
+                        className="px-4 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-center whitespace-nowrap"
+                      >
                         {h}
                       </th>
                     ))}
@@ -750,23 +963,28 @@ const LainLainSection = () => {
                 <tbody className="divide-y divide-slate-50">
                   {loadingTargetTable ? (
                     <tr>
-                      <td colSpan={7} className="py-12 text-center">
+                      <td colSpan={11} className="py-12 text-center">
                         <div className="flex items-center justify-center gap-2 text-slate-400">
                           <div className="w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
                           <span className="text-xs font-black uppercase tracking-widest">Memuat...</span>
                         </div>
                       </td>
                     </tr>
-                  ) : targetTableData.length > 0 ? (
-                    targetTableData.map((item, index) => (
+                  ) : filteredTargetData.length > 0 ? (
+                    filteredTargetData.map((item, index) => (
                       <tr key={item.id || index} className="hover:bg-slate-50/80 transition-colors text-center text-[11px] font-bold text-slate-600">
                         <td className="px-4 py-4 text-slate-400 font-black">{index + 1}</td>
                         <td className="px-4 py-4 font-black text-slate-800 text-left whitespace-nowrap">{item.cabang}</td>
-                        <td className="px-4 py-4">{parseInt(item.jumlah, 10) || 0}</td>
-                        <td className="px-4 py-4 text-right font-black text-slate-900">{formatCurrency(item.perolehanKabupaten)}</td>
                         <td className="px-4 py-4">{item.totalAnggota ?? "-"}</td>
-                        <td className="px-4 py-4 text-slate-400">{item.bulan} {item.tahun}</td>
-                        <td className="px-4 py-4">
+                        <td className="px-4 py-4">{parseInt(item.jumlah, 10) || 0}</td>
+                        <td className="px-4 py-4 text-right font-black text-amber-600 whitespace-nowrap">{formatCurrency(item.perolehanKabupaten)}</td>
+                        <td className="px-4 py-4 text-right font-black text-emerald-600 whitespace-nowrap">{formatCurrency(item.perolehanCabang || 0)}</td>
+                        <td className="px-4 py-4 text-right font-black text-slate-900 bg-slate-50/50 whitespace-nowrap">{formatCurrency((item.perolehanKabupaten || 0) + (item.perolehanCabang || 0))}</td>
+                        <td className="px-4 py-4 text-right font-black text-blue-600 whitespace-nowrap">{formatCurrency(item.transfer || 0)}</td>
+                        <td className="px-4 py-4 text-right font-black text-slate-600 whitespace-nowrap">{formatCurrency(item.pembayaran || 0)}</td>
+                        <td className="px-4 py-4 text-right font-black text-rose-600 whitespace-nowrap">{formatCurrency(item.selisih || 0)}</td>
+
+                        <td data-html2canvas-ignore="true" className="px-4 py-4">
                           <div className="flex items-center justify-center gap-2">
                             <button
                               onClick={() => handleEditTarget(item)}
@@ -790,7 +1008,7 @@ const LainLainSection = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={7} className="py-16 text-center">
+                      <td colSpan={11} className="py-16 text-center">
                         <div className="flex flex-col items-center justify-center space-y-3 text-slate-300">
                           <FaChartLine className="text-4xl" />
                           <p className="text-xs font-black uppercase tracking-widest">Belum ada target</p>
@@ -798,13 +1016,34 @@ const LainLainSection = () => {
                       </td>
                     </tr>
                   )}
-                  {targetTableData.length > 0 && (
+                  {filteredTargetData.length > 0 && (
                     <tr className="bg-slate-50 border-t-2 border-slate-200 font-black text-center text-[11px]">
-                      <td colSpan={3} className="px-4 py-4 text-slate-700 font-black text-right">TOTAL</td>
-                      <td className="px-4 py-4 text-slate-700 font-black text-right">
-                        {formatCurrency(targetTableData.reduce((s, i) => s + (i.perolehanKabupaten || 0), 0))}
+                      <td colSpan={2} className="px-4 py-4 text-slate-700 font-black text-right uppercase tracking-widest">TOTAL</td>
+                      <td className="px-4 py-4 text-slate-700 font-black">
+                        {filteredTargetData.reduce((s, i) => s + (parseInt(i.totalAnggota, 10) || 0), 0)}
                       </td>
-                      <td colSpan={3} className="px-4 py-4 text-slate-400 text-center">-</td>
+                      <td className="px-4 py-4 text-slate-700 font-black">
+                        {filteredTargetData.reduce((s, i) => s + (parseInt(i.jumlah, 10) || 0), 0)}
+                      </td>
+                      <td className="px-4 py-4 text-amber-600 font-black text-right whitespace-nowrap">
+                        {formatCurrency(filteredTargetData.reduce((s, i) => s + (i.perolehanKabupaten || 0), 0))}
+                      </td>
+                      <td className="px-4 py-4 text-emerald-600 font-black text-right whitespace-nowrap">
+                        {formatCurrency(filteredTargetData.reduce((s, i) => s + (i.perolehanCabang || 0), 0))}
+                      </td>
+                      <td className="px-4 py-4 text-slate-900 font-black text-right bg-slate-100 whitespace-nowrap">
+                        {formatCurrency(filteredTargetData.reduce((s, i) => s + (i.perolehanKabupaten || 0) + (i.perolehanCabang || 0), 0))}
+                      </td>
+                      <td className="px-4 py-4 text-blue-600 font-black text-right whitespace-nowrap">
+                        {formatCurrency(filteredTargetData.reduce((s, i) => s + (i.transfer || 0), 0))}
+                      </td>
+                      <td className="px-4 py-4 text-slate-600 font-black text-right whitespace-nowrap">
+                        {formatCurrency(filteredTargetData.reduce((s, i) => s + (i.pembayaran || 0), 0))}
+                      </td>
+                      <td className="px-4 py-4 text-rose-600 font-black text-right whitespace-nowrap">
+                        {formatCurrency(filteredTargetData.reduce((s, i) => s + (i.selisih || 0), 0))}
+                      </td>
+                      <td data-html2canvas-ignore="true" className="px-4 py-4 text-slate-400 text-center">-</td>
                     </tr>
                   )}
                 </tbody>
