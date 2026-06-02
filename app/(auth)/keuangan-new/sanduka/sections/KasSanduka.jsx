@@ -560,7 +560,7 @@ const KasSanduka = () => {
                     <td className="px-4 py-3 text-[10px] font-bold text-slate-400 text-center">{t.formattedDate}</td>
                     <td className="px-4 py-3">
                       <div className={`text-[11px] font-black ${t.isVirtual ? 'text-amber-600' : 'text-slate-800'} leading-none mb-1`}>{t.nomorBukti || "-"}</div>
-                      <div className="text-[9px] text-slate-400 font-medium truncate max-w-[200px] lg:max-w-md italic">{t.keterangan}</div>
+                      <div className="text-[9px] text-slate-400 font-medium italic">{t.keterangan}</div>
                     </td>
                     <td className="px-4 py-3 text-right text-[11px] font-black text-emerald-600">
                       {t.debet > 0 ? formatCurrency(t.debet) : "Rp 0"}

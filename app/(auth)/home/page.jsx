@@ -159,47 +159,14 @@ export default function IconGrid() {
   const [longitude, setLongitude] = useState("");
   const [jumlahMeninggal, setJumlahMeninggal] = useState(0);
   const [jumlahSantunan, setJumlahSantunan] = useState(0);
-  const [formattedAmount, setFormattedAmount] = useState("");
   const [fotoBase64, setFotoBase64] = useState(null);
-  const [fotoMeninggal, setFotoMeninggal] = useState([]);
   const [popupVisible, setPopupVisible] = useState(false);
   const profileImageUrl = "/profile.png";
   const [notification, setNotification] = useState(null);
   const [newPengaduanCount, setNewPengaduanCount] = useState(0);
-  const [data, setData] = useState(null);
-  const [loadingButton, setLoadingButton] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
-  const [dataDiterima, setDataDiterima] = useState([]);
-  const [dataCount, setDataCount] = useState(0);
   const [totalNominal, setTotalNominal] = useState(0);
 
   const icons = [
-    // Menu Keuangan - Prioritas Utama
-    {
-      icon: faUbuntu,
-      label: "Rekap By Nominal",
-      href: "/anggota/rekap-anggota",
-      color: "text-gray-500",
-    },
-    {
-      icon: faMoneyBillTransfer,
-      label: "Transaksi Bank",
-      href: "/transaksi-bank",
-      color: "text-green-600",
-    },
-    {
-      icon: faWallet,
-      label: "Keuangan",
-      href: "/keuangan/home",
-      color: "text-lime-500",
-    },
-    {
-      icon: faMoneyBillTransfer,
-      label: "Keuangan New",
-      href: "/keuangan-new",
-      color: "text-emerald-500",
-    },
     // Menu Lainnya
     { icon: faBullhorn, label: "Lapor", href: "/lapor", color: "text-red-500" },
     {
@@ -251,6 +218,37 @@ export default function IconGrid() {
       color: "text-rose-500",
     },
     {
+      icon: faSitemap,
+      label: "Data Ranting",
+      href: "/ranting",
+      color: "text-blue-500",
+    },
+    // Menu Keuangan - Prioritas Utama
+    {
+      icon: faUbuntu,
+      label: "Rekap By Nominal",
+      href: "/anggota/rekap-anggota",
+      color: "text-gray-500",
+    },
+    {
+      icon: faMoneyBillTransfer,
+      label: "Transaksi Bank",
+      href: "/transaksi-bank",
+      color: "text-green-600",
+    },
+    {
+      icon: faWallet,
+      label: "Keuangan",
+      href: "/keuangan/home",
+      color: "text-lime-500",
+    },
+    {
+      icon: faMoneyBillTransfer,
+      label: "Keuangan New",
+      href: "/keuangan-new",
+      color: "text-emerald-500",
+    },
+    {
       icon: faClipboardCheck,
       label: "Ketentuan",
       href: "/ketentuan",
@@ -261,12 +259,6 @@ export default function IconGrid() {
       label: "Bantuan",
       href: "/bantuan",
       color: "text-purple-500",
-    },
-    {
-      icon: faSitemap,
-      label: "Data Ranting",
-      href: "/ranting",
-      color: "text-blue-500",
     },
     {
       icon: faCog,

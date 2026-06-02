@@ -755,7 +755,7 @@ const KalenderSection = () => {
                   </div>
                   <div>
                     <h4 className="text-lg font-black text-slate-800 tracking-tight">
-                      Data Distribusi Kalender
+                      REKAPITULASI KALENDER
                     </h4>
                     <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
                       Periode: {selectedMonth} {selectedYear}

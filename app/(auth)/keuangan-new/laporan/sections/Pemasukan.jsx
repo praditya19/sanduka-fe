@@ -1,12 +1,11 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import GlobalApi from "@/app/_utils/GlobalApi";
-import { motion } from "framer-motion";
-import { 
-  FaArrowTrendUp, 
-  FaPrint, 
+import {
+  FaArrowTrendUp,
+  FaPrint,
   FaFileExcel,
-  FaCircleInfo
+  FaCircleInfo,
 } from "react-icons/fa6";
 import { FaSearch } from "react-icons/fa";
 import toast, { Toaster } from "react-hot-toast";
@@ -16,9 +15,11 @@ const PemasukanSection = () => {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
   const [bulanList, setBulanList] = useState([]);
-  
+
   const now = new Date();
-  const [selectedMonth, setSelectedMonth] = useState(String(now.getMonth() + 1).padStart(2, "0"));
+  const [selectedMonth, setSelectedMonth] = useState(
+    String(now.getMonth() + 1).padStart(2, "0"),
+  );
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -33,13 +34,36 @@ const PemasukanSection = () => {
 
   const fetchData = useCallback(async () => {
     if (!selectedMonth || !selectedYear) return;
+
     setLoading(true);
     try {
-      const bulanFormatted = `${selectedYear}-${selectedMonth}`;
-      const res = await GlobalApi.getLaporanPemasukan(bulanFormatted);
-      setData(res || []);
+      const res = await GlobalApi.getTableKasSanduka(selectedMonth);
+
+      const dataResult = Array.isArray(res) ? res : res?.data || [];
+
+      dataResult.forEach((item, index) => {});
+
+      const filteredPemasukan = dataResult.filter(
+        (item) => item.jenis === "PEMASUKAN",
+      );
+
+      const mappedData = filteredPemasukan.map((item) => {
+        const tanggal = Array.isArray(item.tanggalTransaksi)
+          ? `${item.tanggalTransaksi[2].toString().padStart(2, "0")}-${item.tanggalTransaksi[1]
+              .toString()
+              .padStart(2, "0")}-${item.tanggalTransaksi[0]}`
+          : item.tanggalTransaksi;
+
+        return {
+          tanggalTransaksi: tanggal,
+          uraian: item.keterangan,
+          nominal: item.debet || 0,
+        };
+      });
+
+      setData(mappedData);
     } catch (error) {
-      console.error("Error fetching laporan pemasukan:", error);
+      console.error("❌ Error fetching kas sanduka:", error);
       toast.error("Gagal mengambil data laporan.");
     } finally {
       setLoading(false);
@@ -55,35 +79,38 @@ const PemasukanSection = () => {
   }, [fetchData]);
 
   const formatCurrency = (val) => {
-    return new Intl.NumberFormat('id-ID', { 
-      style: 'currency', 
-      currency: 'IDR', 
-      maximumFractionDigits: 0 
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      maximumFractionDigits: 0,
     }).format(val || 0);
   };
 
-  const filteredData = data.filter(item => 
-    item.uraian?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredData = data.filter((item) =>
+    item.uraian?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const exportToExcel = () => {
     const excelData = filteredData.map((item, index) => ({
-      "No": index + 1,
-      "Tanggal": item.tanggalTransaksi,
-      "Uraian": item.uraian,
-      "Nominal": item.nominal
+      No: index + 1,
+      Tanggal: item.tanggalTransaksi,
+      Uraian: item.uraian,
+      Nominal: item.nominal,
     }));
 
     const ws = XLSX.utils.json_to_sheet(excelData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Laporan Pemasukan");
-    XLSX.writeFile(wb, `Laporan_Pemasukan_${selectedMonth}_${selectedYear}.xlsx`);
+    XLSX.writeFile(
+      wb,
+      `Laporan_Pemasukan_${selectedMonth}_${selectedYear}.xlsx`,
+    );
   };
 
   return (
     <div className="flex flex-col h-full">
       <Toaster position="top-center" />
-      
+
       {/* Banner */}
       <div className="bg-emerald-600 p-6 text-white">
         <div className="flex items-center justify-between">
@@ -93,14 +120,24 @@ const PemasukanSection = () => {
             </div>
             <div>
               <h2 className="text-xl font-black">Laporan Pemasukan</h2>
-              <p className="text-emerald-100 text-xs font-medium uppercase tracking-wider">Detail seluruh dana masuk Sanduka</p>
+              <p className="text-emerald-100 text-xs font-medium uppercase tracking-wider">
+                Detail seluruh dana masuk Sanduka
+              </p>
             </div>
           </div>
           <div className="flex space-x-2">
-            <button onClick={exportToExcel} className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all" title="Export Excel">
+            <button
+              onClick={exportToExcel}
+              className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all"
+              title="Export Excel"
+            >
               <FaFileExcel className="text-xl" />
             </button>
-            <button onClick={() => window.print()} className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all" title="Cetak Laporan">
+            <button
+              onClick={() => window.print()}
+              className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all"
+              title="Cetak Laporan"
+            >
               <FaPrint className="text-xl" />
             </button>
           </div>
@@ -111,30 +148,44 @@ const PemasukanSection = () => {
         {/* Filters */}
         <div className="bg-slate-50 p-4 rounded-[24px] border border-slate-100 flex flex-wrap gap-4 items-end">
           <div className="flex-1 min-w-[200px]">
-            <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block px-1">Pilih Bulan</label>
-            <select 
+            <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block px-1">
+              Pilih Bulan
+            </label>
+            <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
               className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500/20"
             >
-              {bulanList.map(b => <option key={b.id} value={b.id}>{b.namaBulan}</option>)}
+              {bulanList.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.namaBulan}
+                </option>
+              ))}
             </select>
           </div>
           <div className="flex-1 min-w-[150px]">
-            <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block px-1">Pilih Tahun</label>
-            <select 
+            <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block px-1">
+              Pilih Tahun
+            </label>
+            <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(parseInt(e.target.value))}
               className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500/20"
             >
-              {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
+              {[2024, 2025, 2026, 2027].map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
             </select>
           </div>
           <div className="flex-1 min-w-[200px] relative">
-            <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block px-1">Cari Keterangan</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block px-1">
+              Cari Keterangan
+            </label>
             <FaSearch className="absolute left-4 bottom-4 text-slate-300" />
-            <input 
-              type="text" 
+            <input
+              type="text"
               placeholder="Cari transaksi..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -150,12 +201,20 @@ const PemasukanSection = () => {
               <FaArrowTrendUp />
             </div>
             <div>
-              <h4 className="text-xs font-black text-emerald-800 uppercase tracking-widest">Total Pemasukan</h4>
-              <p className="text-[10px] text-emerald-600 font-bold">Periode {bulanList.find(b => b.id === selectedMonth)?.namaBulan} {selectedYear}</p>
+              <h4 className="text-xs font-black text-emerald-800 uppercase tracking-widest">
+                Total Pemasukan
+              </h4>
+              <p className="text-[10px] text-emerald-600 font-bold">
+                Periode{" "}
+                {bulanList.find((b) => b.id === selectedMonth)?.namaBulan}{" "}
+                {selectedYear}
+              </p>
             </div>
           </div>
           <span className="text-3xl font-black text-emerald-600">
-            {formatCurrency(filteredData.reduce((acc, curr) => acc + (parseFloat(curr.nominal?.replace(/[^0-9]/g, '')) || 0), 0))}
+            {formatCurrency(
+              filteredData.reduce((acc, curr) => acc + (curr.nominal || 0), 0),
+            )}
           </span>
         </div>
 
@@ -173,21 +232,36 @@ const PemasukanSection = () => {
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {loading ? (
-                  Array(5).fill(0).map((_, i) => (
-                    <tr key={i} className="animate-pulse">
-                      <td colSpan="4" className="px-6 py-6"><div className="h-4 bg-slate-100 rounded-lg w-full" /></td>
-                    </tr>
-                  ))
+                  Array(5)
+                    .fill(0)
+                    .map((_, i) => (
+                      <tr key={i} className="animate-pulse">
+                        <td colSpan="4" className="px-6 py-6">
+                          <div className="h-4 bg-slate-100 rounded-lg w-full" />
+                        </td>
+                      </tr>
+                    ))
                 ) : filteredData.length > 0 ? (
                   filteredData.map((row, i) => (
-                    <tr key={i} className="hover:bg-emerald-50/30 transition-colors group">
-                      <td className="px-6 py-4 text-center text-slate-400 font-bold text-xs">{i + 1}</td>
-                      <td className="px-6 py-4 text-slate-500 font-bold text-sm">{row.tanggalTransaksi}</td>
-                      <td className="px-6 py-4">
-                        <span className="font-black text-slate-700 text-sm block">{row.uraian}</span>
+                    <tr
+                      key={i}
+                      className="hover:bg-emerald-50/30 transition-colors group"
+                    >
+                      <td className="px-6 py-4 text-center text-slate-400 font-bold text-xs">
+                        {i + 1}
                       </td>
+                      <td className="px-6 py-4 text-slate-500 font-bold text-sm">
+                        {row.tanggalTransaksi}
+                      </td>
+
+                      <td className="px-6 py-4">
+                        <span className="font-black text-slate-700 text-sm block">
+                          {row.uraian}
+                        </span>
+                      </td>
+
                       <td className="px-6 py-4 text-right font-black text-emerald-600 bg-emerald-50/10">
-                        {row.nominal}
+                        {formatCurrency(row.nominal)}
                       </td>
                     </tr>
                   ))
@@ -196,7 +270,9 @@ const PemasukanSection = () => {
                     <td colSpan="4" className="px-6 py-20 text-center">
                       <div className="flex flex-col items-center">
                         <FaCircleInfo className="text-slate-100 text-6xl mb-4" />
-                        <p className="text-slate-400 font-bold">Data tidak tersedia untuk periode ini</p>
+                        <p className="text-slate-400 font-bold">
+                          Data tidak tersedia untuk periode ini
+                        </p>
                       </div>
                     </td>
                   </tr>
