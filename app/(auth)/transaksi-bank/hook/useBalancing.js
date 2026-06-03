@@ -9,6 +9,7 @@ const useBalancing = ({
   editData,
   setEditData,
   setShowEditModal,
+  setShowImportBalancing,
   setNotification,
 }) => {
   const [dataBalancing, setDataBalancing] = useState([]);
@@ -18,6 +19,8 @@ const useBalancing = ({
   const [tagihanUntukBulan, setTagihanUntukBulan] = useState("");
   const [searchBalancing, setSearchBalancing] = useState("");
   const [paymentNote, setPaymentNote] = useState("");
+  const [importLoader, setImportLoader] = useState(false);
+  const [importProgress, setImportProgress] = useState(0);
 
   const getBalancingdata = async () => {
     setLoadingBalancing(true);
@@ -65,46 +68,8 @@ const useBalancing = ({
       });
     }
   };
-  const handleDelete = async (e) => {
-    e.preventDefault();
-    if (!resetUntukBulan) {
-      alert("Pilih bulan terlebih dahulu!");
-      return;
-    }
-
-    try {
-      setLoader(true);
-      setProgress(0);
-
-      const tagihanUntukBulan = resetUntukBulan.trim();
-      await GlobalApi.deleteBalancing(tagihanUntukBulan, {
-        onDownloadProgress: (progressEvent) => {
-          if (progressEvent.total) {
-            const percentCompleted = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total,
-            );
-            setProgress(percentCompleted);
-          }
-        },
-      });
-
-      setNotification({
-        type: "success",
-        message: "Data berhasil dihapus!",
-      });
-      setShowDeleteBalancing(false);
-      setResetUntukBulan("");
-      getBalancingdata();
-    } catch (err) {
-      console.error("Gagal menghapus data:", err);
-      setNotification({
-        type: "error",
-        message: "Gagal hapus data.",
-      });
-    } finally {
-      setLoader(false);
-    }
-  };
+  // Note: deleting by month (reset) is handled in the page component
+  // because it needs access to UI state (loader/progress/modal setters).
   const handleEditClick = async (id) => {
     try {
       const data = await GlobalApi.getBalancingById(id);
@@ -175,6 +140,11 @@ const useBalancing = ({
         tagihanUntukBulan: editData.tagihanUntukBulan,
       };
 
+      console.log("[useBalancing] Saving edit for id:", editData.id, {
+        editData,
+        payload,
+      });
+
       await GlobalApi.updateBalancing(editData.id, payload);
 
       setNotification({
@@ -199,22 +169,33 @@ const useBalancing = ({
     }
 
     try {
+      setImportLoader(true);
+      setImportProgress(0);
+
       await GlobalApi.importExcelTargetIuran(fileImport, tagihanUntukBulan);
 
-      setNotification({
-        type: "success",
-        message: "Import Berhasil!",
-      });
+      setNotification({ type: "success", message: "Import Berhasil!" });
 
-      setShowImportBalancing(false);
+      if (typeof setShowImportBalancing === "function") {
+        setShowImportBalancing(false);
+      }
+
       setFileImport(null);
       setTagihanUntukBulan("");
+
+      // refresh data after successful import
+      if (typeof getBalancingdata === "function") {
+        await getBalancingdata();
+      }
     } catch (error) {
       console.error("Import gagal:", error);
       setNotification({
         type: "error",
         message: "Terjadi kesalahan saat import data.",
       });
+    } finally {
+      setImportLoader(false);
+      setImportProgress(0);
     }
   };
   const handleSort = (key) => {
@@ -268,7 +249,6 @@ const useBalancing = ({
     setTagihanUntukBulan,
     getBalancingdata,
     handleDeleteClick,
-    handleDelete,
     handleEditClick,
     handleSaveEdit,
     handleImportBalancing,
@@ -277,6 +257,8 @@ const useBalancing = ({
     paymentNote,
     setPaymentNote,
     setDataBalancing,
+    importLoader,
+    importProgress,
   };
 };
 export default useBalancing;
