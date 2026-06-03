@@ -38,8 +38,12 @@ const useBalancing = ({
         searchBalancing || null,
       );
 
-      const safeResult = Array.isArray(result) ? result : [];
-
+      // API may return an array or an object with a `content` array and summary fields.
+      const safeResult = Array.isArray(result)
+        ? result
+        : result && Array.isArray(result.content)
+          ? result.content
+          : [];
       setDataBalancing(safeResult);
     } catch (err) {
       console.error("❌ Gagal memuat data:", err);
