@@ -21,12 +21,18 @@ const usePotonganBank = (
   const today = new Date();
   const currentMonth = today.getMonth() + 1;
   const currentYear = today.getFullYear();
- 
+
   const [displayCount, setDisplayCount] = useState(10);
 
   const handleFilter = async () => {
     setData([]);
     setLoadingFilter(true);
+    console.log("[usePotonganBank] handleFilter params:", {
+      month,
+      year,
+      displayCountPotongan,
+      currentPage,
+    });
     try {
       let result;
 
@@ -58,10 +64,16 @@ const usePotonganBank = (
         );
       }
 
+      console.log("[usePotonganBank] API result summary:", {
+        totalElements: result && result.totalElements,
+        contentLength:
+          result && Array.isArray(result.content) ? result.content.length : 0,
+      });
+
       setData(result.content);
       setTotalPages(result.totalPages);
     } catch (err) {
-      console.error("Gagal memuat data:", err);
+      console.error("[usePotonganBank] Gagal memuat data:", err);
     } finally {
       setLoadingFilter(false);
     }

@@ -7,6 +7,8 @@ const ImportBalancingModal = ({
   tagihanUntukBulan,
   setTagihanUntukBulan,
   handleImportBalancing,
+  loader,
+  progress,
 }) => {
   if (!showImportBalancing) return null;
 
@@ -42,15 +44,17 @@ const ImportBalancingModal = ({
           <button
             className="px-4 py-2 border rounded"
             onClick={() => setShowImportBalancing(false)}
+            disabled={loader}
           >
             Batal
           </button>
 
           <button
-            className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-500"
+            className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-500 disabled:opacity-60"
             onClick={handleImportBalancing}
+            disabled={loader}
           >
-            Upload
+            {loader ? `Processing... ${progress || 0}%` : "Upload"}
           </button>
         </div>
       </div>
