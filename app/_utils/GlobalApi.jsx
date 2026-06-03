@@ -1267,10 +1267,8 @@ const getTransaksiBankBalancing = async (
     if (keterangan) params.append("keterangan", keterangan);
     if (search) params.append("search", search);
 
-    const response = await axiosClient.get(
-      `/api/potongan-gaji/balancing?${params.toString()}`,
-    );
-
+    const url = `/api/potongan-gaji/balancing?${params.toString()}`;
+    const response = await axiosClient.get(url);
     return response.data;
   } catch (error) {
     console.error("Error fetching transaksi bank balancing:", error);
