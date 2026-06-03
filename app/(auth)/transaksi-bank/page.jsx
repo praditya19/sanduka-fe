@@ -8,6 +8,7 @@ import {
 import { useRouter } from "next/navigation";
 import Sidebar from "@/app/_components/Sidebar";
 import { Input } from "@/components/ui/input";
+import GlobalApi from "@/app/_utils/GlobalApi";
 
 // components
 import HeaderSection from "./components/HeaderSection";
@@ -198,14 +199,18 @@ export default function BankTransactionPage() {
   const {
     handleDeleteUpload,
     resetData,
+    setResetData,
     handleInputChange,
     loader,
     progress,
+    setLoader,
+    setProgress,
     handleSubmitUpload,
   } = useUploadHandler({
     setNotification,
     setShowUploadModal,
   });
+
 
   // Get dropdown filters first
   const dropdownFilters = useDropdownFilter(
@@ -216,7 +221,6 @@ export default function BankTransactionPage() {
   );
 
   const {
-    handleDelete,
     setFileImport,
     tagihanUntukBulan,
     setTagihanUntukBulan,
@@ -234,6 +238,9 @@ export default function BankTransactionPage() {
     handleSaveEdit,
     handleEditClick,
     paymentNote,
+    getBalancingdata,
+    importLoader,
+    importProgress,
   } = useBalancing({
     selectedCabang: dropdownFilters.selectedCabang,
     selectedUnitKerja: dropdownFilters.selectedUnitKerja,
@@ -242,8 +249,45 @@ export default function BankTransactionPage() {
     editData,
     setEditData,
     setShowEditModal,
+    setShowImportBalancing,
     setNotification,
   });
+
+  const handleDelete = async (e) => {
+    e.preventDefault();
+    if (!resetUntukBulan) {
+      alert("Pilih bulan terlebih dahulu!");
+      return;
+    }
+
+    try {
+      setLoader(true);
+      setProgress(0);
+
+      const tagihan = resetUntukBulan.trim();
+      await GlobalApi.deleteBalancing(tagihan, {
+        onDownloadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total,
+            );
+            setProgress(percentCompleted);
+          }
+        },
+      });
+
+      setNotification({ type: "success", message: "Data berhasil dihapus!" });
+      setShowDeleteBalancing(false);
+      setResetUntukBulan("");
+      await getBalancingdata();
+    } catch (err) {
+      console.error("Gagal menghapus data:", err);
+      setNotification({ type: "error", message: "Gagal hapus data." });
+    } finally {
+      setLoader(false);
+      setProgress(0);
+    }
+  };
 
   const balancingSummary = useMemo(() => {
     const source = Array.isArray(dataBalancing) ? dataBalancing : [];
@@ -276,13 +320,13 @@ export default function BankTransactionPage() {
   const summaryValues =
     activeTab === "potongan"
       ? {
-          jumlahPotonganBank,
-          totalNominalPotonganBank,
-          jumlahSetorTunai,
-          totalNominalSetorTunai,
-          totalTerfilter,
-          totalNominalTerfilter,
-        }
+        jumlahPotonganBank,
+        totalNominalPotonganBank,
+        jumlahSetorTunai,
+        totalNominalSetorTunai,
+        totalTerfilter,
+        totalNominalTerfilter,
+      }
       : balancingSummary;
 
   const {
@@ -431,9 +475,8 @@ export default function BankTransactionPage() {
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
         <div
-          className={`pt-20 pb-8 px-4 md:px-8 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`pt-20 pb-8 px-4 md:px-8 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           {notification && (
             <NotificationPopup
@@ -492,6 +535,8 @@ export default function BankTransactionPage() {
             tagihanUntukBulan={tagihanUntukBulan}
             setTagihanUntukBulan={setTagihanUntukBulan}
             handleImportBalancing={handleImportBalancing}
+            loader={importLoader}
+            progress={importProgress}
           />
 
           <UploadModal
@@ -566,11 +611,10 @@ export default function BankTransactionPage() {
                     <button
                       key={page}
                       onClick={() => handlePageClick(page)}
-                      className={`px-3 py-1 border rounded-md text-sm ${
-                        page === currentPage
-                          ? "bg-teal-600 text-white"
-                          : "bg-white hover:bg-gray-50"
-                      }`}
+                      className={`px-3 py-1 border rounded-md text-sm ${page === currentPage
+                        ? "bg-teal-600 text-white"
+                        : "bg-white hover:bg-gray-50"
+                        }`}
                     >
                       {page}
                     </button>

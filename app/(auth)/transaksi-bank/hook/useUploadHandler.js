@@ -72,15 +72,24 @@ const useUploadHandler = ({
       await GlobalApi.deleteTransaksiBank(resetData);
       setProgress(100);
 
-      handleCloseModalDelete();
+      if (typeof handleCloseModalDelete === "function") {
+        handleCloseModalDelete();
+      }
+
       setResetData("");
 
       setNotification({
         type: "success",
         message: "Data berhasil direset!",
       });
-      handleFilter();
-      getBalancingdata();
+
+      if (typeof handleFilter === "function") {
+        handleFilter();
+      }
+
+      if (typeof getBalancingdata === "function") {
+        getBalancingdata();
+      }
     } catch (error) {
       console.error("Gagal reset data:", error);
       setNotification({
