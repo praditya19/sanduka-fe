@@ -56,19 +56,22 @@ const TargetRealisasiSection = () => {
     if (!selectedBulan || !selectedYear) return;
 
     setLoading(true);
+
     try {
       const bulanAngka = monthMap[selectedBulan];
       const bulanuangmasuk = `${bulanAngka}/${selectedYear}`;
 
-      const [resTargetRealisasi, balancingMap] = await Promise.all([
-        GlobalApi.getTableTargetRealisasi(
-          selectedYear,
-          bulanAngka,
-          "",
-          bulanuangmasuk,
-        ),
-        fetchTargetFromBalancing(),
-      ]);
+      const [resTargetRealisasi, balancingMap, realisasiMap] =
+        await Promise.all([
+          GlobalApi.getTableTargetRealisasi(
+            selectedYear,
+            bulanAngka,
+            "",
+            bulanuangmasuk,
+          ),
+          fetchTargetFromBalancing(),
+          fetchRealisasiFromKasSanduka(),
+        ]);
 
       const finalData = (resTargetRealisasi || []).map((item) => {
         const key = item.cabang?.trim().toUpperCase();
@@ -78,11 +81,15 @@ const TargetRealisasiSection = () => {
           totalIuran: 0,
         };
 
+        const realisasiNominal =
+          realisasiMap[key]?.totalNominal || item.realisasi || 0;
+
         const result = {
           ...item,
           jumlahAnggota: bal.jumlahAnggota,
           target: bal.totalIuran,
-          selisih: (bal.totalIuran || 0) - (item.realisasi || 0),
+          realisasi: realisasiNominal,
+          selisih: (bal.totalIuran || 0) - realisasiNominal,
         };
 
         return result;
@@ -90,7 +97,12 @@ const TargetRealisasiSection = () => {
 
       setData(finalData);
     } catch (error) {
-      console.error("Error fetching target realisasi:", error);
+      console.error("❌ ERROR fetching target realisasi:", error);
+      console.error("📋 Error details:", {
+        message: error.message,
+        stack: error.stack,
+      });
+      toast.error("Gagal mengambil data target realisasi");
     } finally {
       setLoading(false);
     }
@@ -129,7 +141,25 @@ const TargetRealisasiSection = () => {
 
       return grouped;
     } catch (error) {
-      console.error("Error fetching balancing:", error);
+      console.error("❌ Error fetching balancing:", error);
+      console.error("📋 Error stack:", error.stack);
+      return {};
+    }
+  };
+
+  const fetchRealisasiFromKasSanduka = async () => {
+    try {
+      const bulanAngka = monthMap[selectedBulan];
+
+      const realisasiData = await GlobalApi.getRealisasiFromKasSanduka(
+        bulanAngka,
+        selectedYear,
+      );
+
+      return realisasiData;
+    } catch (error) {
+      console.error("❌ Error fetching realisasi from kas sanduka:", error);
+      console.error("📋 Error stack:", error.stack);
       return {};
     }
   };
@@ -342,7 +372,7 @@ const TargetRealisasiSection = () => {
                         {formatCurrency(row.target)}
                       </td>
                       <td className="px-6 py-4 text-center font-bold text-blue-600 border-r border-slate-50">
-                        {row.jumlahAnggotaByAdmin}
+                        {row.jumlahAnggota}
                       </td>
                       <td className="px-6 py-4 text-right font-bold text-blue-600 border-r border-slate-50 bg-blue-50/20">
                         {formatCurrency(row.realisasi)}
@@ -375,38 +405,39 @@ const TargetRealisasiSection = () => {
                     </td>
                     <td className="px-6 py-4 text-center">
                       {filteredData.reduce(
-                        (acc, curr) => acc + (curr.jumlahAnggota || 0),
+                        (acc, curr) => acc + (Number(curr.jumlahAnggota) || 0),
                         0,
                       )}
                     </td>
                     <td className="px-6 py-4 text-right bg-slate-100/50">
                       {formatCurrency(
                         filteredData.reduce(
-                          (acc, curr) => acc + (curr.target || 0),
+                          (acc, curr) => acc + (Number(curr.target) || 0),
                           0,
                         ),
                       )}
                     </td>
                     <td className="px-6 py-4 text-center text-blue-700">
                       {filteredData.reduce(
-                        (acc, curr) => acc + (curr.jumlahAnggotaByAdmin || 0),
+                        (acc, curr) =>
+                          acc + (Number(curr.jumlahAnggotaByAdmin) || 0),
                         0,
                       )}
                     </td>
                     <td className="px-6 py-4 text-right text-blue-700 bg-blue-100/30">
                       {formatCurrency(
                         filteredData.reduce(
-                          (acc, curr) => acc + (curr.realisasi || 0),
+                          (acc, curr) => acc + (Number(curr.realisasi) || 0),
                           0,
                         ),
                       )}
                     </td>
                     <td
-                      className={`px-6 py-4 text-right ${filteredData.reduce((acc, curr) => acc + (curr.selisih || 0), 0) < 0 ? "text-rose-600" : "text-emerald-600"}`}
+                      className={`px-6 py-4 text-right ${filteredData.reduce((acc, curr) => acc + (Number(curr.selisih) || 0), 0) < 0 ? "text-rose-600" : "text-emerald-600"}`}
                     >
                       {formatCurrency(
                         filteredData.reduce(
-                          (acc, curr) => acc + (curr.selisih || 0),
+                          (acc, curr) => acc + (Number(curr.selisih) || 0),
                           0,
                         ),
                       )}

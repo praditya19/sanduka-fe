@@ -966,9 +966,7 @@ const createTargetDaspen = async (payload) => {
 };
 const getAllTargetDaspen = async () => {
   try {
-    const response = await axiosClient.get(
-      `/api/target-daspen`,
-    );
+    const response = await axiosClient.get(`/api/target-daspen`);
     return response.data;
   } catch (error) {
     console.error("Error fetching all target:", error);
@@ -1896,7 +1894,7 @@ const keluarAnggota = async (anggotaId, keterangan) => {
       `api/mutasi-anggota/${anggotaId}/keluar`,
       {
         keterangan: keterangan,
-      }
+      },
     );
     return response.data;
   } catch (error) {
@@ -1921,13 +1919,13 @@ const mutasiCabangUnitKerja = async (
   idAnggota,
   cabang,
   unitKerja,
-  keterangan
+  keterangan,
 ) => {
   try {
     const url = `/api/mutasi-anggota/${idAnggota}/update-cabang-unitkerja?cabang=${encodeURIComponent(
-      cabang
+      cabang,
     )}&unitKerja=${encodeURIComponent(
-      unitKerja
+      unitKerja,
     )}&keterangan=${encodeURIComponent(keterangan || "")}`;
 
     const response = await axiosClient.put(url);
@@ -2692,9 +2690,76 @@ const getTableKasSanduka = async (bulan, tahun) => {
     const response = await axiosClient.get(
       `/api/rekap-transaksi-sanduka?bulan=${bulan}&tahun=${tahun}`,
     );
+
     return response.data;
   } catch (error) {
     console.error("Error fetching table kas sanduka:", error);
+    throw error;
+  }
+};
+
+// Helper untuk ekstrak cabang dari keterangan
+// Contoh: "Pemasukan Sanduka Sumbangan Anggota Cabang PAKIS AJI (Transfer) untuk Maret 2026"
+// Output: "PAKIS AJI"
+const extractCabangFromKeterangan = (keterangan) => {
+  if (!keterangan || typeof keterangan !== "string") {
+    return null;
+  }
+
+  const match = keterangan.match(/Cabang\s+([^(]+)/i);
+  if (match && match[1]) {
+    const result = match[1].trim().toUpperCase();
+    return result;
+  }
+
+  const match2 = keterangan.match(/Cabang\s+([^(]+)\s*\(/);
+  if (match2 && match2[1]) {
+    const result = match2[1].trim().toUpperCase();
+    return result;
+  }
+
+  return null;
+};
+
+// Get Realisasi dari Kas Sanduka (hanya PEMASUKAN, grouped per cabang)
+const getRealisasiFromKasSanduka = async (bulan, tahun) => {
+  try {
+    const res = await getTableKasSanduka(bulan, tahun);
+
+    const dataKasSanduka = Array.isArray(res) ? res : res?.data || [];
+
+    // Filter hanya PEMASUKAN
+    const pemasukanData = dataKasSanduka.filter((item) => {
+      const match = item.jenis === "PEMASUKAN";
+      if (match) {
+      }
+      return match;
+    });
+
+    // Group dan total per cabang
+    const grouped = {};
+
+    pemasukanData.forEach((item, index) => {
+      const cabang = extractCabangFromKeterangan(item.keterangan);
+
+      if (cabang) {
+        if (!grouped[cabang]) {
+          grouped[cabang] = {
+            totalNominal: 0,
+            jumlahTransaksi: 0,
+          };
+        }
+
+        grouped[cabang].totalNominal += item.debet || 0;
+        grouped[cabang].jumlahTransaksi += 1;
+      } else {
+        console.log(`   ❌ Failed to extract cabang`);
+      }
+    });
+
+    return grouped;
+  } catch (error) {
+    console.error("❌ Error fetching realisasi from kas sanduka:", error);
     throw error;
   }
 };
@@ -3363,7 +3428,6 @@ const createBerita = async (data) => {
       });
     }
 
-    console.log("📤 Data yang dikirim ke /api/berita/create:");
     for (let [key, value] of formData.entries()) {
       if (value instanceof File) {
         console.log(`  ${key}: File(${value.name}, ${value.size} bytes)`);
@@ -3854,7 +3918,12 @@ const createLembaga = async (data) => {
   }
 };
 
-const getAllLembaga = async (page = 0, size = 10, sortBy = "id", direction = "desc") => {
+const getAllLembaga = async (
+  page = 0,
+  size = 10,
+  sortBy = "id",
+  direction = "desc",
+) => {
   try {
     const response = await axiosClient.get(`/api/lembaga`, {
       params: {
@@ -3916,7 +3985,10 @@ const saveRekap = async (data) => {
 
 const saveRekapBatch = async (data) => {
   try {
-    const response = await axiosClient.post("/api/rekapitulasi-iuran/batch", data);
+    const response = await axiosClient.post(
+      "/api/rekapitulasi-iuran/batch",
+      data,
+    );
     return response.data;
   } catch (error) {
     console.error("Error saveRekapBatch:", error);
@@ -3927,7 +3999,7 @@ const saveRekapBatch = async (data) => {
 const getRekapByPeriode = async (bulan, tahun) => {
   try {
     const response = await axiosClient.get(`/api/rekapitulasi-iuran/filter`, {
-      params: { bulan, tahun }
+      params: { bulan, tahun },
     });
     return response.data;
   } catch (error) {
@@ -4131,6 +4203,7 @@ export default {
   postPengeluaranSanduka,
   getPengeluaranKasSandukaById,
   getTableKasSanduka,
+  getRealisasiFromKasSanduka,
   deletePosPengeluaranSanduka,
   updatePengeluaranKasSanduka,
   postPosPengeluaranSanduka,
