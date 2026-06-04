@@ -10,6 +10,7 @@ const useBalancing = ({
   setEditData,
   setShowEditModal,
   setShowImportBalancing,
+  setShowDeleteBalancing,
   setNotification,
 }) => {
   const [dataBalancing, setDataBalancing] = useState([]);
@@ -21,6 +22,9 @@ const useBalancing = ({
   const [paymentNote, setPaymentNote] = useState("");
   const [importLoader, setImportLoader] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
+  const [resetUntukBulan, setResetUntukBulan] = useState("");
+  const [deleteLoader, setDeleteLoader] = useState(false);
+  const [deleteProgress, setDeleteProgress] = useState(0);
 
   const getBalancingdata = async () => {
     setLoadingBalancing(true);
@@ -202,6 +206,45 @@ const useBalancing = ({
       setImportProgress(0);
     }
   };
+
+  const handleDelete = async (e) => {
+    if (e) e.preventDefault();
+
+    if (!resetUntukBulan) {
+      alert("Pilih bulan terlebih dahulu!");
+      return;
+    }
+
+    try {
+      setDeleteLoader(true);
+      setDeleteProgress(0);
+
+      const tagihan = resetUntukBulan.trim();
+      await GlobalApi.deleteBalancing(tagihan, {
+        onDownloadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total,
+            );
+            setDeleteProgress(percentCompleted);
+          }
+        },
+      });
+
+      setNotification({ type: "success", message: "Data berhasil dihapus!" });
+      if (typeof setShowDeleteBalancing === "function") {
+        setShowDeleteBalancing(false);
+      }
+      setResetUntukBulan("");
+      await getBalancingdata();
+    } catch (err) {
+      console.error("Gagal menghapus data:", err);
+      setNotification({ type: "error", message: "Gagal hapus data." });
+    } finally {
+      setDeleteLoader(false);
+      setDeleteProgress(0);
+    }
+  };
   const handleSort = (key) => {
     let direction = "asc";
     if (sortConfig.key === key && sortConfig.direction === "asc") {
@@ -256,6 +299,7 @@ const useBalancing = ({
     handleEditClick,
     handleSaveEdit,
     handleImportBalancing,
+    handleDelete,
     handleSort,
     sortedData,
     paymentNote,
@@ -263,6 +307,10 @@ const useBalancing = ({
     setDataBalancing,
     importLoader,
     importProgress,
+    resetUntukBulan,
+    setResetUntukBulan,
+    deleteLoader,
+    deleteProgress,
   };
 };
 export default useBalancing;

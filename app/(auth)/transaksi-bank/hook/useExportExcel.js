@@ -181,7 +181,7 @@ const useExportExcel = () => {
         "Manual Sanduka": item.manualSanduka,
         Sanduka: item.totalIuranSanduka,
 
-        "Default Daspen": 0,
+        "Default Daspen": item.defaultDaspen,
         "Manual Daspen": item.manualDaspen,
         Daspen: item.totalIuranDaspen,
 

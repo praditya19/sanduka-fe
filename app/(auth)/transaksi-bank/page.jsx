@@ -154,7 +154,6 @@ export default function BankTransactionPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [onProses, setOnProses] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [resetUntukBulan, setResetUntukBulan] = useState("");
   const [totalPagesBalancing, setTotalPagesBalancing] = useState(1);
 
   const updatedRowRef = useRef(null);
@@ -211,7 +210,6 @@ export default function BankTransactionPage() {
     setShowUploadModal,
   });
 
-
   // Get dropdown filters first
   const dropdownFilters = useDropdownFilter(
     showEditModal,
@@ -241,6 +239,11 @@ export default function BankTransactionPage() {
     getBalancingdata,
     importLoader,
     importProgress,
+    resetUntukBulan,
+    setResetUntukBulan,
+    handleDelete,
+    deleteLoader,
+    deleteProgress,
   } = useBalancing({
     selectedCabang: dropdownFilters.selectedCabang,
     selectedUnitKerja: dropdownFilters.selectedUnitKerja,
@@ -250,52 +253,25 @@ export default function BankTransactionPage() {
     setEditData,
     setShowEditModal,
     setShowImportBalancing,
+    setShowDeleteBalancing,
     setNotification,
   });
 
-  const handleDelete = async (e) => {
-    e.preventDefault();
-    if (!resetUntukBulan) {
-      alert("Pilih bulan terlebih dahulu!");
-      return;
-    }
-
-    try {
-      setLoader(true);
-      setProgress(0);
-
-      const tagihan = resetUntukBulan.trim();
-      await GlobalApi.deleteBalancing(tagihan, {
-        onDownloadProgress: (progressEvent) => {
-          if (progressEvent.total) {
-            const percentCompleted = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total,
-            );
-            setProgress(percentCompleted);
-          }
-        },
-      });
-
-      setNotification({ type: "success", message: "Data berhasil dihapus!" });
-      setShowDeleteBalancing(false);
-      setResetUntukBulan("");
-      await getBalancingdata();
-    } catch (err) {
-      console.error("Gagal menghapus data:", err);
-      setNotification({ type: "error", message: "Gagal hapus data." });
-    } finally {
-      setLoader(false);
-      setProgress(0);
-    }
-  };
+  // Note: handleDelete dipindahkan ke useBalancing hook
+  // Akses via: handleDelete dari destructure hook
 
   const balancingSummary = useMemo(() => {
     const source = Array.isArray(dataBalancing) ? dataBalancing : [];
     const potonganRows = source.filter(
-      (item) => !String(item.keterangan || "").toLowerCase().startsWith("tunai"),
+      (item) =>
+        !String(item.keterangan || "")
+          .toLowerCase()
+          .startsWith("tunai"),
     );
     const tunaiRows = source.filter((item) =>
-      String(item.keterangan || "").toLowerCase().startsWith("tunai"),
+      String(item.keterangan || "")
+        .toLowerCase()
+        .startsWith("tunai"),
     );
 
     return {
@@ -320,13 +296,13 @@ export default function BankTransactionPage() {
   const summaryValues =
     activeTab === "potongan"
       ? {
-        jumlahPotonganBank,
-        totalNominalPotonganBank,
-        jumlahSetorTunai,
-        totalNominalSetorTunai,
-        totalTerfilter,
-        totalNominalTerfilter,
-      }
+          jumlahPotonganBank,
+          totalNominalPotonganBank,
+          jumlahSetorTunai,
+          totalNominalSetorTunai,
+          totalTerfilter,
+          totalNominalTerfilter,
+        }
       : balancingSummary;
 
   const {
@@ -475,8 +451,9 @@ export default function BankTransactionPage() {
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
         <div
-          className={`pt-20 pb-8 px-4 md:px-8 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`pt-20 pb-8 px-4 md:px-8 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           {notification && (
             <NotificationPopup
@@ -524,8 +501,8 @@ export default function BankTransactionPage() {
             handleDelete={handleDelete}
             resetUntukBulan={resetUntukBulan}
             setResetUntukBulan={setResetUntukBulan}
-            loader={loader}
-            progress={progress}
+            loader={deleteLoader}
+            progress={deleteProgress}
           />
 
           <ImportBalancingModal
@@ -611,10 +588,11 @@ export default function BankTransactionPage() {
                     <button
                       key={page}
                       onClick={() => handlePageClick(page)}
-                      className={`px-3 py-1 border rounded-md text-sm ${page === currentPage
-                        ? "bg-teal-600 text-white"
-                        : "bg-white hover:bg-gray-50"
-                        }`}
+                      className={`px-3 py-1 border rounded-md text-sm ${
+                        page === currentPage
+                          ? "bg-teal-600 text-white"
+                          : "bg-white hover:bg-gray-50"
+                      }`}
                     >
                       {page}
                     </button>
