@@ -27,51 +27,49 @@ const usePotonganBank = (
   const handleFilter = async () => {
     setData([]);
     setLoadingFilter(true);
-    console.log("[usePotonganBank] handleFilter params:", {
-      month,
-      year,
-      displayCountPotongan,
-      currentPage,
-    });
     try {
-      let result;
+      // normalize year/month similar to other hooks
+      const parsedYear = year !== "all" ? Number(year) : null;
+      const parsedMonth = month !== "all" ? Number(month) : null;
 
+      let result;
       if (displayCountPotongan === "all") {
         const tempResult = await GlobalApi.getTransaksiBank(
-          month,
-          year,
+          parsedMonth,
+          parsedYear,
           searchQuery,
           1,
           0,
         );
 
-        const totalElements = tempResult.totalElements;
+        const totalElements = tempResult && tempResult.totalElements;
 
         result = await GlobalApi.getTransaksiBank(
-          month,
-          year,
+          parsedMonth,
+          parsedYear,
           searchQuery,
           totalElements,
           0,
         );
       } else {
         result = await GlobalApi.getTransaksiBank(
-          month,
-          year,
+          parsedMonth,
+          parsedYear,
           searchQuery,
           displayCountPotongan,
           currentPage - 1,
         );
       }
 
-      console.log("[usePotonganBank] API result summary:", {
-        totalElements: result && result.totalElements,
-        contentLength:
-          result && Array.isArray(result.content) ? result.content.length : 0,
-      });
+      // result might be an array (rare) or an object with `content`
+      const safeContent = Array.isArray(result)
+        ? result
+        : result && Array.isArray(result.content)
+          ? result.content
+          : [];
 
-      setData(result.content);
-      setTotalPages(result.totalPages);
+      setData(safeContent);
+      setTotalPages((result && result.totalPages) || 0);
     } catch (err) {
       console.error("[usePotonganBank] Gagal memuat data:", err);
     } finally {
