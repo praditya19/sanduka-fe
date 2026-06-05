@@ -50,8 +50,8 @@ const useUploadHandler = ({
           return prev + 10;
         });
       }, 300);
-      handleFilter();
-      getBalancingdata();
+      if (typeof handleFilter === "function") handleFilter();
+      if (typeof getBalancingdata === "function") getBalancingdata();
     } catch (error) {
       console.error("Upload gagal:", error);
       setLoader(false);
