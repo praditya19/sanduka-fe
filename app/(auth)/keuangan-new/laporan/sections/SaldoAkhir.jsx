@@ -2,13 +2,13 @@
 import React, { useState, useEffect, useCallback } from "react";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { motion } from "framer-motion";
-import { 
-  FaWallet, 
-  FaPrint, 
+import {
+  FaWallet,
+  FaPrint,
   FaFileExcel,
   FaCheckDouble,
   FaCircleInfo,
-  FaVault
+  FaVault,
 } from "react-icons/fa6";
 import toast, { Toaster } from "react-hot-toast";
 import * as XLSX from "xlsx";
@@ -17,7 +17,7 @@ const SaldoAkhirSection = () => {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState(null);
   const [bulanList, setBulanList] = useState([]);
-  
+
   const now = new Date();
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
@@ -35,13 +35,62 @@ const SaldoAkhirSection = () => {
     if (!selectedMonth || !selectedYear) return;
     setLoading(true);
     try {
-      // Ensure month is formatted with leading zero if needed by backend
-      const monthFormatted = String(selectedMonth).padStart(2, '0');
-      const res = await GlobalApi.getSaldoAkhir(monthFormatted, selectedYear);
-      setData(res);
+      const targetBulan = Number(selectedMonth);
+      const targetTahun = Number(selectedYear);
+
+      // 1. Fetch current month data
+      const currentMonthData = await GlobalApi.getTableKasSanduka(
+        targetBulan,
+        targetTahun,
+      );
+
+      // 2. Legacy Manual Calculation: Loop back to March 2021 to get Saldo Awal
+      const maret2021 = new Date(2021, 2, 1);
+      let tempDate = new Date(targetTahun, targetBulan - 1, 1);
+      tempDate.setMonth(tempDate.getMonth() - 1);
+
+      let allPreviousData = [];
+      while (tempDate >= maret2021) {
+        const b = tempDate.getMonth() + 1;
+        const y = tempDate.getFullYear();
+        try {
+          const data = await GlobalApi.getTableKasSanduka(b, y);
+          allPreviousData.push(...(Array.isArray(data) ? data : []));
+        } catch (e) {
+          console.warn(`Failed to fetch legacy data for ${b}-${y}`);
+        }
+        tempDate.setMonth(tempDate.getMonth() - 1);
+      }
+
+      // 3. Calculate Saldo Awal from all previous data
+      let saldoAwalManual = 0;
+      allPreviousData.forEach((item) => {
+        saldoAwalManual += (item.debet || 0) - (item.kredit || 0);
+      });
+
+      // 4. Calculate totals for current month
+      let totalMasuk = 0;
+      let totalKeluar = 0;
+
+      const currentMonthArray = Array.isArray(currentMonthData)
+        ? currentMonthData
+        : [];
+      currentMonthArray.forEach((item) => {
+        totalMasuk += item.debet || 0;
+        totalKeluar += item.kredit || 0;
+      });
+
+      // 5. Calculate Saldo Akhir
+      const saldoAkhirManual = saldoAwalManual + totalMasuk - totalKeluar;
+
+      setData({
+        saldoAwal: saldoAwalManual,
+        totalPemasukan: totalMasuk,
+        totalPengeluaran: totalKeluar,
+        saldoAkhir: saldoAkhirManual,
+      });
     } catch (error) {
       console.error("Error fetching saldo akhir:", error);
-      // If it's a 404 or empty data, we just set data to null and show empty state
       setData(null);
       if (error.response?.status !== 404) {
         toast.error("Gagal mengambil data saldo akhir.");
@@ -60,20 +109,20 @@ const SaldoAkhirSection = () => {
   }, [fetchData]);
 
   const formatCurrency = (val) => {
-    return new Intl.NumberFormat('id-ID', { 
-      style: 'currency', 
-      currency: 'IDR', 
-      maximumFractionDigits: 0 
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      maximumFractionDigits: 0,
     }).format(val || 0);
   };
 
   const exportToExcel = () => {
     if (!data) return;
     const excelData = [
-      { "Keterangan": "Saldo Awal", "Nominal": data.saldoAwal },
-      { "Keterangan": "Total Pemasukan", "Nominal": data.totalPemasukan },
-      { "Keterangan": "Total Pengeluaran", "Nominal": data.totalPengeluaran },
-      { "Keterangan": "Saldo Akhir", "Nominal": data.saldoAkhir }
+      { Keterangan: "Saldo Awal", Nominal: data.saldoAwal },
+      { Keterangan: "Total Pemasukan", Nominal: data.totalPemasukan },
+      { Keterangan: "Total Pengeluaran", Nominal: data.totalPengeluaran },
+      { Keterangan: "Saldo Akhir", Nominal: data.saldoAkhir },
     ];
 
     const ws = XLSX.utils.json_to_sheet(excelData);
@@ -85,7 +134,7 @@ const SaldoAkhirSection = () => {
   return (
     <div className="flex flex-col h-full">
       <Toaster position="top-center" />
-      
+
       {/* Banner */}
       <div className="bg-amber-500 p-6 text-white">
         <div className="flex items-center justify-between">
@@ -95,14 +144,24 @@ const SaldoAkhirSection = () => {
             </div>
             <div>
               <h2 className="text-xl font-black">Saldo Akhir</h2>
-              <p className="text-amber-100 text-xs font-medium uppercase tracking-wider">Rekapitulasi saldo kas pada akhir periode</p>
+              <p className="text-amber-100 text-xs font-medium uppercase tracking-wider">
+                Rekapitulasi saldo kas pada akhir periode
+              </p>
             </div>
           </div>
           <div className="flex space-x-2">
-            <button onClick={exportToExcel} className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all" title="Export Excel">
+            <button
+              onClick={exportToExcel}
+              className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all"
+              title="Export Excel"
+            >
               <FaFileExcel className="text-xl" />
             </button>
-            <button onClick={() => window.print()} className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all" title="Cetak Laporan">
+            <button
+              onClick={() => window.print()}
+              className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all"
+              title="Cetak Laporan"
+            >
               <FaPrint className="text-xl" />
             </button>
           </div>
@@ -113,23 +172,35 @@ const SaldoAkhirSection = () => {
         {/* Filters */}
         <div className="bg-slate-50 p-4 rounded-[24px] border border-slate-100 flex flex-wrap gap-4 items-end">
           <div className="flex-1 min-w-[200px]">
-            <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block px-1">Pilih Bulan</label>
-            <select 
+            <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block px-1">
+              Pilih Bulan
+            </label>
+            <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
               className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-amber-500/20"
             >
-              {bulanList.map(b => <option key={b.id} value={parseInt(b.id)}>{b.namaBulan}</option>)}
+              {bulanList.map((b) => (
+                <option key={b.id} value={parseInt(b.id)}>
+                  {b.namaBulan}
+                </option>
+              ))}
             </select>
           </div>
           <div className="flex-1 min-w-[150px]">
-            <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block px-1">Pilih Tahun</label>
-            <select 
+            <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block px-1">
+              Pilih Tahun
+            </label>
+            <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(parseInt(e.target.value))}
               className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-amber-500/20"
             >
-              {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
+              {[2024, 2025, 2026, 2027].map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -153,13 +224,20 @@ const SaldoAkhirSection = () => {
                   <div className="p-2 bg-amber-500 rounded-lg">
                     <FaVault />
                   </div>
-                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-amber-500">Saldo Akhir Periode</h3>
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-amber-500">
+                    Saldo Akhir Periode
+                  </h3>
                 </div>
                 <h1 className="text-5xl font-black tracking-tight mb-2">
                   {formatCurrency(data.saldoAkhir)}
                 </h1>
                 <p className="text-slate-400 text-sm font-medium">
-                  Status per {bulanList.find(b => parseInt(b.id) === selectedMonth)?.namaBulan} {selectedYear}
+                  Status per{" "}
+                  {
+                    bulanList.find((b) => parseInt(b.id) === selectedMonth)
+                      ?.namaBulan
+                  }{" "}
+                  {selectedYear}
                 </p>
               </div>
             </div>
@@ -167,16 +245,39 @@ const SaldoAkhirSection = () => {
             {/* Breakdown Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
-                { label: "Saldo Awal", value: data.saldoAwal, icon: <FaWallet />, color: "text-slate-600", bg: "bg-slate-100" },
-                { label: "Total Pemasukan", value: data.totalPemasukan, icon: <FaCheckDouble />, color: "text-emerald-600", bg: "bg-emerald-100" },
-                { label: "Total Pengeluaran", value: data.totalPengeluaran, icon: <FaCircleInfo />, color: "text-rose-600", bg: "bg-rose-100" },
+                {
+                  label: "Saldo Awal",
+                  value: data.saldoAwal,
+                  icon: <FaWallet />,
+                  color: "text-slate-600",
+                  bg: "bg-slate-100",
+                },
+                {
+                  label: "Total Pemasukan",
+                  value: data.totalPemasukan,
+                  icon: <FaCheckDouble />,
+                  color: "text-emerald-600",
+                  bg: "bg-emerald-100",
+                },
+                {
+                  label: "Total Pengeluaran",
+                  value: data.totalPengeluaran,
+                  icon: <FaCircleInfo />,
+                  color: "text-rose-600",
+                  bg: "bg-rose-100",
+                },
               ].map((item, i) => (
-                <div key={i} className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-md transition-all">
+                <div
+                  key={i}
+                  className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-md transition-all"
+                >
                   <div className="flex items-center space-x-3 mb-3">
                     <div className={`p-2 rounded-lg ${item.bg} ${item.color}`}>
                       {item.icon}
                     </div>
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{item.label}</span>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      {item.label}
+                    </span>
                   </div>
                   <p className={`text-xl font-black ${item.color}`}>
                     {formatCurrency(item.value)}
@@ -191,9 +292,13 @@ const SaldoAkhirSection = () => {
                 <FaCircleInfo className="text-xl" />
               </div>
               <div>
-                <h4 className="text-blue-900 font-black text-sm uppercase tracking-tight mb-1">Informasi Transparansi</h4>
+                <h4 className="text-blue-900 font-black text-sm uppercase tracking-tight mb-1">
+                  Informasi Transparansi
+                </h4>
                 <p className="text-blue-700/70 text-xs font-medium leading-relaxed">
-                  Saldo akhir dihitung berdasarkan akumulasi saldo awal ditambah total pemasukan dikurangi total pengeluaran pada periode yang dipilih. Data ini sinkron dengan Buku Kas Sanduka.
+                  Saldo akhir dihitung berdasarkan akumulasi saldo awal ditambah
+                  total pemasukan dikurangi total pengeluaran pada periode yang
+                  dipilih. Data ini sinkron dengan Buku Kas Sanduka.
                 </p>
               </div>
             </div>
@@ -201,7 +306,9 @@ const SaldoAkhirSection = () => {
         ) : (
           <div className="py-20 text-center">
             <FaCircleInfo className="text-slate-100 text-6xl mb-4 mx-auto" />
-            <p className="text-slate-400 font-bold">Data saldo tidak ditemukan untuk periode ini</p>
+            <p className="text-slate-400 font-bold">
+              Data saldo tidak ditemukan untuk periode ini
+            </p>
           </div>
         )}
       </div>
