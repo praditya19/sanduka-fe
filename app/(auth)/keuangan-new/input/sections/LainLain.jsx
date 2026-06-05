@@ -114,9 +114,9 @@ const LainLainSection = () => {
     if (!config) return;
     setConfigId(config.id || defaultConfigId);
     setBesaran({
-      provinsi: 0,
+      provinsi: parseInt(config.propinsi, 10) || 0,
       kabupaten: parseInt(config.kabupaten, 10) || 0,
-      cabang: 0,
+      cabang: parseInt(config.cabang, 10) || 0,
     });
   };
 
@@ -189,16 +189,16 @@ const LainLainSection = () => {
     try {
       const payload = {
         pb: "",
-        propinsi: "",
-        kabupaten: besaran.kabupaten,
-        cabang: "",
+        propinsi: String(besaran.provinsi),
+        kabupaten: String(besaran.kabupaten),
+        cabang: String(besaran.cabang),
         sanduka: "",
         iuran: "LAIN-LAIN",
       };
       await GlobalApi.updateIuranData(configId, payload);
-      toast.success("Besaran Lain-lain diperbarui!");
+      toast.success("Default Pos berhasil disimpan!");
     } catch (error) {
-      toast.error("Gagal memperbarui besaran Lain-lain.");
+      toast.error("Gagal menyimpan Default Pos.");
     } finally {
       setLoadingBesaran(false);
     }
@@ -238,7 +238,7 @@ const LainLainSection = () => {
         toast.success("Pos berhasil ditambahkan!");
       }
 
-      setTambahPosForm({ nama: "", peruntukanProvinsi: 0, peruntukanKabupaten: 0, peruntukanCabang: 0 });
+      setTambahPosForm({ nama: "", peruntukanProvinsi: besaran.provinsi, peruntukanKabupaten: besaran.kabupaten, peruntukanCabang: besaran.cabang });
       setTambahPosBulan("");
       setTambahPosTahun(new Date().getFullYear());
       setShowTambahPos(false);
@@ -532,7 +532,12 @@ const LainLainSection = () => {
               if (showTambahPos) {
                 setIsEditingPos(false);
                 setEditingPosId(null);
-                setTambahPosForm({ nama: "", peruntukanProvinsi: 0, peruntukanKabupaten: 0, peruntukanCabang: 0 });
+                setTambahPosForm({
+                  nama: "",
+                  peruntukanProvinsi: besaran.provinsi,
+                  peruntukanKabupaten: besaran.kabupaten,
+                  peruntukanCabang: besaran.cabang,
+                });
                 setTambahPosBulan("");
                 setTambahPosTahun(new Date().getFullYear());
               }
@@ -698,7 +703,153 @@ const LainLainSection = () => {
           </AnimatePresence>
         </motion.div>
 
+        <div className="bg-white rounded-[40px] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden">
+          <div className="p-6 border-b border-slate-100 flex flex-col xl:flex-row xl:items-center justify-between gap-6 bg-white">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-[18px] bg-slate-50 text-slate-600 flex items-center justify-center border border-slate-100 shadow-sm">
+                <FaHistory className="text-xl" />
+              </div>
+              <div>
+                <h4 className="text-lg font-black text-slate-800 tracking-tight">
+                  Default Pos
+                </h4>
+                <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                  Lain-Lain - {selectedMonth} {selectedYear}
+                </p>
+              </div>
+            </div>
 
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative min-w-[200px] flex-1 md:flex-none">
+                <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-sm" />
+                <input
+                  type="text"
+                  placeholder="Cari transaksi..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-slate-500/20 focus:bg-white transition-all text-xs"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-100">
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="bg-transparent px-3 py-1.5 outline-none font-black text-slate-600 text-[10px] uppercase tracking-widest cursor-pointer"
+                >
+                  {bulanList.map((b) => (
+                    <option key={b.id} value={b.namaBulan} className="font-sans normal-case">
+                      {b.namaBulan}
+                    </option>
+                  ))}
+                </select>
+                <div className="w-[1px] h-4 bg-slate-200" />
+                <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
+                  className="bg-transparent px-3 py-1.5 outline-none font-black text-slate-600 text-[10px] uppercase tracking-widest cursor-pointer"
+                >
+                  {[2024, 2025, 2026, 2027].map((year) => (
+                    <option key={year} value={year} className="font-sans normal-case">
+                      {year}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50/50 border-b border-slate-100">
+                  {["No", "Nama", "Peruntukan Provinsi", "Peruntukan Kabupaten", "Peruntukan Cabang", "Total", "Bulan/Tahun", "Action"].map((heading, index) => (
+                    <th
+                      key={index}
+                      className="px-4 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-center whitespace-nowrap"
+                    >
+                      {heading}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {filteredPosData.length > 0 ? (
+                  filteredPosData.map((item, index) => {
+                    const totalItem = (parseInt(item.peruntukanProvinsi, 10) || 0) + (parseInt(item.peruntukanKabupaten, 10) || 0) + (parseInt(item.peruntukanCabang, 10) || 0);
+
+                    return (
+                      <tr
+                        key={item.id || index}
+                        className="hover:bg-slate-50/80 transition-colors text-center text-[11px] font-bold text-slate-600"
+                      >
+                        <td className="px-4 py-4 text-slate-400 font-black">{index + 1}</td>
+                        <td className="px-4 py-4 font-black text-slate-800 text-left whitespace-nowrap">
+                          {item.nama}
+                        </td>
+                        <td className="px-4 py-4 text-right font-black text-indigo-600 whitespace-nowrap">
+                          {formatCurrency(item.peruntukanProvinsi)}
+                        </td>
+                        <td className="px-4 py-4 text-right font-black text-amber-600 whitespace-nowrap">
+                          {formatCurrency(item.peruntukanKabupaten)}
+                        </td>
+                        <td className="px-4 py-4 text-right font-black text-emerald-600 whitespace-nowrap">
+                          {formatCurrency(item.peruntukanCabang)}
+                        </td>
+                        <td className="px-4 py-4 text-right font-black text-slate-900 bg-slate-50/50 whitespace-nowrap">
+                          {formatCurrency(totalItem)}
+                        </td>
+                        <td className="px-4 py-4 text-slate-400">
+                          {item.bulan} {item.tahun}
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="flex items-center justify-center gap-2">
+                            <button
+                              onClick={() => handleEditPos(item)}
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                              title="Edit"
+                            >
+                              <FaEdit className="text-lg" />
+                            </button>
+                            <button
+                              onClick={() => handleDeletePos(item.id)}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                              title="Hapus"
+                            >
+                              <FaTrash className="text-lg" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={8} className="py-16 text-center">
+                      <div className="flex flex-col items-center justify-center space-y-3 text-slate-300">
+                        <FaFileInvoiceDollar className="text-4xl" />
+                        <p className="text-xs font-black uppercase tracking-widest">Data Kosong</p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+
+                {filteredPosData.length > 0 && (
+                  <tr className="bg-slate-50 border-t-2 border-slate-200 font-black text-center text-[11px]">
+                    <td colSpan={5} className="px-4 py-4 text-slate-700 font-black text-right uppercase tracking-widest">
+                      TOTAL REKAP
+                    </td>
+                    <td className="px-4 py-4 text-slate-900 font-black text-right bg-slate-100 whitespace-nowrap">
+                      {formatCurrency(totalNominal)}
+                    </td>
+                    <td className="px-4 py-4 text-slate-400 text-center">-</td>
+                    <td className="px-4 py-4 text-slate-400 text-center">-</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
 
         <form
           onSubmit={handleSubmitTarget}
@@ -802,154 +953,6 @@ const LainLainSection = () => {
         </form>
 
         <div className="space-y-8">
-          <div className="bg-white rounded-[40px] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex flex-col xl:flex-row xl:items-center justify-between gap-6 bg-white">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-[18px] bg-slate-50 text-slate-600 flex items-center justify-center border border-slate-100 shadow-sm">
-                  <FaHistory className="text-xl" />
-                </div>
-                <div>
-                  <h4 className="text-lg font-black text-slate-800 tracking-tight">
-                    Riwayat Transaksi
-                  </h4>
-                  <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
-                    Lain-Lain - {selectedMonth} {selectedYear}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="relative min-w-[200px] flex-1 md:flex-none">
-                  <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-sm" />
-                  <input
-                    type="text"
-                    placeholder="Cari transaksi..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-slate-500/20 focus:bg-white transition-all text-xs"
-                  />
-                </div>
-
-                <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-100">
-                  <select
-                    value={selectedMonth}
-                    onChange={(e) => setSelectedMonth(e.target.value)}
-                    className="bg-transparent px-3 py-1.5 outline-none font-black text-slate-600 text-[10px] uppercase tracking-widest cursor-pointer"
-                  >
-                    {bulanList.map((b) => (
-                      <option key={b.id} value={b.namaBulan} className="font-sans normal-case">
-                        {b.namaBulan}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="w-[1px] h-4 bg-slate-200" />
-                  <select
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
-                    className="bg-transparent px-3 py-1.5 outline-none font-black text-slate-600 text-[10px] uppercase tracking-widest cursor-pointer"
-                  >
-                    {[2024, 2025, 2026, 2027].map((year) => (
-                      <option key={year} value={year} className="font-sans normal-case">
-                        {year}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50/50 border-b border-slate-100">
-                    {["No", "Nama", "Peruntukan Provinsi", "Peruntukan Kabupaten", "Peruntukan Cabang", "Total", "Bulan/Tahun", "Action"].map((heading, index) => (
-                      <th
-                        key={index}
-                        className="px-4 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-center whitespace-nowrap"
-                      >
-                        {heading}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50">
-                  {filteredPosData.length > 0 ? (
-                    filteredPosData.map((item, index) => {
-                      const totalItem = (parseInt(item.peruntukanProvinsi, 10) || 0) + (parseInt(item.peruntukanKabupaten, 10) || 0) + (parseInt(item.peruntukanCabang, 10) || 0);
-
-                      return (
-                        <tr
-                          key={item.id || index}
-                          className="hover:bg-slate-50/80 transition-colors text-center text-[11px] font-bold text-slate-600"
-                        >
-                          <td className="px-4 py-4 text-slate-400 font-black">{index + 1}</td>
-                          <td className="px-4 py-4 font-black text-slate-800 text-left whitespace-nowrap">
-                            {item.nama}
-                          </td>
-                          <td className="px-4 py-4 text-right font-black text-indigo-600 whitespace-nowrap">
-                            {formatCurrency(item.peruntukanProvinsi)}
-                          </td>
-                          <td className="px-4 py-4 text-right font-black text-amber-600 whitespace-nowrap">
-                            {formatCurrency(item.peruntukanKabupaten)}
-                          </td>
-                          <td className="px-4 py-4 text-right font-black text-emerald-600 whitespace-nowrap">
-                            {formatCurrency(item.peruntukanCabang)}
-                          </td>
-                          <td className="px-4 py-4 text-right font-black text-slate-900 bg-slate-50/50 whitespace-nowrap">
-                            {formatCurrency(totalItem)}
-                          </td>
-                          <td className="px-4 py-4 text-slate-400">
-                            {item.bulan} {item.tahun}
-                          </td>
-                          <td className="px-4 py-4">
-                            <div className="flex items-center justify-center gap-2">
-                              <button
-                                onClick={() => handleEditPos(item)}
-                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                                title="Edit"
-                              >
-                                <FaEdit className="text-lg" />
-                              </button>
-                              <button
-                                onClick={() => handleDeletePos(item.id)}
-                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                                title="Hapus"
-                              >
-                                <FaTrash className="text-lg" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  ) : (
-                    <tr>
-                      <td colSpan={8} className="py-16 text-center">
-                        <div className="flex flex-col items-center justify-center space-y-3 text-slate-300">
-                          <FaFileInvoiceDollar className="text-4xl" />
-                          <p className="text-xs font-black uppercase tracking-widest">Data Kosong</p>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-
-                  {filteredPosData.length > 0 && (
-                    <tr className="bg-slate-50 border-t-2 border-slate-200 font-black text-center text-[11px]">
-                      <td colSpan={5} className="px-4 py-4 text-slate-700 font-black text-right uppercase tracking-widest">
-                        TOTAL REKAP
-                      </td>
-                      <td className="px-4 py-4 text-slate-900 font-black text-right bg-slate-100 whitespace-nowrap">
-                        {formatCurrency(totalNominal)}
-                      </td>
-                      <td className="px-4 py-4 text-slate-400 text-center">-</td>
-                      <td className="px-4 py-4 text-slate-400 text-center">-</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {[
               { label: "Total Provinsi", val: totalProvinsi, color: "bg-indigo-600", icon: <FaMoneyBillWave /> },
@@ -1039,7 +1042,7 @@ const LainLainSection = () => {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50/50 border-b border-slate-100">
-                    {["No", "Cabang", "Total Anggota", "Jumlah", "Peruntukan Kabupaten", "Peruntukan Cabang", "Total", "Transfer", "Pembayaran", "Selisih", "Action"].map((h, i) => (
+                    {["No", "Cabang", "Jumlah", "Peruntukan Kabupaten", "Peruntukan Cabang", "Total", "Transfer", "Pembayaran", "Selisih", "Action"].map((h, i) => (
                       <th
                         key={i}
                         data-html2canvas-ignore={h === 'Action' ? "true" : undefined}
@@ -1065,7 +1068,6 @@ const LainLainSection = () => {
                       <tr key={item.id || index} className="hover:bg-slate-50/80 transition-colors text-center text-[11px] font-bold text-slate-600">
                         <td className="px-4 py-4 text-slate-400 font-black">{index + 1}</td>
                         <td className="px-4 py-4 font-black text-slate-800 text-left whitespace-nowrap">{item.cabang}</td>
-                        <td className="px-4 py-4">{item.totalAnggota ?? "-"}</td>
                         <td className="px-4 py-4">{parseInt(item.jumlah, 10) || 0}</td>
                         <td className="px-4 py-4 text-right font-black text-amber-600 whitespace-nowrap">{formatCurrency(item.perolehanKabupaten)}</td>
                         <td className="px-4 py-4 text-right font-black text-emerald-600 whitespace-nowrap">{formatCurrency(item.perolehanCabang || 0)}</td>
