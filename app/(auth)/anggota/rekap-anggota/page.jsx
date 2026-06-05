@@ -199,9 +199,9 @@ function RekapAnggota() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 1. Fetch Keterangan Lain-Lain
-        let responseLain = await GlobalApi.getKeteranganLainlain();
-        const actualLain = responseLain?.data || responseLain || [];
+        // 1. Fetch Nama Pos Lain-Lain
+        let responseLain = await GlobalApi.getPosLainLainNames();
+        const actualLain = Array.isArray(responseLain) ? responseLain : responseLain?.data || [];
         setKeteranganLainLain(actualLain);
 
         // 2. Fetch Iuran Standar (PGRI, Kalender, Derap, dll)
@@ -754,19 +754,12 @@ function RekapAnggota() {
 
     // 1. Handle uniqueKey khusus lainlain
     if (selectedKategori === "lainlain") {
-      try {
-        const parsed = JSON.parse(selectedKeterangan);
-        const rawKey =
-          parsed.keterangan || parsed.nama_iuran || selectedKeterangan;
-        uniqueKey = rawKey.toString().replace(/"/g, "").trim().toLowerCase();
-      } catch (e) {
-        uniqueKey =
-          selectedKeterangan
-            ?.toString()
-            .replace(/"/g, "")
-            .trim()
-            .toLowerCase() || `lain-lain-${Date.now()}`;
-      }
+      uniqueKey =
+        selectedKeterangan
+          ?.toString()
+          .replace(/"/g, "")
+          .trim()
+          .toLowerCase() || `lain-lain-${Date.now()}`;
     }
 
     // 2. Ambil standard iuran (fallback jika kosong)
@@ -857,9 +850,11 @@ function RekapAnggota() {
     // =========================
     else if (selectedKategori === "lainlain" && selectedKeterangan) {
       try {
-        console.log("🔍 Keterangan dipilih:", selectedKeterangan);
+        console.log("🔍 Nama dipilih:", selectedKeterangan);
 
-        const response = await GlobalApi.getLainlain(selectedKeterangan);
+        const searchNama = selectedKeterangan.toString().replace(/"/g, "").trim();
+
+        const response = await GlobalApi.getPosLainLain();
 
         const dataList = Array.isArray(response)
           ? response
@@ -867,31 +862,20 @@ function RekapAnggota() {
 
         console.log("📋 Data list:", dataList);
 
-        let searchKeterangan = selectedKeterangan;
-        try {
-          const parsed = JSON.parse(selectedKeterangan);
-          const rawKey =
-            parsed.keterangan || parsed.nama_iuran || selectedKeterangan;
-          searchKeterangan = rawKey.toString().replace(/"/g, "").trim();
-        } catch (e) {
-          searchKeterangan = selectedKeterangan
-            ?.toString()
-            .replace(/"/g, "")
-            .trim();
-        }
-
         const matchingItem = dataList.find(
-          (item) => cleanText(item.keterangan) === cleanText(searchKeterangan),
+          (item) => cleanText(item.nama) === cleanText(searchNama),
         );
 
         console.log("🎯 Matching item:", matchingItem);
 
         if (matchingItem) {
-          initialValue = parseInt(matchingItem.jumlahNominal || 0);
+          initialValue = (parseInt(matchingItem.peruntukanProvinsi, 10) || 0)
+            + (parseInt(matchingItem.peruntukanKabupaten, 10) || 0)
+            + (parseInt(matchingItem.peruntukanCabang, 10) || 0);
           console.log("💰 Initial value:", initialValue);
         } else {
           console.warn(
-            "⚠️ Tidak ditemukan data dengan keterangan:",
+            "⚠️ Tidak ditemukan data dengan nama:",
             selectedKeterangan,
           );
           initialValue = 0;
