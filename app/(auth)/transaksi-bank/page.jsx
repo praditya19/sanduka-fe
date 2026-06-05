@@ -205,6 +205,7 @@ export default function BankTransactionPage() {
     setLoader,
     setProgress,
     handleSubmitUpload,
+     handleDownloadTemplate,
   } = useUploadHandler({
     setNotification,
     setShowUploadModal,
@@ -542,6 +543,7 @@ export default function BankTransactionPage() {
                 }
                 setShowDeleteModal={setShowDeleteModal}
                 setShowUploadModal={setShowUploadModal}
+                 handleDownloadTemplate={handleDownloadTemplate}
               />
 
               <PotonganFilters
