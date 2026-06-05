@@ -1,5 +1,7 @@
 import { useState } from "react";
 import GlobalApi from "@/app/_utils/GlobalApi";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 const useUploadHandler = ({
   setNotification,
@@ -102,6 +104,69 @@ const useUploadHandler = ({
     }
   };
 
+ const handleDownloadTemplate = () => {
+  try {
+    // HEADER SESUAI TEMPLATE ASLI (huruf kecil semua)
+    const headers = [
+      "rekening",
+      "nama anggota",
+      "rekening kabupaten",
+      "potongan",
+      "type",
+      "tanggal pemotongan",
+      "transaksi",
+    ];
+
+    // contoh data sesuai format asli
+    const sampleData = [
+      [
+        "3093077341",
+        "NEVA VARIANA",
+        "2015151695",
+        33000,
+        "Gaji",
+        "02/06/2026",
+        "Sukses",
+      ],
+    ];
+
+    const data = [headers, ...sampleData];
+
+    const worksheet = XLSX.utils.aoa_to_sheet(data);
+
+    // lebar kolom biar mirip excel asli
+    worksheet["!cols"] = [
+      { wch: 18 }, // rekening
+      { wch: 30 }, // nama anggota
+      { wch: 22 }, // rekening kabupaten
+      { wch: 15 }, // potongan
+      { wch: 10 }, // type
+      { wch: 20 }, // tanggal
+      { wch: 15 }, // transaksi
+    ];
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+
+    const fileData = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    saveAs(fileData, "Template Upload Potongan Bank.xlsx");
+  } catch (error) {
+    console.error("Gagal membuat template:", error);
+    setNotification({
+      type: "error",
+      message: "Gagal membuat template!",
+    });
+  }
+};
+
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;
     if (name === "file") {
@@ -124,6 +189,7 @@ const useUploadHandler = ({
     handleSubmitUpload,
     handleDeleteUpload,
     handleInputChange,
+    handleDownloadTemplate,
   };
 };
 
