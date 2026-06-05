@@ -67,10 +67,10 @@ function KeuanganInputContent() {
         <HeaderMenu toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
         <HeaderMobile toggleSidebar={toggleSidebar} />
 
-        <main className="px-4 md:px-6 py-8 mt-24 md:mt-20 max-w-[1600px] mx-auto">
-          {/* Header Section */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-6 px-2">
-            <div className="flex items-center space-x-5">
+        <main className="px-4 md:px-6 py-8 mt-24 md:mt-20">
+          <div className="max-w-[1400px] mx-auto">
+            {/* Header Section */}
+            <div className="flex items-center space-x-5 mb-8 px-2">
               <button 
                 onClick={() => router.back()}
                 className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 text-slate-600 hover:bg-slate-50 hover:text-emerald-500 transition-all active:scale-90"
@@ -82,46 +82,55 @@ function KeuanganInputContent() {
                 <p className="text-slate-400 text-sm font-medium uppercase tracking-widest text-[10px]">Administrasi Iuran & Pendapatan Organisasi</p>
               </div>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
-            {/* Navigation Tabs (Sidebar-like but integrated) */}
-            <div className="xl:col-span-2 space-y-3">
-              <div className="bg-white/40 backdrop-blur-sm p-2 rounded-[32px] border border-white/60 shadow-sm">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center space-x-3 p-4 rounded-[24px] transition-all duration-500 group ${
-                      activeTab === tab.id 
-                      ? "bg-slate-900 text-white shadow-2xl shadow-slate-900/20 translate-x-2" 
-                      : "text-slate-400 hover:bg-white hover:text-slate-600 hover:shadow-lg hover:shadow-slate-200/50"
-                    }`}
-                  >
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500 ${
-                      activeTab === tab.id 
-                      ? "bg-white/10 text-white" 
-                      : "bg-slate-100 text-slate-400 group-hover:bg-slate-200 group-hover:text-slate-600"
-                    }`}>
-                      {tab.icon}
+            {/* Stepper */}
+            <div className="mb-10 px-2">
+              <div className="flex items-center justify-between md:justify-start md:gap-0 max-w-2xl mx-auto">
+                {tabs.map((tab, idx) => {
+                  const isActive = activeTab === tab.id;
+                  const isComplete = tabs.findIndex(t => t.id === activeTab) > idx;
+                  return (
+                    <div key={tab.id} className="flex items-center flex-1 md:flex-none">
+                      <button
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`flex flex-col items-center gap-1.5 group transition-all ${
+                          isActive ? "scale-105" : "opacity-50 hover:opacity-80"
+                        }`}
+                      >
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black transition-all ${
+                          isActive
+                            ? "bg-slate-900 text-white shadow-lg shadow-slate-900/30"
+                            : isComplete
+                              ? "bg-emerald-500 text-white"
+                              : "bg-slate-100 text-slate-400"
+                        }`}>
+                          {isComplete ? "✓" : tab.icon}
+                        </div>
+                        <span className={`text-[9px] font-black uppercase tracking-widest whitespace-nowrap ${
+                          isActive ? "text-slate-800" : "text-slate-400"
+                        }`}>
+                          {tab.label}
+                        </span>
+                      </button>
+                      {idx < tabs.length - 1 && (
+                        <div className={`hidden md:block h-px w-16 mx-4 mt-[-1.5rem] ${
+                          isComplete ? "bg-emerald-400" : "bg-slate-200"
+                        }`} />
+                      )}
                     </div>
-                    <span className={`font-black text-[11px] uppercase tracking-wider ${activeTab === tab.id ? "opacity-100" : "opacity-60"}`}>
-                      {tab.label}
-                    </span>
-                  </button>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
             {/* Main Content Area */}
-            <div className="xl:col-span-10">
+            <div>
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeTab}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="bg-white rounded-[40px] border border-slate-100 shadow-2xl shadow-slate-200/60 overflow-hidden min-h-[700px]"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
                 >
                   {activeTab === "iuran-pgri" && <IuranPgriSection />}
                   {activeTab === "daspen" && <DaspenSection />}
