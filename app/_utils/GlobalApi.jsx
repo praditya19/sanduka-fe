@@ -1217,6 +1217,58 @@ const deleteTargetLainLain = async (id) => {
 };
 // END
 
+// Pos Lain-Lain
+const postPosLainLain = async (payload) => {
+  try {
+    const response = await axiosClient.post("/api/pos-lain-lain", payload);
+    return response.data;
+  } catch (error) {
+    console.error("Error creating pos lain-lain:", error);
+    throw error;
+  }
+};
+
+const getPosLainLain = async () => {
+  try {
+    const response = await axiosClient.get("/api/pos-lain-lain");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching pos lain-lain:", error);
+    throw error;
+  }
+};
+
+const getPosLainLainNames = async () => {
+  try {
+    const response = await axiosClient.get("/api/pos-lain-lain/names");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching pos lain-lain names:", error);
+    throw error;
+  }
+};
+
+const updatePosLainLain = async (id, updatedData) => {
+  try {
+    const response = await axiosClient.put(`/api/pos-lain-lain/${id}`, updatedData);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating pos lain-lain:", error);
+    throw error;
+  }
+};
+
+const deletePosLainLain = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/pos-lain-lain/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting pos lain-lain:", error);
+    throw error;
+  }
+};
+// END
+
 // Transaksi Bank (data utama)
 const getTransaksiBank = async (
   bulan = null,
@@ -4285,4 +4337,9 @@ export default {
   saveRekap,
   saveRekapBatch,
   getRekapByPeriode,
+  postPosLainLain,
+  getPosLainLain,
+  getPosLainLainNames,
+  updatePosLainLain,
+  deletePosLainLain,
 };

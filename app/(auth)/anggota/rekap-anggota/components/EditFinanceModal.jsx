@@ -272,7 +272,7 @@ const EditFinanceModal = ({
                         >
                           <option value="">-- Pilih --</option>
                           {Array.isArray(keteranganLainLain) && keteranganLainLain.map((item, index) => (
-                            <option key={index} value={JSON.stringify(item)}>{item.keterangan || item.nama_iuran || item}</option>
+                            <option key={index} value={item}>{item}</option>
                           ))}
                           <option value="manual">Manual</option>
                         </select>
