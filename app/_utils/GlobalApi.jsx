@@ -259,13 +259,25 @@ const getFileByNip = async (nip) => {
     const response = await axiosClient.get(`/api/files/nip/${nip}`);
     return response.data;
   } catch (error) {
-    if (error.response) {
-      throw new Error(
-        error.response.data.message || "Terjadi kesalahan pada server",
-      );
-    } else {
-      throw new Error("Terjadi kesalahan pada jaringan");
-    }
+    throw error;
+  }
+};
+
+const getAllDuplicates = async () => {
+  try {
+    const response = await axiosClient.get("/api/files/all-duplicates");
+    return response.data;
+  } catch (error) {
+    return [];
+  }
+};
+
+const deleteDuplicates = async () => {
+  try {
+    const response = await axiosClient.delete("/api/files/delete-duplicates");
+    return response.data;
+  } catch (error) {
+    throw error;
   }
 };
 
@@ -4161,6 +4173,8 @@ export default {
   getTotalAnggotaStatistik,
   getTotalAnggotaByCabang,
   getFileByNip,
+  getAllDuplicates,
+  deleteDuplicates,
   updateIuranById,
   createHistoryData,
   getAllHistoryData,

@@ -136,6 +136,11 @@ const SyncData = () => {
   const [sortOrder, setSortOrder] = useState("asc");
   const [activeTab, setActiveTab] = useState("all");
   const [progress, setProgress] = useState(0);
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [duplicates, setDuplicates] = useState([]);
+  const [loadingDuplicates, setLoadingDuplicates] = useState(false);
+  const [deletingDuplicates, setDeletingDuplicates] = useState(false);
+  const [hideNonAktif, setHideNonAktif] = useState(true);
 
   useEffect(() => { Modal.setAppElement('body'); }, []);
 
@@ -177,7 +182,7 @@ const SyncData = () => {
     }
   }, [selectedCabang]);
 
-  useEffect(() => { setCurrentPage(1); }, [selectedCabang, searchNama, selectedUnitKerja, statusKeanggotaan, activeTab]);
+  useEffect(() => { setCurrentPage(1); }, [selectedCabang, searchNama, selectedUnitKerja, statusKeanggotaan, activeTab, hideNonAktif]);
 
   const handleSort = (field) => {
     setSortOrder(prev => sortField === field && prev === 'asc' ? 'desc' : 'asc');
@@ -195,12 +200,13 @@ const SyncData = () => {
       const tabMatch = activeTab === "all" ? true
         : activeTab === "daspen" ? item.kategoriDaspen : activeTab === "kta" ? item.dataKtaDigital : true;
       const statusMatch = statusKeanggotaan ? item.statusKeanggotaan?.toLowerCase() === statusKeanggotaan.toLowerCase() : true;
+      const hideMatch = hideNonAktif ? (!item.statusAnggota || item.statusAnggota === 'Aktif') : true;
       const cabangMatch = selectedCabang ? item.cabang === selectedCabang : true;
       const unitKerjaMatch = selectedUnitKerja ? item.unitKerja?.toLowerCase() === selectedUnitKerja?.toLowerCase() : true;
       const namaMatch = searchNama
         ? (item.namaAnggota?.toLowerCase().includes(searchNama) || item.npa?.toLowerCase().includes(searchNama) || item.nip?.toLowerCase().includes(searchNama))
         : true;
-      return tabMatch && cabangMatch && unitKerjaMatch && namaMatch && statusMatch;
+      return tabMatch && cabangMatch && unitKerjaMatch && namaMatch && statusMatch && hideMatch;
     });
     if (sortField) {
       result.sort((a, b) => {
@@ -211,7 +217,7 @@ const SyncData = () => {
       });
     }
     return result;
-  }, [data, activeTab, statusKeanggotaan, selectedCabang, selectedUnitKerja, searchNama, sortField, sortOrder]);
+  }, [data, activeTab, statusKeanggotaan, selectedCabang, selectedUnitKerja, searchNama, sortField, sortOrder, hideNonAktif]);
 
   const daspenData = useMemo(() => data.filter(d => d.kategoriDaspen), [data]);
 
@@ -286,6 +292,39 @@ const SyncData = () => {
   };
 
   const handleDownloadRekap = () => GlobalApi.exportTidakTerdaftarToExcel(selectedCabang, selectedUnitKerja);
+
+  const handleCekDuplikat = async () => {
+    setLoadingDuplicates(true);
+    setShowDuplicateModal(true);
+    try {
+      const result = await GlobalApi.getAllDuplicates();
+      setDuplicates(result || []);
+    } catch (error) {
+      setDuplicates([]);
+      setNotification({ type: 'error', message: 'Gagal memuat data duplikat.' });
+    } finally {
+      setLoadingDuplicates(false);
+    }
+  };
+
+  const handleHapusDuplikat = async () => {
+    if (!window.confirm(`Yakin ingin menghapus ${duplicates.length} data duplikat? Data yang dihapus adalah data lama (duplikat).`)) return;
+    setDeletingDuplicates(true);
+    try {
+      await GlobalApi.deleteDuplicates();
+      setNotification({ type: 'success', message: `${duplicates.length} data duplikat berhasil dihapus!` });
+      setShowDuplicateModal(false);
+      setDuplicates([]);
+      const result = await GlobalApi.getAllFiles();
+      setData(result);
+      const totals = await GlobalApi.getAllTotalData();
+      setFilteredTotalFiles(totals);
+    } catch (error) {
+      setNotification({ type: 'error', message: 'Gagal menghapus duplikat.' });
+    } finally {
+      setDeletingDuplicates(false);
+    }
+  };
 
   const getStatusPill = (status) => {
     switch (status) {
@@ -422,9 +461,14 @@ const SyncData = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <h2 className="text-xl font-semibold text-gray-700">Filter & Pencarian</h2>
               {!isMobile && (
-                <button aria-label="Tindakan" className="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition" onClick={() => setShowActions(true)}>
-                  <FaBars /><span>Tindakan</span>
-                </button>
+                <div className="flex gap-2">
+                  <button onClick={handleCekDuplikat} className="flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-lg transition text-sm font-bold">
+                    <FaExclamationCircle /> Cek Duplikat
+                  </button>
+                  <button aria-label="Tindakan" className="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition" onClick={() => setShowActions(true)}>
+                    <FaBars /><span>Tindakan</span>
+                  </button>
+                </div>
               )}
             </div>
             <div className="border-t my-4"></div>
@@ -471,6 +515,10 @@ const SyncData = () => {
                   <option value="Terdaftar di Daspen">Daspen</option>
                   <option value="Tidak Terdaftar">Tidak Terdaftar</option>
                 </select>
+              </div>
+              <div className="w-full flex items-center gap-2">
+                <input type="checkbox" id="hideNonAktif" checked={hideNonAktif} onChange={(e) => setHideNonAktif(e.target.checked)} className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500" />
+                <label htmlFor="hideNonAktif" className="text-sm text-gray-700 whitespace-nowrap cursor-pointer">Sembunyikan Tidak Aktif / Pensiun</label>
               </div>
             </div>
           </div>
@@ -640,6 +688,66 @@ const SyncData = () => {
                 Download Template {selectedTemplate === 'daspen' ? 'Daspen' : 'KTA Digital'}
               </Button>
             </div>
+          )}
+        </div>
+      </Modal>
+
+      {/* DUPLICATE MODAL */}
+      <Modal isOpen={showDuplicateModal} onRequestClose={() => { if (!deletingDuplicates) setShowDuplicateModal(false); }} contentLabel="Cek Duplikat" className="fixed inset-0 flex items-center justify-center p-4 z-[100]" overlayClassName="fixed inset-0 bg-black bg-opacity-60 z-[90]">
+        <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold text-gray-800">Cek Data Duplikat</h2>
+            <button onClick={() => setShowDuplicateModal(false)} className="text-gray-500 hover:text-gray-800" disabled={deletingDuplicates}><FaTimes size={20} /></button>
+          </div>
+          {loadingDuplicates ? (
+            <div className="text-center py-10">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-teal-600 mx-auto mb-4"></div>
+              <p className="text-gray-500">Memeriksa data duplikat...</p>
+            </div>
+          ) : duplicates.length === 0 ? (
+            <div className="text-center py-10">
+              <FaCheckCircle className="text-green-500 text-5xl mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-800">Tidak Ada Data Duplikat</h3>
+              <p className="text-gray-500 mt-2">Semua data sudah unik berdasarkan NIP (Daspen) dan NPA (KTA Digital).</p>
+            </div>
+          ) : (
+            <>
+              <div className="bg-rose-50 border border-rose-200 rounded-lg p-4 mb-4">
+                <p className="text-rose-700 font-bold text-lg">{duplicates.length} Data Duplikat Ditemukan</p>
+                <p className="text-rose-600 text-sm mt-1">Data duplikat adalah data lama yang memiliki NIP/NPA dan Tanggal Lahir yang sama dengan data baru.</p>
+              </div>
+              <div className="overflow-x-auto max-h-64 overflow-y-auto border rounded-lg">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-gray-50 text-xs uppercase text-gray-600 sticky top-0">
+                    <tr>
+                      <th className="px-3 py-2">Nama</th>
+                      <th className="px-3 py-2">Kategori</th>
+                      <th className="px-3 py-2">NIP</th>
+                      <th className="px-3 py-2">NPA</th>
+                      <th className="px-3 py-2">Cabang</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {duplicates.slice(0, 50).map((d, i) => (
+                      <tr key={i} className="hover:bg-gray-50">
+                        <td className="px-3 py-2 font-medium">{d.namaAnggota}</td>
+                        <td className="px-3 py-2"><span className="bg-rose-100 text-rose-700 text-[10px] font-bold px-2 py-0.5 rounded">{d.category}</span></td>
+                        <td className="px-3 py-2">{d.nip || "-"}</td>
+                        <td className="px-3 py-2">{d.npa || "-"}</td>
+                        <td className="px-3 py-2">{d.cabang}</td>
+                      </tr>
+                    ))}
+                    {duplicates.length > 50 && <tr><td colSpan={5} className="px-3 py-2 text-center text-gray-400 italic">...dan {duplicates.length - 50} lainnya</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+              <div className="mt-6 flex justify-end gap-3">
+                <Button onClick={() => setShowDuplicateModal(false)} className="bg-gray-200 text-gray-800 hover:bg-gray-300" disabled={deletingDuplicates}>Tutup</Button>
+                <Button onClick={handleHapusDuplikat} className="bg-rose-600 hover:bg-rose-700 text-white flex items-center gap-2" disabled={deletingDuplicates}>
+                  {deletingDuplicates ? <>Menghapus...</> : <><FaTrash /> Hapus {duplicates.length} Duplikat</>}
+                </Button>
+              </div>
+            </>
           )}
         </div>
       </Modal>
