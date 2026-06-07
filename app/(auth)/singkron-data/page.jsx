@@ -1,65 +1,68 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
-import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
-import { faMinusCircle, faPlusCircle, faArrowLeft, faSort, faSortUp, faSortDown } from "@fortawesome/free-solid-svg-icons";
-import { FaTrash, FaBars, FaTimes, FaCheckCircle, FaExclamationCircle, FaDownload, FaUpload, FaSearch, FaFilter } from "react-icons/fa";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import {
+  FaTrash, FaBars, FaTimes, FaCheckCircle, FaExclamationCircle,
+  FaDownload, FaUpload, FaSearch, FaSyncAlt, FaUsers, FaIdCard,
+  FaLayerGroup, FaCheckDouble, FaTimesCircle, FaHourglassHalf
+} from "react-icons/fa";
 import { FiGrid, FiList } from 'react-icons/fi';
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
+import { faArrowLeft, faSort, faSortUp, faSortDown, faMinusCircle, faPlusCircle } from "@fortawesome/free-solid-svg-icons";
 import HeaderMenu from "@/app/_components/HeaderMenu";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { Input } from "@/components/ui/input";
 import Modal from "react-modal";
 
-// --- Sub-component: Notification Toast ---
 const NotificationToast = ({ type, message, onClose }) => {
   useEffect(() => {
     const timer = setTimeout(onClose, 4000);
     return () => clearTimeout(timer);
   }, [onClose]);
-
   const styles = {
     success: { bg: 'bg-green-500', icon: <FaCheckCircle /> },
     error: { bg: 'bg-red-500', icon: <FaExclamationCircle /> },
     info: { bg: 'bg-blue-500', icon: <FaExclamationCircle /> },
   };
-
-  const selectedStyle = styles[type] || styles.info;
-
+  const s = styles[type] || styles.info;
   return (
-    <div className={`fixed top-5 right-5 z-[9999] flex items-center p-4 rounded-lg shadow-lg text-white ${selectedStyle.bg} transform transition-all duration-300 ease-in-out animate-slideInRight`}>
-      <div className="text-2xl mr-3">{selectedStyle.icon}</div>
+    <div className={`fixed top-5 right-5 z-[9999] flex items-center p-4 rounded-lg shadow-lg text-white ${s.bg} animate-slideInRight`}>
+      <div className="text-2xl mr-3">{s.icon}</div>
       <div>
         <p className="font-bold">{type.charAt(0).toUpperCase() + type.slice(1)}</p>
         <p>{message}</p>
       </div>
-      <button onClick={onClose} className="ml-4 text-white hover:text-gray-200">
-        <FaTimes />
-      </button>
+      <button onClick={onClose} className="ml-4 text-white hover:text-gray-200"><FaTimes /></button>
     </div>
   );
 };
 
-// --- Sub-component: Stat Card ---
-const StatCard = ({ icon, label, value, loading }) => (
-  <div className="bg-white p-6 rounded-xl shadow-md flex items-center space-x-4 transition hover:shadow-lg hover:-translate-y-1">
-    <div className="bg-teal-100 text-teal-700 p-3 rounded-full">
-      {icon}
+const StatCard = ({ icon, label, value, loading, color = "teal" }) => {
+  const colors = {
+    teal: "bg-teal-100 text-teal-700",
+    blue: "bg-blue-100 text-blue-700",
+    purple: "bg-purple-100 text-purple-700",
+    amber: "bg-amber-100 text-amber-700",
+    rose: "bg-rose-100 text-rose-700",
+    indigo: "bg-indigo-100 text-indigo-700",
+  };
+  return (
+    <div className="bg-white p-5 rounded-xl shadow-md flex items-center space-x-4 transition hover:shadow-lg hover:-translate-y-1">
+      <div className={`${colors[color] || colors.teal} p-3 rounded-full`}>{icon}</div>
+      <div>
+        <p className="text-sm font-medium text-gray-500">{label}</p>
+        {loading ? (
+          <div className="h-6 bg-gray-200 rounded-md w-16 animate-pulse mt-1"></div>
+        ) : (
+          <p className="text-xl md:text-2xl font-bold text-gray-800">{value}</p>
+        )}
+      </div>
     </div>
-    <div>
-      <p className="text-sm font-medium text-gray-500">{label}</p>
-      {loading ? (
-        <div className="h-6 bg-gray-200 rounded-md w-16 animate-pulse mt-1"></div>
-      ) : (
-        <p className="text-xl md:text-2xl font-bold text-gray-800">{value}</p>
-      )}
-    </div>
-  </div>
-);
+  );
+};
 
-
-// --- Sub-component: Skeleton Loader for Table ---
 const TableSkeleton = () => (
   <tbody>
     {[...Array(5)].map((_, i) => (
@@ -69,31 +72,32 @@ const TableSkeleton = () => (
         <td className="py-4 px-6"><div className="h-4 bg-gray-200 rounded"></div></td>
         <td className="py-4 px-6 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded"></div></td>
         <td className="py-4 px-6 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded"></div></td>
-        <td className="py-4 px-6 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded"></div></td>
         <td className="py-4 px-6 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded-full w-12 h-6"></div></td>
         <td className="py-4 px-6 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded-full w-12 h-6"></div></td>
-        <td className="py-4 px-6 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
+        <td className="py-4 px-6 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded-full w-12 h-6"></div></td>
         <td className="py-4 px-6 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded w-20"></div></td>
         <td className="py-4 px-6 hidden md:table-cell"><div className="h-8 bg-gray-200 rounded-full w-8"></div></td>
-        <td className="py-4 px-6 hidden md:table-cell"><div className="h-8 bg-gray-200 rounded-md w-8"></div></td>
       </tr>
     ))}
   </tbody>
 );
 
-// --- Sub-component: Empty State for Table ---
-const EmptyState = () => (
+const EmptyState = ({ message = "Data Tidak Ditemukan" }) => (
   <div className="text-center py-16 px-6 bg-white rounded-lg">
-    <svg className="mx-auto h-24 w-24 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+    <svg className="mx-auto h-24 w-24 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
     </svg>
-    <h3 className="mt-4 text-xl font-semibold text-gray-800">Data Tidak Ditemukan</h3>
+    <h3 className="mt-4 text-xl font-semibold text-gray-800">{message}</h3>
     <p className="mt-2 text-gray-500">Ubah filter pencarian Anda atau tambahkan data baru.</p>
   </div>
 );
 
+const tabs = [
+  { key: "all", label: "Semua Data", icon: <FiList size={16} /> },
+  { key: "daspen", label: "Upload Daspen", icon: <FaLayerGroup size={16} /> },
+  { key: "kta", label: "Upload KTA Digital", icon: <FaIdCard size={16} /> },
+];
 
-// --- Main Component: SyncData ---
 const SyncData = () => {
   const [cabangList, setCabangList] = useState([]);
   const [selectedCabang, setSelectedCabang] = useState("");
@@ -118,7 +122,6 @@ const SyncData = () => {
   const [visiblePages, setVisiblePages] = useState([]);
   const [role, setRole] = useState("");
   const [filteredTotalFiles, setFilteredTotalFiles] = useState({ totalDaspen: 0, totalKtaDigital: 0 });
-  const [progress, setProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
@@ -131,133 +134,38 @@ const SyncData = () => {
   const [showActions, setShowActions] = useState(false);
   const [sortField, setSortField] = useState(null);
   const [sortOrder, setSortOrder] = useState("asc");
+  const [activeTab, setActiveTab] = useState("all");
+  const [progress, setProgress] = useState(0);
 
-  useEffect(() => {
-    Modal.setAppElement('body');
-  }, []);
+  useEffect(() => { Modal.setAppElement('body'); }, []);
 
   useEffect(() => {
     const storedRole = sessionStorage.getItem("role");
     const storedCabang = sessionStorage.getItem("cabang");
     setRole(storedRole || "");
-    if (storedRole === "ADMIN" && storedCabang) {
-      setSelectedCabang(storedCabang);
-    }
+    if (storedRole === "ADMIN" && storedCabang) setSelectedCabang(storedCabang);
   }, []);
 
   useEffect(() => {
-    const fetchCabangData = async () => {
-      try {
-        const response = await GlobalApi.getCabang();
-        setOriginalCabangList(response.data);
-        setFilteredCabangList(response.data);
-      } catch (error) { console.error("Error fetching cabang data:", error); }
-    };
-    fetchCabangData();
-  }, []);
-
-  useEffect(() => {
-    const fetchUnitKerjaData = async () => {
-      try {
-        const response = await GlobalApi.getUnitKerja();
-        setUnitKerjaList(response.data);
-        // Pre-filter unit kerja if admin role is detected early
-        const storedRole = sessionStorage.getItem("role");
-        const storedCabang = sessionStorage.getItem("cabang");
-        if (storedRole === "ADMIN" && storedCabang) {
-          const filtered = response.data.filter(
-            (unitKerja) => unitKerja.cabang.toLowerCase() === storedCabang.toLowerCase()
-          );
-          setFilteredUnitKerja(filtered);
-        }
-      } catch (error) { console.error("Error fetching unit kerja data:", error); }
-    };
-    fetchUnitKerjaData();
-  }, []);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const result = await GlobalApi.getAllFiles();
-        setData(result);
-      } catch (error) {
-        console.error("Error fetching files:", error);
-        setNotification({ type: 'error', message: 'Gagal memuat data utama.' });
-      } finally {
-        setLoading(false);
+    GlobalApi.getCabang().then(r => { setOriginalCabangList(r.data); setFilteredCabangList(r.data); }).catch(console.error);
+    GlobalApi.getUnitKerja().then(r => {
+      setUnitKerjaList(r.data);
+      const storedRole = sessionStorage.getItem("role");
+      const storedCabang = sessionStorage.getItem("cabang");
+      if (storedRole === "ADMIN" && storedCabang) {
+        setFilteredUnitKerja(r.data.filter(u => u.cabang.toLowerCase() === storedCabang.toLowerCase()));
       }
-    };
-    fetchData();
+    }).catch(console.error);
   }, []);
 
   useEffect(() => {
-    const fetchTotalFiles = async () => {
-      try {
-        const result = await GlobalApi.getAllTotalData();
-        setFilteredTotalFiles(result);
-      } catch (error) { console.error("Error fetching total files:", error); }
-    };
-    fetchTotalFiles();
+    setLoading(true);
+    GlobalApi.getAllFiles().then(r => { setData(r); }).catch(console.error).finally(() => setLoading(false));
+    GlobalApi.getAllTotalData().then(r => setFilteredTotalFiles(r)).catch(console.error);
   }, []);
 
   const filterUnitKerjaForCabang = (cabang) => {
-    const filtered = unitKerjaList.filter(
-      (unitKerja) => unitKerja.cabang.toLowerCase() === cabang.toLowerCase()
-    );
-    setFilteredUnitKerja(filtered);
-  };
-
-  const paginateData = (data) => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return data.slice(startIndex, startIndex + itemsPerPage);
-  };
-
-  useEffect(() => {
-    updateVisiblePages(currentPage, totalPages);
-  }, [currentPage, totalPages]);
-
-  const updateVisiblePages = (current, total) => {
-    if (total <= 5) {
-      setVisiblePages(Array.from({ length: total }, (_, i) => i + 1));
-      return;
-    }
-    if (current <= 3) {
-      setVisiblePages([1, 2, 3, 4, '...', total]);
-    } else if (current >= total - 2) {
-      setVisiblePages([1, '...', total - 3, total - 2, total - 1, total]);
-    } else {
-      setVisiblePages([1, '...', current - 1, current, current + 1, '...', total]);
-    }
-  };
-
-  const handleUnitKerjaFocus = () => {
-    if (selectedCabang) {
-      filterUnitKerjaForCabang(selectedCabang);
-      setShowUnitKerjaDropdown(true);
-    }
-  };
-
-  const handleCabangClick = () => {
-    if (role !== "ADMIN") {
-      setFilteredCabangList(originalCabangList);
-      setShowCabangDropdown(true);
-    }
-  };
-
-  const handleUnitKerjaChange = (e) => {
-    const input = e.target.value;
-    setUnitKerjaInput(input);
-    setSelectedUnitKerja(input);
-    if (selectedCabang) {
-      const filtered = unitKerjaList.filter(
-        (unitKerja) =>
-          unitKerja.cabang.toLowerCase() === selectedCabang.toLowerCase() &&
-          unitKerja.unitKerja.toLowerCase().includes(input.toLowerCase())
-      );
-      setFilteredUnitKerja(filtered);
-      setShowUnitKerjaDropdown(true);
-    }
+    setFilteredUnitKerja(unitKerjaList.filter(u => u.cabang.toLowerCase() === cabang.toLowerCase()));
   };
 
   useEffect(() => {
@@ -269,109 +177,141 @@ const SyncData = () => {
     }
   }, [selectedCabang]);
 
-  const handleCabangSearch = (query) => {
-    const filtered = originalCabangList.filter((cabang) =>
-      cabang.kecamatan.toLowerCase().includes(query.toLowerCase())
-    );
-    setFilteredCabangList(filtered);
-  };
-
-  const handleSelectCabang = (cabang) => {
-    setSelectedCabang(cabang.kecamatan);
-    setShowCabangDropdown(false);
-  };
-
-  const handleUnitKerjaSelect = (unitKerja) => {
-    setSelectedUnitKerja(unitKerja.unitKerja);
-    setUnitKerjaInput(unitKerja.unitKerja);
-    setShowUnitKerjaDropdown(false);
-    setCurrentPage(1);
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (cabangRef.current && !cabangRef.current.contains(event.target)) setShowCabangDropdown(false);
-      if (unitKerjaRef.current && !unitKerjaRef.current.contains(event.target)) setShowUnitKerjaDropdown(false);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  useEffect(() => { setCurrentPage(1); }, [selectedCabang, searchNama, selectedUnitKerja, statusKeanggotaan, activeTab]);
 
   const handleSort = (field) => {
-    const newSortOrder = sortField === field && sortOrder === 'asc' ? 'desc' : 'asc';
+    setSortOrder(prev => sortField === field && prev === 'asc' ? 'desc' : 'asc');
     setSortField(field);
-    setSortOrder(newSortOrder);
   };
 
   const SortIcon = ({ field }) => {
     if (sortField !== field) return <FontAwesomeIcon icon={faSort} className="ml-2 text-gray-400" />;
-    if (sortOrder === 'asc') return <FontAwesomeIcon icon={faSortUp} className="ml-2" />;
-    return <FontAwesomeIcon icon={faSortDown} className="ml-2" />;
+    return <FontAwesomeIcon icon={sortOrder === 'asc' ? faSortUp : faSortDown} className="ml-2" />;
   };
 
-  const sortedAndFilteredData = React.useMemo(() => {
+  const filteredData = useMemo(() => {
     let result = [...data];
-    result = result.filter((item) => {
+    result = result.filter(item => {
+      const tabMatch = activeTab === "all" ? true
+        : activeTab === "daspen" ? item.kategoriDaspen : activeTab === "kta" ? item.dataKtaDigital : true;
       const statusMatch = statusKeanggotaan ? item.statusKeanggotaan?.toLowerCase() === statusKeanggotaan.toLowerCase() : true;
       const cabangMatch = selectedCabang ? item.cabang === selectedCabang : true;
       const unitKerjaMatch = selectedUnitKerja ? item.unitKerja?.toLowerCase() === selectedUnitKerja?.toLowerCase() : true;
-      const namaMatch = searchNama ? (
-        item.namaAnggota?.toLowerCase().includes(searchNama) ||
-        item.npa?.toLowerCase().includes(searchNama) ||
-        item.nip?.toLowerCase().includes(searchNama)
-      ) : true;
-      return cabangMatch && unitKerjaMatch && namaMatch && statusMatch;
+      const namaMatch = searchNama
+        ? (item.namaAnggota?.toLowerCase().includes(searchNama) || item.npa?.toLowerCase().includes(searchNama) || item.nip?.toLowerCase().includes(searchNama))
+        : true;
+      return tabMatch && cabangMatch && unitKerjaMatch && namaMatch && statusMatch;
     });
     if (sortField) {
       result.sort((a, b) => {
-        let valA = a[sortField] ?? '';
-        let valB = b[sortField] ?? '';
-        if (typeof valA === 'boolean') {
-          return sortOrder === 'asc' ? (valA === valB ? 0 : valA ? 1 : -1) : (valA === valB ? 0 : valA ? -1 : 1);
-        }
-        if (!isNaN(Number(valA)) && !isNaN(Number(valB))) {
-          return sortOrder === 'asc' ? Number(valA) - Number(valB) : Number(valB) - Number(valA);
-        }
-        return sortOrder === 'asc' ? String(valA).localeCompare(String(valB)) : String(valB).localeCompare(String(valA));
+        let va = a[sortField] ?? '', vb = b[sortField] ?? '';
+        if (typeof va === 'boolean') return sortOrder === 'asc' ? (va === vb ? 0 : va ? 1 : -1) : (va === vb ? 0 : va ? -1 : 1);
+        if (!isNaN(Number(va)) && !isNaN(Number(vb))) return sortOrder === 'asc' ? Number(va) - Number(vb) : Number(vb) - Number(va);
+        return sortOrder === 'asc' ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va));
       });
     }
     return result;
-  }, [data, statusKeanggotaan, selectedCabang, selectedUnitKerja, searchNama, sortField, sortOrder]);
+  }, [data, activeTab, statusKeanggotaan, selectedCabang, selectedUnitKerja, searchNama, sortField, sortOrder]);
 
-  const paginatedData = paginateData(sortedAndFilteredData);
+  const daspenData = useMemo(() => data.filter(d => d.kategoriDaspen), [data]);
+
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredData.slice(start, start + itemsPerPage);
+  }, [filteredData, currentPage]);
 
   useEffect(() => {
-    setTotalPages(Math.ceil(sortedAndFilteredData.length / itemsPerPage));
-  }, [sortedAndFilteredData, itemsPerPage]);
+    setTotalPages(Math.ceil(filteredData.length / itemsPerPage));
+  }, [filteredData]);
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [selectedCabang, searchNama, selectedUnitKerja, statusKeanggotaan]);
+    updateVisiblePages(currentPage, totalPages);
+  }, [currentPage, totalPages]);
+
+  const updateVisiblePages = (current, total) => {
+    if (total <= 5) { setVisiblePages(Array.from({ length: total }, (_, i) => i + 1)); return; }
+    if (current <= 3) setVisiblePages([1, 2, 3, 4, '...', total]);
+    else if (current >= total - 2) setVisiblePages([1, '...', total - 3, total - 2, total - 1, total]);
+    else setVisiblePages([1, '...', current - 1, current, current + 1, '...', total]);
+  };
 
   const handleInputChange = (e) => {
-    const { name, value, type, files } = e.target;
-    setFormData({ ...formData, [name]: type === "file" ? files[0] : value });
+    const { name, value, files } = e.target;
+    setFormData({ ...formData, [name]: files ? files[0] : value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.file || !formData.category) {
-      setNotification({ type: 'error', message: 'Harap lengkapi file dan kategori.' });
-      return;
+      setNotification({ type: 'error', message: 'Harap lengkapi file dan kategori.' }); return;
     }
-    setLoader(true); setProgress(0); setIsUploading(true);
-    const dataToSend = new FormData();
-    dataToSend.append("file", formData.file);
-    dataToSend.append("category", formData.category);
+    setLoader(true); setIsUploading(true);
+    const fd = new FormData();
+    fd.append("file", formData.file);
+    fd.append("category", formData.category);
     try {
-      await GlobalApi.uploadFile(dataToSend);
+      await GlobalApi.uploadFile(fd);
       setNotification({ type: 'success', message: 'File berhasil diunggah!' });
+      const result = await GlobalApi.getAllFiles();
+      setData(result);
+      const totals = await GlobalApi.getAllTotalData();
+      setFilteredTotalFiles(totals);
     } catch (error) {
       setNotification({ type: 'error', message: 'Gagal mengunggah file.' });
-      console.error("Error submitting data:", error.response?.data || error.message);
     } finally {
       setLoader(false); setIsUploading(false); setIsUploadModalOpen(false);
     }
+  };
+
+  const handleDeleteClick = async (id) => {
+    if (window.confirm("Apakah Anda yakin ingin menghapus data ini?")) {
+      try {
+        await GlobalApi.deleteFiles(id);
+        setNotification({ type: 'success', message: 'Data berhasil dihapus!' });
+        setData(data.filter(item => item.id !== id));
+        const totals = await GlobalApi.getAllTotalData();
+        setFilteredTotalFiles(totals);
+      } catch (error) { setNotification({ type: 'error', message: 'Gagal menghapus data.' }); }
+    }
+  };
+
+  const handleDownloadTemplate = () => {
+    if (!selectedTemplate) return;
+    const urls = {
+      daspen: "https://docs.google.com/spreadsheets/d/19YgMVfGCOq4iK4vNzGTpr3ezPVrsKROb/edit?usp=sharing&ouid=104657245264175519758&rtpof=true&sd=true",
+      kta: "https://docs.google.com/spreadsheets/d/1WGxbFRHjtAGxhSC77OEdyXTYAs8R98F6/edit?usp=sharing&ouid=104657245264175519758&rtpof=true&sd=true",
+    };
+    window.open(urls[selectedTemplate], "_blank");
+    setShowTemplateModal(false);
+  };
+
+  const handleDownloadRekap = () => GlobalApi.exportTidakTerdaftarToExcel(selectedCabang, selectedUnitKerja);
+
+  const getStatusPill = (status) => {
+    switch (status) {
+      case 'Terdaftar di KTA Digital dan Daspen': return <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">KTA + Daspen</span>;
+      case 'Terdaftar di KTA Digital': return <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">KTA Digital</span>;
+      case 'Terdaftar di Daspen': return <span className="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Daspen</span>;
+      case 'Tidak Terdaftar': return <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Tidak Terdaftar</span>;
+      default: return <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full">{status || 'N/A'}</span>;
+    }
+  };
+
+  const getBooleanPill = (value) => value
+    ? <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Ya</span>
+    : <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Tidak</span>;
+
+  const getVerificationPill = (value) => {
+    if (value === null) return <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Belum Dicek</span>;
+    return value
+      ? <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Sinkron</span>
+      : <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Tidak Sinkron</span>;
+  };
+
+  const getKatPill = (kat) => {
+    if (!kat) return <span className="text-gray-300">-</span>;
+    const colors = { I: "bg-blue-100 text-blue-700", II: "bg-amber-100 text-amber-700", III: "bg-purple-100 text-purple-700" };
+    return <span className={`text-[11px] font-black px-2 py-0.5 rounded-md ${colors[kat.trim()] || "bg-gray-100 text-gray-700"}`}>Kat {kat.trim()}</span>;
   };
 
   const handleBackClick = () => router.back();
@@ -394,8 +334,8 @@ const SyncData = () => {
         <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 transition">First</button>
         <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 transition">Prev</button>
         {visiblePages.map((page, index) =>
-          page === '...' ? <span key={index} className="px-3 py-1">...</span> :
-            <button key={index} onClick={() => setCurrentPage(page)} className={`px-3 py-1 border rounded-md transition ${page === currentPage ? 'bg-teal-600 text-white' : 'bg-white hover:bg-gray-50'}`}>{page}</button>
+          page === '...' ? <span key={index} className="px-3 py-1">...</span>
+            : <button key={index} onClick={() => setCurrentPage(page)} className={`px-3 py-1 border rounded-md transition ${page === currentPage ? 'bg-teal-600 text-white' : 'bg-white hover:bg-gray-50'}`}>{page}</button>
         )}
         <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 transition">Next</button>
         <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 transition">Last</button>
@@ -403,48 +343,31 @@ const SyncData = () => {
     );
   };
 
-  const handleDeleteClick = async (id) => {
-    if (window.confirm("Apakah Anda yakin ingin menghapus data ini?")) {
-      try {
-        await GlobalApi.deleteFiles(id);
-        setNotification({ type: 'success', message: 'Data berhasil dihapus!' });
-        setData(data.filter(item => item.id !== id));
-      } catch (error) {
-        setNotification({ type: 'error', message: 'Gagal menghapus data.' });
-      }
-    }
-  };
+  const katStats = useMemo(() => {
+    const items = activeTab === "all" ? filteredData : filteredData.filter(d => d.kategoriDaspen);
+    const totalAnggota = items.length;
+    const totalDaspen = items.filter(d => d.kategoriDaspen).length;
+    const katI = items.filter(d => d.kategoriDaspen?.trim() === 'I').length;
+    const katII = items.filter(d => d.kategoriDaspen?.trim() === 'II').length;
+    const katIII = items.filter(d => d.kategoriDaspen?.trim() === 'III').length;
+    const sinkron = items.filter(d => d.verifikasi === true).length;
+    const tidakSinkron = items.filter(d => d.verifikasi === false).length;
+    const belumDicek = items.filter(d => d.verifikasi === null).length;
+    const terdaftar = items.filter(d => d.statusKeanggotaan !== 'Tidak Terdaftar').length;
+    const tidakTerdaftar = items.filter(d => d.statusKeanggotaan === 'Tidak Terdaftar').length;
+    return { totalAnggota, totalDaspen, katI, katII, katIII, sinkron, tidakSinkron, belumDicek, terdaftar, tidakTerdaftar };
+  }, [filteredData, activeTab]);
 
-  const handleDownloadTemplate = () => {
-    if (!selectedTemplate) return;
-    const urls = {
-      daspen: "https://docs.google.com/spreadsheets/d/19YgMVfGCOq4iK4vNzGTpr3ezPVrsKROb/edit?usp=sharing&ouid=104657245264175519758&rtpof=true&sd=true",
-      kta: "https://docs.google.com/spreadsheets/d/1WGxbFRHjtAGxhSC77OEdyXTYAs8R98F6/edit?usp=sharing&ouid=104657245264175519758&rtpof=true&sd=true",
-    };
-    window.open(urls[selectedTemplate], "_blank");
-    setShowTemplateModal(false);
-  };
-
-  const handleDownloadRekap = () => GlobalApi.exportTidakTerdaftarToExcel(selectedCabang, selectedUnitKerja);
-
-  const getStatusPill = (status) => {
-    switch (status) {
-      case 'Terdaftar': return <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Terdaftar</span>;
-      case 'Tidak Terdaftar': return <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Tidak Terdaftar</span>;
-      default: return <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full">{status || 'N/A'}</span>;
-    }
-  };
-
-  const getBooleanPill = (value) => value ?
-    <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">YES</span> :
-    <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">NO</span>;
-
-  const getVerificationPill = (value) => {
-    if (value === null) return <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Belum Dicek</span>;
-    return value ?
-      <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Sinkron</span> :
-      <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Tidak Sinkron</span>;
-  };
+  const ktaStats = useMemo(() => {
+    const items = activeTab === "kta" ? filteredData : filteredData.filter(d => d.dataKtaDigital);
+    const totalKta = items.length;
+    const sinkron = items.filter(d => d.verifikasi === true).length;
+    const tidakSinkron = items.filter(d => d.verifikasi === false).length;
+    const belumDicek = items.filter(d => d.verifikasi === null).length;
+    const terdaftar = items.filter(d => d.statusKeanggotaan !== 'Tidak Terdaftar').length;
+    const tidakTerdaftar = items.filter(d => d.statusKeanggotaan === 'Tidak Terdaftar').length;
+    return { totalKta, sinkron, tidakSinkron, belumDicek, terdaftar, tidakTerdaftar };
+  }, [filteredData, activeTab]);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -455,22 +378,51 @@ const SyncData = () => {
             <FontAwesomeIcon icon={faArrowLeft} size="lg" onClick={handleBackClick} className="cursor-pointer mr-4" />
             <h1 className="text-lg font-bold">Sinkronisasi Data</h1>
           </div>
-          <button aria-label="Tampilkan menu aksi" className="p-2" onClick={() => setShowActions(true)}><FaBars size={22} /></button>
+          <button aria-label="Menu" className="p-2" onClick={() => setShowActions(true)}><FaBars size={22} /></button>
         </header>
       ) : <HeaderMenu />}
       <main className="p-4 md:p-8 pt-24 md:pt-8">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-6">Dashboard Sinkronisasi Data</h1>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-            <StatCard icon={<FiList size={24} />} label="Total Data Daspen" value={filteredTotalFiles.totalDaspen.toLocaleString('id-ID')} loading={loading && !data.length} />
-            <StatCard icon={<FiGrid size={24} />} label="Total Data KTA Digital" value={filteredTotalFiles.totalKtaDigital.toLocaleString('id-ID')} loading={loading && !data.length} />
-            <StatCard icon={<FaFilter size={24} />} label="Data Tampil" value={sortedAndFilteredData.length.toLocaleString('id-ID')} loading={loading} />
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-6 mt-8">Dashboard Sinkronisasi Data</h1>
+
+          {/* TAB NAVIGATION */}
+          <div className="flex gap-2 mb-6 bg-white p-1.5 rounded-xl shadow-sm border border-slate-200 w-fit">
+            {tabs.map(tab => (
+              <button key={tab.key} onClick={() => { setActiveTab(tab.key); setCurrentPage(1); }}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === tab.key ? 'bg-teal-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}>
+                {tab.icon} {tab.label}
+              </button>
+            ))}
           </div>
+
+          {/* STATS CARDS - BEDA PER TAB */}
+          {activeTab !== "kta" && (
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
+              <StatCard icon={<FiList size={20} />} label="Total Anggota" value={katStats.totalAnggota.toLocaleString('id-ID')} color="teal" />
+              <StatCard icon={<FaLayerGroup size={20} />} label="Punya Daspen" value={katStats.totalDaspen.toLocaleString('id-ID')} color="blue" />
+              <StatCard icon={<FaCheckCircle size={20} />} label="Kat I" value={katStats.katI.toLocaleString('id-ID')} color="blue" />
+              <StatCard icon={<FaCheckDouble size={20} />} label="Kat II" value={katStats.katII.toLocaleString('id-ID')} color="amber" />
+              <StatCard icon={<FaUsers size={20} />} label="Kat III" value={katStats.katIII.toLocaleString('id-ID')} color="purple" />
+              <StatCard icon={<FaCheckCircle size={20} />} label="Sinkron" value={katStats.sinkron.toLocaleString('id-ID')} color="teal" />
+              <StatCard icon={<FaExclamationCircle size={20} />} label="Tidak Sinkron" value={katStats.tidakSinkron.toLocaleString('id-ID')} color="rose" />
+              <StatCard icon={<FaHourglassHalf size={20} />} label="Belum Dicek" value={katStats.belumDicek.toLocaleString('id-ID')} color="amber" />
+            </div>
+          )}
+          {activeTab === "kta" && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
+              <StatCard icon={<FaIdCard size={20} />} label="Total KTA Digital" value={ktaStats.totalKta.toLocaleString('id-ID')} color="teal" />
+              <StatCard icon={<FaCheckCircle size={20} />} label="Sinkron" value={ktaStats.sinkron.toLocaleString('id-ID')} color="teal" />
+              <StatCard icon={<FaExclamationCircle size={20} />} label="Tidak Sinkron" value={ktaStats.tidakSinkron.toLocaleString('id-ID')} color="rose" />
+              <StatCard icon={<FaHourglassHalf size={20} />} label="Belum Dicek" value={ktaStats.belumDicek.toLocaleString('id-ID')} color="amber" />
+            </div>
+          )}
+
+          {/* FILTER SECTION */}
           <div className="bg-white p-6 rounded-xl shadow-md mb-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <h2 className="text-xl font-semibold text-gray-700">Filter & Pencarian</h2>
               {!isMobile && (
-                <button aria-label="Tampilkan menu aksi" className="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition" onClick={() => setShowActions(true)}>
+                <button aria-label="Tindakan" className="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition" onClick={() => setShowActions(true)}>
                   <FaBars /><span>Tindakan</span>
                 </button>
               )}
@@ -478,31 +430,32 @@ const SyncData = () => {
             <div className="border-t my-4"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="relative w-full" ref={cabangRef}>
-                <Input type="text" value={selectedCabang} readOnly onClick={handleCabangClick} className={`block w-full px-4 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none transition duration-150 ${role === "ADMIN" ? "bg-gray-100 cursor-not-allowed" : ""}`} placeholder="Pilih Cabang" disabled={role === "ADMIN"} />
+                <Input type="text" value={selectedCabang} readOnly onClick={() => { if (role !== "ADMIN") { setFilteredCabangList(originalCabangList); setShowCabangDropdown(true); } }}
+                  className={`block w-full px-4 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none ${role === "ADMIN" ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                  placeholder="Pilih Cabang" disabled={role === "ADMIN"} />
                 {showCabangDropdown && role !== "ADMIN" && (
                   <div className="absolute z-20 border rounded-md bg-white shadow-md mt-2 w-full">
                     <ul className="max-h-44 overflow-y-auto">
-                      <li className="p-2"><Input type="text" onChange={(e) => handleCabangSearch(e.target.value)} className="block w-full" placeholder="Cari Cabang..." autoFocus /></li>
-                      <li onClick={() => handleSelectCabang({ kecamatan: "" })} className="px-4 py-2 cursor-pointer hover:bg-gray-100">Pilih Cabang</li>
-                      {filteredCabangList
-                        .sort((a, b) => a.kecamatan.localeCompare(b.kecamatan, "id"))
-                        .map((cabang) => (<li key={cabang.id} onClick={() => handleSelectCabang(cabang)} className="px-4 py-2 cursor-pointer hover:bg-gray-100">{cabang.kecamatan}</li>))}
+                      <li className="p-2"><Input type="text" onChange={(e) => setFilteredCabangList(originalCabangList.filter(c => c.kecamatan.toLowerCase().includes(e.target.value.toLowerCase())))} placeholder="Cari Cabang..." autoFocus className="block w-full" /></li>
+                      <li onClick={() => { setSelectedCabang(""); setShowCabangDropdown(false); }} className="px-4 py-2 cursor-pointer hover:bg-gray-100">Semua Cabang</li>
+                      {filteredCabangList.sort((a, b) => a.kecamatan.localeCompare(b.kecamatan, "id")).map(c => (
+                        <li key={c.id} onClick={() => { setSelectedCabang(c.kecamatan); setShowCabangDropdown(false); }} className="px-4 py-2 cursor-pointer hover:bg-gray-100">{c.kecamatan}</li>
+                      ))}
                     </ul>
                   </div>
                 )}
               </div>
               <div className="relative w-full" ref={unitKerjaRef}>
-                <Input type="text" value={unitKerjaInput} onChange={handleUnitKerjaChange} onFocus={handleUnitKerjaFocus} placeholder="Pilih Unit Kerja" className={`block w-full px-4 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none transition ${!selectedCabang ? "bg-gray-100 cursor-not-allowed" : ""}`} disabled={!selectedCabang} />
+                <Input type="text" value={unitKerjaInput} onChange={(e) => { setUnitKerjaInput(e.target.value); setSelectedUnitKerja(e.target.value); if (selectedCabang) { setFilteredUnitKerja(unitKerjaList.filter(u => u.cabang.toLowerCase() === selectedCabang.toLowerCase() && u.unitKerja.toLowerCase().includes(e.target.value.toLowerCase()))); setShowUnitKerjaDropdown(true); } }}
+                  onFocus={() => { if (selectedCabang) { filterUnitKerjaForCabang(selectedCabang); setShowUnitKerjaDropdown(true); } }}
+                  placeholder="Pilih Unit Kerja" className={`block w-full px-4 py-2 border rounded-md ${!selectedCabang ? "bg-gray-100 cursor-not-allowed" : ""}`} disabled={!selectedCabang} />
                 {showUnitKerjaDropdown && (
                   <div className="absolute z-20 border rounded-md bg-white shadow-md mt-2 w-full">
                     <ul className="max-h-44 overflow-y-auto">
-                      <li className="p-2"><Input type="text" value={unitKerjaInput} onChange={handleUnitKerjaChange} placeholder="Cari Unit Kerja..." autoFocus className="block w-full" /></li>
-                      <li onClick={() => handleUnitKerjaSelect({ unitKerja: "" })} className="px-4 py-2 cursor-pointer hover:bg-gray-100">Pilih Unit Kerja</li>
-                      {filteredUnitKerja.length > 0 ? (
-                        filteredUnitKerja
-                          .sort((a, b) => a.unitKerja.localeCompare(b.unitKerja, "id"))
-                          .map((unitKerja) => (<li key={unitKerja.id} onClick={() => handleUnitKerjaSelect(unitKerja)} className="px-4 py-2 cursor-pointer hover:bg-gray-100">{unitKerja.unitKerja}</li>))
-                      ) : (<li className="px-4 py-2 text-gray-500">Tidak ada hasil</li>)}
+                      <li onClick={() => { setSelectedUnitKerja(""); setUnitKerjaInput(""); setShowUnitKerjaDropdown(false); }} className="px-4 py-2 cursor-pointer hover:bg-gray-100">Semua Unit Kerja</li>
+                      {filteredUnitKerja.sort((a, b) => a.unitKerja.localeCompare(b.unitKerja, "id")).map(u => (
+                        <li key={u.id} onClick={() => { setSelectedUnitKerja(u.unitKerja); setUnitKerjaInput(u.unitKerja); setShowUnitKerjaDropdown(false); setCurrentPage(1); }} className="px-4 py-2 cursor-pointer hover:bg-gray-100">{u.unitKerja}</li>
+                      ))}
                     </ul>
                   </div>
                 )}
@@ -511,14 +464,18 @@ const SyncData = () => {
                 <Input type="text" className="block w-full px-4 py-2 border rounded-md" placeholder="Cari Nama / NPA / NIP" onChange={handleNamaChange} />
               </div>
               <div className="w-full">
-                <select onChange={(e) => setStatusKeanggotaan(e.target.value)} className="block w-full px-4 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none" defaultValue="">
+                <select onChange={(e) => setStatusKeanggotaan(e.target.value)} className="block w-full px-4 py-2 border rounded-md" defaultValue="">
                   <option value="">Semua Status</option>
-                  <option value="Terdaftar">Terdaftar</option>
+                  <option value="Terdaftar di KTA Digital dan Daspen">KTA + Daspen</option>
+                  <option value="Terdaftar di KTA Digital">KTA Digital</option>
+                  <option value="Terdaftar di Daspen">Daspen</option>
                   <option value="Tidak Terdaftar">Tidak Terdaftar</option>
                 </select>
               </div>
             </div>
           </div>
+
+          {/* TABLE */}
           <div className="bg-white rounded-xl shadow-md overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left text-gray-500">
@@ -531,12 +488,12 @@ const SyncData = () => {
                       <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('namaAnggota')}>Nama <SortIcon field="namaAnggota" /></th>
                       <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('npa')}>NPA <SortIcon field="npa" /></th>
                       <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('nip')}>NIP <SortIcon field="nip" /></th>
-                      <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('dataKtaDigital')}>KTA Digital <SortIcon field="dataKtaDigital" /></th>
+                      {activeTab !== "kta" && <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('kategoriDaspen')}>Kat Daspen <SortIcon field="kategoriDaspen" /></th>}
+                      <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('dataKtaDigital')}>KTA <SortIcon field="dataKtaDigital" /></th>
                       <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('dataDaspen')}>Daspen <SortIcon field="dataDaspen" /></th>
+                      <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('dataSanduka')}>Sanduka <SortIcon field="dataSanduka" /></th>
                       <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('verifikasi')}>Verifikasi <SortIcon field="verifikasi" /></th>
                       <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('statusKeanggotaan')}>Status <SortIcon field="statusKeanggotaan" /></th>
-                      <th scope="col" className="py-3 px-6">Kontak</th>
-                      <th scope="col" className="py-3 px-6">Aksi</th>
                     </>)}
                   </tr>
                 </thead>
@@ -557,53 +514,34 @@ const SyncData = () => {
                             <td className="py-4 px-6">{item.cabang}</td>
                             <td className="py-4 px-6">{item.unitKerja}</td>
                             {!isMobile && (<>
-                              <td className="py-4 px-6 text-left">{item.namaAnggota}</td>
+                              <td className="py-4 px-6 font-medium text-slate-800">{item.namaAnggota}</td>
                               <td className="py-4 px-6 text-center">{item.npa || "-"}</td>
-                              <td className="py-4 px-6 text-center">{item.nip}</td>
+                              <td className="py-4 px-6 text-center">{item.nip || "-"}</td>
+                              {activeTab !== "kta" && <td className="py-4 px-6 text-center">{getKatPill(item.kategoriDaspen)}</td>}
                               <td className="py-4 px-6 text-center">{getBooleanPill(item.dataKtaDigital)}</td>
                               <td className="py-4 px-6 text-center">{getBooleanPill(item.dataDaspen)}</td>
+                              <td className="py-4 px-6 text-center">{getBooleanPill(item.dataSanduka)}</td>
                               <td className="py-4 px-6 text-center">{getVerificationPill(item.verifikasi)}</td>
                               <td className="py-4 px-6 text-center">{getStatusPill(item.statusKeanggotaan)}</td>
-                              <td className="py-4 px-6 text-center"><a href={`https://wa.me/${item.nomorHp}`} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-600"><FontAwesomeIcon icon={faWhatsapp} size="2x" /></a></td>
-                              <td className="py-4 px-6 text-center"><button onClick={() => handleDeleteClick(item.id)} className="text-red-500 hover:text-red-700"><FaTrash size={18} /></button></td>
                             </>)}
                           </tr>
                           {isMobile && isExpanded && (
                             <tr className="bg-gray-50">
                               <td colSpan="3" className="p-4">
                                 <div className="space-y-3">
-                                  <div className="flex justify-between text-sm">
-                                    <span className="font-semibold text-gray-600">Nama</span>
-                                    <span className="text-gray-800">{item.namaAnggota}</span>
-                                  </div>
-                                  <div className="flex justify-between text-sm">
-                                    <span className="font-semibold text-gray-600">NPA</span>
-                                    <span className="text-gray-800">{item.npa || "-"}</span>
-                                  </div>
-                                  <div className="flex justify-between text-sm">
-                                    <span className="font-semibold text-gray-600">NIP</span>
-                                    <span className="text-gray-800">{item.nip}</span>
-                                  </div>
+                                  <div className="flex justify-between text-sm"><span className="font-semibold">Nama</span><span>{item.namaAnggota}</span></div>
+                                  <div className="flex justify-between text-sm"><span className="font-semibold">NPA</span><span>{item.npa || "-"}</span></div>
+                                  <div className="flex justify-between text-sm"><span className="font-semibold">NIP</span><span>{item.nip || "-"}</span></div>
                                   <div className="border-t my-2"></div>
-                                  <div className="flex justify-between items-center text-sm">
-                                    <span className="font-semibold text-gray-600">KTA Digital</span>
-                                    {getBooleanPill(item.dataKtaDigital)}
-                                  </div>
-                                  <div className="flex justify-between items-center text-sm">
-                                    <span className="font-semibold text-gray-600">Daspen</span>
-                                    {getBooleanPill(item.dataDaspen)}
-                                  </div>
-                                  <div className="flex justify-between items-center text-sm">
-                                    <span className="font-semibold text-gray-600">Verifikasi</span>
-                                    {getVerificationPill(item.verifikasi)}
-                                  </div>
-                                  <div className="flex justify-between items-center text-sm">
-                                    <span className="font-semibold text-gray-600">Status</span>
-                                    {getStatusPill(item.statusKeanggotaan)}
-                                  </div>
+                                  {activeTab !== "kta" && <div className="flex justify-between items-center text-sm"><span className="font-semibold">Kat Daspen</span>{getKatPill(item.kategoriDaspen)}</div>}
+                                  <div className="flex justify-between items-center text-sm"><span className="font-semibold">KTA Digital</span>{getBooleanPill(item.dataKtaDigital)}</div>
+                                  <div className="flex justify-between items-center text-sm"><span className="font-semibold">Daspen</span>{getBooleanPill(item.dataDaspen)}</div>
+                                  <div className="flex justify-between items-center text-sm"><span className="font-semibold">Sanduka</span>{getBooleanPill(item.dataSanduka)}</div>
+                                  <div className="flex justify-between items-center text-sm"><span className="font-semibold">Verifikasi</span>{getVerificationPill(item.verifikasi)}</div>
+                                  <div className="flex justify-between items-center text-sm"><span className="font-semibold">Status</span>{getStatusPill(item.statusKeanggotaan)}</div>
                                   <div className="border-t my-2"></div>
                                   <div className="flex justify-between items-center">
-                                    <span className="font-semibold text-gray-600">Aksi</span>
+                                    <span className="font-semibold">Aksi</span>
                                     <div className="flex items-center gap-4">
                                       <a href={`https://wa.me/${item.nomorHp}`} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-600"><FontAwesomeIcon icon={faWhatsapp} size="2x" /></a>
                                       <button onClick={() => handleDeleteClick(item.id)} className="text-red-500 hover:text-red-700"><FaTrash size={18} /></button>
@@ -625,10 +563,12 @@ const SyncData = () => {
           </div>
         </div>
       </main>
+
+      {/* SIDE PANEL ACTIONS */}
       <div className={`fixed top-0 right-0 h-full w-80 bg-white shadow-2xl p-6 z-[60] transition-transform duration-300 transform ${showActions ? "translate-x-0" : "translate-x-full"}`}>
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-gray-800">Menu Tindakan</h2>
-          <button aria-label="Tutup menu aksi" className="text-gray-500 hover:text-red-500" onClick={() => setShowActions(false)}><FaTimes size={24} /></button>
+          <button aria-label="Tutup" className="text-gray-500 hover:text-red-500" onClick={() => setShowActions(false)}><FaTimes size={24} /></button>
         </div>
         <div className="flex flex-col gap-4">
           <Button onClick={() => setShowTemplateModal(true)} className="w-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-2"><FaDownload /> Download Template</Button>
@@ -638,8 +578,10 @@ const SyncData = () => {
         </div>
       </div>
       {showActions && <div className="fixed inset-0 bg-black bg-opacity-50 z-50" onClick={() => setShowActions(false)}></div>}
+
+      {/* UPLOAD MODAL */}
       <Modal isOpen={isUploadModalOpen} onRequestClose={() => setIsUploadModalOpen(false)} contentLabel="Upload Data" className="fixed inset-0 flex items-center justify-center p-4 z-[100]" overlayClassName="fixed inset-0 bg-black bg-opacity-60 z-[90]">
-        <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg transform transition-all duration-300 ease-in-out">
+        <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold text-gray-800">Upload Data Anggota</h2>
             <button onClick={() => setIsUploadModalOpen(false)} className="text-gray-500 hover:text-gray-800"><FaTimes size={20} /></button>
@@ -674,8 +616,10 @@ const SyncData = () => {
           </form>
         </div>
       </Modal>
+
+      {/* TEMPLATE MODAL */}
       <Modal isOpen={showTemplateModal} onRequestClose={() => setShowTemplateModal(false)} contentLabel="Pilih Template" className="fixed inset-0 flex items-center justify-center p-4 z-[100]" overlayClassName="fixed inset-0 bg-black bg-opacity-60 z-[90]">
-        <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md transform transition-all duration-300 ease-in-out">
+        <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold text-gray-800">Download Template</h2>
             <button onClick={() => setShowTemplateModal(false)} className="text-gray-500 hover:text-gray-800"><FaTimes size={20} /></button>
