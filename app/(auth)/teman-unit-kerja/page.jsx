@@ -43,6 +43,7 @@ const TemanUnitKerja = () => {
       setLoading(true);
 
       const unitKerja = sessionStorage.getItem("unitKerja");
+      const cabang = sessionStorage.getItem("cabang");
 
       if (!unitKerja) {
         console.error("unitKerja is not available in sessionStorage.");
@@ -53,6 +54,7 @@ const TemanUnitKerja = () => {
 
       const result = await GlobalApi.getTemanUnitKerja(
         unitKerja,
+        cabang,
         currentPage - 1,
         itemsPerPage
       );
