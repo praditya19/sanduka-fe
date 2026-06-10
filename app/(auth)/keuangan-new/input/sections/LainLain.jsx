@@ -149,13 +149,9 @@ const LainLainSection = () => {
   const filteredPosData = useMemo(() => {
     return posTableData.filter((item) => {
       const keyword = searchQuery.toLowerCase();
-      const matchMonth = !selectedMonth || item.bulan === selectedMonth;
-      const matchYear = parseInt(item.tahun, 10) === parseInt(selectedYear, 10);
-      const matchSearch = item.nama?.toLowerCase().includes(keyword);
-
-      return matchMonth && matchYear && matchSearch;
+      return item.nama?.toLowerCase().includes(keyword);
     });
-  }, [posTableData, selectedMonth, selectedYear, searchQuery]);
+  }, [posTableData, searchQuery]);
 
   const totalProvinsi = filteredPosData.reduce(
     (sum, item) => sum + (parseInt(item.peruntukanProvinsi, 10) || 0),
