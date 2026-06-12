@@ -18,33 +18,13 @@ const News = () => {
       try {
         const data = await GlobalApi.getAllBerita("PUBLISH");
 
-        const sortedByViews = [...data].sort((a, b) => {
-          const viewsA = a.views || 0;
-          const viewsB = b.views || 0;
-          return viewsB - viewsA;
-        });
-
         const sortedByDate = [...data].sort((a, b) => {
-          const dateA = new Date(
-            a.updatedAt[0],
-            a.updatedAt[1] - 1,
-            a.updatedAt[2],
-            a.updatedAt[3],
-            a.updatedAt[4],
-            a.updatedAt[5],
-          );
-          const dateB = new Date(
-            b.updatedAt[0],
-            b.updatedAt[1] - 1,
-            b.updatedAt[2],
-            b.updatedAt[3],
-            b.updatedAt[4],
-            b.updatedAt[5],
-          );
+          const dateA = new Date(...(a.updatedAt || a.createdAt));
+          const dateB = new Date(...(b.updatedAt || b.createdAt));
           return dateB - dateA;
         });
 
-        setNewsData(sortedByViews);
+        setNewsData(sortedByDate);
       } catch (error) {
         console.error("Gagal mengambil berita:", error);
       }
@@ -53,8 +33,8 @@ const News = () => {
     fetchBerita();
   }, []);
   const getPopularNews = () => {
-  return newsData.filter((item) => (item.views || 0) > 100);
-};
+    return newsData.filter((item) => (item.views || 0) > 100);
+  };
   const formatDate = (arr) => {
     if (!arr) return "";
 
@@ -125,15 +105,7 @@ const News = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
         <div className="lg:col-span-9">
           {(() => {
-            const popularNews = getPopularNews();
-            const topPopular = popularNews.length > 0 ? popularNews[0] : null;
-
-            const fallbackNews =
-              !topPopular && newsData.length > 0
-                ? [...newsData].sort((a, b) => b.views - a.views)[0]
-                : null;
-
-            const displayNews = topPopular || fallbackNews;
+            const displayNews = newsData.length > 0 ? newsData[0] : null;
 
             if (!displayNews) {
               return (
