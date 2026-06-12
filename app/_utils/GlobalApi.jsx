@@ -3172,6 +3172,7 @@ const createPemasukanUmum = async ({
   cabang,
   nominal,
   keterangan,
+  nomorBukti,
 }) => {
   try {
     const data = {
@@ -3183,6 +3184,7 @@ const createPemasukanUmum = async ({
       cabang,
       nominal,
       keterangan,
+      ...(nomorBukti && { nomorBukti }),
     };
 
     const response = await axiosClient.post("/api/pemasukan-organisasi", data, {
