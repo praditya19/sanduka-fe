@@ -259,13 +259,25 @@ const getFileByNip = async (nip) => {
     const response = await axiosClient.get(`/api/files/nip/${nip}`);
     return response.data;
   } catch (error) {
-    if (error.response) {
-      throw new Error(
-        error.response.data.message || "Terjadi kesalahan pada server",
-      );
-    } else {
-      throw new Error("Terjadi kesalahan pada jaringan");
-    }
+    throw error;
+  }
+};
+
+const getAllDuplicates = async () => {
+  try {
+    const response = await axiosClient.get("/api/files/all-duplicates");
+    return response.data;
+  } catch (error) {
+    return [];
+  }
+};
+
+const deleteDuplicates = async () => {
+  try {
+    const response = await axiosClient.delete("/api/files/delete-duplicates");
+    return response.data;
+  } catch (error) {
+    throw error;
   }
 };
 
@@ -623,11 +635,12 @@ const getAdminBantuan = () =>
   axiosClient.get("/api/register-admin/admins-per-cabang");
 
 // Teman Unit Kerja
-const getTemanUnitKerja = async (unitKerja, page = 0, size = 50) => {
+const getTemanUnitKerja = async (unitKerja, cabang = null, page = 0, size = 50) => {
   try {
     const response = await axiosClient.get("/api/auth/teman-unit-kerja", {
       params: {
         unitKerja: unitKerja,
+        cabang: cabang,
         page: page,
         size: size,
       },
@@ -3159,6 +3172,7 @@ const createPemasukanUmum = async ({
   cabang,
   nominal,
   keterangan,
+  nomorBukti,
 }) => {
   try {
     const data = {
@@ -3170,6 +3184,7 @@ const createPemasukanUmum = async ({
       cabang,
       nominal,
       keterangan,
+      ...(nomorBukti && { nomorBukti }),
     };
 
     const response = await axiosClient.post("/api/pemasukan-organisasi", data, {
@@ -4161,6 +4176,8 @@ export default {
   getTotalAnggotaStatistik,
   getTotalAnggotaByCabang,
   getFileByNip,
+  getAllDuplicates,
+  deleteDuplicates,
   updateIuranById,
   createHistoryData,
   getAllHistoryData,

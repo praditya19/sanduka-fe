@@ -676,7 +676,7 @@ const DaspenSection = () => {
     </div>
   );
 
-  const CellTriple = ({ top, middle, bottom, topClass = "text-slate-700", middleClass = "text-teal-500", bottomClass = "text-purple-600" }) => (
+  const CellTriple = ({ top, middle, bottom, topClass = "text-slate-700", middleClass = "text-teal-500", bottomClass = "text-red-600" }) => (
     <div className="flex flex-col justify-center gap-1 leading-tight py-1">
       <div className={`text-[11px] font-bold ${topClass}`}>{top !== null && top !== undefined ? top : "-"}</div>
       <div className={`text-[11px] font-semibold italic ${middleClass}`}>{middle !== null && middle !== undefined ? middle : "-"}</div>
@@ -803,7 +803,7 @@ const DaspenSection = () => {
                   </div>
                   <div className="flex justify-between items-center pt-1">
                     <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Tipe Data</span>
-                    <span className={`text-[10px] px-2 py-1 rounded-md font-black ${deleteModal.jenis.includes('Realisasi') ? 'bg-purple-100 text-purple-600' : 'bg-teal-50 text-teal-600'}`}>
+                    <span className={`text-[10px] px-2 py-1 rounded-md font-black ${deleteModal.jenis.includes('Realisasi') ? 'bg-red-100 text-red-600' : 'bg-teal-50 text-teal-600'}`}>
                       {deleteModal.jenis}
                     </span>
                   </div>
@@ -1125,19 +1125,6 @@ const DaspenSection = () => {
                       const autoSelisih = totAutoNominal - autoTransfer;
                       const autoKurangSetor = totAutoNominal - autoTransfer;
 
-                      const dbK1 = sandukaDB ? parseInt(sandukaDB.kategori1) : null;
-                      const dbK2 = sandukaDB ? parseInt(sandukaDB.kategori2) : null;
-                      const dbK3 = sandukaDB ? parseInt(sandukaDB.kategori3) : null;
-                      const nomDbK1 = sandukaDB ? parseFloat(sandukaDB.valueKat1) : null;
-                      const nomDbK2 = sandukaDB ? parseFloat(sandukaDB.valueKat2) : null;
-                      const nomDbK3 = sandukaDB ? parseFloat(sandukaDB.valueKat3) : null;
-                      const totDbNominal = sandukaDB ? parseFloat(sandukaDB.totalTarget || (nomDbK1 + nomDbK2 + nomDbK3)) : null;
-                      const dbTransfer = sandukaDB ? parseFloat(sandukaDB.transfer || 0) : null;
-                      const dbSelisih = sandukaDB ? (totDbNominal - dbTransfer) : null;
-                      const dbPemb1 = sandukaDB ? parseFloat(sandukaDB.pembayaran1 || 0) : null;
-                      const dbPemb2 = sandukaDB ? parseFloat(sandukaDB.pembayaran2 || 0) : null;
-                      const dbKurangSetor = sandukaDB ? (totDbNominal - dbTransfer - dbPemb1 - dbPemb2) : null;
-
                       const pk1 = daspen ? parseInt(daspen.kategori1) : null;
                       const pk2 = daspen ? parseInt(daspen.kategori2) : null;
                       const pk3 = daspen ? parseInt(daspen.kategori3) : null;
@@ -1152,8 +1139,22 @@ const DaspenSection = () => {
                       const pKurangSetor = daspen ? (pTotNominal - pTransfer - pPemb1 - pPemb2) : null;
 
                       const activeMembers = cabAggregated.length > 0 ? cabAggregated.reduce((sum, item) => sum + (parseInt(item.jumlah) || 1), 0) : 0;
-                      const dbTotAnggota = sandukaDB ? (dbK1 + dbK2 + dbK3) : null;
                       const pTotAnggota = daspen ? (pk1 + pk2 + pk3) : null;
+
+                      /* REALISASI (merah): fallback ke AUTO jika belum disimpan manual */
+                      const dbK1 = sandukaDB ? parseInt(sandukaDB.kategori1) : autoK1;
+                      const dbK2 = sandukaDB ? parseInt(sandukaDB.kategori2) : autoK2;
+                      const dbK3 = sandukaDB ? parseInt(sandukaDB.kategori3) : autoK3;
+                      const nomDbK1 = sandukaDB ? parseFloat(sandukaDB.valueKat1) : nomAutoK1;
+                      const nomDbK2 = sandukaDB ? parseFloat(sandukaDB.valueKat2) : nomAutoK2;
+                      const nomDbK3 = sandukaDB ? parseFloat(sandukaDB.valueKat3) : nomAutoK3;
+                      const totDbNominal = sandukaDB ? parseFloat(sandukaDB.totalTarget || (nomDbK1 + nomDbK2 + nomDbK3)) : totAutoNominal;
+                      const dbTransfer = sandukaDB ? parseFloat(sandukaDB.transfer || 0) : autoTransfer;
+                      const dbSelisih = sandukaDB ? (totDbNominal - dbTransfer) : autoSelisih;
+                      const dbPemb1 = sandukaDB ? parseFloat(sandukaDB.pembayaran1 || 0) : 0;
+                      const dbPemb2 = sandukaDB ? parseFloat(sandukaDB.pembayaran2 || 0) : 0;
+                      const dbKurangSetor = sandukaDB ? (totDbNominal - dbTransfer - dbPemb1 - dbPemb2) : autoKurangSetor;
+                      const dbTotAnggota = sandukaDB ? (dbK1 + dbK2 + dbK3) : activeMembers;
 
                       tAutoAng += activeMembers; tProvAng += (pTotAnggota || 0); tRealAng += (dbTotAnggota || 0);
 
@@ -1222,7 +1223,7 @@ const DaspenSection = () => {
                             <div className="flex flex-col gap-1 items-center justify-center">
                               <span className="text-[9px] font-black text-slate-500">AUTO</span>
                               {daspen && <span className="px-2 py-0.5 rounded-md text-[9px] font-black bg-teal-50 text-teal-600">DASPEN</span>}
-                              {sandukaDB && <span className="px-2 py-0.5 rounded-md text-[9px] font-black bg-purple-100 text-purple-600">REALISASI</span>}
+                              {sandukaDB && <span className="px-2 py-0.5 rounded-md text-[9px] font-black bg-red-100 text-red-600">REALISASI</span>}
                             </div>
                           </td>
 
@@ -1248,7 +1249,7 @@ const DaspenSection = () => {
 
                               {sandukaDB && (
                                 <div className="flex gap-2">
-                                  <button onClick={() => setEditModal({ show: true, data: sandukaDB })} className="text-purple-500 hover:text-purple-700 transition-colors" title="Edit Simpan Realisasi"><FaEdit size={14} /></button>
+                                  <button onClick={() => setEditModal({ show: true, data: sandukaDB })} className="text-red-500 hover:text-red-700 transition-colors" title="Edit Simpan Realisasi"><FaEdit size={14} /></button>
                                   <button onClick={(e) => handleDelete(sandukaDB.id, "Realisasi / Manual", cabangName, e)} className="text-red-400 hover:text-red-600 transition-colors" title="Hapus Data Simpan Realisasi"><FaTrash size={14} /></button>
                                 </div>
                               )}

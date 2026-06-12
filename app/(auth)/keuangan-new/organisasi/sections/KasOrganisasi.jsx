@@ -58,6 +58,22 @@ const KasOrganisasi = () => {
   // Modal States
   const [showModalIn, setShowModalIn] = useState(false);
   const [showModalOut, setShowModalOut] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editJenis, setEditJenis] = useState("");
+  const [editForm, setEditForm] = useState({
+    id: null,
+    tanggalTransaksi: "",
+    nomorBukti: "",
+    jenisPenerimaan: "Transfer",
+    jenisPegeluaran: "Tunai",
+    posPenerimaan: "",
+    posPengeluaran: "",
+    cabang: "",
+    setoranBulan: "",
+    setoranTahun: new Date().getFullYear(),
+    nominal: 0,
+    keterangan: ""
+  });
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
     title: "",
@@ -123,79 +139,53 @@ const KasOrganisasi = () => {
       // 1. Fetch current month data
       const currentMonthData = await GlobalApi.getTableUmum(targetBulan, targetTahun);
       
-      // 2. Legacy Manual Calculation: Loop back to March 2021 to get Saldo Awal
-      const maret2021 = new Date(2021, 2, 1);
-      let tempDate = new Date(targetTahun, targetBulan - 1, 1);
-      tempDate.setMonth(tempDate.getMonth() - 1);
+      // Backend already includes SALDO AWAL with opening balance as first entry
+      let processed = [...currentMonthData];
 
-      let allPreviousData = [];
-      // Note: This sequential fetching might be slow, but following legacy logic as requested
-      // In a real app, we should probably have a more efficient way to get Saldo Awal
-      while (tempDate >= maret2021) {
-        const b = tempDate.getMonth() + 1;
-        const y = tempDate.getFullYear();
-        try {
-          const data = await GlobalApi.getTableUmum(b, y);
-          allPreviousData.push(...(Array.isArray(data) ? data : []));
-        } catch (e) {
-          console.warn(`Failed to fetch legacy data for ${b}-${y}`);
-        }
-        tempDate.setMonth(tempDate.getMonth() - 1);
-      }
-
-      let saldoAwalManual = 0;
-      allPreviousData.forEach(item => {
-        saldoAwalManual += (item.debet || 0) - (item.kredit || 0);
+      // 2. Ensure Saldo Awal is always the first row
+      processed.sort((a, b) => {
+        const aIsSaldo = String(a.nomorBukti || "").toLowerCase().includes("saldo awal");
+        const bIsSaldo = String(b.nomorBukti || "").toLowerCase().includes("saldo awal");
+        if (aIsSaldo && !bIsSaldo) return -1;
+        if (!aIsSaldo && bIsSaldo) return 1;
+        return 0;
       });
 
-      // 3. Replicate Saldo Awal row logic
-      const hasSaldoAwal = currentMonthData.some(item => 
-        String(item.nomorBukti || "").toLowerCase().includes("saldo awal organisasi")
-      );
-
-      let processed = [...currentMonthData];
-      if (!hasSaldoAwal) {
-        processed = [{
-          id: "virtual-saldo-awal",
-          tanggalTransaksi: [targetTahun, targetBulan, 1],
-          nomorBukti: "SALDO AWAL ORGANISASI",
-          keterangan: `Saldo Organisasi Periode ${monthFilter}-${targetTahun}`,
-          debet: saldoAwalManual,
-          kredit: 0,
-          isVirtual: true
-        }, ...currentMonthData];
-      }
-
-      // 4. Calculate running balance and totals for summary
-      let currentBalance = 0;
+      // 3. Calculate totals for summary (skip saldo awal)
       let totalMasuk = 0;
       let totalKeluar = 0;
 
       const transactionsWithBalance = processed.map(item => {
         const d = item.debet || 0;
         const k = item.kredit || 0;
+        const isSaldoAwal = String(item.nomorBukti || "").toLowerCase().includes("saldo awal");
         
-        if (!item.isVirtual) {
+        if (!isSaldoAwal) {
           totalMasuk += d;
           totalKeluar += k;
         }
 
-        currentBalance += (d - k);
         return {
           ...item,
-          runningBalance: currentBalance,
+          isVirtual: isSaldoAwal && !item.id,
+          runningBalance: item.saldo || 0,
           formattedDate: Array.isArray(item.tanggalTransaksi) 
             ? `${String(item.tanggalTransaksi[2]).padStart(2, '0')}-${String(item.tanggalTransaksi[1]).padStart(2, '0')}-${item.tanggalTransaksi[0]}`
             : new Date(item.tanggalTransaksi).toLocaleDateString("id-ID")
         };
       });
 
+      const saldoAwal = processed.length > 0 ? (processed[0].saldo || 0) : 0;
+      const saldoAkhir = transactionsWithBalance.length > 0 
+        ? (transactionsWithBalance[transactionsWithBalance.length - 1].runningBalance || 0) 
+        : 0;
+
       setTransactions(transactionsWithBalance);
       setSummary({
-        saldoAwal: saldoAwalManual,
+        saldoAwal,
         masuk: totalMasuk,
         keluar: totalKeluar,
-        saldoAkhir: currentBalance
+        saldoAkhir
       });
 
     } catch (error) {
@@ -257,6 +247,121 @@ const KasOrganisasi = () => {
         }
       }
     });
+  };
+
+  const handleDeleteTransaksi = async (id, jenis) => {
+    setConfirmModal({
+      isOpen: true,
+      title: "Hapus Transaksi",
+      message: "Apakah Anda yakin ingin menghapus transaksi ini?",
+      type: "danger",
+      onConfirm: async () => {
+        try {
+          if (jenis === "PEMASUKAN") {
+            await GlobalApi.deletePemasukanUmum(id);
+          } else {
+            await GlobalApi.deletePengeluaranUmum(id);
+          }
+          toast.success("Transaksi berhasil dihapus!");
+          fetchData();
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        } catch (error) {
+          toast.error("Gagal menghapus transaksi.");
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        }
+      }
+    });
+  };
+
+  const handleEditClick = async (id, jenis, rowData) => {
+    try {
+      const isSaldoAwal = String(rowData?.nomorBukti || "").toLowerCase().includes("saldo awal");
+      const effectiveJenis = isSaldoAwal ? "PEMASUKAN" : jenis;
+      setEditJenis(effectiveJenis);
+      let data;
+      if (id && !isSaldoAwal) {
+        if (jenis === "PEMASUKAN") {
+          data = await GlobalApi.getPemasukanUmumById(id);
+        } else {
+          data = await GlobalApi.getPengeluaranUmumById(id);
+        }
+      }
+      const tanggal = data
+        ? (Array.isArray(data.tanggalTransaksi)
+            ? `${data.tanggalTransaksi[0]}-${String(data.tanggalTransaksi[1]).padStart(2, "0")}-${String(data.tanggalTransaksi[2]).padStart(2, "0")}`
+            : data.tanggalTransaksi.slice(0, 10))
+        : `${yearFilter}-${monthFilter}-01`;
+
+      setEditForm({
+        id: id,
+        tanggalTransaksi: tanggal,
+        nomorBukti: data?.nomorBukti || rowData?.nomorBukti || "",
+        jenisPenerimaan: data?.jenisPenerimaan || "Transfer",
+        jenisPegeluaran: data?.jenisPegeluaran || "Tunai",
+        posPenerimaan: data?.posPenerimaan || "",
+        posPengeluaran: data?.posPengeluaran || "",
+        cabang: data?.cabang || "",
+        setoranBulan: data?.setoranBulan || Number(monthFilter),
+        setoranTahun: data?.setoranTahun || Number(yearFilter),
+        nominal: data?.nominal || rowData?.debet || 0,
+        keterangan: data?.keterangan || rowData?.keterangan || ""
+      });
+      setShowEditModal(true);
+    } catch (error) {
+      toast.error("Gagal memuat data transaksi.");
+    }
+  };
+
+  const handleSaveEdit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      if (editForm.id) {
+        if (editJenis === "PEMASUKAN") {
+          await GlobalApi.updatePemasukanUmum(editForm.id, {
+            tanggalTransaksi: editForm.tanggalTransaksi,
+            posPenerimaan: editForm.posPenerimaan,
+            setoranBulan: Number(editForm.setoranBulan),
+            setoranTahun: Number(editForm.setoranTahun),
+            jenisPenerimaan: editForm.jenisPenerimaan,
+            cabang: editForm.cabang,
+            nominal: Number(editForm.nominal),
+            keterangan: editForm.keterangan,
+          });
+        } else {
+          await GlobalApi.updatePengeluaranUmum(editForm.id, {
+            tanggalTransaksi: editForm.tanggalTransaksi,
+            posPengeluaran: editForm.posPengeluaran,
+            setoranBulan: Number(editForm.setoranBulan),
+            setoranTahun: Number(editForm.setoranTahun),
+            jenisPegeluaran: editForm.jenisPegeluaran,
+            cabang: editForm.cabang,
+            nominal: Number(editForm.nominal),
+            keterangan: editForm.keterangan,
+          });
+        }
+        toast.success("Transaksi berhasil diperbarui!");
+      } else {
+        await GlobalApi.createPemasukanUmum({
+          tanggalTransaksi: editForm.tanggalTransaksi,
+          posPenerimaan: editForm.posPenerimaan || "Lainnya",
+          setoranBulan: Number(editForm.setoranBulan),
+          setoranTahun: Number(editForm.setoranTahun),
+          jenisPenerimaan: editForm.jenisPenerimaan,
+          cabang: editForm.cabang || "Umum",
+          nominal: Number(editForm.nominal),
+          keterangan: editForm.keterangan,
+          nomorBukti: "SALDO AWAL ORGANISASI",
+        });
+        toast.success("Saldo awal berhasil disimpan!");
+      }
+      setShowEditModal(false);
+      fetchData();
+    } catch (error) {
+      toast.error("Gagal menyimpan perubahan.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const terbilang = (n) => {
@@ -558,17 +663,19 @@ const KasOrganisasi = () => {
               <tr className="bg-slate-50/50 text-[10px] sm:text-xs uppercase font-black text-slate-500 tracking-wider border-b border-slate-100">
                 <th className="px-3 sm:px-6 py-4 text-center">No</th>
                 <th className="px-3 sm:px-6 py-4">Tgl Transaksi</th>
-                <th className="px-3 sm:px-6 py-4">No. Bukti / Keterangan</th>
+                <th className="px-3 sm:px-6 py-4">No. Bukti</th>
+                <th className="px-3 sm:px-6 py-4">Keterangan</th>
                 <th className="px-3 sm:px-6 py-4 text-right">Debet (Rp)</th>
                 <th className="px-3 sm:px-6 py-4 text-right">Kredit (Rp)</th>
                 <th className="px-3 sm:px-6 py-4 text-right">Saldo (Rp)</th>
+                <th className="px-3 sm:px-6 py-4 text-center">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {loading ? (
                 Array(5).fill(0).map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    <td colSpan="6" className="px-6 py-6"><div className="h-4 bg-slate-100 rounded w-full"></div></td>
+                    <td colSpan="8" className="px-6 py-6"><div className="h-4 bg-slate-100 rounded w-full"></div></td>
                   </tr>
                 ))
               ) : filteredTransactions.length > 0 ? (
@@ -578,6 +685,8 @@ const KasOrganisasi = () => {
                     <td className="px-3 sm:px-6 py-4 text-[10px] sm:text-sm font-bold text-slate-500">{t.formattedDate}</td>
                     <td className="px-3 sm:px-6 py-4">
                       <div className={`text-[10px] sm:text-sm font-black ${t.isVirtual ? 'text-amber-600' : 'text-slate-700'}`}>{t.nomorBukti || "-"}</div>
+                    </td>
+                    <td className="px-3 sm:px-6 py-4">
                       <div className="text-[9px] sm:text-xs text-slate-400 font-medium truncate max-w-[100px] sm:max-w-md">{t.keterangan}</div>
                     </td>
                     <td className="px-3 sm:px-6 py-4 text-right text-[10px] sm:text-sm font-black text-emerald-600">
@@ -589,11 +698,17 @@ const KasOrganisasi = () => {
                     <td className="px-3 sm:px-6 py-4 text-right text-[10px] sm:text-sm font-black text-slate-800 bg-slate-50/30">
                       {formatCurrency(t.runningBalance)}
                     </td>
+                    <td className="px-3 sm:px-6 py-4 text-center">
+                      <div className="flex items-center justify-center space-x-1">
+                        <button onClick={() => handleEditClick(t.id, t.jenis, t)} className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-1.5 rounded-lg transition-all text-xs" title="Edit"><FaEdit /></button>
+                        {t.id && <button onClick={() => handleDeleteTransaksi(t.id, t.jenis)} className="text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1.5 rounded-lg transition-all text-xs" title="Hapus"><FaTrash /></button>}
+                      </div>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="px-6 py-20 text-center">
+                  <td colSpan="8" className="px-6 py-20 text-center">
                     <FaInfoCircle className="text-slate-100 text-6xl mx-auto mb-4" />
                     <p className="text-slate-400 font-bold">Data transaksi tidak ditemukan</p>
                   </td>
@@ -603,7 +718,7 @@ const KasOrganisasi = () => {
             {!loading && filteredTransactions.length > 0 && (
               <tfoot className="bg-slate-800 text-white">
                 <tr className="font-black text-[10px] sm:text-sm">
-                  <td colSpan="3" className="px-3 sm:px-6 py-5 uppercase tracking-wider">Total Transaksi Organisasi</td>
+                  <td colSpan="5" className="px-3 sm:px-6 py-5 uppercase tracking-wider">Total Transaksi Organisasi</td>
                   <td className="px-3 sm:px-6 py-5 text-right">{formatCurrency(summary.masuk)}</td>
                   <td className="px-3 sm:px-6 py-5 text-right">{formatCurrency(summary.keluar)}</td>
                   <td className="px-3 sm:px-6 py-5 text-right bg-blue-600">{formatCurrency(summary.saldoAkhir)}</td>
@@ -773,6 +888,88 @@ const KasOrganisasi = () => {
                 <div className="flex gap-4">
                   <button type="button" onClick={() => setShowModalOut(false)} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase text-xs">Batal</button>
                   <button type="submit" disabled={submitting} className="flex-1 py-4 bg-rose-500 text-white rounded-2xl font-black uppercase text-xs shadow-lg shadow-rose-100">Simpan</button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showEditModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowEditModal(false)} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
+            <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="relative bg-white w-full max-w-2xl rounded-[40px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+              <div className={`p-8 text-white flex justify-between items-center ${editJenis === "PEMASUKAN" ? "bg-emerald-500" : "bg-rose-500"}`}>
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-2xl backdrop-blur-md"><FaEdit /></div>
+                  <div>
+                    <h3 className="text-xl font-black uppercase tracking-tight">{editForm.id ? "Edit " : "Tambah "}{editJenis === "PEMASUKAN" ? "Pemasukan" : "Pengeluaran"}</h3>
+                    <p className="text-white/70 text-xs font-bold">{editForm.nomorBukti ? "No. Bukti: " + editForm.nomorBukti : "Saldo Awal Organisasi"}</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowEditModal(false)} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-all"><FaTimes /></button>
+              </div>
+              <form onSubmit={handleSaveEdit} className="p-8 overflow-y-auto space-y-6">
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tanggal</label>
+                    <input type="date" required value={editForm.tanggalTransaksi} onChange={(e) => setEditForm({ ...editForm, tanggalTransaksi: e.target.value })} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Metode</label>
+                    <select value={editJenis === "PEMASUKAN" ? editForm.jenisPenerimaan : editForm.jenisPegeluaran} onChange={(e) => {
+                      if (editJenis === "PEMASUKAN") setEditForm({ ...editForm, jenisPenerimaan: e.target.value });
+                      else setEditForm({ ...editForm, jenisPegeluaran: e.target.value });
+                    }} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
+                      <option value="Transfer">Transfer</option>
+                      <option value="Tunai">Tunai</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Bulan Pembayaran</label>
+                    <select required value={editForm.setoranBulan} onChange={(e) => setEditForm({ ...editForm, setoranBulan: e.target.value })} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
+                      {months.map((m) => (<option key={m.value} value={m.value}>{m.label}</option>))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tahun Pembayaran</label>
+                    <select required value={editForm.setoranTahun} onChange={(e) => setEditForm({ ...editForm, setoranTahun: Number(e.target.value) })} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
+                      {yearOptions.map((y) => (<option key={y} value={y}>{y}</option>))}
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Pos</label>
+                    <select required value={editJenis === "PEMASUKAN" ? editForm.posPenerimaan : editForm.posPengeluaran} onChange={(e) => {
+                      if (editJenis === "PEMASUKAN") setEditForm({ ...editForm, posPenerimaan: e.target.value });
+                      else setEditForm({ ...editForm, posPengeluaran: e.target.value });
+                    }} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
+                      <option value="">Pilih Pos</option>
+                      {(editJenis === "PEMASUKAN" ? posPenerimaanList : posPengeluaranList).map(p => (
+                        <option key={p.id} value={p.namaPosPenerimaan || p.namaPosPengeluaran}>{p.namaPosPenerimaan || p.namaPosPengeluaran}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Cabang</label>
+                    <select value={editForm.cabang} onChange={(e) => setEditForm({ ...editForm, cabang: e.target.value })} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
+                      <option value="">Pilih Cabang</option>
+                      {cabangList.map(c => <option key={c.id} value={c.kecamatan}>{c.kecamatan}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Nominal</label>
+                  <input type="number" required value={editForm.nominal} onChange={(e) => setEditForm({ ...editForm, nominal: Number(e.target.value) })} className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-black text-xl text-slate-700" />
+                </div>
+                <textarea value={editForm.keterangan} onChange={(e) => setEditForm({ ...editForm, keterangan: e.target.value })} placeholder="Keterangan..." className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl font-medium text-slate-700 h-24 resize-none" />
+                <div className="flex gap-4">
+                  <button type="button" onClick={() => setShowEditModal(false)} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase text-xs">Batal</button>
+                  <button type="submit" disabled={submitting} className="flex-1 py-4 bg-blue-500 text-white rounded-2xl font-black uppercase text-xs shadow-lg shadow-blue-100">Simpan Perubahan</button>
                 </div>
               </form>
             </motion.div>

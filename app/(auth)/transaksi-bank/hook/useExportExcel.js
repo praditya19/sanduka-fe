@@ -116,23 +116,6 @@ const useExportExcel = () => {
     searchBalancing,
     setLoading,
   }) => {
-    const defaultKalender = await GlobalApi.getDefaultIuranById(1);
-    const defaultPgri = await GlobalApi.getDefaultIuranById(2);
-    const defaultDerap = await GlobalApi.getDefaultIuranById(3);
-    const defaultDaspen = await GlobalApi.getDefaultIuranById(4);
-    const sumDefault = (data) => {
-      return (
-        Number(data.pb || 0) +
-        Number(data.propinsi || 0) +
-        Number(data.kabupaten || 0) +
-        Number(data.cabang || 0) +
-        Number(data.sanduka || 0)
-      );
-    };
-    const totalDefaultKalender = sumDefault(defaultKalender);
-    const totalDefaultPgri = sumDefault(defaultPgri);
-    const totalDefaultDerap = sumDefault(defaultDerap);
-    const totalDefaultDaspen = sumDefault(defaultDaspen);
     try {
       setLoading(true);
 
@@ -158,14 +141,6 @@ const useExportExcel = () => {
       });
       const filteredData = Array.from(map.values());
 
-      const rekeningCount = {};
-      filteredData.forEach((item) => {
-        if (item.rekening) {
-          rekeningCount[item.rekening] =
-            (rekeningCount[item.rekening] || 0) + 1;
-        }
-      });
-
       const formattedData = filteredData.map((item, index) => ({
         No: index + 1,
         Cabang: item.cabang,
@@ -173,11 +148,11 @@ const useExportExcel = () => {
         Nama: item.nama,
         "Nomor Rekening": item.rekening,
 
-        "Default PGRI": totalDefaultPgri,
+        "Default PGRI": item.defaultPgri,
         "Manual PGRI": item.manualPgri,
         PGRI: item.totalIuranAnggota,
 
-        "Default Sanduka": 3000,
+        "Default Sanduka": item.defaultSanduka,
         "Manual Sanduka": item.manualSanduka,
         Sanduka: item.totalIuranSanduka,
 
@@ -185,11 +160,11 @@ const useExportExcel = () => {
         "Manual Daspen": item.manualDaspen,
         Daspen: item.totalIuranDaspen,
 
-        "Default Derap": totalDefaultDerap,
+        "Default Derap": item.defaultDerap,
         "Manual Derap": item.manualDerap,
         Derap: item.totalIuranDerap,
 
-        "Default Kalender": totalDefaultKalender,
+        "Default Kalender": item.defaultKalender,
         "Manual Kalender": item.manualKalender,
         Kalender: item.totalIuranKalender,
 
@@ -198,8 +173,6 @@ const useExportExcel = () => {
         "Potongan Bank": item.potongan,
         Selisih: item.selisih,
         Keterangan: item.keterangan,
-
-        // "Cek Duplicate": rekeningCount[item.rekening] > 1 ? "Duplicate" : "-",
       }));
 
       const worksheet = XLSX.utils.json_to_sheet(formattedData);
