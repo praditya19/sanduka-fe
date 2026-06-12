@@ -273,32 +273,38 @@ const KasOrganisasi = () => {
     });
   };
 
-  const handleEditClick = async (id, jenis) => {
+  const handleEditClick = async (id, jenis, rowData) => {
     try {
-      setEditJenis(jenis);
+      const isSaldoAwal = String(rowData?.nomorBukti || "").toLowerCase().includes("saldo awal");
+      const effectiveJenis = isSaldoAwal ? "PEMASUKAN" : jenis;
+      setEditJenis(effectiveJenis);
       let data;
-      if (jenis === "PEMASUKAN") {
-        data = await GlobalApi.getPemasukanUmumById(id);
-      } else {
-        data = await GlobalApi.getPengeluaranUmumById(id);
+      if (id && !isSaldoAwal) {
+        if (jenis === "PEMASUKAN") {
+          data = await GlobalApi.getPemasukanUmumById(id);
+        } else {
+          data = await GlobalApi.getPengeluaranUmumById(id);
+        }
       }
-      const tanggal = Array.isArray(data.tanggalTransaksi)
-        ? `${data.tanggalTransaksi[0]}-${String(data.tanggalTransaksi[1]).padStart(2, "0")}-${String(data.tanggalTransaksi[2]).padStart(2, "0")}`
-        : data.tanggalTransaksi.slice(0, 10);
+      const tanggal = data
+        ? (Array.isArray(data.tanggalTransaksi)
+            ? `${data.tanggalTransaksi[0]}-${String(data.tanggalTransaksi[1]).padStart(2, "0")}-${String(data.tanggalTransaksi[2]).padStart(2, "0")}`
+            : data.tanggalTransaksi.slice(0, 10))
+        : `${yearFilter}-${monthFilter}-01`;
 
       setEditForm({
-        id: data.id,
+        id: id,
         tanggalTransaksi: tanggal,
-        nomorBukti: data.nomorBukti || "",
-        jenisPenerimaan: data.jenisPenerimaan || "Transfer",
-        jenisPegeluaran: data.jenisPegeluaran || "Tunai",
-        posPenerimaan: data.posPenerimaan || "",
-        posPengeluaran: data.posPengeluaran || "",
-        cabang: data.cabang || "",
-        setoranBulan: data.setoranBulan || "",
-        setoranTahun: data.setoranTahun || new Date().getFullYear(),
-        nominal: data.nominal || 0,
-        keterangan: data.keterangan || ""
+        nomorBukti: data?.nomorBukti || rowData?.nomorBukti || "",
+        jenisPenerimaan: data?.jenisPenerimaan || "Transfer",
+        jenisPegeluaran: data?.jenisPegeluaran || "Tunai",
+        posPenerimaan: data?.posPenerimaan || "",
+        posPengeluaran: data?.posPengeluaran || "",
+        cabang: data?.cabang || "",
+        setoranBulan: data?.setoranBulan || Number(monthFilter),
+        setoranTahun: data?.setoranTahun || Number(yearFilter),
+        nominal: data?.nominal || rowData?.debet || 0,
+        keterangan: data?.keterangan || rowData?.keterangan || ""
       });
       setShowEditModal(true);
     } catch (error) {
@@ -310,34 +316,49 @@ const KasOrganisasi = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      if (editJenis === "PEMASUKAN") {
-        await GlobalApi.updatePemasukanUmum(editForm.id, {
+      if (editForm.id) {
+        if (editJenis === "PEMASUKAN") {
+          await GlobalApi.updatePemasukanUmum(editForm.id, {
+            tanggalTransaksi: editForm.tanggalTransaksi,
+            posPenerimaan: editForm.posPenerimaan,
+            setoranBulan: Number(editForm.setoranBulan),
+            setoranTahun: Number(editForm.setoranTahun),
+            jenisPenerimaan: editForm.jenisPenerimaan,
+            cabang: editForm.cabang,
+            nominal: Number(editForm.nominal),
+            keterangan: editForm.keterangan,
+          });
+        } else {
+          await GlobalApi.updatePengeluaranUmum(editForm.id, {
+            tanggalTransaksi: editForm.tanggalTransaksi,
+            posPengeluaran: editForm.posPengeluaran,
+            setoranBulan: Number(editForm.setoranBulan),
+            setoranTahun: Number(editForm.setoranTahun),
+            jenisPegeluaran: editForm.jenisPegeluaran,
+            cabang: editForm.cabang,
+            nominal: Number(editForm.nominal),
+            keterangan: editForm.keterangan,
+          });
+        }
+        toast.success("Transaksi berhasil diperbarui!");
+      } else {
+        await GlobalApi.createPemasukanUmum({
           tanggalTransaksi: editForm.tanggalTransaksi,
-          posPenerimaan: editForm.posPenerimaan,
+          posPenerimaan: editForm.posPenerimaan || "Lainnya",
           setoranBulan: Number(editForm.setoranBulan),
           setoranTahun: Number(editForm.setoranTahun),
           jenisPenerimaan: editForm.jenisPenerimaan,
-          cabang: editForm.cabang,
+          cabang: editForm.cabang || "Umum",
           nominal: Number(editForm.nominal),
           keterangan: editForm.keterangan,
+          nomorBukti: "SALDO AWAL ORGANISASI",
         });
-      } else {
-        await GlobalApi.updatePengeluaranUmum(editForm.id, {
-          tanggalTransaksi: editForm.tanggalTransaksi,
-          posPengeluaran: editForm.posPengeluaran,
-          setoranBulan: Number(editForm.setoranBulan),
-          setoranTahun: Number(editForm.setoranTahun),
-          jenisPegeluaran: editForm.jenisPegeluaran,
-          cabang: editForm.cabang,
-          nominal: Number(editForm.nominal),
-          keterangan: editForm.keterangan,
-        });
+        toast.success("Saldo awal berhasil disimpan!");
       }
-      toast.success("Transaksi berhasil diperbarui!");
       setShowEditModal(false);
       fetchData();
     } catch (error) {
-      toast.error("Gagal memperbarui transaksi.");
+      toast.error("Gagal menyimpan perubahan.");
     } finally {
       setSubmitting(false);
     }
@@ -678,12 +699,10 @@ const KasOrganisasi = () => {
                       {formatCurrency(t.runningBalance)}
                     </td>
                     <td className="px-3 sm:px-6 py-4 text-center">
-                      {t.id && (
-                        <div className="flex items-center justify-center space-x-1">
-                          <button onClick={() => handleEditClick(t.id, t.jenis)} className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-1.5 rounded-lg transition-all text-xs" title="Edit"><FaEdit /></button>
-                          <button onClick={() => handleDeleteTransaksi(t.id, t.jenis)} className="text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1.5 rounded-lg transition-all text-xs" title="Hapus"><FaTrash /></button>
-                        </div>
-                      )}
+                      <div className="flex items-center justify-center space-x-1">
+                        <button onClick={() => handleEditClick(t.id, t.jenis, t)} className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-1.5 rounded-lg transition-all text-xs" title="Edit"><FaEdit /></button>
+                        {t.id && <button onClick={() => handleDeleteTransaksi(t.id, t.jenis)} className="text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1.5 rounded-lg transition-all text-xs" title="Hapus"><FaTrash /></button>}
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -885,8 +904,8 @@ const KasOrganisasi = () => {
                 <div className="flex items-center space-x-4">
                   <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-2xl backdrop-blur-md"><FaEdit /></div>
                   <div>
-                    <h3 className="text-xl font-black uppercase tracking-tight">Edit {editJenis === "PEMASUKAN" ? "Pemasukan" : "Pengeluaran"}</h3>
-                    <p className="text-white/70 text-xs font-bold">No. Bukti: {editForm.nomorBukti}</p>
+                    <h3 className="text-xl font-black uppercase tracking-tight">{editForm.id ? "Edit " : "Tambah "}{editJenis === "PEMASUKAN" ? "Pemasukan" : "Pengeluaran"}</h3>
+                    <p className="text-white/70 text-xs font-bold">{editForm.nomorBukti ? "No. Bukti: " + editForm.nomorBukti : "Saldo Awal Organisasi"}</p>
                   </div>
                 </div>
                 <button onClick={() => setShowEditModal(false)} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-all"><FaTimes /></button>
