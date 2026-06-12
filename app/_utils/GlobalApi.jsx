@@ -3357,6 +3357,82 @@ const getTableUmum = async (bulan, tahun) => {
 };
 // END
 
+// Transaksi Cabang
+const createTransaksiCabang = async (data) => {
+  try {
+    const response = await axiosClient.post("/api/transaksi-cabang", data, {
+      headers: { "Content-Type": "application/json" },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error create transaksi cabang:", error);
+    throw error;
+  }
+};
+
+const getTransaksiCabang = async () => {
+  try {
+    const response = await axiosClient.get("/api/transaksi-cabang");
+    return response.data;
+  } catch (error) {
+    console.error("Error get transaksi cabang:", error);
+    throw error;
+  }
+};
+
+const getTransaksiCabangById = async (id) => {
+  try {
+    const response = await axiosClient.get(`/api/transaksi-cabang/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const getTransaksiCabangByBulanTahun = async (bulan, tahun) => {
+  try {
+    const response = await axiosClient.get(
+      `/api/transaksi-cabang/by-bulan-tahun?bulan=${bulan}&tahun=${tahun}`,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error get transaksi cabang by bulan:", error);
+    throw error;
+  }
+};
+
+const updateTransaksiCabang = async (id, payload) => {
+  try {
+    const response = await axiosClient.put(
+      `/api/transaksi-cabang/${id}`,
+      payload,
+      {
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error update transaksi cabang:", error);
+    throw error;
+  }
+};
+
+const deleteTransaksiCabang = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/transaksi-cabang/${id}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Terjadi kesalahan pada server",
+      );
+    } else {
+      throw new Error("Terjadi kesalahan pada jaringan");
+    }
+  }
+};
+// END
+
 // New By Nominal
 const getAllByNominal = async () => {
   try {
@@ -4301,6 +4377,12 @@ export default {
   deletePengeluaranUmum,
   deleteBalancing,
   getTableUmum,
+  createTransaksiCabang,
+  getTransaksiCabang,
+  getTransaksiCabangById,
+  getTransaksiCabangByBulanTahun,
+  updateTransaksiCabang,
+  deleteTransaksiCabang,
   getAllByNominal,
   importByNominal,
   deleteByNominal,
