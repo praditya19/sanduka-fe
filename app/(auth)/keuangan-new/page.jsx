@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
@@ -10,7 +10,9 @@ import SummaryCards from "./components/SummaryCards";
 import AIInsight from "./components/AIInsight";
 import QuickActions from "./components/QuickActions";
 import AIChat from "./components/AIChat";
-import { FaCalendarAlt, FaFilter, FaChartBar } from "react-icons/fa";
+import { FaCalendarAlt, FaFilter, FaChartBar, FaEye, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
 
 export default function KeuanganNew() {
   const router = useRouter();
@@ -20,7 +22,7 @@ export default function KeuanganNew() {
     sanduka: { saldo: 0, pemasukan: 0, pengeluaran: 0 },
     organisasi: { saldo: 0, pemasukan: 0, pengeluaran: 0 },
   });
-  const [activeModule, setActiveModule] = useState("sanduka"); // 'sanduka' or 'organisasi'
+  const [activeModule, setActiveModule] = useState("sanduka");
   const [insights, setInsights] = useState([]);
   const [tableData, setTableData] = useState([]);
   const [tableLoading, setTableLoading] = useState(true);
@@ -28,6 +30,19 @@ export default function KeuanganNew() {
   const now = new Date();
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+
+  const formatCurrency = (val) =>
+    new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(val || 0);
+
+  const normalizeCabangKey = (value) =>
+    (value || "").toString().trim().replace(/\s+/g, " ").toUpperCase();
+
+  const parseCurrency = (value) => {
+    if (!value) return 0;
+    if (typeof value === "number") return value;
+    const cleaned = value.toString().replace(/[^0-9,-]/g, "").replace(",", ".");
+    return parseFloat(cleaned) || 0;
+  };
 
   useEffect(() => {
     const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
@@ -39,55 +54,70 @@ export default function KeuanganNew() {
     fetchTableData();
   }, [selectedMonth, selectedYear]);
 
-
-  const fetchTableData = async () => {
+  const fetchTableData = useCallback(async () => {
     setTableLoading(true);
     try {
-      // Mengambil data dari balancing total iuran sesuai permintaan user
-      const response = await GlobalApi.getTransaksiBankBalancing(
-        "", 
-        null, 
-        selectedYear, 
-        selectedMonth, 
-        null, 
-        null
-      );
+      const [balancingRes, orgRes] = await Promise.all([
+        GlobalApi.getTransaksiBankBalancing("", null, selectedYear, selectedMonth, null, null),
+        GlobalApi.getPemasukanUmum(),
+      ]);
 
-      const safeData = Array.isArray(response) ? response : [];
+      const balancingData = Array.isArray(balancingRes) ? balancingRes : [];
 
-      // Filter untuk memastikan hanya mengambil record terbaru per NPA (menghindari duplikasi)
+      // Filter unique records per NPA
       const npaMap = {};
-      safeData.forEach((item) => {
+      balancingData.forEach((item) => {
         const key = `${item.cabang}-${item.unitKerja}-${item.npa}`;
         if (!npaMap[key] || item.id > npaMap[key].id) {
           npaMap[key] = item;
         }
       });
+      const uniqueData = Object.values(npaMap);
 
-      // Group by Cabang
-      const grouped = Object.values(npaMap).reduce((acc, item) => {
+      // Parse pemasukan organisasi for additional payments per cabang
+      const orgPayments = {};
+      if (orgRes && Array.isArray(orgRes)) {
+        orgRes.forEach((item) => {
+          const cabangValue =
+            typeof item.cabang === "object"
+              ? item.cabang?.kecamatan || item.cabang?.cabang || item.cabang?.namaCabang
+              : item.cabang;
+          const cabangName = cabangValue || item.namaCabang || item.nama_cabang || "";
+          const cabangKey = normalizeCabangKey(cabangName);
+          if (!cabangKey) return;
+          const nominal = parseCurrency(item.nominal || item.debet || item.debit);
+          orgPayments[cabangKey] = (orgPayments[cabangKey] || 0) + nominal;
+        });
+      }
+
+      // Group by cabang
+      const grouped = uniqueData.reduce((acc, item) => {
         const key = item.cabang || "Lainnya";
         if (!acc[key]) {
-          acc[key] = { 
-            cabang: key, 
-            target: 0, 
-            realisasi: 0 
-          };
+          acc[key] = { cabang: key, target: 0, realisasi: 0 };
         }
-        
-        // Target adalah total semua iuran (Anggota, Sanduka, Daspen, Derap, Kalender, Sumbangan)
-        const itemTarget = (item.totalIuranAnggota || 0) +
-                           (item.totalIuranSanduka || 0) +
-                           (item.totalIuranDaspen || 0) +
-                           (item.totalIuranDerap || 0) +
-                           (item.totalIuranKalender || 0) +
-                           (item.totalIuranSumbangan || 0);
-        
-        acc[key].target += itemTarget;
-        acc[key].realisasi += (item.potongan || 0);
-        
+
+        const targetItem =
+          (parseFloat(item.totalIuranAnggota) || 0) +
+          (parseFloat(item.totalIuranSanduka) || 0) +
+          (parseFloat(item.totalIuranDaspen) || 0) +
+          (parseFloat(item.totalIuranDerap) || 0) +
+          (parseFloat(item.totalIuranKalender) || 0) +
+          (parseFloat(item.totalIuranSumbangan) || 0);
+
+        acc[key].target += targetItem;
+        acc[key].realisasi += parseFloat(item.potongan) || 0;
+
         return acc;
       }, {});
+
+      // Add organisasi payments to realisasi
+      Object.keys(grouped).forEach((cabang) => {
+        const key = normalizeCabangKey(cabang);
+        if (orgPayments[key]) {
+          grouped[cabang].realisasi += orgPayments[key];
+        }
+      });
 
       setTableData(Object.values(grouped).sort((a, b) => a.cabang.localeCompare(b.cabang)));
     } catch (error) {
@@ -95,12 +125,11 @@ export default function KeuanganNew() {
     } finally {
       setTableLoading(false);
     }
-  };
+  }, [selectedMonth, selectedYear]);
 
   const cleanNumber = (val) => {
     if (typeof val === 'number') return val;
     if (!val) return 0;
-    // Remove everything except digits
     const cleaned = val.toString().replace(/[^0-9]/g, "");
     return parseInt(cleaned) || 0;
   };
@@ -108,7 +137,6 @@ export default function KeuanganNew() {
   const fetchFinancialData = async () => {
     setLoading(true);
     try {
-      // Fetch both Sanduka and Organisasi data
       const [responseSanduka, responseOrganisasi] = await Promise.all([
         GlobalApi.getSaldoSanduka(),
         GlobalApi.getSaldoOrganisasi(),
@@ -123,16 +151,8 @@ export default function KeuanganNew() {
       const organisasiKeluar = cleanNumber(responseOrganisasi.total_keluar);
 
       setData({
-        sanduka: {
-          saldo: sandukaSaldo,
-          pemasukan: sandukaMasuk,
-          pengeluaran: sandukaKeluar
-        },
-        organisasi: {
-          saldo: organisasiSaldo,
-          pemasukan: organisasiMasuk,
-          pengeluaran: organisasiKeluar
-        }
+        sanduka: { saldo: sandukaSaldo, pemasukan: sandukaMasuk, pengeluaran: sandukaKeluar },
+        organisasi: { saldo: organisasiSaldo, pemasukan: organisasiMasuk, pengeluaran: organisasiKeluar }
       });
     } catch (error) {
       console.error("Error fetching financial data:", error);
@@ -141,15 +161,12 @@ export default function KeuanganNew() {
     }
   };
 
-  // Update insights when activeModule or data changes
   useEffect(() => {
     if (loading) return;
-
     const currentModule = activeModule === "sanduka" ? "Sanduka" : "Organisasi";
     const currentData = data[activeModule];
-
     const newInsights = [
-      `Saldo ${currentModule} saat ini mencapai ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(currentData.saldo)}.`,
+      `Saldo ${currentModule} saat ini mencapai ${formatCurrency(currentData.saldo)}.`,
       `Tren pemasukan ${currentModule} bulan ini menunjukkan kenaikan positif dari sektor iuran.`,
       `Disarankan untuk meninjau kembali laporan ${currentModule} secara berkala untuk menjaga transparansi.`,
     ];
@@ -161,6 +178,9 @@ export default function KeuanganNew() {
     setIsSidebarOpen(newState);
     localStorage.setItem("isSidebarOpen", newState);
   };
+
+  const totalTarget = tableData.reduce((sum, row) => sum + row.target, 0);
+  const totalRealisasi = tableData.reduce((sum, row) => sum + row.realisasi, 0);
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row overflow-hidden">
@@ -178,13 +198,13 @@ export default function KeuanganNew() {
               animate={{ opacity: 1, x: 0 }}
             >
               <h1 className="text-3xl font-black text-slate-800 tracking-tight">
-                Dashboard Keuangan <span className="text-emerald-500">New</span>
+                Target <span className="text-emerald-500">&</span> Realisasi{" "}
+                <span className="text-blue-500">Keuangan</span>
               </h1>
-              <p className="text-slate-500 font-medium">Selamat datang kembali, Admin</p>
+              <p className="text-slate-500 font-medium">Kelola target dan realisasi iuran</p>
             </motion.div>
 
             <div className="flex items-center space-x-3">
-              {/* Premium Period Picker */}
               <div className="flex items-center bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <div className="px-4 py-3 bg-emerald-50 text-emerald-600 border-r border-slate-100">
                   <FaCalendarAlt className="text-sm" />
@@ -195,7 +215,7 @@ export default function KeuanganNew() {
                     onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
                     className="bg-transparent border-none text-sm font-black text-slate-700 focus:ring-0 cursor-pointer pl-3 pr-8 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_8px_center] bg-no-repeat"
                   >
-                    {["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"].map((m, i) => (
+                    {MONTHS.map((m, i) => (
                       <option key={i} value={i + 1}>{m}</option>
                     ))}
                   </select>
@@ -239,7 +259,6 @@ export default function KeuanganNew() {
                 Organisasi
               </button>
             </div>
-
             <div></div>
           </div>
 
@@ -248,7 +267,7 @@ export default function KeuanganNew() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              key={activeModule} // Re-animate when module changes
+              key={activeModule}
             >
               <SummaryCards
                 saldo={data[activeModule].saldo}
@@ -262,12 +281,12 @@ export default function KeuanganNew() {
 
               <QuickActions />
 
-              {/* Arrears Table Section */}
+              {/* Target & Realisasi Table Section */}
               <div className="bg-white rounded-[40px] p-8 shadow-xl border border-slate-100 mt-8 overflow-hidden">
                 <div className="flex items-center justify-between mb-8">
                   <div>
                     <h2 className="text-2xl font-black text-slate-800 tracking-tight">Data Setoran <span className="text-emerald-500">Per Cabang</span></h2>
-                    <p className="text-sm font-medium text-slate-400 mt-1">Status pembayaran iuran anggota berdasarkan wilayah</p>
+                    <p className="text-sm font-medium text-slate-400 mt-1">Target dan realisasi iuran berdasarkan wilayah</p>
                   </div>
                 </div>
 
@@ -277,8 +296,10 @@ export default function KeuanganNew() {
                       <tr className="text-slate-400 text-[10px] font-black uppercase tracking-widest border-b border-slate-100">
                         <th className="pb-5 text-center w-16">No</th>
                         <th className="pb-5">Cabang</th>
-                        <th className="pb-5 text-center">Total Iuran</th>
-                        <th className="pb-5 text-right">Opsi</th>
+                        <th className="pb-5 text-right">Target</th>
+                        <th className="pb-5 text-right">Realisasi</th>
+                        <th className="pb-5 text-center">Keterangan</th>
+                        <th className="pb-5 text-center">View</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
@@ -287,35 +308,56 @@ export default function KeuanganNew() {
                           <tr key={i} className="animate-pulse">
                             <td className="py-6 text-center"><div className="h-4 w-6 bg-slate-100 mx-auto rounded-full" /></td>
                             <td className="py-6"><div className="h-4 w-32 bg-slate-100 rounded-full" /></td>
-                            <td className="py-6 text-center"><div className="h-6 w-24 bg-slate-100 mx-auto rounded-full" /></td>
-                            <td className="py-6 text-right"><div className="h-8 w-20 bg-slate-100 ml-auto rounded-xl" /></td>
+                            <td className="py-6 text-right"><div className="h-6 w-24 bg-slate-100 ml-auto rounded-full" /></td>
+                            <td className="py-6 text-right"><div className="h-6 w-24 bg-slate-100 ml-auto rounded-full" /></td>
+                            <td className="py-6 text-center"><div className="h-6 w-20 bg-slate-100 mx-auto rounded-full" /></td>
+                            <td className="py-6 text-center"><div className="h-8 w-20 bg-slate-100 mx-auto rounded-xl" /></td>
                           </tr>
                         ))
                       ) : tableData.length > 0 ? (
-                        tableData.map((row, i) => (
-                          <tr key={i} className="hover:bg-slate-50/50 transition-colors group">
-                            <td className="py-6 text-center text-slate-400 font-bold text-xs">{i + 1}</td>
-                            <td className="py-6">
-                              <span className="font-black text-slate-700 block uppercase text-sm tracking-tight">{row.cabang}</span>
-                            </td>
-                            <td className="py-6 text-center">
-                              <span className="bg-emerald-50 text-emerald-600 font-black px-4 py-1.5 rounded-full text-[10px] border border-emerald-100 shadow-sm shadow-emerald-50">
-                                {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(row.target)}
-                              </span>
-                            </td>
-                            <td className="py-6 text-right">
-                              <button
-                                onClick={() => router.push(`/keuangan-new/detail?cabang=${encodeURIComponent(row.cabang)}`)}
-                                className="bg-slate-100 hover:bg-emerald-500 hover:text-white text-slate-600 px-5 py-2 rounded-2xl text-[10px] font-black transition-all active:scale-95 shadow-sm hover:shadow-lg hover:shadow-emerald-100"
-                              >
-                                LIHAT DETAIL
-                              </button>
-                            </td>
-                          </tr>
-                        ))
+                        tableData.map((row, i) => {
+                          const selisih = row.target - row.realisasi;
+                          const isLunas = selisih <= 0;
+                          return (
+                            <tr key={i} className="hover:bg-slate-50/50 transition-colors group">
+                              <td className="py-6 text-center text-slate-400 font-bold text-xs">{i + 1}</td>
+                              <td className="py-6">
+                                <span className="font-black text-slate-700 block uppercase text-sm tracking-tight">{row.cabang}</span>
+                              </td>
+                              <td className="py-6 text-right">
+                                <span className="font-black text-slate-700 text-sm">{formatCurrency(row.target)}</span>
+                              </td>
+                              <td className="py-6 text-right">
+                                <span className="font-bold text-emerald-600 text-sm">{formatCurrency(row.realisasi)}</span>
+                              </td>
+                              <td className="py-6 text-center">
+                                <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-black border shadow-sm ${
+                                  isLunas
+                                    ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+                                    : "bg-rose-50 text-rose-700 border-rose-100"
+                                }`}>
+                                  {isLunas ? (
+                                    <><FaCheckCircle className="text-[10px]" /> LUNAS</>
+                                  ) : (
+                                    <><FaTimesCircle className="text-[10px]" /> KEKURANGAN</>
+                                  )}
+                                </span>
+                              </td>
+                              <td className="py-6 text-center">
+                                <button
+                                  onClick={() => router.push(`/keuangan-new/detail?cabang=${encodeURIComponent(row.cabang)}&bulan=${selectedMonth}&tahun=${selectedYear}`)}
+                                  className="inline-flex items-center gap-2 bg-slate-100 hover:bg-emerald-500 hover:text-white text-slate-600 px-5 py-2 rounded-2xl text-[10px] font-black transition-all active:scale-95 shadow-sm hover:shadow-lg hover:shadow-emerald-100"
+                                >
+                                  <FaEye className="text-[10px]" />
+                                  DETAIL
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })
                       ) : (
                         <tr>
-                          <td colSpan="4" className="py-20 text-center">
+                          <td colSpan="6" className="py-20 text-center">
                             <div className="flex flex-col items-center">
                               <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-3">
                                 <FaChartBar className="text-slate-300" />
@@ -326,6 +368,25 @@ export default function KeuanganNew() {
                         </tr>
                       )}
                     </tbody>
+                    {tableData.length > 0 && (
+                      <tfoot>
+                        <tr className="bg-slate-900 text-white font-black">
+                          <td colSpan="2" className="px-4 py-5 text-[10px] uppercase tracking-widest">Total</td>
+                          <td className="px-4 py-5 text-right text-sm">{formatCurrency(totalTarget)}</td>
+                          <td className="px-4 py-5 text-right text-sm text-emerald-300">{formatCurrency(totalRealisasi)}</td>
+                          <td className="px-4 py-5 text-center">
+                            <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-black border ${
+                              totalTarget - totalRealisasi <= 0
+                                ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                                : "bg-rose-500/20 text-rose-300 border-rose-500/30"
+                            }`}>
+                              {totalTarget - totalRealisasi <= 0 ? "LUNAS" : "KEKURANGAN"}
+                            </span>
+                          </td>
+                          <td></td>
+                        </tr>
+                      </tfoot>
+                    )}
                   </table>
                 </div>
               </div>
