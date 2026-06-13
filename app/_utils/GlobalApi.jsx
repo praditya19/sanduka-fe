@@ -4195,7 +4195,34 @@ const getRekapDerapByPeriode = async (bulan, tahun) => {
     throw error;
   }
 };
-// END
+// END Rekapitulasi Derap
+
+// Rekapitulasi Kalender
+const saveRekapKalenderBatch = async (data) => {
+  try {
+    const response = await axiosClient.post(
+      "/api/rekapitulasi-kalender/batch",
+      data,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error saveRekapKalenderBatch:", error);
+    throw error;
+  }
+};
+
+const getRekapKalenderByPeriode = async (bulan, tahun) => {
+  try {
+    const response = await axiosClient.get(`/api/rekapitulasi-kalender/filter`, {
+      params: { bulan, tahun },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error getRekapKalenderByPeriode:", error);
+    throw error;
+  }
+};
+// END Rekapitulasi Kalender
 
 // Export all functions
 export default {
@@ -4484,6 +4511,8 @@ export default {
   getRekapByPeriode,
   saveRekapDerapBatch,
   getRekapDerapByPeriode,
+  saveRekapKalenderBatch,
+  getRekapKalenderByPeriode,
   postPosLainLain,
   getPosLainLain,
   getPosLainLainNames,
