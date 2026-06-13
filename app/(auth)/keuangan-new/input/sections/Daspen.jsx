@@ -1253,7 +1253,7 @@ const DaspenSection = () => {
                       const dbPemb1 = sandukaDB ? parseFloat(sandukaDB.pembayaran1 || 0) : 0;
                       const dbPemb2 = sandukaDB ? parseFloat(sandukaDB.pembayaran2 || 0) : 0;
                       const dbKurangSetor = sandukaDB ? (totDbNominal - dbTransfer - dbPemb1 - dbPemb2) : autoKurangSetor;
-                      const dbTotAnggota = sandukaDB ? (dbK1 + dbK2 + dbK3) : activeMembers;
+                      const dbTotAnggota = dbK1 + dbK2 + dbK3;
 
                       tAutoAng += activeMembers; tProvAng += (pTotAnggota || 0); tRealAng += (dbTotAnggota || 0);
 
