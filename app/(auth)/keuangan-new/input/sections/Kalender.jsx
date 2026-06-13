@@ -54,6 +54,11 @@ const KalenderSection = () => {
   const [searchDropCabang, setSearchDropCabang] = useState("");
   const cabangRef = useRef(null);
 
+  // Saved status
+  const [isSaved, setIsSaved] = useState(false);
+  const [savedDataCount, setSavedDataCount] = useState(0);
+  const [saving, setSaving] = useState(false);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (cabangRef.current && !cabangRef.current.contains(event.target)) {
@@ -76,6 +81,18 @@ const KalenderSection = () => {
     setSearchQuery(cabangName);
     setShowCabangDropdown(false);
     setSearchDropCabang("");
+  };
+
+  const checkSavedStatus = async (bulan, tahun) => {
+    try {
+      const res = await GlobalApi.getRekapKalenderByPeriode(bulan, tahun);
+      const data = Array.isArray(res) ? res : res?.data || [];
+      setIsSaved(data.length > 0);
+      setSavedDataCount(data.length);
+    } catch (error) {
+      setIsSaved(false);
+      setSavedDataCount(0);
+    }
   };
 
   const totalPerUnit = besaran.provinsi + besaran.kabupaten + besaran.cabang;
@@ -105,8 +122,10 @@ const KalenderSection = () => {
         });
       }
       const currentMonth = new Date().getMonth();
-      if (resBulan.data?.[currentMonth])
+      if (resBulan.data?.[currentMonth]) {
         setSelectedMonth(resBulan.data[currentMonth].namaBulan);
+        checkSavedStatus(resBulan.data[currentMonth].namaBulan, new Date().getFullYear());
+      }
     } catch (error) {
       console.error("Error fetching Kalender data:", error);
     }
@@ -196,6 +215,11 @@ const KalenderSection = () => {
   useEffect(() => {
     fetchTableData();
   }, [fetchTableData]);
+
+  useEffect(() => {
+    if (!selectedMonth || !selectedYear) return;
+    checkSavedStatus(selectedMonth, selectedYear);
+  }, [selectedMonth, selectedYear]);
 
   const getTambahanCabang = (cabangName, balancingData) => {
     const group = { manualByNpa: {} };
@@ -347,6 +371,50 @@ const KalenderSection = () => {
       toast.error("Gagal menghapus data Kalender.");
     } finally {
       setLoadingAction(false);
+    }
+  };
+
+  const handleSaveTable = async () => {
+    if (!tableData.length) {
+      toast.error("Tidak ada data untuk disimpan.");
+      return;
+    }
+
+    const loadingToast = toast.loading("Sedang menyimpan data rekapitulasi...");
+    setSaving(true);
+    try {
+      const monthObj = bulanList.find((b) => b.namaBulan === selectedMonth);
+      const monthId = monthObj ? monthObj.id : new Date().getMonth() + 1;
+
+      const payload = tableData.map((row) => ({
+        cabang: row.cabang,
+        jumlah: parseInt(row.jumlah) || 0,
+        peruntukanProvinsi: Math.round(row.peruntukanProvinsi) || 0,
+        peruntukanKabupaten: Math.round(row.peruntukanKabupaten) || 0,
+        peruntukanCabang: Math.round(row.peruntukanCabang) || 0,
+        tambahanCabang: Math.round(row.tambahanCabang) || 0,
+        totalCabang: Math.round(row.totalCabang) || 0,
+        transfer: Math.round(row.transfer) || 0,
+        kurang: Math.round(row.kurang) || 0,
+        bulan: selectedMonth,
+        bulanId: monthId,
+        tahun: selectedYear,
+        keterangan: "Simpan Rekapitulasi Otomatis",
+      }));
+
+      await GlobalApi.saveRekapKalenderBatch(payload);
+      toast.success("Rekapitulasi data Kalender berhasil disimpan ke database!", {
+        id: loadingToast,
+      });
+      setIsSaved(true);
+      const res = await GlobalApi.getRekapKalenderByPeriode(selectedMonth, selectedYear);
+      const data = Array.isArray(res) ? res : res?.data || [];
+      setSavedDataCount(data.length);
+    } catch (error) {
+      console.error("Error saving rekap kalender batch:", error);
+      toast.error("Gagal menyimpan data rekapitulasi.", { id: loadingToast });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -896,6 +964,30 @@ const KalenderSection = () => {
                   </div>
 
                   <div className="flex items-center gap-2">
+                    {isSaved ? (
+                      <span className="px-4 py-2.5 bg-emerald-50 text-emerald-700 rounded-xl font-black text-xs uppercase tracking-widest flex items-center gap-1.5 border border-emerald-200">
+                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                        TERSIMPAN ({savedDataCount})
+                      </span>
+                    ) : (
+                      <span className="px-4 py-2.5 bg-amber-50 text-amber-700 rounded-xl font-black text-xs uppercase tracking-widest flex items-center gap-1.5 border border-amber-200">
+                        <span className="w-1.5 h-1.5 bg-amber-500 rounded-full" />
+                        BELUM DISIMPAN
+                      </span>
+                    )}
+                    <button
+                      onClick={handleSaveTable}
+                      disabled={saving}
+                      className="px-5 py-3 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-black shadow-sm transition-all active:scale-95 text-xs uppercase tracking-widest flex items-center gap-2"
+                      title="Simpan Rekapitulasi"
+                    >
+                      {saving ? (
+                        <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        <FaSave />
+                      )}
+                      Simpan
+                    </button>
                     <button
                       onClick={handleDownloadExcel}
                       className="px-5 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black shadow-sm transition-all active:scale-95 text-xs uppercase tracking-widest flex items-center gap-2"
@@ -928,7 +1020,7 @@ const KalenderSection = () => {
                         "Peruntukan Cabang",
                         "Tambahan Cabang",
                         "Total Cabang",
-                        "Tranfer",
+                        "Transfer",
                         "Kurang",
                         "Setoran Tunai",
                         "Selisih",

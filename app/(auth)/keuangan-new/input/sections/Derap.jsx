@@ -1050,7 +1050,7 @@ const DerapSection = () => {
                         "Peruntukan Cabang",
                         "Tambahan Cabang",
                         "Total Cabang",
-                        "Tranfer",
+                        "Transfer",
                         "Kurang",
                         "Setoran Tunai",
                         "Selisih",
