@@ -13,6 +13,7 @@ import {
   faUserMinus,
   faUsers,
   faSearch,
+  faPrint,
 } from "@fortawesome/free-solid-svg-icons";
 import Seldata from "../statistik/Seldata/page";
 import { useRouter } from "next/navigation";
@@ -597,7 +598,7 @@ const Page = () => {
                         type="text"
                         placeholder="Cabang terpilih"
                         value={selectedCabang}
-                        readOnly={role === "ADMIN"}
+                        readOnly
                         className={`p-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                           role === "ADMIN"
                             ? "bg-gray-100 cursor-not-allowed"
@@ -690,7 +691,7 @@ const Page = () => {
                         onClick={handlePrint}
                         className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-300 flex items-center justify-center"
                       >
-                        <FontAwesomeIcon icon={handlePrint} className="mr-2" />
+                        <FontAwesomeIcon icon={faPrint} className="mr-2" />
                         Cetak Laporan
                       </button>
                     </div>

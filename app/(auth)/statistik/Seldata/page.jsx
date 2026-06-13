@@ -138,6 +138,12 @@ const DataTable = () => {
           year,
           cabang
         );
+      } else if (detailFilter === "Pindah Cabang") {
+        data = await GlobalApi.getCalculateSandukaPindahCabang(
+          month,
+          year,
+          cabang
+        );
       }
 
       setTableData(data || []);
@@ -257,21 +263,22 @@ const DataTable = () => {
                 <option value="Anggota Keluar">Anggota Keluar</option>
                 <option value="Anggota Pensiun">Anggota Pensiun</option>
                 <option value="Anggota Meninggal">Anggota Meninggal</option>
+                <option value="Pindah Cabang">Pindah Cabang</option>
               </select>
 
               <div className="relative w-full" ref={dropdownRef}>
-                <Input
-                  type="text"
-                  placeholder="Cabang terpilih"
-                  value={selectedCabang}
-                  readOnly={role === "ADMIN"}
-                  className={`p-2 border border-gray-300 rounded-md w-full ${
-                    role === "ADMIN" ? "bg-gray-100 cursor-not-allowed" : ""
-                  }`}
-                  onClick={() => {
-                    if (role !== "ADMIN") setShowDropdown(!showDropdown);
-                  }}
-                />
+                  <Input
+                    type="text"
+                    placeholder="Cabang terpilih"
+                    value={selectedCabang}
+                    readOnly
+                    className={`p-2 border border-gray-300 rounded-md w-full ${
+                      role === "ADMIN" ? "bg-gray-100 cursor-not-allowed" : ""
+                    }`}
+                    onClick={() => {
+                      if (role !== "ADMIN") setShowDropdown(!showDropdown);
+                    }}
+                  />
                 {showDropdown && (
                   <div className="absolute w-full bg-white border border-gray-300 rounded-md max-h-48 shadow-lg z-10">
                     <ul className="max-h-44 overflow-y-auto">
@@ -377,24 +384,28 @@ const DataTable = () => {
                         Cabang
                       </TableHead>
                       <TableHead
-                        colSpan="4"
+                        rowSpan="2"
                         className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
                       >
-                        Detail
+                        Unit Kerja
                       </TableHead>
-                    </TableRow>
-                    <TableRow>
-                      <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
+                      <TableHead
+                        rowSpan="2"
+                        className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
+                      >
                         Nama
                       </TableHead>
-                      <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
-                        NPA
-                      </TableHead>
-                      <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
+                      <TableHead
+                        rowSpan="2"
+                        className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
+                      >
                         Usia
                       </TableHead>
-                      <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
-                        Unit Kerja
+                      <TableHead
+                        rowSpan="2"
+                        className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
+                      >
+                        Keterangan
                       </TableHead>
                     </TableRow>
                   </TableHeader>
@@ -406,6 +417,31 @@ const DataTable = () => {
                         const npa = detailParts[1] || "-";
                         const usia = detailParts[2] || "-";
                         const unitKerja = detailParts[3] || "-";
+                        const keterangan = detailParts[4] || "";
+                        const updatedAt = detailParts[5] || "";
+
+                        const formatDate = (dateStr) => {
+                          if (!dateStr) return "";
+                          const d = new Date(dateStr);
+                          if (isNaN(d.getTime())) return dateStr.split("T")[0] || dateStr;
+                          return d.toLocaleDateString("id-ID", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          });
+                        };
+
+                        const getMutationLabel = (keterangan, filter) => {
+                          if (keterangan && keterangan.trim()) return keterangan;
+                          const labels = {
+                            "Menjadi Anggota Baru": "Anggota Baru",
+                            "Anggota Keluar": "Keluar",
+                            "Anggota Pensiun": "Pensiun",
+                            "Anggota Meninggal": "Meninggal",
+                            "Pindah Cabang": "Pindah Cabang",
+                          };
+                          return labels[filter] || filter || "-";
+                        };
 
                         return (
                           <React.Fragment key={index}>
@@ -433,16 +469,20 @@ const DataTable = () => {
                                 {item.cabang || "-"}
                               </TableCell>
                               <TableCell className="border text-center">
-                                {nama}
+                                {unitKerja || "-"}
                               </TableCell>
                               <TableCell className="border text-center">
-                                {npa}
+                                <div className="font-medium">{nama}</div>
+                                <div className="text-xs text-gray-500">{npa}</div>
                               </TableCell>
                               <TableCell className="border text-center">
                                 {usia} Tahun
                               </TableCell>
-                              <TableCell className="border text-center">
-                                {unitKerja}
+                              <TableCell className="border text-center text-xs">
+                                <span className="block font-medium">
+                                  {getMutationLabel(keterangan, detailFilter)}
+                                </span>
+                                <span className="block text-gray-500">{formatDate(updatedAt)}</span>
                               </TableCell>
                             </TableRow>
 
@@ -457,6 +497,8 @@ const DataTable = () => {
                                   const extraUsia = extraDetailParts[2] || "-";
                                   const extraUnitKerja =
                                     extraDetailParts[3] || "-";
+                                  const extraKeterangan = extraDetailParts[4] || "";
+                                  const extraUpdatedAt = extraDetailParts[5] || "";
 
                                   return (
                                     <TableRow
@@ -471,16 +513,20 @@ const DataTable = () => {
                                         colSpan="2"
                                       ></TableCell>
                                       <TableCell className="border text-center">
-                                        {extraNama}
+                                        {extraUnitKerja || "-"}
                                       </TableCell>
                                       <TableCell className="border text-center">
-                                        {extraNpa}
+                                        <div className="font-medium">{extraNama}</div>
+                                        <div className="text-xs text-gray-500">{extraNpa}</div>
                                       </TableCell>
                                       <TableCell className="border text-center">
                                         {extraUsia} Tahun
                                       </TableCell>
-                                      <TableCell className="border text-center">
-                                        {extraUnitKerja}
+                                      <TableCell className="border text-center text-xs">
+                                        <span className="block font-medium">
+                                          {getMutationLabel(extraKeterangan, detailFilter)}
+                                        </span>
+                                        <span className="block text-gray-500">{formatDate(extraUpdatedAt)}</span>
                                       </TableCell>
                                     </TableRow>
                                   );
