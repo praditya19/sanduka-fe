@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import GlobalApi from "@/app/_utils/GlobalApi";
+import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
 import toast, { Toaster } from "react-hot-toast";
 import html2canvas from "html2canvas";
@@ -40,6 +41,37 @@ const LainLainSection = () => {
   const [selectedMonth, setSelectedMonth] = useState("");
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Dropdown Cabang Standard State
+  const [showCabangDropdown, setShowCabangDropdown] = useState(false);
+  const [filteredCabangList, setFilteredCabangList] = useState([]);
+  const [searchDropCabang, setSearchDropCabang] = useState("");
+  const cabangRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (cabangRef.current && !cabangRef.current.contains(event.target)) {
+        setShowCabangDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleCabangSearch = (query) => {
+    setSearchDropCabang(query);
+    const filtered = cabangList.filter((cab) =>
+      (cab.kecamatan || "").toLowerCase().includes(query.toLowerCase()),
+    );
+    setFilteredCabangList(filtered);
+  };
+
+  const handleSelectCabang = (cabangName) => {
+    setSearchQuery(cabangName);
+    setShowCabangDropdown(false);
+    setSearchDropCabang("");
+  };
+
   const [bulanList, setBulanList] = useState([]);
   const [targetTableData, setTargetTableData] = useState([]);
   const [loadingTargetTable, setLoadingTargetTable] = useState(false);
@@ -716,38 +748,99 @@ const LainLainSection = () => {
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-              <div className="relative min-w-[200px] flex-1 md:flex-none">
-                <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-sm" />
-                <input
-                  type="text"
-                  placeholder="Cari transaksi..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-slate-500/20 focus:bg-white transition-all text-xs"
-                />
+              <div className="relative min-w-[200px]" ref={cabangRef}>
+                <div className="relative group">
+                  <Input
+                    type="text"
+                    value={searchQuery || "Semua Cabang"}
+                    readOnly
+                    onClick={() => {
+                      setShowCabangDropdown(!showCabangDropdown);
+                      setFilteredCabangList(cabangList);
+                    }}
+                    className="w-full pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-lg outline-none font-bold text-slate-700 focus:ring-2 focus:ring-slate-500/20 transition-all text-xs cursor-pointer hover:border-slate-300 shadow-sm"
+                    placeholder="Pilih Cabang"
+                  />
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-[8px] transition-transform duration-300 group-hover:text-slate-500">
+                    {showCabangDropdown ? "▲" : "▼"}
+                  </div>
+                </div>
+                {showCabangDropdown && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute z-[100] border border-slate-100 rounded-xl bg-white shadow-2xl mt-2 w-full max-h-72 overflow-hidden flex flex-col ring-1 ring-black/5"
+                  >
+                    <div className="p-3 border-b border-slate-50 bg-slate-50/50">
+                      <div className="relative">
+                        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-[10px]" />
+                        <Input
+                          type="text"
+                          value={searchDropCabang}
+                          onChange={(e) => handleCabangSearch(e.target.value)}
+                          className="w-full pl-8 pr-3 py-2 text-[10px] font-bold border-slate-200 rounded-lg focus:ring-slate-500 bg-white"
+                          placeholder="Ketik nama cabang..."
+                          autoFocus
+                        />
+                      </div>
+                    </div>
+                    <ul className="overflow-y-auto py-2 custom-scrollbar">
+                      <li
+                        onClick={() => handleSelectCabang("")}
+                        className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${
+                          !searchQuery
+                            ? "bg-slate-50 text-slate-600 border-slate-500"
+                            : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
+                        }`}
+                      >
+                        Semua Cabang
+                      </li>
+                      {[...filteredCabangList]
+                        .sort((a, b) =>
+                          (a.kecamatan || "").localeCompare(
+                            b.kecamatan || "",
+                          ),
+                        )
+                        .map((cab, idx) => (
+                          <li
+                            key={idx}
+                            onClick={() => handleSelectCabang(cab.kecamatan)}
+                            className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${
+                              searchQuery === cab.kecamatan
+                                ? "bg-slate-50 text-slate-600 border-slate-500"
+                                : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
+                            }`}
+                          >
+                            {cab.kecamatan}
+                          </li>
+                        ))}
+                    </ul>
+                  </motion.div>
+                )}
               </div>
 
-              <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-100">
+              <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-100">
                 <select
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="bg-transparent px-3 py-1.5 outline-none font-black text-slate-600 text-[10px] uppercase tracking-widest cursor-pointer"
+                  className="bg-transparent px-4 py-2.5 outline-none font-black text-slate-600 text-xs uppercase tracking-widest cursor-pointer"
                 >
                   {bulanList.map((b) => (
-                    <option key={b.id} value={b.namaBulan} className="font-sans normal-case">
+                    <option key={b.id} value={b.namaBulan}>
                       {b.namaBulan}
                     </option>
                   ))}
                 </select>
-                <div className="w-[1px] h-4 bg-slate-200" />
+                <div className="w-[1px] h-5 bg-slate-200" />
                 <select
                   value={selectedYear}
                   onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
-                  className="bg-transparent px-3 py-1.5 outline-none font-black text-slate-600 text-[10px] uppercase tracking-widest cursor-pointer"
+                  className="bg-transparent px-4 py-2.5 outline-none font-black text-slate-600 text-xs uppercase tracking-widest cursor-pointer"
                 >
-                  {[2024, 2025, 2026, 2027].map((year) => (
-                    <option key={year} value={year} className="font-sans normal-case">
-                      {year}
+                  {[2024, 2025, 2026, 2027].map((y) => (
+                    <option key={y} value={y}>
+                      {y}
                     </option>
                   ))}
                 </select>
@@ -1009,15 +1102,15 @@ const LainLainSection = () => {
 
                 <button
                   onClick={handleExportExcelTarget}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-sm"
+                  className="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-sm"
                 >
-                  <FaFileExcel className="text-xs" /> Excel
+                  <FaFileExcel className="text-sm" /> Excel
                 </button>
                 <button
                   onClick={handleDownloadPDFTarget}
-                  className="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-sm"
+                  className="px-5 py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-sm"
                 >
-                  <FaFilePdf className="text-xs" /> PDF
+                  <FaFilePdf className="text-sm" /> PDF
                 </button>
                 <button
                   onClick={fetchTargetTable}

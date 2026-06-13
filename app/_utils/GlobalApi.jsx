@@ -4169,6 +4169,32 @@ const getRekapByPeriode = async (bulan, tahun) => {
     throw error;
   }
 };
+
+// Rekapitulasi Derap
+const saveRekapDerapBatch = async (data) => {
+  try {
+    const response = await axiosClient.post(
+      "/api/rekapitulasi-derap/batch",
+      data,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error saveRekapDerapBatch:", error);
+    throw error;
+  }
+};
+
+const getRekapDerapByPeriode = async (bulan, tahun) => {
+  try {
+    const response = await axiosClient.get(`/api/rekapitulasi-derap/filter`, {
+      params: { bulan, tahun },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error getRekapDerapByPeriode:", error);
+    throw error;
+  }
+};
 // END
 
 // Export all functions
@@ -4456,6 +4482,8 @@ export default {
   saveRekap,
   saveRekapBatch,
   getRekapByPeriode,
+  saveRekapDerapBatch,
+  getRekapDerapByPeriode,
   postPosLainLain,
   getPosLainLain,
   getPosLainLainNames,

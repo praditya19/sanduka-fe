@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import GlobalApi from "@/app/_utils/GlobalApi";
+import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
 import toast, { Toaster } from "react-hot-toast";
 import * as XLSX from 'xlsx-js-style';
@@ -50,6 +51,36 @@ const DaspenSection = () => {
 
   const [loadingTable, setLoadingTable] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Dropdown Cabang Standard State
+  const [showCabangDropdown, setShowCabangDropdown] = useState(false);
+  const [filteredCabangList, setFilteredCabangList] = useState([]);
+  const [searchDropCabang, setSearchDropCabang] = useState("");
+  const cabangRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (cabangRef.current && !cabangRef.current.contains(event.target)) {
+        setShowCabangDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleCabangSearch = (query) => {
+    setSearchDropCabang(query);
+    const filtered = cabangList.filter((cab) =>
+      (cab.kecamatan || "").toLowerCase().includes(query.toLowerCase()),
+    );
+    setFilteredCabangList(filtered);
+  };
+
+  const handleSelectCabang = (cabangName) => {
+    setSearchQuery(cabangName);
+    setShowCabangDropdown(false);
+    setSearchDropCabang("");
+  };
 
   const [isUploadingDaspen, setIsUploadingDaspen] = useState(false);
   const [editModal, setEditModal] = useState({ show: false, data: null });
@@ -1036,15 +1067,83 @@ const DaspenSection = () => {
 
                 {/* ABAIKAN BAGIAN INI SAAT JADI PDF MENGGUNAKAN data-html2canvas-ignore */}
                 <div data-html2canvas-ignore="true" className="flex flex-wrap items-center gap-3">
-                  <div className="relative min-w-[200px]">
-                    <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300" />
-                    <input type="text" placeholder="Cari Cabang..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-slate-50 rounded-xl outline-none font-bold text-xs" />
+                  <div className="relative min-w-[200px]" ref={cabangRef}>
+                    <div className="relative group">
+                      <Input
+                        type="text"
+                        value={searchQuery || "Semua Cabang"}
+                        readOnly
+                        onClick={() => {
+                          setShowCabangDropdown(!showCabangDropdown);
+                          setFilteredCabangList(cabangList);
+                        }}
+                        className="w-full pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-lg outline-none font-bold text-slate-700 focus:ring-2 focus:ring-rose-500/20 transition-all text-xs cursor-pointer hover:border-rose-300 shadow-sm"
+                        placeholder="Pilih Cabang"
+                      />
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-[8px] transition-transform duration-300 group-hover:text-rose-500">
+                        {showCabangDropdown ? "▲" : "▼"}
+                      </div>
+                    </div>
+                    {showCabangDropdown && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        className="absolute z-[100] border border-slate-100 rounded-xl bg-white shadow-2xl mt-2 w-full max-h-72 overflow-hidden flex flex-col ring-1 ring-black/5"
+                      >
+                        <div className="p-3 border-b border-slate-50 bg-slate-50/50">
+                          <div className="relative">
+                            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-[10px]" />
+                            <Input
+                              type="text"
+                              value={searchDropCabang}
+                              onChange={(e) => handleCabangSearch(e.target.value)}
+                              className="w-full pl-8 pr-3 py-2 text-[10px] font-bold border-slate-200 rounded-lg focus:ring-rose-500 bg-white"
+                              placeholder="Ketik nama cabang..."
+                              autoFocus
+                            />
+                          </div>
+                        </div>
+                        <ul className="overflow-y-auto py-2 custom-scrollbar">
+                          <li
+                            onClick={() => handleSelectCabang("")}
+                            className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${
+                              !searchQuery
+                                ? "bg-rose-50 text-rose-600 border-rose-500"
+                                : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
+                            }`}
+                          >
+                            Semua Cabang
+                          </li>
+                          {[...filteredCabangList]
+                            .sort((a, b) =>
+                              (a.kecamatan || "").localeCompare(
+                                b.kecamatan || "",
+                              ),
+                            )
+                            .map((cab, idx) => (
+                              <li
+                                key={idx}
+                                onClick={() => handleSelectCabang(cab.kecamatan)}
+                                className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${
+                                  searchQuery === cab.kecamatan
+                                    ? "bg-rose-50 text-rose-600 border-rose-500"
+                                    : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
+                                }`}
+                              >
+                                {cab.kecamatan}
+                              </li>
+                            ))}
+                        </ul>
+                      </motion.div>
+                    )}
                   </div>
-                  <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-100">
-                    <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} className="bg-transparent px-3 py-1.5 outline-none font-black text-slate-600 text-[10px] uppercase">
+                  <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-100">
+                    <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} className="bg-transparent px-4 py-2.5 outline-none font-black text-slate-600 text-xs uppercase tracking-widest cursor-pointer">
                       {bulanList.map(b => <option key={b.id} value={b.namaBulan}>{b.namaBulan}</option>)}
                     </select>
-                    <select value={selectedYear} onChange={(e) => setSelectedYear(parseInt(e.target.value))} className="bg-transparent px-3 py-1.5 outline-none font-black text-slate-600 text-[10px] uppercase">
+                    <div className="w-[1px] h-5 bg-slate-200" />
+                    <select value={selectedYear} onChange={(e) => setSelectedYear(parseInt(e.target.value))} className="bg-transparent px-4 py-2.5 outline-none font-black text-slate-600 text-xs uppercase tracking-widest cursor-pointer">
                       {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
                     </select>
                   </div>
@@ -1055,13 +1154,13 @@ const DaspenSection = () => {
               <div data-html2canvas-ignore="true" className="flex justify-end gap-3 px-6 pt-4">
                 <button
                   onClick={handleExportExcel}
-                  className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-emerald-600/20 active:scale-95"
+                  className="flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-emerald-600/20 active:scale-95"
                 >
                   <FaFileExcel className="text-sm" /> Export Excel
                 </button>
                 <button
                   onClick={handleDownloadPDF} /* <-- Panggil fungsi baru di sini */
-                  className="flex items-center gap-2 px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white text-[11px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-rose-500/20 active:scale-95"
+                  className="flex items-center gap-2 px-5 py-3 bg-rose-500 hover:bg-rose-600 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-rose-500/20 active:scale-95"
                 >
                   <FaFilePdf className="text-sm" /> Cetak PDF
                 </button>
