@@ -743,6 +743,25 @@ const getCalculateSandukaKeluar = async (month, year, cabang) => {
   }
 };
 
+const getCalculateSandukaPindahCabang = async (month, year, cabang) => {
+  try {
+    const respons = await axiosClient.get(
+      "/api/calculate-sanduka/pindah-cabang",
+      {
+        params: {
+          cabang: cabang || null,
+          year: year,
+          month: month,
+        },
+      },
+    );
+    return respons.data;
+  } catch (error) {
+    console.error("Error fetching pindah cabang data:", error);
+    throw error;
+  }
+};
+
 const getTotalAnggotaStatistik = async () => {
   try {
     const respons = await axiosClient.get("/api/iuran/total-anggota");
@@ -4249,6 +4268,7 @@ export default {
   deletePemasukanSanduka,
   getCalculateSandukaPensiun,
   getCalculateSandukaKeluar,
+  getCalculateSandukaPindahCabang,
   getTotalAnggotaStatistik,
   getTotalAnggotaByCabang,
   getFileByNip,
