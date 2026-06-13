@@ -35,11 +35,18 @@ const QuickActions = () => {
       href: "/keuangan-new/organisasi",
     },
     {
-      title: "Laporan Keuangan",
+      title: "Laporan Keuangan Sanduka",
       subtitle: "Cetak & Export PDF",
       icon: <FaPrint />,
       color: "bg-purple-500",
       href: "/keuangan-new/laporan",
+    },
+    {
+      title: "Laporan Keuangan Organisasi",
+      subtitle: "Laporan keuangan organisasi",
+      icon: <FaFileInvoiceDollar />,
+      color: "bg-indigo-500",
+      href: "/keuangan-new/laporan-organisasi",
     },
     {
       title: "Analisis Tren",
@@ -53,7 +60,7 @@ const QuickActions = () => {
   return (
     <div className="mb-8">
       <h2 className="text-xl font-bold text-gray-800 mb-4 tracking-tight uppercase text-xs">Akses Cepat</h2>
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
         {actions.map((action, index) => (
           <Link href={action.href} key={index}>
             <motion.div
