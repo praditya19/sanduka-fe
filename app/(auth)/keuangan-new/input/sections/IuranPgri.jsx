@@ -45,6 +45,10 @@ const IuranPgriSection = () => {
   const [totalAnggotaCabang, setTotalAnggotaCabang] = useState(0);
   const [keterangan, setKeterangan] = useState("");
 
+  // Saved status
+  const [isSaved, setIsSaved] = useState(false);
+  const [savedDataCount, setSavedDataCount] = useState(0);
+
   // Lists
   const [cabangList, setCabangList] = useState([]);
   const [bulanList, setBulanList] = useState([]);
@@ -107,6 +111,18 @@ const IuranPgriSection = () => {
     setCurrentPage(1);
   };
 
+  const checkSavedStatus = async (bulan, tahun) => {
+    try {
+      const res = await GlobalApi.getRekapByPeriode(bulan, tahun);
+      const data = Array.isArray(res) ? res : res?.data || [];
+      setIsSaved(data.length > 0);
+      setSavedDataCount(data.length);
+    } catch (error) {
+      setIsSaved(false);
+      setSavedDataCount(0);
+    }
+  };
+
   // Initial Fetch
   useEffect(() => {
     fetchInitialData();
@@ -139,10 +155,22 @@ const IuranPgriSection = () => {
       if (resBulan.data?.[currentMonth]) {
         setSelectedMonth(resBulan.data[currentMonth].namaBulan);
       }
+
+      // Check saved status for selected period after month is set
+      const defaultBulan = resBulan.data?.[currentMonth];
+      if (defaultBulan) {
+        checkSavedStatus(defaultBulan.namaBulan, new Date().getFullYear());
+      }
     } catch (error) {
       console.error("Error fetching initial data:", error);
     }
   };
+
+  // Check saved status when month/year changes
+  useEffect(() => {
+    if (!selectedMonth || !selectedYear) return;
+    checkSavedStatus(selectedMonth, selectedYear);
+  }, [selectedMonth, selectedYear]);
 
   // Fetch Table Data
   const fetchTransactions = useCallback(async () => {
@@ -488,6 +516,10 @@ const IuranPgriSection = () => {
       toast.success("Rekapitulasi data iuran berhasil disimpan ke database!", {
         id: loadingToast,
       });
+      setIsSaved(true);
+      const res = await GlobalApi.getRekapByPeriode(selectedMonth, selectedYear);
+      const data = Array.isArray(res) ? res : res?.data || [];
+      setSavedDataCount(data.length);
     } catch (error) {
       console.error("Error saving rekap batch:", error);
       toast.error("Gagal menyimpan data rekapitulasi.", { id: loadingToast });
@@ -963,7 +995,7 @@ const IuranPgriSection = () => {
                                       );
                                       setFilteredCabangList(cabangList);
                                     }}
-                                    className="w-full pl-4 pr-10 py-2 bg-white border border-slate-200 rounded-lg outline-none font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500/20 transition-all text-[10px] cursor-pointer hover:border-indigo-300 shadow-sm"
+                                    className="w-full pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-lg outline-none font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500/20 transition-all text-xs cursor-pointer hover:border-indigo-300 shadow-sm"
                                     placeholder="Pilih Cabang"
                                   />
                                   <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-[8px] transition-transform duration-300 group-hover:text-indigo-500">
@@ -1028,46 +1060,60 @@ const IuranPgriSection = () => {
                                   </motion.div>
                                 )}
                               </div>
-                              <select
-                                value={selectedMonth}
-                                onChange={(e) =>
-                                  setSelectedMonth(e.target.value)
-                                }
-                                className="px-3 py-2 bg-white border border-slate-200 rounded-lg outline-none font-bold text-slate-700 text-[10px] appearance-none cursor-pointer hover:bg-slate-50 transition-colors"
-                              >
-                                {bulanList.map((b) => (
-                                  <option key={b.id} value={b.namaBulan}>
-                                    {b.namaBulan}
-                                  </option>
-                                ))}
-                              </select>
-                              <select
-                                value={selectedYear}
-                                onChange={(e) =>
-                                  setSelectedYear(parseInt(e.target.value))
-                                }
-                                className="px-3 py-2 bg-white border border-slate-200 rounded-lg outline-none font-bold text-slate-700 text-[10px] appearance-none cursor-pointer hover:bg-slate-50 transition-colors"
-                              >
-                                {[2024, 2025, 2026, 2027].map((y) => (
-                                  <option key={y} value={y}>
-                                    {y}
-                                  </option>
-                                ))}
-                              </select>
+                              <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-100">
+                                <select
+                                  value={selectedMonth}
+                                  onChange={(e) =>
+                                    setSelectedMonth(e.target.value)
+                                  }
+                                  className="bg-transparent px-4 py-2.5 outline-none font-black text-slate-600 text-xs uppercase tracking-widest cursor-pointer"
+                                >
+                                  {bulanList.map((b) => (
+                                    <option key={b.id} value={b.namaBulan}>
+                                      {b.namaBulan}
+                                    </option>
+                                  ))}
+                                </select>
+                                <div className="w-[1px] h-5 bg-slate-200" />
+                                <select
+                                  value={selectedYear}
+                                  onChange={(e) =>
+                                    setSelectedYear(parseInt(e.target.value))
+                                  }
+                                  className="bg-transparent px-4 py-2.5 outline-none font-black text-slate-600 text-xs uppercase tracking-widest cursor-pointer"
+                                >
+                                  {[2024, 2025, 2026, 2027].map((y) => (
+                                    <option key={y} value={y}>
+                                      {y}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
                             </div>
                           </div>
 
                           <div className="flex items-center gap-2">
+                            {isSaved ? (
+                              <span className="flex items-center gap-1.5 px-4 py-2.5 bg-emerald-50 text-emerald-700 rounded-xl font-black text-xs uppercase tracking-widest border border-emerald-200">
+                                <FaCheckCircle className="text-sm" />
+                                TERSIMPAN ({savedDataCount})
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1.5 px-4 py-2.5 bg-amber-50 text-amber-700 rounded-xl font-black text-xs uppercase tracking-widest border border-amber-200">
+                                <FaExclamationCircle className="text-sm" />
+                                BELUM DISIMPAN
+                              </span>
+                            )}
                             <button
                               onClick={handleSaveTable}
-                              className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-lg font-black text-[9px] uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 shadow-md"
+                              className="flex items-center gap-2 px-5 py-3 bg-emerald-500 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 shadow-md"
                             >
                               <FaSave />
                               <span>Simpan</span>
                             </button>
                             <button
                               onClick={() => window.print()}
-                              className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg font-black text-[9px] uppercase tracking-widest hover:bg-black transition-all active:scale-95 shadow-md"
+                              className="flex items-center gap-2 px-5 py-3 bg-slate-900 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-black transition-all active:scale-95 shadow-md"
                             >
                               <FaPrint />
                               <span>PDF</span>
