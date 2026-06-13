@@ -1910,6 +1910,12 @@ const DataTable = ({
                               ? "Terdaftar Daspen"
                               : "Belum Terdaftar Daspen"}
                           </div>
+
+                          <div className="text-[10px] text-gray-400 mt-2 border-t border-gray-100 pt-1">
+                            {item.updatedAt && item.updatedAt.length >= 3
+                              ? `Update: ${String(item.updatedAt[2]).padStart(2, "0")}-${String(item.updatedAt[1]).padStart(2, "0")}-${item.updatedAt[0]}`
+                              : ""}
+                          </div>
                         </td>
                         <td className="py-2 px-4 border text-center">
                           <div
@@ -2429,6 +2435,13 @@ const DataTable = ({
                                 Status Keanggotaan:
                               </h3>
                               {item.statusKeanggotaan}
+                            </div>
+                            <div className="text-left mt-1">
+                              <span className="text-xs text-gray-400">
+                                {item.updatedAt && item.updatedAt.length >= 3
+                                  ? `Update: ${String(item.updatedAt[2]).padStart(2, "0")}-${String(item.updatedAt[1]).padStart(2, "0")}-${item.updatedAt[0]}`
+                                  : ""}
+                              </span>
                             </div>
                           </div>
                           <div>
