@@ -115,7 +115,7 @@ const DaspenSection = () => {
       let tAutoTrans = 0, tAutoSel = 0, tAutoKurang = 0;
 
       filteredCabangs.forEach((cabangName, i) => {
-        let autoK1 = 0, autoK2 = 0, autoK3 = 0, autoTransfer = 0;
+                      let autoK1 = 0, autoK2 = 0, autoK3 = 0, autoTransfer = 0, autoTunai = 0;
         const targetK1 = Math.round(kat1Val);
         const targetK2 = Math.round(kat2Val);
         const targetK3 = Math.round(kat3Val);
@@ -134,12 +134,13 @@ const DaspenSection = () => {
           }
 
           const manualDaspen = parseFloat(item.manualDaspen || item.manual_daspen) || 0;
-          const isSukses = item.keterangan === "Sukses" || item.keterangan === "Tunai";
 
           if (manualDaspen > 0) {
             autoTransfer += manualDaspen;
-          } else if (isSukses) {
+          } else if (item.keterangan?.toLowerCase() === "sukses") {
             autoTransfer += tagihan;
+          } else if (item.keterangan?.toLowerCase() === "tunai") {
+            autoTunai += tagihan;
           }
         });
 
@@ -149,7 +150,9 @@ const DaspenSection = () => {
         const nomAutoK1 = autoK1 * kat1Val; const nomAutoK2 = autoK2 * kat2Val; const nomAutoK3 = autoK3 * kat3Val;
         const totAutoNominal = nomAutoK1 + nomAutoK2 + nomAutoK3;
         const autoSelisih = totAutoNominal - autoTransfer;
-        const autoKurangSetor = totAutoNominal - autoTransfer;
+        const autoPerunCabang = totAutoNominal * CABANG_PERCENTAGE;
+        const autoPerunKabupaten = totAutoNominal * KABUPATEN_PERCENTAGE;
+        const autoTagihan = totAutoNominal - autoPerunCabang;
 
         const pk1 = daspen ? parseInt(daspen.kategori1) : 0;
         const pk2 = daspen ? parseInt(daspen.kategori2) : 0;
@@ -176,7 +179,7 @@ const DaspenSection = () => {
         const activeSelisih = sandukaDB ? dbSelisih : autoSelisih;
         const activePemb1 = sandukaDB ? dbPemb1 : 0;
         const activePemb2 = sandukaDB ? dbPemb2 : 0;
-        const activeKurang = sandukaDB ? dbKurangSetor : autoKurangSetor;
+        const activeKurang = sandukaDB ? dbKurangSetor : autoSelisih;
 
         const activeMembers = cabAggregated.length > 0 ? cabAggregated.reduce((sum, item) => sum + (parseInt(item.jumlah) || 1), 0) : 0;
         const pTotAnggota = daspen ? (pk1 + pk2 + pk3) : 0;
@@ -190,7 +193,7 @@ const DaspenSection = () => {
         tAutoK3 += autoK3; tProvK3 += pk3; tRealK3 += dbK3;
         tAutoNomK3 += nomAutoK3; tProvNomK3 += pNomK3; tRealNomK3 += nomDbK3;
         tAutoTotNom += totAutoNominal; tProvTotNom += pTotNominal; tRealTotNom += totDbNominal;
-        tAutoTrans += autoTransfer; tAutoSel += autoSelisih; tAutoKurang += autoKurangSetor;
+        tAutoTrans += autoTransfer; tAutoSel += autoSelisih; tAutoKurang += autoSelisih;
 
         excelData.push({
           "No": i + 1,
@@ -410,27 +413,67 @@ const DaspenSection = () => {
   const fetchTableData = useCallback(async () => {
     if (!selectedMonth || !selectedYear) return;
     setLoadingTable(true);
+    const monthNames = [
+      "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+      "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+    ];
     try {
-      const [resTable, resTargets] = await Promise.all([
+      let [resTable, resTargets] = await Promise.all([
         GlobalApi.getTableDaspen(selectedMonth, selectedYear, [], ""),
         GlobalApi.getAllTargetDaspen()
       ]);
 
-      const filteredTable = resTable.filter(row => row["Cabang/Khusus"] !== "Jumlah" && row.cabang !== "Jumlah");
-      setTableData(filteredTable || []);
+      let filteredTable = resTable.filter(row => row["Cabang/Khusus"] !== "Jumlah" && row.cabang !== "Jumlah");
 
-      const filteredTargets = resTargets.filter(row =>
+      let filteredTargets = resTargets.filter(row =>
         row.bulan?.toUpperCase() === selectedMonth.toUpperCase() &&
         row.tahun?.toString() === selectedYear.toString()
       );
+
+      // Isi cabang yg belum punya data dari bulan sebelumnya
+      const currentMonthId = monthNames.indexOf(selectedMonth) + 1;
+
+      let prevMonthId = currentMonthId - 1;
+      let prevYear = selectedYear;
+      if (prevMonthId < 1) { prevMonthId = 12; prevYear = selectedYear - 1; }
+
+      const prevMonthName = monthNames[prevMonthId - 1];
+
+      const [prevTable, prevAllTargets] = await Promise.all([
+        GlobalApi.getTableDaspen(prevMonthName, prevYear, [], ""),
+        GlobalApi.getAllTargetDaspen()
+      ]);
+
+      const prevFilteredTable = prevTable.filter(row => row["Cabang/Khusus"] !== "Jumlah" && row.cabang !== "Jumlah");
+      if (prevFilteredTable.length > 0) {
+        const existingCabangs = new Set((filteredTable || []).map((r) => r.cabang?.toUpperCase()));
+        prevFilteredTable.forEach((row) => {
+          if (!existingCabangs.has(row.cabang?.toUpperCase())) {
+            filteredTable = [...(filteredTable || []), { ...row, bulan: selectedMonth, tahun: selectedYear }];
+          }
+        });
+      }
+
+      const prevFilteredTargets = prevAllTargets.filter(row =>
+        row.bulan?.toUpperCase() === prevMonthName.toUpperCase() &&
+        row.tahun?.toString() === prevYear.toString()
+      );
+      if (prevFilteredTargets.length > 0) {
+        const existingTargetKeys = new Set(
+          (filteredTargets || []).map((r) => `${r.cabang?.toUpperCase()}|${r.jenisData}`)
+        );
+        prevFilteredTargets.forEach((row) => {
+          const key = `${row.cabang?.toUpperCase()}|${row.jenisData}`;
+          if (!existingTargetKeys.has(key)) {
+            filteredTargets = [...(filteredTargets || []), { ...row, bulan: selectedMonth, tahun: selectedYear }];
+          }
+        });
+      }
+
+      setTableData(filteredTable || []);
       setTargetData(filteredTargets || []);
 
       try {
-        const monthNames = [
-          "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-          "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-        ];
-
         const numericMonth = monthNames.indexOf(selectedMonth) !== -1
           ? monthNames.indexOf(selectedMonth) + 1
           : null;
@@ -707,11 +750,12 @@ const DaspenSection = () => {
     </div>
   );
 
-  const CellTriple = ({ top, middle, bottom, topClass = "text-slate-700", middleClass = "text-teal-500", bottomClass = "text-red-600" }) => (
+  const CellTriple = ({ top, middle, bottom, topClass = "text-slate-700", middleClass = "text-teal-500" }) => (
     <div className="flex flex-col justify-center gap-1 leading-tight py-1">
       <div className={`text-[11px] font-bold ${topClass}`}>{top !== null && top !== undefined ? top : "-"}</div>
-      <div className={`text-[11px] font-semibold italic ${middleClass}`}>{middle !== null && middle !== undefined ? middle : "-"}</div>
-      <div className={`text-[11px] font-bold italic ${bottomClass}`}>{bottom !== null && bottom !== undefined ? bottom : "-"}</div>
+      {middle !== null && middle !== undefined && (
+        <div className={`text-[11px] font-semibold italic ${middleClass}`}>{middle}</div>
+      )}
     </div>
   );
 
@@ -1179,16 +1223,17 @@ const DaspenSection = () => {
                   let tAutoNomK3 = 0, tProvNomK3 = 0, tRealNomK3 = 0;
                   let tAutoTotNom = 0, tProvTotNom = 0, tRealTotNom = 0;
                   let tAutoTrans = 0, tProvTrans = 0, tRealTrans = 0;
-                  let tAutoSel = 0, tProvSel = 0, tRealSel = 0;
-                  let tProvPemb1 = 0, tRealPemb1 = 0;
-                  let tProvPemb2 = 0, tRealPemb2 = 0;
+                  let tAutoTunai = 0, tProvTunai = 0, tRealTunai = 0;
                   let tAutoKurang = 0, tProvKurang = 0, tRealKurang = 0;
+                  let tAutoPerunCabang = 0, tProvPerunCabang = 0, tRealPerunCabang = 0;
+                  let tAutoPerunKabupaten = 0, tProvPerunKabupaten = 0, tRealPerunKabupaten = 0;
+                  let tAutoTagihan = 0, tProvTagihan = 0, tRealTagihan = 0;
 
                   const renderedRows = loadingTable ? (
-                    Array(5).fill(0).map((_, i) => <tr key={i} className="animate-pulse"><td colSpan={17} className="p-6"><div className="h-3 bg-slate-100 rounded-full w-full" /></td></tr>)
+                    Array(5).fill(0).map((_, i) => <tr key={i} className="animate-pulse"><td colSpan={18} className="p-6"><div className="h-3 bg-slate-100 rounded-full w-full" /></td></tr>)
                   ) : filteredCabangs.length > 0 ? (
                     filteredCabangs.map((cabangName, i) => {
-                      let autoK1 = 0, autoK2 = 0, autoK3 = 0, autoTransfer = 0;
+        let autoK1 = 0, autoK2 = 0, autoK3 = 0, autoTransfer = 0, autoTunai = 0;
                       const targetK1 = Math.round(kat1Val);
                       const targetK2 = Math.round(kat2Val);
                       const targetK3 = Math.round(kat3Val);
@@ -1207,12 +1252,13 @@ const DaspenSection = () => {
                         }
 
                         const manualDaspen = parseFloat(item.manualDaspen || item.manual_daspen) || 0;
-                        const isSukses = item.keterangan === "Sukses" || item.keterangan === "Tunai";
 
                         if (manualDaspen > 0) {
                           autoTransfer += manualDaspen;
-                        } else if (isSukses) {
+                        } else if (item.keterangan?.toLowerCase() === "sukses") {
                           autoTransfer += tagihan;
+                        } else if (item.keterangan?.toLowerCase() === "tunai") {
+                          autoTunai += tagihan;
                         }
                       });
 
@@ -1222,7 +1268,9 @@ const DaspenSection = () => {
                       const nomAutoK1 = autoK1 * kat1Val; const nomAutoK2 = autoK2 * kat2Val; const nomAutoK3 = autoK3 * kat3Val;
                       const totAutoNominal = nomAutoK1 + nomAutoK2 + nomAutoK3;
                       const autoSelisih = totAutoNominal - autoTransfer;
-                      const autoKurangSetor = totAutoNominal - autoTransfer;
+                      const autoPerunCabang = totAutoNominal * CABANG_PERCENTAGE;
+                      const autoPerunKabupaten = totAutoNominal * KABUPATEN_PERCENTAGE;
+                      const autoTagihan = totAutoNominal - autoPerunCabang;
 
                       const pk1 = daspen ? parseInt(daspen.kategori1) : null;
                       const pk2 = daspen ? parseInt(daspen.kategori2) : null;
@@ -1236,6 +1284,9 @@ const DaspenSection = () => {
                       const pPemb1 = daspen ? parseFloat(daspen.pembayaran1 || 0) : null;
                       const pPemb2 = daspen ? parseFloat(daspen.pembayaran2 || 0) : null;
                       const pKurangSetor = daspen ? (pTotNominal - pTransfer - pPemb1 - pPemb2) : null;
+                      const pPerunCabang = daspen ? (pTotNominal * CABANG_PERCENTAGE) : null;
+                      const pPerunKabupaten = daspen ? (pTotNominal * KABUPATEN_PERCENTAGE) : null;
+                      const pTagihan = daspen ? (pTotNominal - pPerunCabang) : null;
 
                       const activeMembers = cabAggregated.length > 0 ? cabAggregated.reduce((sum, item) => sum + (parseInt(item.jumlah) || 1), 0) : 0;
                       const pTotAnggota = daspen ? (pk1 + pk2 + pk3) : null;
@@ -1252,7 +1303,10 @@ const DaspenSection = () => {
                       const dbSelisih = sandukaDB ? (totDbNominal - dbTransfer) : autoSelisih;
                       const dbPemb1 = sandukaDB ? parseFloat(sandukaDB.pembayaran1 || 0) : 0;
                       const dbPemb2 = sandukaDB ? parseFloat(sandukaDB.pembayaran2 || 0) : 0;
-                      const dbKurangSetor = sandukaDB ? (totDbNominal - dbTransfer - dbPemb1 - dbPemb2) : autoKurangSetor;
+                      const dbKurangSetor = sandukaDB ? (totDbNominal - dbTransfer - dbPemb1 - dbPemb2) : autoSelisih;
+                      const dbPerunCabang = totDbNominal * CABANG_PERCENTAGE;
+                      const dbPerunKabupaten = totDbNominal * KABUPATEN_PERCENTAGE;
+                      const dbTagihan = totDbNominal - dbPerunCabang;
                       const dbTotAnggota = dbK1 + dbK2 + dbK3;
 
                       tAutoAng += activeMembers; tProvAng += (pTotAnggota || 0); tRealAng += (dbTotAnggota || 0);
@@ -1268,18 +1322,19 @@ const DaspenSection = () => {
 
                       tAutoTotNom += totAutoNominal; tProvTotNom += (pTotNominal || 0); tRealTotNom += (totDbNominal || 0);
                       tAutoTrans += autoTransfer; tProvTrans += (pTransfer || 0); tRealTrans += (dbTransfer || 0);
-                      tAutoSel += autoSelisih; tProvSel += (pSelisih || 0); tRealSel += (dbSelisih || 0);
+                      tAutoTunai += autoTunai; tProvTunai += (0); tRealTunai += (dbPemb1 || 0);
 
-                      tProvPemb1 += (pPemb1 || 0); tRealPemb1 += (dbPemb1 || 0);
-                      tProvPemb2 += (pPemb2 || 0); tRealPemb2 += (dbPemb2 || 0);
+                      tAutoKurang += autoSelisih; tProvKurang += (0); tRealKurang += (dbSelisih || 0);
 
-                      tAutoKurang += autoKurangSetor; tProvKurang += (pKurangSetor || 0); tRealKurang += (dbKurangSetor || 0);
+                      tAutoPerunCabang += autoPerunCabang; tProvPerunCabang += (pPerunCabang || 0); tRealPerunCabang += (dbPerunCabang || 0);
+                      tAutoPerunKabupaten += autoPerunKabupaten; tProvPerunKabupaten += (pPerunKabupaten || 0); tRealPerunKabupaten += (dbPerunKabupaten || 0);
+                      tAutoTagihan += autoTagihan; tProvTagihan += (pTagihan || 0); tRealTagihan += (dbTagihan || 0);
 
                       const activeTransfer = sandukaDB ? parseFloat(sandukaDB.transfer || 0) : autoTransfer;
                       const activeSelisih = sandukaDB ? (totDbNominal - activeTransfer) : autoSelisih;
                       const activePemb1 = sandukaDB ? parseFloat(sandukaDB.pembayaran1 || 0) : 0;
                       const activePemb2 = sandukaDB ? parseFloat(sandukaDB.pembayaran2 || 0) : 0;
-                      const activeKurang = sandukaDB ? (totDbNominal - activeTransfer - activePemb1 - activePemb2) : autoKurangSetor;
+                      const activeKurang = sandukaDB ? (totDbNominal - activeTransfer - activePemb1 - activePemb2) : autoSelisih;
 
                       return (
                         <tr key={i} className="hover:bg-slate-50/80 transition-colors text-[11px] font-bold text-slate-600">
@@ -1304,25 +1359,30 @@ const DaspenSection = () => {
                           </td>
 
                           <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/30">
-                            <CellTriple top={formatCurrency(autoSelisih)} middle={pSelisih !== null ? formatCurrency(pSelisih) : null} bottom={dbSelisih !== null ? formatCurrency(dbSelisih) : null} />
+                            {/* Tunai = transaksi Tunai */}
+                            <CellTriple top={formatCurrency(autoTunai)} middle={null} bottom={dbPemb1 !== null ? formatCurrency(dbPemb1) : null} />
                           </td>
 
                           <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/30">
-                            <CellTriple top={formatCurrency(0)} middle={pPemb1 !== null ? formatCurrency(pPemb1) : null} bottom={dbPemb1 !== null ? formatCurrency(dbPemb1) : null} />
+                            {/* selisih kurang = total - Transfer */}
+                            <CellTriple top={formatCurrency(autoSelisih)} middle={null} bottom={dbSelisih !== null ? formatCurrency(dbSelisih) : null} />
                           </td>
 
                           <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/30">
-                            <CellTriple top={formatCurrency(0)} middle={pPemb2 !== null ? formatCurrency(pPemb2) : null} bottom={dbPemb2 !== null ? formatCurrency(dbPemb2) : null} />
+                            <CellTriple top={formatCurrency(autoPerunCabang)} middle={pPerunCabang !== null ? formatCurrency(pPerunCabang) : null} bottom={formatCurrency(dbPerunCabang)} />
                           </td>
 
                           <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/30">
-                            <CellTriple top={formatCurrency(autoKurangSetor)} middle={pKurangSetor !== null ? formatCurrency(pKurangSetor) : null} bottom={dbKurangSetor !== null ? formatCurrency(dbKurangSetor) : null} />
+                            <CellTriple top={formatCurrency(autoPerunKabupaten)} middle={pPerunKabupaten !== null ? formatCurrency(pPerunKabupaten) : null} bottom={formatCurrency(dbPerunKabupaten)} />
+                          </td>
+
+                          <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/30">
+                            <CellTriple top={formatCurrency(autoTagihan)} middle={pTagihan !== null ? formatCurrency(pTagihan) : null} bottom={formatCurrency(dbTagihan)} />
                           </td>
                           <td className="px-3 py-2 text-center border-r border-slate-200">
                             <div className="flex flex-col gap-1 items-center justify-center">
                               <span className="text-[9px] font-black text-slate-500">AUTO</span>
                               {daspen && <span className="px-2 py-0.5 rounded-md text-[9px] font-black bg-teal-50 text-teal-600">DASPEN</span>}
-                              {sandukaDB && <span className="px-2 py-0.5 rounded-md text-[9px] font-black bg-red-100 text-red-600">REALISASI</span>}
                             </div>
                           </td>
 
@@ -1358,7 +1418,7 @@ const DaspenSection = () => {
                       );
                     })
                   ) : (
-                    <tr><td colSpan={17} className="py-16 text-center text-slate-300 font-black uppercase tracking-widest text-xs">Data Kosong</td></tr>
+                    <tr><td colSpan={18} className="py-16 text-center text-slate-300 font-black uppercase tracking-widest text-xs">Data Kosong</td></tr>
                   );
 
                   return (
@@ -1366,7 +1426,7 @@ const DaspenSection = () => {
                       <thead>
                         <tr className="bg-slate-50 border-b border-slate-200">
                           {/* MAPPING HEADER, JIKA H === 'Aksi', TAMBAHKAN data-html2canvas-ignore */}
-                          {["No", "Cabang/Khusus", "Total Anggota", "Kat I", "Nominal", "Kat II", "Nominal", "Kat III", "Nominal", "Total Nominal", "Transfer", "Selisih", "Pembayaran 1", "Pembayaran 2", "Kurang Setor", "Status", "Aksi"].map((h, i) => (
+                          {["No", "Cabang/Khusus", "Total Anggota", "Kat I", "Nominal", "Kat II", "Nominal", "Kat III", "Nominal", "Total Nominal", "Transfer", "Tunai", "selisih kurang", "Peruntukan cabang", "Peruntukan Kabupaten", "TAGIHAN", "Status", "Aksi"].map((h, i) => (
                             <th
                               key={i}
                               data-html2canvas-ignore={h === 'Aksi' ? "true" : undefined}
@@ -1399,19 +1459,23 @@ const DaspenSection = () => {
                             </td>
 
                             <td className="px-3 py-2 border-r border-slate-300 text-right">
-                              <CellTriple top={formatCurrency(tAutoSel)} middle={formatCurrency(tProvSel)} bottom={formatCurrency(tRealSel)} />
-                            </td>
-
-                            <td className="px-3 py-2 border-r border-slate-300 text-right">
-                              <CellTriple top={formatCurrency(0)} middle={formatCurrency(tProvPemb1)} bottom={formatCurrency(tRealPemb1)} />
-                            </td>
-
-                            <td className="px-3 py-2 border-r border-slate-300 text-right">
-                              <CellTriple top={formatCurrency(0)} middle={formatCurrency(tProvPemb2)} bottom={formatCurrency(tRealPemb2)} />
+                              <CellTriple top={formatCurrency(tAutoTunai)} middle={formatCurrency(tProvTunai)} bottom={formatCurrency(tRealTunai)} />
                             </td>
 
                             <td className="px-3 py-2 border-r border-slate-300 text-right">
                               <CellTriple top={formatCurrency(tAutoKurang)} middle={formatCurrency(tProvKurang)} bottom={formatCurrency(tRealKurang)} />
+                            </td>
+
+                            <td className="px-3 py-2 border-r border-slate-300 text-right">
+                              <CellTriple top={formatCurrency(tAutoPerunCabang)} middle={formatCurrency(tProvPerunCabang)} bottom={formatCurrency(tRealPerunCabang)} />
+                            </td>
+
+                            <td className="px-3 py-2 border-r border-slate-300 text-right">
+                              <CellTriple top={formatCurrency(tAutoPerunKabupaten)} middle={formatCurrency(tProvPerunKabupaten)} bottom={formatCurrency(tRealPerunKabupaten)} />
+                            </td>
+
+                            <td className="px-3 py-2 border-r border-slate-300 text-right">
+                              <CellTriple top={formatCurrency(tAutoTagihan)} middle={formatCurrency(tProvTagihan)} bottom={formatCurrency(tRealTagihan)} />
                             </td>
                             {/* ABAIKAN JUGA DI FOOTER */}
                             <td data-html2canvas-ignore="true" colSpan={2} className="px-3 py-2 border-r border-slate-300 bg-slate-200/30"></td>
