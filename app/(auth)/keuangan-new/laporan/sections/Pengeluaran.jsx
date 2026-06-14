@@ -157,7 +157,7 @@ const PengeluaranSection = () => {
               className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-rose-500/20"
             >
               {bulanList.map((b) => (
-                <option key={b.id} value={b.id}>
+                <option key={b.id} value={String(b.id).padStart(2, "0")}>
                   {b.namaBulan}
                 </option>
               ))}

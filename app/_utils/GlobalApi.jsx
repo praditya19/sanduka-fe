@@ -3412,6 +3412,61 @@ const getTableUmum = async (bulan, tahun) => {
     console.error("Error fetching table kas umum:", error);
     throw error;
   }
+}; 
+// KAS Organisasi
+const getTableKasOrganisasi = async (bulan, tahun) => {
+  try {
+    const response = await axiosClient.get(
+      `/api/rekap-transaksi-organisasi?bulan=${bulan}&tahun=${tahun}`,
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching table kas sanduka:", error);
+    throw error;
+  }
+};
+
+const getRealisasiFromKasOrganisasi = async (bulan, tahun) => {
+  try {
+    const res = await getTableKasOrganisasi(bulan, tahun);
+
+    const dataKasOrganisasi = Array.isArray(res) ? res : res?.data || [];
+
+    // Filter hanya PEMASUKAN
+    const pemasukanData = dataKasOrganisasi.filter((item) => {
+      const match = item.jenis === "PEMASUKAN";
+      if (match) {
+      }
+      return match;
+    });
+
+    // Group dan total per cabang
+    const grouped = {};
+
+    pemasukanData.forEach((item, index) => {
+      const cabang = extractCabangFromKeterangan(item.keterangan);
+
+      if (cabang) {
+        if (!grouped[cabang]) {
+          grouped[cabang] = {
+            totalNominal: 0,
+            jumlahTransaksi: 0,
+          };
+        }
+
+        grouped[cabang].totalNominal += item.debet || 0;
+        grouped[cabang].jumlahTransaksi += 1;
+      } else {
+        console.log(`   ❌ Failed to extract cabang`);
+      }
+    });
+
+    return grouped;
+  } catch (error) {
+    console.error("❌ Error fetching realisasi from kas sanduka:", error);
+    throw error;
+  }
 };
 // END
 
@@ -4561,4 +4616,6 @@ export default {
   updateIuranPersenDaspen,
   saveRekapDaspenBatch,
   getRekapDaspenByPeriode,
+  getTableKasOrganisasi,
+  getRealisasiFromKasOrganisasi,
 };
