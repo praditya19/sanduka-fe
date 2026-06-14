@@ -59,7 +59,7 @@ const PemasukanOrganisasi = () => {
 
         return {
           tanggalTransaksi: tanggal,
-          uraian: item.keterangan,
+          uraian: item.pos,
           nominal: item.debet || 0,
         };
       });
@@ -81,6 +81,35 @@ const PemasukanOrganisasi = () => {
     fetchData();
   }, [fetchData]);
 
+  const filteredData = data.filter((item) =>
+    item.uraian?.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+
+  const POS_PRIORITY = {
+  "Saldo Awal": 0,
+  };
+  
+  const groupedSortedData = Object.values(
+  filteredData.reduce((acc, item) => {
+    const pos = item.uraian || "LAINNYA";
+
+    if (!acc[pos]) acc[pos] = [];
+
+    acc[pos].push(item);
+    return acc;
+  }, {})
+)
+  .sort((a, b) => {
+    const posA = a[0].uraian;
+    const posB = b[0].uraian;
+
+    const priorityA = POS_PRIORITY[posA] ?? 999;
+    const priorityB = POS_PRIORITY[posB] ?? 999;
+
+    return priorityA - priorityB;
+  })
+    .flat();
+  
   const formatCurrency = (val) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -89,15 +118,11 @@ const PemasukanOrganisasi = () => {
     }).format(val || 0);
   };
 
-  const filteredData = data.filter((item) =>
-    item.uraian?.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
-
   const exportToExcel = () => {
     const excelData = filteredData.map((item, index) => ({
       No: index + 1,
       Tanggal: item.tanggalTransaksi,
-      Uraian: item.uraian,
+      Uraian: item.pos,
       Nominal: item.nominal,
     }));
 
@@ -229,7 +254,7 @@ const PemasukanOrganisasi = () => {
                 <tr className="bg-slate-900 text-white text-[10px] uppercase font-black tracking-widest">
                   <th className="px-6 py-5 text-center w-20">No</th>
                   <th className="px-6 py-5">Tanggal Transaksi</th>
-                  <th className="px-6 py-5">Uraian / Keterangan</th>
+                  <th className="px-6 py-5">POS</th>
                   <th className="px-6 py-5 text-right">Nominal (Rp)</th>
                 </tr>
               </thead>
@@ -245,7 +270,7 @@ const PemasukanOrganisasi = () => {
                       </tr>
                     ))
                 ) : filteredData.length > 0 ? (
-                  filteredData.map((row, i) => (
+                  groupedSortedData.map((row, i) => (
                     <tr
                       key={i}
                       className="hover:bg-emerald-50/30 transition-colors group"

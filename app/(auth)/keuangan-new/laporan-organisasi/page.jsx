@@ -13,7 +13,6 @@ import {
   FaWallet,
   FaChartPie,
   FaChevronRight,
-  FaBuildingColumns,
 } from "react-icons/fa6";
 
 import TargetRealisasiOrganisasi from "./sections/TargetRealisasiOrganisasi";
@@ -33,7 +32,7 @@ export default function LaporanOrganisasi() {
 function LaporanOrganisasiContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const tabParam = searchParams.get("tab") || "pemasukan";
+  const tabParam = searchParams.get("tab") || "target-realisasi";
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(tabParam);
