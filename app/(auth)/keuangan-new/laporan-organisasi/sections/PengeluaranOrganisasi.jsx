@@ -56,7 +56,7 @@ const PengeluaranOrganisasi = () => {
 
           return {
             tanggalTransaksi: tanggal,
-            uraian: item.keterangan,
+            uraian: item.pos,
             nominal: item.kredit || 0,
           };
         });
@@ -94,7 +94,7 @@ const PengeluaranOrganisasi = () => {
     const excelData = filteredData.map((item, index) => ({
       No: index + 1,
       Tanggal: item.tanggalTransaksi,
-      Uraian: item.uraian,
+      Uraian: item.pos,
       Nominal: item.nominal,
     }));
 
@@ -226,7 +226,7 @@ const PengeluaranOrganisasi = () => {
                 <tr className="bg-slate-900 text-white text-[10px] uppercase font-black tracking-widest">
                   <th className="px-6 py-5 text-center w-20">No</th>
                   <th className="px-6 py-5">Tanggal Transaksi</th>
-                  <th className="px-6 py-5">Uraian / Keterangan</th>
+                  <th className="px-6 py-5">POS</th>
                   <th className="px-6 py-5 text-right">Nominal (Rp)</th>
                 </tr>
               </thead>
