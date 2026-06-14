@@ -56,12 +56,13 @@ function KeuanganDetailContent() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [balancingRes, orgRes, iuranRes, rekapIuran, rekapDerap] = await Promise.all([
+      const [balancingRes, orgRes, iuranRes, rekapIuran, rekapDerap, rekapDaspen] = await Promise.all([
         GlobalApi.getTransaksiBankBalancing("", null, selectedYear, selectedMonth, null, null),
         GlobalApi.getPemasukanUmum(),
         GlobalApi.getDefaultIuranById(2),
         GlobalApi.getRekapByPeriode(MONTHS_FULL[selectedMonth], selectedYear),
         GlobalApi.getRekapDerapByPeriode(MONTHS_FULL[selectedMonth], selectedYear),
+        GlobalApi.getRekapDaspenByPeriode(MONTHS_FULL[selectedMonth], selectedYear),
       ]);
 
       const safeData = Array.isArray(balancingRes) ? balancingRes : [];
@@ -110,6 +111,20 @@ function KeuanganDetailContent() {
         : 0;
       rekapDerapJumlah = rekapDerapByCabang[cabangKey]?.jumlah || 0;
 
+      // Rekapitulasi Daspen — tagihan
+      const rekapDaspenData = Array.isArray(rekapDaspen) ? rekapDaspen : [];
+      const rekapDaspenByCabang = {};
+      rekapDaspenData.forEach((r) => {
+        const key = (r.cabang || "").trim().toUpperCase();
+        if (!rekapDaspenByCabang[key]) {
+          rekapDaspenByCabang[key] = { tagihan: 0, totalAnggota: 0 };
+        }
+        rekapDaspenByCabang[key].tagihan += r.tagihan || 0;
+        rekapDaspenByCabang[key].totalAnggota += r.totalAnggota || 0;
+      });
+      const rekapDaspenTotal = rekapDaspenByCabang[cabangKey]?.tagihan || 0;
+      const rekapDaspenAnggota = rekapDaspenByCabang[cabangKey]?.totalAnggota || 0;
+
       // Per-category breakdown
       const categories = [
         { label: "IURAN", field: "totalIuranAnggota" },
@@ -138,6 +153,10 @@ function KeuanganDetailContent() {
         if (cat.label === "DERAP" && rekapDerapTotal > 0) {
           total = rekapDerapTotal;
           if (rekapDerapJumlah > 0) count = rekapDerapJumlah;
+        }
+        if (cat.label === "DASPEN" && rekapDaspenTotal > 0) {
+          total = rekapDaspenTotal;
+          if (rekapDaspenAnggota > 0) count = rekapDaspenAnggota;
         }
         subtotal += total;
         return { label: cat.label, count, total };
