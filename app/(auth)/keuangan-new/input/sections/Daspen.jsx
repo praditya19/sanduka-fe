@@ -863,11 +863,14 @@ const DaspenSection = () => {
     </div>
   );
 
-  const CellTriple = ({ top, middle, bottom, topClass = "text-slate-700", middleClass = "text-teal-500" }) => (
+  const CellTriple = ({ top, middle, bottom, topClass = "text-slate-700", middleClass = "text-teal-500", bottomClass = "text-rose-500" }) => (
     <div className="flex flex-col justify-center gap-1 leading-tight py-1">
       <div className={`text-[11px] font-bold ${topClass}`}>{top !== null && top !== undefined ? top : "-"}</div>
       {middle !== null && middle !== undefined && (
         <div className={`text-[11px] font-semibold italic ${middleClass}`}>{middle}</div>
+      )}
+      {bottom !== null && bottom !== undefined && (
+        <div className={`text-[11px] font-semibold italic ${bottomClass}`}>{bottom}</div>
       )}
     </div>
   );
@@ -1451,6 +1454,8 @@ const DaspenSection = () => {
                       const pTagihan = daspen ? (pTotNominal - pPerunCabang) : null;
 
                       const activeMembers = cabAggregated.length > 0 ? cabAggregated.reduce((sum, item) => sum + (parseInt(item.jumlah) || 1), 0) : 0;
+                      const totalKatAnggota = autoK1 + autoK2 + autoK3;
+                      const uniqueAnggotaPGRI = new Set(cabAggregated.map(r => r.npa || r.nip).filter(Boolean)).size || activeMembers;
                       const pTotAnggota = daspen ? (pk1 + pk2 + pk3) : null;
 
                       /* REALISASI (merah): fallback ke AUTO jika belum disimpan manual */
@@ -1471,7 +1476,7 @@ const DaspenSection = () => {
                       const dbTagihan = totDbNominal - dbPerunCabang;
                       const dbTotAnggota = dbK1 + dbK2 + dbK3;
 
-                      tAutoAng += activeMembers; tProvAng += (pTotAnggota || 0); tRealAng += (dbTotAnggota || 0);
+                      tAutoAng += totalKatAnggota; tProvAng += (pTotAnggota || 0); tRealAng += (dbTotAnggota || 0);
 
                       tAutoK1 += autoK1; tProvK1 += (pk1 || 0); tRealK1 += (dbK1 || 0);
                       tAutoNomK1 += nomAutoK1; tProvNomK1 += (pNomK1 || 0); tRealNomK1 += (nomDbK1 || 0);
@@ -1503,7 +1508,7 @@ const DaspenSection = () => {
                           <td className="px-3 py-2 text-slate-400 font-black border-r border-slate-200 text-center">{i + 1}</td>
                           <td className="px-3 py-2 font-black text-slate-800 whitespace-nowrap border-r border-slate-200 uppercase">{cabangName}</td>
 
-                          <td className="px-3 py-2 border-r border-slate-200 text-center"><CellTriple top={activeMembers} middle={pTotAnggota} bottom={dbTotAnggota} /></td>
+                          <td className="px-3 py-2 border-r border-slate-200 text-center whitespace-nowrap"><CellTriple top={`OTOMATIS ${totalKatAnggota}`} middle={pTotAnggota !== null ? `DASPEN ONLINE ${pTotAnggota}` : null} bottom={`TOTAL ANGGOTA DI SANDUKA ${uniqueAnggotaPGRI}`} topClass="text-slate-700 font-black" middleClass="text-teal-500" bottomClass="text-rose-500" /></td>
 
                           <td className="px-3 py-2 border-r border-slate-200 text-center"><CellTriple top={autoK1} middle={pk1} bottom={dbK1} /></td>
                           <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap"><CellTriple top={formatCurrency(nomAutoK1)} middle={pNomK1 !== null ? formatCurrency(pNomK1) : null} bottom={nomDbK1 !== null ? formatCurrency(nomDbK1) : null} /></td>
@@ -1607,7 +1612,7 @@ const DaspenSection = () => {
                         <tfoot className="bg-slate-100/80 border-t-4 border-slate-300 shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
                           <tr className="text-[11px] font-black text-slate-800">
                             <td colSpan={2} className="px-3 py-4 text-center text-xs uppercase tracking-widest border-r border-slate-300">TOTAL REKAPITULASI</td>
-                            <td className="px-3 py-2 border-r border-slate-300 text-center"><CellTriple top={tAutoAng} middle={tProvAng} bottom={tRealAng} /></td>
+                            <td className="px-3 py-2 border-r border-slate-300 text-center"><CellTriple top={`OTOMATIS ${tAutoAng}`} middle={tProvAng > 0 ? `DASPEN ONLINE ${tProvAng}` : null} bottom={`TOTAL ANGGOTA DI SANDUKA ${tRealAng}`} topClass="text-slate-900 font-black" middleClass="text-teal-500" bottomClass="text-rose-500" /></td>
                             <td className="px-3 py-2 border-r border-slate-300 text-center"><CellTriple top={tAutoK1} middle={tProvK1} bottom={tRealK1} /></td>
                             <td className="px-3 py-2 border-r border-slate-300 text-right"><CellTriple top={formatCurrency(tAutoNomK1)} middle={formatCurrency(tProvNomK1)} bottom={formatCurrency(tRealNomK1)} /></td>
                             <td className="px-3 py-2 border-r border-slate-300 text-center"><CellTriple top={tAutoK2} middle={tProvK2} bottom={tRealK2} /></td>
