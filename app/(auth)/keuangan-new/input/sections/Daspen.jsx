@@ -1339,6 +1339,19 @@ const DaspenSection = () => {
 
               {/* ABAIKAN TOMBOL EXCEL & PDF SAAT JADI PDF */}
               <div data-html2canvas-ignore="true" className="flex justify-end gap-3 px-6 pt-4">
+                <div className="flex items-center gap-2">
+                  {isSaved ? (
+                    <span className="px-4 py-2.5 bg-emerald-50 text-emerald-700 rounded-xl font-black text-xs uppercase tracking-widest flex items-center gap-1.5 border border-emerald-200">
+                      <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                      TERSIMPAN ({savedDataCount})
+                    </span>
+                  ) : (
+                    <span className="px-4 py-2.5 bg-amber-50 text-amber-700 rounded-xl font-black text-xs uppercase tracking-widest flex items-center gap-1.5 border border-amber-200">
+                      <span className="w-1.5 h-1.5 bg-amber-500 rounded-full" />
+                      BELUM DISIMPAN
+                    </span>
+                  )}
+                </div>
                 <button
                   onClick={handleSaveRekapToDB}
                   className="flex items-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
