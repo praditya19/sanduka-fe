@@ -11,13 +11,15 @@ import {
   FaArrowTrendDown,
   FaCalendarDays,
   FaWallet,
+  FaChartPie,
   FaChevronRight,
   FaBuildingColumns,
 } from "react-icons/fa6";
 
+import TargetRealisasiOrganisasi from "./sections/TargetRealisasiOrganisasi";
 import PemasukanOrganisasiSection from "./sections/PemasukanOrganisasi";
 import PengeluaranOrganisasiSection from "./sections/PengeluaranOrganisasi";
-import RekapTransaksiSection from "./sections/RekapTransaksi";
+import RekapTransaksiSection from "./sections/RekapTahunan";
 import SaldoAkhirOrganisasiSection from "./sections/SaldoAkhirOrganisasi";
 
 export default function LaporanOrganisasi() {
@@ -48,6 +50,7 @@ function LaporanOrganisasiContent() {
   };
 
   const tabs = [
+   { id: "target-realisasi", label: "Target & Realisasi", icon: <FaChartPie />, color: "text-blue-500", bg: "bg-blue-50" },
     { id: "pemasukan", label: "Laporan Pemasukan", icon: <FaArrowTrendUp />, color: "text-emerald-500", bg: "bg-emerald-50" },
     { id: "pengeluaran", label: "Laporan Pengeluaran", icon: <FaArrowTrendDown />, color: "text-rose-500", bg: "bg-rose-50" },
     { id: "rekap", label: "Rekap Transaksi", icon: <FaCalendarDays />, color: "text-purple-500", bg: "bg-purple-50" },
@@ -112,6 +115,7 @@ function LaporanOrganisasiContent() {
                   exit={{ opacity: 0, y: -10 }}
                   className="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 min-h-[600px] overflow-hidden"
                 >
+                  {activeTab === "target-realisasi" && <TargetRealisasiOrganisasi />}
                   {activeTab === "pemasukan" && <PemasukanOrganisasiSection />}
                   {activeTab === "pengeluaran" && <PengeluaranOrganisasiSection />}
                   {activeTab === "rekap" && <RekapTransaksiSection />}

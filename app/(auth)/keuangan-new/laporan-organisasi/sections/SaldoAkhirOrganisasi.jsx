@@ -13,7 +13,7 @@ import {
 import toast, { Toaster } from "react-hot-toast";
 import * as XLSX from "xlsx";
 
-const SaldoAkhirOrganisasiSection = () => {
+const SaldoAkhirSection = () => {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState(null);
   const [bulanList, setBulanList] = useState([]);
@@ -35,55 +35,65 @@ const SaldoAkhirOrganisasiSection = () => {
     if (!selectedMonth || !selectedYear) return;
     setLoading(true);
     try {
-      const [saldoRes, rekapRes] = await Promise.all([
-        GlobalApi.getSaldoOrganisasi(),
-        GlobalApi.getTableUmum(selectedMonth, selectedYear),
-      ]);
+      const targetBulan = Number(selectedMonth);
+      const targetTahun = Number(selectedYear);
 
-      const saldoAkhir = Number(saldoRes.saldo_akhir_organisasi) || 0;
-      const totalMasuk = Number(saldoRes.total_masuk) || 0;
-      const totalKeluar = Number(saldoRes.total_keluar) || 0;
+      // 1. Fetch current month data
+      const currentMonthData = await GlobalApi.getTableKasOrganisasi(
+        targetBulan,
+        targetTahun,
+      );
 
-      const rekapData = Array.isArray(rekapRes) ? rekapRes : [];
+      // 2. Legacy Manual Calculation: Loop back to March 2021 to get Saldo Awal
+      const maret2021 = new Date(2021, 2, 1);
+      let tempDate = new Date(targetTahun, targetBulan - 1, 1);
+      tempDate.setMonth(tempDate.getMonth() - 1);
 
-      const rekapTotalDebet = rekapData.reduce((sum, item) => sum + (Number(item.debet) || 0), 0);
-      const rekapTotalKredit = rekapData.reduce((sum, item) => sum + (Number(item.kredit) || 0), 0);
-
-      let saldoAwal = 0;
-      if (rekapTotalDebet > 0 || rekapTotalKredit > 0) {
-        const maret2021 = new Date(2021, 2, 1);
-        let tempDate = new Date(selectedYear, selectedMonth - 1, 1);
-        tempDate.setMonth(tempDate.getMonth() - 1);
-
-        let allPreviousData = [];
-        while (tempDate >= maret2021) {
-          const b = tempDate.getMonth() + 1;
-          const y = tempDate.getFullYear();
-          try {
-            const prevData = await GlobalApi.getTableUmum(b, y);
-            allPreviousData.push(...(Array.isArray(prevData) ? prevData : []));
-          } catch (e) {
-            // silent skip
-          }
-          tempDate.setMonth(tempDate.getMonth() - 1);
+      let allPreviousData = [];
+      while (tempDate >= maret2021) {
+        const b = tempDate.getMonth() + 1;
+        const y = tempDate.getFullYear();
+        try {
+          const data = await GlobalApi.getTableKasOrganisasi(b, y);
+          allPreviousData.push(...(Array.isArray(data) ? data : []));
+        } catch (e) {
+          console.warn(`Failed to fetch legacy data for ${b}-${y}`);
         }
-
-        allPreviousData.forEach((item) => {
-          saldoAwal += (Number(item.debet) || 0) - (Number(item.kredit) || 0);
-        });
+        tempDate.setMonth(tempDate.getMonth() - 1);
       }
 
+      // 3. Calculate Saldo Awal from all previous data
+      let saldoAwalManual = 0;
+      allPreviousData.forEach((item) => {
+        saldoAwalManual += (item.debet || 0) - (item.kredit || 0);
+      });
+
+      // 4. Calculate totals for current month
+      let totalMasuk = 0;
+      let totalKeluar = 0;
+
+      const currentMonthArray = Array.isArray(currentMonthData)
+        ? currentMonthData
+        : [];
+      currentMonthArray.forEach((item) => {
+        totalMasuk += item.debet || 0;
+        totalKeluar += item.kredit || 0;
+      });
+
+      // 5. Calculate Saldo Akhir
+      const saldoAkhirManual = saldoAwalManual + totalMasuk - totalKeluar;
+
       setData({
-        saldoAwal,
-        totalPemasukan: totalMasuk || rekapTotalDebet,
-        totalPengeluaran: totalKeluar || rekapTotalKredit,
-        saldoAkhir,
+        saldoAwal: saldoAwalManual,
+        totalPemasukan: totalMasuk,
+        totalPengeluaran: totalKeluar,
+        saldoAkhir: saldoAkhirManual,
       });
     } catch (error) {
-      console.error("Error fetching saldo organisasi:", error);
+      console.error("Error fetching saldo akhir:", error);
       setData(null);
       if (error.response?.status !== 404) {
-        toast.error("Gagal mengambil data saldo organisasi");
+        toast.error("Gagal mengambil data saldo akhir.");
       }
     } finally {
       setLoading(false);
@@ -117,14 +127,15 @@ const SaldoAkhirOrganisasiSection = () => {
 
     const ws = XLSX.utils.json_to_sheet(excelData);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Saldo Akhir Organisasi");
-    XLSX.writeFile(wb, `Saldo_Akhir_Organisasi_${selectedMonth}_${selectedYear}.xlsx`);
+    XLSX.utils.book_append_sheet(wb, ws, "Saldo Akhir");
+    XLSX.writeFile(wb, `Saldo_Akhir_${selectedMonth}_${selectedYear}.xlsx`);
   };
 
   return (
     <div className="flex flex-col h-full">
       <Toaster position="top-center" />
 
+      {/* Banner */}
       <div className="bg-amber-500 p-6 text-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -132,9 +143,9 @@ const SaldoAkhirOrganisasiSection = () => {
               <FaWallet className="text-2xl" />
             </div>
             <div>
-              <h2 className="text-xl font-black">Saldo Akhir Organisasi</h2>
+              <h2 className="text-xl font-black">Saldo Akhir</h2>
               <p className="text-amber-100 text-xs font-medium uppercase tracking-wider">
-                Rekapitulasi saldo kas organisasi pada akhir periode
+                Rekapitulasi saldo kas pada akhir periode
               </p>
             </div>
           </div>
@@ -158,6 +169,7 @@ const SaldoAkhirOrganisasiSection = () => {
       </div>
 
       <div className="p-6 space-y-8 flex-1 overflow-y-auto">
+        {/* Filters */}
         <div className="bg-slate-50 p-4 rounded-[24px] border border-slate-100 flex flex-wrap gap-4 items-end">
           <div className="flex-1 min-w-[200px]">
             <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block px-1">
@@ -204,6 +216,7 @@ const SaldoAkhirOrganisasiSection = () => {
           </div>
         ) : data ? (
           <div className="space-y-6">
+            {/* Main Saldo Card */}
             <div className="bg-slate-900 p-8 rounded-[40px] text-white shadow-2xl relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-12 bg-white/5 rounded-full -mr-12 -mt-12 group-hover:scale-110 transition-transform duration-700" />
               <div className="relative z-10">
@@ -220,12 +233,16 @@ const SaldoAkhirOrganisasiSection = () => {
                 </h1>
                 <p className="text-slate-400 text-sm font-medium">
                   Status per{" "}
-                  {bulanList.find((b) => parseInt(b.id) === selectedMonth)?.namaBulan}{" "}
+                  {
+                    bulanList.find((b) => parseInt(b.id) === selectedMonth)
+                      ?.namaBulan
+                  }{" "}
                   {selectedYear}
                 </p>
               </div>
             </div>
 
+            {/* Breakdown Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
                 {
@@ -269,6 +286,7 @@ const SaldoAkhirOrganisasiSection = () => {
               ))}
             </div>
 
+            {/* Summary Info */}
             <div className="p-6 bg-blue-50 border border-blue-100 rounded-[32px] flex items-start space-x-4">
               <div className="p-3 bg-blue-500 text-white rounded-2xl flex-shrink-0">
                 <FaCircleInfo className="text-xl" />
@@ -278,9 +296,9 @@ const SaldoAkhirOrganisasiSection = () => {
                   Informasi Transparansi
                 </h4>
                 <p className="text-blue-700/70 text-xs font-medium leading-relaxed">
-                  Saldo akhir organisasi dihitung berdasarkan akumulasi saldo awal
-                  ditambah total pemasukan dikurangi total pengeluaran pada periode
-                  yang dipilih. Data ini sinkron dengan Buku Kas Organisasi.
+                  Saldo akhir dihitung berdasarkan akumulasi saldo awal ditambah
+                  total pemasukan dikurangi total pengeluaran pada periode yang
+                  dipilih. Data ini sinkron dengan Buku Kas Sanduka.
                 </p>
               </div>
             </div>
@@ -298,4 +316,4 @@ const SaldoAkhirOrganisasiSection = () => {
   );
 };
 
-export default SaldoAkhirOrganisasiSection;
+export default SaldoAkhirSection;
