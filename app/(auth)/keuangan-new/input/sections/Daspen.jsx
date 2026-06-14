@@ -22,8 +22,6 @@ import {
 } from "react-icons/fa";
 
 const PROVINSI_PERCENTAGE = 0.895;
-const CABANG_PERCENTAGE = 0.065;
-const KABUPATEN_PERCENTAGE = 0.04;
 
 const DaspenSection = () => {
   const [kuota, setKuota] = useState(700);
@@ -31,6 +29,9 @@ const DaspenSection = () => {
   const [katagori2, setKatagori2] = useState(0);
   const [katagori3, setKatagori3] = useState(0);
   const [showConfig, setShowConfig] = useState(false);
+  const [cabangPersen, setCabangPersen] = useState(0.065);
+  const [kabupatenPersen, setKabupatenPersen] = useState(0.04);
+  const [persenList, setPersenList] = useState([]);
 
   const [kat1, setKat1] = useState(0);
   const [kat2, setKat2] = useState(0);
@@ -51,6 +52,8 @@ const DaspenSection = () => {
 
   const [loadingTable, setLoadingTable] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSaved, setIsSaved] = useState(false);
+  const [savedDataCount, setSavedDataCount] = useState(0);
 
   // Dropdown Cabang Standard State
   const [showCabangDropdown, setShowCabangDropdown] = useState(false);
@@ -115,7 +118,7 @@ const DaspenSection = () => {
       let tAutoTrans = 0, tAutoSel = 0, tAutoKurang = 0;
 
       filteredCabangs.forEach((cabangName, i) => {
-                      let autoK1 = 0, autoK2 = 0, autoK3 = 0, autoTransfer = 0, autoTunai = 0;
+        let autoK1 = 0, autoK2 = 0, autoK3 = 0, autoTransfer = 0, autoTunai = 0;
         const targetK1 = Math.round(kat1Val);
         const targetK2 = Math.round(kat2Val);
         const targetK3 = Math.round(kat3Val);
@@ -139,7 +142,7 @@ const DaspenSection = () => {
             autoTransfer += manualDaspen;
           } else if (item.keterangan?.toLowerCase() === "sukses") {
             autoTransfer += tagihan;
-          } else if (item.keterangan?.toLowerCase() === "tunai") {
+          } else if (item.keterangan?.toLowerCase().startsWith("tunai")) {
             autoTunai += tagihan;
           }
         });
@@ -150,8 +153,8 @@ const DaspenSection = () => {
         const nomAutoK1 = autoK1 * kat1Val; const nomAutoK2 = autoK2 * kat2Val; const nomAutoK3 = autoK3 * kat3Val;
         const totAutoNominal = nomAutoK1 + nomAutoK2 + nomAutoK3;
         const autoSelisih = totAutoNominal - autoTransfer;
-        const autoPerunCabang = totAutoNominal * CABANG_PERCENTAGE;
-        const autoPerunKabupaten = totAutoNominal * KABUPATEN_PERCENTAGE;
+        const autoPerunCabang = totAutoNominal * cabangPersen;
+        const autoPerunKabupaten = totAutoNominal * kabupatenPersen;
         const autoTagihan = totAutoNominal - autoPerunCabang;
 
         const pk1 = daspen ? parseInt(daspen.kategori1) : 0;
@@ -378,16 +381,102 @@ const DaspenSection = () => {
     }
   };
 
+  const handleSaveRekapToDB = async () => {
+    if (!selectedMonth || !selectedYear) return toast.error("Pilih periode terlebih dahulu!");
+    const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    const toastId = toast.loading("Menyimpan rekapitulasi...");
+    try {
+      const rekapData = uniqueCabangs.map(cabangName => {
+        let autoK1 = 0, autoK2 = 0, autoK3 = 0, autoTransfer = 0, autoTunai = 0;
+        const targetK1 = Math.round(kat1Val);
+        const targetK2 = Math.round(kat2Val);
+        const targetK3 = Math.round(kat3Val);
+        const cabAggregated = rawAggregatedData.filter(r => r.cabang?.toUpperCase() === cabangName.toUpperCase());
+        cabAggregated.forEach(item => {
+          const tagihan = Math.round(parseFloat(item.totalIuranDaspen) || 0);
+          if (tagihan === targetK1 && targetK1 > 0) autoK1++;
+          else if (tagihan === targetK2 && targetK2 > 0) autoK2++;
+          else if (tagihan === targetK3 && targetK3 > 0) autoK3++;
+          const manualDaspen = parseFloat(item.manualDaspen || item.manual_daspen) || 0;
+          if (manualDaspen > 0) autoTransfer += manualDaspen;
+          else if (item.keterangan?.toLowerCase() === "sukses") autoTransfer += tagihan;
+          else if (item.keterangan?.toLowerCase().startsWith("tunai")) autoTunai += tagihan;
+        });
+        const sandukaDB = targetData.find(r => r.cabang?.toUpperCase() === cabangName.toUpperCase() && r.jenisData === 'SANDUKA');
+        const nomAutoK1 = autoK1 * kat1Val;
+        const nomAutoK2 = autoK2 * kat2Val;
+        const nomAutoK3 = autoK3 * kat3Val;
+        const totAutoNominal = nomAutoK1 + nomAutoK2 + nomAutoK3;
+        const dbK1 = sandukaDB ? parseInt(sandukaDB.kategori1) : autoK1;
+        const dbK2 = sandukaDB ? parseInt(sandukaDB.kategori2) : autoK2;
+        const dbK3 = sandukaDB ? parseInt(sandukaDB.kategori3) : autoK3;
+        const nomDbK1 = sandukaDB ? parseFloat(sandukaDB.valueKat1) : nomAutoK1;
+        const nomDbK2 = sandukaDB ? parseFloat(sandukaDB.valueKat2) : nomAutoK2;
+        const nomDbK3 = sandukaDB ? parseFloat(sandukaDB.valueKat3) : nomAutoK3;
+        const totDbNominal = sandukaDB ? parseFloat(sandukaDB.totalTarget || (nomDbK1 + nomDbK2 + nomDbK3)) : totAutoNominal;
+        const dbTransfer = sandukaDB ? parseFloat(sandukaDB.transfer || 0) : autoTransfer;
+        const dbPemb1 = sandukaDB ? parseFloat(sandukaDB.pembayaran1 || 0) : 0;
+        const dbSelisih = sandukaDB ? (totDbNominal - dbTransfer) : (totAutoNominal - autoTransfer);
+        const dbPerunCabang = totDbNominal * cabangPersen;
+        const dbPerunKabupaten = totDbNominal * kabupatenPersen;
+        const dbTagihan = totDbNominal - dbPerunCabang;
+        const dbTotAnggota = dbK1 + dbK2 + dbK3;
+        return {
+          cabang: cabangName,
+          totalAnggota: dbTotAnggota,
+          kategori1: dbK1,
+          nominal1: Math.round(nomDbK1),
+          kategori2: dbK2,
+          nominal2: Math.round(nomDbK2),
+          kategori3: dbK3,
+          nominal3: Math.round(nomDbK3),
+          totalNominal: Math.round(totDbNominal),
+          transfer: Math.round(dbTransfer),
+          tunai: Math.round(dbPemb1),
+          selisihKurang: Math.round(dbSelisih),
+          peruntukanCabang: Math.round(dbPerunCabang),
+          peruntukanKabupaten: Math.round(dbPerunKabupaten),
+          tagihan: Math.round(dbTagihan),
+          bulan: selectedMonth,
+          bulanId: monthNames.indexOf(selectedMonth) + 1,
+          tahun: selectedYear,
+        };
+      });
+      await GlobalApi.saveRekapDaspenBatch(rekapData);
+      toast.success("Rekapitulasi berhasil disimpan ke database!", { id: toastId });
+      setIsSaved(true);
+      const checkRes = await GlobalApi.getRekapDaspenByPeriode(selectedMonth, selectedYear);
+      const checkData = Array.isArray(checkRes) ? checkRes : checkRes?.data || [];
+      setSavedDataCount(checkData.length);
+    } catch (err) {
+      console.error("Save error:", err);
+      toast.error("Gagal menyimpan rekapitulasi.", { id: toastId });
+    }
+  };
+
+  const checkSavedStatus = async (bulan, tahun) => {
+    try {
+      const res = await GlobalApi.getRekapDaspenByPeriode(bulan, tahun);
+      const data = Array.isArray(res) ? res : res?.data || [];
+      setIsSaved(data.length > 0);
+      setSavedDataCount(data.length);
+    } catch (error) {
+      setIsSaved(false);
+      setSavedDataCount(0);
+    }
+  };
+
   useEffect(() => {
     fetchInitialData();
   }, []);
 
   const fetchInitialData = async () => {
     try {
-      const [resBulan, resCabang, resIuran] = await Promise.all([
+      const [resBulan, resCabang, resIuran, resPersen] = await Promise.all([
         GlobalApi.getBulan(),
         GlobalApi.getCabang(),
-        GlobalApi.getDefaultIuranById(4)
+        GlobalApi.getDefaultIuranById(4),
+        GlobalApi.getIuranPersenDaspen()
       ]);
 
       setBulanList(resBulan.data || []);
@@ -401,9 +490,19 @@ const DaspenSection = () => {
         setKatagori3(parseFloat(resIuran.cabang) || 0);
       }
 
+      if (resPersen && resPersen.length > 0) {
+        setPersenList(resPersen);
+        const cabang = resPersen.find(p => p.jenis === 'CABANG');
+        const kabupaten = resPersen.find(p => p.jenis === 'KABUPATEN');
+        if (cabang) setCabangPersen(cabang.persen / 100);
+        if (kabupaten) setKabupatenPersen(kabupaten.persen / 100);
+      }
+
       const currentMonth = new Date().getMonth();
       if (resBulan.data?.[currentMonth]) {
-        setSelectedMonth(resBulan.data[currentMonth].namaBulan);
+        const namaBulan = resBulan.data[currentMonth].namaBulan;
+        setSelectedMonth(namaBulan);
+        checkSavedStatus(namaBulan, selectedYear);
       }
     } catch (error) {
       console.error("Error fetching Daspen data:", error);
@@ -600,6 +699,20 @@ const DaspenSection = () => {
     }
   };
 
+  const handleSavePersen = async () => {
+    try {
+      for (const item of persenList) {
+        const persenValue = item.jenis === 'CABANG' ? cabangPersen * 100 : kabupatenPersen * 100;
+        await GlobalApi.updateIuranPersenDaspen(item.id, { persen: persenValue });
+      }
+      const resPersen = await GlobalApi.getIuranPersenDaspen();
+      if (resPersen) setPersenList(resPersen);
+      toast.success("Persentase berhasil disimpan!");
+    } catch (error) {
+      toast.error("Gagal menyimpan persentase.");
+    }
+  };
+
   const handleSubmitTarget = async (e) => {
     e.preventDefault();
     if (!selectedCabang || !selectedMonth) {
@@ -610,8 +723,8 @@ const DaspenSection = () => {
       const payload = {
         bulan: selectedMonth, tahun: selectedYear.toString(), cabang: selectedCabang,
         kategori1: kat1, kategori2: kat2, kategori3: kat3,
-        perolehanCabang: totalTarget * CABANG_PERCENTAGE,
-        perolehanKabupaten: totalTarget * KABUPATEN_PERCENTAGE,
+        perolehanCabang: totalTarget * cabangPersen,
+        perolehanKabupaten: totalTarget * kabupatenPersen,
         valueKat1: kat1 * kat1Val, valueKat2: kat2 * kat2Val, valueKat3: kat3 * kat3Val,
         transfer: 0, pembayaran1: 0, pembayaran2: 0,
         jenisData: "SANDUKA"
@@ -669,7 +782,7 @@ const DaspenSection = () => {
           const payload = {
             bulan: selectedMonth, tahun: selectedYear.toString(), cabang: cabang,
             kategori1: k1, kategori2: k2, kategori3: k3,
-            perolehanCabang: totalTgt * CABANG_PERCENTAGE, perolehanKabupaten: totalTgt * KABUPATEN_PERCENTAGE,
+            perolehanCabang: totalTgt * cabangPersen, perolehanKabupaten: totalTgt * kabupatenPersen,
             valueKat1: vKat1, valueKat2: vKat2, valueKat3: vKat3,
             transfer: transfer, pembayaran1: 0, pembayaran2: 0,
             jenisData: "DASPEN"
@@ -722,7 +835,7 @@ const DaspenSection = () => {
         kategori1: k1, kategori2: k2, kategori3: k3,
         transfer: t, pembayaran1: p1, pembayaran2: p2,
         valueKat1: vKat1, valueKat2: vKat2, valueKat3: vKat3,
-        perolehanCabang: totalTgt * CABANG_PERCENTAGE, perolehanKabupaten: totalTgt * KABUPATEN_PERCENTAGE,
+        perolehanCabang: totalTgt * cabangPersen, perolehanKabupaten: totalTgt * kabupatenPersen,
       };
 
       if (id) {
@@ -957,6 +1070,38 @@ const DaspenSection = () => {
               <FaSave /> Simpan Konfigurasi
             </button>
 
+            <div className="mt-6 p-5 bg-emerald-50 rounded-[24px]">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center"><FaCog /></div>
+                <div><h4 className="text-sm font-black text-emerald-800">Pembagian Persentase</h4></div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="text-[9px] font-black text-slate-400 uppercase">Cabang (%)</label>
+                  <div className="relative group">
+                    <input
+                      type="number" step="0.01" value={cabangPersen * 100}
+                      onChange={(e) => setCabangPersen((parseFloat(e.target.value) || 0) / 100)}
+                      className="w-full px-4 py-3 bg-white rounded-[16px] font-black outline-none border border-slate-200"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[9px] font-black text-slate-400 uppercase">Kabupaten (%)</label>
+                  <div className="relative group">
+                    <input
+                      type="number" step="0.01" value={kabupatenPersen * 100}
+                      onChange={(e) => setKabupatenPersen((parseFloat(e.target.value) || 0) / 100)}
+                      className="w-full px-4 py-3 bg-white rounded-[16px] font-black outline-none border border-slate-200"
+                    />
+                  </div>
+                </div>
+              </div>
+              <button onClick={handleSavePersen} className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-[24px] font-black flex items-center justify-center gap-2">
+                <FaSave /> Simpan Persentase
+              </button>
+            </div>
+
             <div className="mt-6 p-5 bg-blue-50 rounded-[24px]">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-8 h-8 rounded-xl bg-blue-500 text-white flex items-center justify-center"><FaFileExcel /></div>
@@ -1151,11 +1296,10 @@ const DaspenSection = () => {
                         <ul className="overflow-y-auto py-2 custom-scrollbar">
                           <li
                             onClick={() => handleSelectCabang("")}
-                            className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${
-                              !searchQuery
+                            className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${!searchQuery
                                 ? "bg-rose-50 text-rose-600 border-rose-500"
                                 : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
-                            }`}
+                              }`}
                           >
                             Semua Cabang
                           </li>
@@ -1169,11 +1313,10 @@ const DaspenSection = () => {
                               <li
                                 key={idx}
                                 onClick={() => handleSelectCabang(cab.kecamatan)}
-                                className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${
-                                  searchQuery === cab.kecamatan
+                                className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${searchQuery === cab.kecamatan
                                     ? "bg-rose-50 text-rose-600 border-rose-500"
                                     : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
-                                }`}
+                                  }`}
                               >
                                 {cab.kecamatan}
                               </li>
@@ -1196,6 +1339,12 @@ const DaspenSection = () => {
 
               {/* ABAIKAN TOMBOL EXCEL & PDF SAAT JADI PDF */}
               <div data-html2canvas-ignore="true" className="flex justify-end gap-3 px-6 pt-4">
+                <button
+                  onClick={handleSaveRekapToDB}
+                  className="flex items-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
+                >
+                  <FaSave className="text-sm" /> Simpan
+                </button>
                 <button
                   onClick={handleExportExcel}
                   className="flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-emerald-600/20 active:scale-95"
@@ -1233,7 +1382,7 @@ const DaspenSection = () => {
                     Array(5).fill(0).map((_, i) => <tr key={i} className="animate-pulse"><td colSpan={18} className="p-6"><div className="h-3 bg-slate-100 rounded-full w-full" /></td></tr>)
                   ) : filteredCabangs.length > 0 ? (
                     filteredCabangs.map((cabangName, i) => {
-        let autoK1 = 0, autoK2 = 0, autoK3 = 0, autoTransfer = 0, autoTunai = 0;
+                      let autoK1 = 0, autoK2 = 0, autoK3 = 0, autoTransfer = 0, autoTunai = 0;
                       const targetK1 = Math.round(kat1Val);
                       const targetK2 = Math.round(kat2Val);
                       const targetK3 = Math.round(kat3Val);
@@ -1257,7 +1406,7 @@ const DaspenSection = () => {
                           autoTransfer += manualDaspen;
                         } else if (item.keterangan?.toLowerCase() === "sukses") {
                           autoTransfer += tagihan;
-                        } else if (item.keterangan?.toLowerCase() === "tunai") {
+                        } else if (item.keterangan?.toLowerCase().startsWith("tunai")) {
                           autoTunai += tagihan;
                         }
                       });
@@ -1268,8 +1417,8 @@ const DaspenSection = () => {
                       const nomAutoK1 = autoK1 * kat1Val; const nomAutoK2 = autoK2 * kat2Val; const nomAutoK3 = autoK3 * kat3Val;
                       const totAutoNominal = nomAutoK1 + nomAutoK2 + nomAutoK3;
                       const autoSelisih = totAutoNominal - autoTransfer;
-                      const autoPerunCabang = totAutoNominal * CABANG_PERCENTAGE;
-                      const autoPerunKabupaten = totAutoNominal * KABUPATEN_PERCENTAGE;
+                      const autoPerunCabang = totAutoNominal * cabangPersen;
+                      const autoPerunKabupaten = totAutoNominal * kabupatenPersen;
                       const autoTagihan = totAutoNominal - autoPerunCabang;
 
                       const pk1 = daspen ? parseInt(daspen.kategori1) : null;
@@ -1284,8 +1433,8 @@ const DaspenSection = () => {
                       const pPemb1 = daspen ? parseFloat(daspen.pembayaran1 || 0) : null;
                       const pPemb2 = daspen ? parseFloat(daspen.pembayaran2 || 0) : null;
                       const pKurangSetor = daspen ? (pTotNominal - pTransfer - pPemb1 - pPemb2) : null;
-                      const pPerunCabang = daspen ? (pTotNominal * CABANG_PERCENTAGE) : null;
-                      const pPerunKabupaten = daspen ? (pTotNominal * KABUPATEN_PERCENTAGE) : null;
+                      const pPerunCabang = daspen ? (pTotNominal * cabangPersen) : null;
+                      const pPerunKabupaten = daspen ? (pTotNominal * kabupatenPersen) : null;
                       const pTagihan = daspen ? (pTotNominal - pPerunCabang) : null;
 
                       const activeMembers = cabAggregated.length > 0 ? cabAggregated.reduce((sum, item) => sum + (parseInt(item.jumlah) || 1), 0) : 0;
@@ -1304,8 +1453,8 @@ const DaspenSection = () => {
                       const dbPemb1 = sandukaDB ? parseFloat(sandukaDB.pembayaran1 || 0) : 0;
                       const dbPemb2 = sandukaDB ? parseFloat(sandukaDB.pembayaran2 || 0) : 0;
                       const dbKurangSetor = sandukaDB ? (totDbNominal - dbTransfer - dbPemb1 - dbPemb2) : autoSelisih;
-                      const dbPerunCabang = totDbNominal * CABANG_PERCENTAGE;
-                      const dbPerunKabupaten = totDbNominal * KABUPATEN_PERCENTAGE;
+                      const dbPerunCabang = totDbNominal * cabangPersen;
+                      const dbPerunKabupaten = totDbNominal * kabupatenPersen;
                       const dbTagihan = totDbNominal - dbPerunCabang;
                       const dbTotAnggota = dbK1 + dbK2 + dbK3;
 

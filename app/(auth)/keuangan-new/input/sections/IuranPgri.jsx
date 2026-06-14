@@ -350,7 +350,7 @@ const IuranPgriSection = () => {
 
       if (item.keterangan?.toLowerCase() === "sukses") {
         acc[cab].potBank += amountBank;
-      } else if (item.keterangan?.toLowerCase() === "tunai") {
+      } else if (item.keterangan?.toLowerCase().startsWith("tunai")) {
         acc[cab].tunai += amountTotal;
       }
       return acc;
