@@ -1508,43 +1508,40 @@ const DaspenSection = () => {
                           <td className="px-3 py-2 text-slate-400 font-black border-r border-slate-200 text-center">{i + 1}</td>
                           <td className="px-3 py-2 font-black text-slate-800 whitespace-nowrap border-r border-slate-200 uppercase">{cabangName}</td>
 
-                          <td className="px-3 py-2 border-r border-slate-200 text-center whitespace-nowrap"><CellTriple top={`OTOMATIS ${totalKatAnggota}`} middle={pTotAnggota !== null ? `DASPEN ONLINE ${pTotAnggota}` : null} bottom={`TOTAL ANGGOTA DI SANDUKA ${uniqueAnggotaPGRI}`} topClass="text-slate-700 font-black" middleClass="text-teal-500" bottomClass="text-rose-500" /></td>
+                          <td className="px-3 py-2 border-r border-slate-200 text-center whitespace-nowrap"><CellTriple top={totalKatAnggota} middle={pTotAnggota} bottom={uniqueAnggotaPGRI} topClass="text-slate-700 font-black" middleClass="text-teal-500" bottomClass="text-rose-500" /></td>
+                          <td className="px-3 py-2 border-r border-slate-200 text-center"><CellTriple top={autoK1} middle={pk1} /></td>
+                          <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap"><CellTriple top={formatCurrency(nomAutoK1)} middle={pNomK1 !== null ? formatCurrency(pNomK1) : null} /></td>
 
-                          <td className="px-3 py-2 border-r border-slate-200 text-center"><CellTriple top={autoK1} middle={pk1} bottom={dbK1} /></td>
-                          <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap"><CellTriple top={formatCurrency(nomAutoK1)} middle={pNomK1 !== null ? formatCurrency(pNomK1) : null} bottom={nomDbK1 !== null ? formatCurrency(nomDbK1) : null} /></td>
+                          <td className="px-3 py-2 border-r border-slate-200 text-center"><CellTriple top={autoK2} middle={pk2} /></td>
+                          <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap"><CellTriple top={formatCurrency(nomAutoK2)} middle={pNomK2 !== null ? formatCurrency(pNomK2) : null} /></td>
 
-                          <td className="px-3 py-2 border-r border-slate-200 text-center"><CellTriple top={autoK2} middle={pk2} bottom={dbK2} /></td>
-                          <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap"><CellTriple top={formatCurrency(nomAutoK2)} middle={pNomK2 !== null ? formatCurrency(pNomK2) : null} bottom={nomDbK2 !== null ? formatCurrency(nomDbK2) : null} /></td>
+                          <td className="px-3 py-2 border-r border-slate-200 text-center"><CellTriple top={autoK3} middle={pk3} /></td>
+                          <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap"><CellTriple top={formatCurrency(nomAutoK3)} middle={pNomK3 !== null ? formatCurrency(pNomK3) : null} /></td>
 
-                          <td className="px-3 py-2 border-r border-slate-200 text-center"><CellTriple top={autoK3} middle={pk3} bottom={dbK3} /></td>
-                          <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap"><CellTriple top={formatCurrency(nomAutoK3)} middle={pNomK3 !== null ? formatCurrency(pNomK3) : null} bottom={nomDbK3 !== null ? formatCurrency(nomDbK3) : null} /></td>
-
-                          <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/50"><CellTriple top={formatCurrency(totAutoNominal)} middle={pTotNominal !== null ? formatCurrency(pTotNominal) : null} bottom={totDbNominal !== null ? formatCurrency(totDbNominal) : null} topClass="text-slate-900 font-black" /></td>
+                          <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/50"><CellTriple top={formatCurrency(totAutoNominal)} middle={pTotNominal !== null ? formatCurrency(pTotNominal) : null} topClass="text-slate-900 font-black" /></td>
 
                           <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/30">
-                            <CellTriple top={formatCurrency(autoTransfer)} middle={pTransfer !== null ? formatCurrency(pTransfer) : null} bottom={dbTransfer !== null ? formatCurrency(dbTransfer) : null} />
+                            <CellTriple top={formatCurrency(autoTransfer)} middle={pTransfer !== null ? formatCurrency(pTransfer) : null} />
                           </td>
 
                           <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/30">
-                            {/* Tunai = transaksi Tunai */}
-                            <CellTriple top={formatCurrency(autoTunai)} middle={null} bottom={dbPemb1 !== null ? formatCurrency(dbPemb1) : null} />
+                            <CellTriple top={formatCurrency(autoTunai)} middle={null} />
                           </td>
 
                           <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/30">
-                            {/* selisih kurang = total - Transfer */}
-                            <CellTriple top={formatCurrency(autoSelisih)} middle={null} bottom={dbSelisih !== null ? formatCurrency(dbSelisih) : null} />
+                            <CellTriple top={formatCurrency(autoSelisih)} middle={null} />
                           </td>
 
                           <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/30">
-                            <CellTriple top={formatCurrency(autoPerunCabang)} middle={pPerunCabang !== null ? formatCurrency(pPerunCabang) : null} bottom={formatCurrency(dbPerunCabang)} />
+                            <CellTriple top={formatCurrency(autoPerunCabang)} middle={pPerunCabang !== null ? formatCurrency(pPerunCabang) : null} />
                           </td>
 
                           <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/30">
-                            <CellTriple top={formatCurrency(autoPerunKabupaten)} middle={pPerunKabupaten !== null ? formatCurrency(pPerunKabupaten) : null} bottom={formatCurrency(dbPerunKabupaten)} />
+                            <CellTriple top={formatCurrency(autoPerunKabupaten)} middle={pPerunKabupaten !== null ? formatCurrency(pPerunKabupaten) : null} />
                           </td>
 
                           <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/30">
-                            <CellTriple top={formatCurrency(autoTagihan)} middle={pTagihan !== null ? formatCurrency(pTagihan) : null} bottom={formatCurrency(dbTagihan)} />
+                            <CellTriple top={formatCurrency(autoTagihan)} middle={pTagihan !== null ? formatCurrency(pTagihan) : null} />
                           </td>
                           <td className="px-3 py-2 text-center border-r border-slate-200">
                             <div className="flex flex-col gap-1 items-center justify-center">
@@ -1612,37 +1609,37 @@ const DaspenSection = () => {
                         <tfoot className="bg-slate-100/80 border-t-4 border-slate-300 shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
                           <tr className="text-[11px] font-black text-slate-800">
                             <td colSpan={2} className="px-3 py-4 text-center text-xs uppercase tracking-widest border-r border-slate-300">TOTAL REKAPITULASI</td>
-                            <td className="px-3 py-2 border-r border-slate-300 text-center"><CellTriple top={`OTOMATIS ${tAutoAng}`} middle={tProvAng > 0 ? `DASPEN ONLINE ${tProvAng}` : null} bottom={`TOTAL ANGGOTA DI SANDUKA ${tRealAng}`} topClass="text-slate-900 font-black" middleClass="text-teal-500" bottomClass="text-rose-500" /></td>
-                            <td className="px-3 py-2 border-r border-slate-300 text-center"><CellTriple top={tAutoK1} middle={tProvK1} bottom={tRealK1} /></td>
-                            <td className="px-3 py-2 border-r border-slate-300 text-right"><CellTriple top={formatCurrency(tAutoNomK1)} middle={formatCurrency(tProvNomK1)} bottom={formatCurrency(tRealNomK1)} /></td>
-                            <td className="px-3 py-2 border-r border-slate-300 text-center"><CellTriple top={tAutoK2} middle={tProvK2} bottom={tRealK2} /></td>
-                            <td className="px-3 py-2 border-r border-slate-300 text-right"><CellTriple top={formatCurrency(tAutoNomK2)} middle={formatCurrency(tProvNomK2)} bottom={formatCurrency(tRealNomK2)} /></td>
-                            <td className="px-3 py-2 border-r border-slate-300 text-center"><CellTriple top={tAutoK3} middle={tProvK3} bottom={tRealK3} /></td>
-                            <td className="px-3 py-2 border-r border-slate-300 text-right"><CellTriple top={formatCurrency(tAutoNomK3)} middle={formatCurrency(tProvNomK3)} bottom={formatCurrency(tRealNomK3)} /></td>
-                            <td className="px-3 py-2 border-r border-slate-300 text-right bg-slate-200/50"><CellTriple top={formatCurrency(tAutoTotNom)} middle={formatCurrency(tProvTotNom)} bottom={formatCurrency(tRealTotNom)} topClass="text-slate-900" /></td>
+                            <td className="px-3 py-2 border-r border-slate-300 text-center"><CellTriple top={tAutoAng} middle={tProvAng > 0 ? tProvAng : null} bottom={tRealAng} topClass="text-slate-900 font-black" middleClass="text-teal-500" bottomClass="text-rose-500" /></td>
+                            <td className="px-3 py-2 border-r border-slate-300 text-center"><CellTriple top={tAutoK1} middle={tProvK1} /></td>
+                            <td className="px-3 py-2 border-r border-slate-300 text-right"><CellTriple top={formatCurrency(tAutoNomK1)} middle={formatCurrency(tProvNomK1)} /></td>
+                            <td className="px-3 py-2 border-r border-slate-300 text-center"><CellTriple top={tAutoK2} middle={tProvK2} /></td>
+                            <td className="px-3 py-2 border-r border-slate-300 text-right"><CellTriple top={formatCurrency(tAutoNomK2)} middle={formatCurrency(tProvNomK2)} /></td>
+                            <td className="px-3 py-2 border-r border-slate-300 text-center"><CellTriple top={tAutoK3} middle={tProvK3} /></td>
+                            <td className="px-3 py-2 border-r border-slate-300 text-right"><CellTriple top={formatCurrency(tAutoNomK3)} middle={formatCurrency(tProvNomK3)} /></td>
+                            <td className="px-3 py-2 border-r border-slate-300 text-right bg-slate-200/50"><CellTriple top={formatCurrency(tAutoTotNom)} middle={formatCurrency(tProvTotNom)} topClass="text-slate-900" /></td>
 
                             <td className="px-3 py-2 border-r border-slate-300 text-right">
-                              <CellTriple top={formatCurrency(tAutoTrans)} middle={formatCurrency(tProvTrans)} bottom={formatCurrency(tRealTrans)} />
+                              <CellTriple top={formatCurrency(tAutoTrans)} middle={formatCurrency(tProvTrans)} />
                             </td>
 
                             <td className="px-3 py-2 border-r border-slate-300 text-right">
-                              <CellTriple top={formatCurrency(tAutoTunai)} middle={formatCurrency(tProvTunai)} bottom={formatCurrency(tRealTunai)} />
+                              <CellTriple top={formatCurrency(tAutoTunai)} middle={formatCurrency(tProvTunai)} />
                             </td>
 
                             <td className="px-3 py-2 border-r border-slate-300 text-right">
-                              <CellTriple top={formatCurrency(tAutoKurang)} middle={formatCurrency(tProvKurang)} bottom={formatCurrency(tRealKurang)} />
+                              <CellTriple top={formatCurrency(tAutoKurang)} middle={formatCurrency(tProvKurang)} />
                             </td>
 
                             <td className="px-3 py-2 border-r border-slate-300 text-right">
-                              <CellTriple top={formatCurrency(tAutoPerunCabang)} middle={formatCurrency(tProvPerunCabang)} bottom={formatCurrency(tRealPerunCabang)} />
+                              <CellTriple top={formatCurrency(tAutoPerunCabang)} middle={formatCurrency(tProvPerunCabang)} />
                             </td>
 
                             <td className="px-3 py-2 border-r border-slate-300 text-right">
-                              <CellTriple top={formatCurrency(tAutoPerunKabupaten)} middle={formatCurrency(tProvPerunKabupaten)} bottom={formatCurrency(tRealPerunKabupaten)} />
+                              <CellTriple top={formatCurrency(tAutoPerunKabupaten)} middle={formatCurrency(tProvPerunKabupaten)} />
                             </td>
 
                             <td className="px-3 py-2 border-r border-slate-300 text-right">
-                              <CellTriple top={formatCurrency(tAutoTagihan)} middle={formatCurrency(tProvTagihan)} bottom={formatCurrency(tRealTagihan)} />
+                              <CellTriple top={formatCurrency(tAutoTagihan)} middle={formatCurrency(tProvTagihan)} />
                             </td>
                             {/* ABAIKAN JUGA DI FOOTER */}
                             <td data-html2canvas-ignore="true" colSpan={2} className="px-3 py-2 border-r border-slate-300 bg-slate-200/30"></td>
