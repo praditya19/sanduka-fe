@@ -56,10 +56,12 @@ function KeuanganDetailContent() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [balancingRes, orgRes, iuranRes] = await Promise.all([
+      const [balancingRes, orgRes, iuranRes, rekapIuran, rekapDerap] = await Promise.all([
         GlobalApi.getTransaksiBankBalancing("", null, selectedYear, selectedMonth, null, null),
         GlobalApi.getPemasukanUmum(),
         GlobalApi.getDefaultIuranById(2),
+        GlobalApi.getRekapByPeriode(MONTHS_FULL[selectedMonth], selectedYear),
+        GlobalApi.getRekapDerapByPeriode(MONTHS_FULL[selectedMonth], selectedYear),
       ]);
 
       const safeData = Array.isArray(balancingRes) ? balancingRes : [];
@@ -72,6 +74,41 @@ function KeuanganDetailContent() {
         if (!npaMap[key] || item.id > npaMap[key].id) npaMap[key] = item;
       });
       const cabangData = Object.values(npaMap);
+
+      // Rekapitulasi Iuran — pb + provinsi + kabupaten
+      const rekapData = Array.isArray(rekapIuran) ? rekapIuran : [];
+      const rekapByCabang = {};
+      rekapData.forEach((r) => {
+        const key = (r.cabang || "").trim().toUpperCase();
+        if (!rekapByCabang[key]) {
+          rekapByCabang[key] = { pb: 0, provinsi: 0, kabupaten: 0 };
+        }
+        rekapByCabang[key].pb += r.pb || 0;
+        rekapByCabang[key].provinsi += r.provinsi || 0;
+        rekapByCabang[key].kabupaten += r.kabupaten || 0;
+      });
+      const cabangKey = cabang.trim().toUpperCase();
+      const rekapIuranTotal = rekapByCabang[cabangKey]
+        ? (rekapByCabang[cabangKey].pb + rekapByCabang[cabangKey].provinsi + rekapByCabang[cabangKey].kabupaten)
+        : 0;
+
+      // Rekapitulasi Derap — peruntukan provinsi + peruntukan kabupaten
+      const rekapDerapData = Array.isArray(rekapDerap) ? rekapDerap : [];
+      const rekapDerapByCabang = {};
+      let rekapDerapJumlah = 0;
+      rekapDerapData.forEach((r) => {
+        const key = (r.cabang || "").trim().toUpperCase();
+        if (!rekapDerapByCabang[key]) {
+          rekapDerapByCabang[key] = { provinsi: 0, kabupaten: 0, jumlah: 0 };
+        }
+        rekapDerapByCabang[key].provinsi += r.peruntukanProvinsi || 0;
+        rekapDerapByCabang[key].kabupaten += r.peruntukanKabupaten || 0;
+        rekapDerapByCabang[key].jumlah += r.jumlah || 0;
+      });
+      const rekapDerapTotal = rekapDerapByCabang[cabangKey]
+        ? (rekapDerapByCabang[cabangKey].provinsi + rekapDerapByCabang[cabangKey].kabupaten)
+        : 0;
+      rekapDerapJumlah = rekapDerapByCabang[cabangKey]?.jumlah || 0;
 
       // Per-category breakdown
       const categories = [
@@ -95,6 +132,13 @@ function KeuanganDetailContent() {
             total += val;
           }
         });
+        if (cat.label === "IURAN" && rekapIuranTotal > 0) {
+          total = rekapIuranTotal;
+        }
+        if (cat.label === "DERAP" && rekapDerapTotal > 0) {
+          total = rekapDerapTotal;
+          if (rekapDerapJumlah > 0) count = rekapDerapJumlah;
+        }
         subtotal += total;
         return { label: cat.label, count, total };
       });

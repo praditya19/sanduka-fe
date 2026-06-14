@@ -1038,6 +1038,26 @@ const updateTargetDaspen = async (id, updatedData) => {
   }
 };
 // end
+// Iuran Persen Daspen
+const getIuranPersenDaspen = async () => {
+  try {
+    const response = await axiosClient.get(`/api/iuran-persen-daspen`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching iuran persen daspen:", error);
+    throw error;
+  }
+};
+const updateIuranPersenDaspen = async (id, payload) => {
+  try {
+    const response = await axiosClient.put(`/api/iuran-persen-daspen/${id}`, payload);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating iuran persen daspen:", error);
+    throw error;
+  }
+};
+// end
 // Star Derap
 const createDerapData = async (payload) => {
   try {
@@ -1296,6 +1316,25 @@ const deletePosLainLain = async (id) => {
     return response.data;
   } catch (error) {
     console.error("Error deleting pos lain-lain:", error);
+    throw error;
+  }
+};
+// Rekapitulasi Daspen
+const saveRekapDaspenBatch = async (data) => {
+  try {
+    const response = await axiosClient.post("/api/rekapitulasi-daspen/batch", data);
+    return response.data;
+  } catch (error) {
+    console.error("Error saving rekap daspen:", error);
+    throw error;
+  }
+};
+const getRekapDaspenByPeriode = async (bulan, tahun) => {
+  try {
+    const response = await axiosClient.get(`/api/rekapitulasi-daspen/filter?bulan=${bulan}&tahun=${tahun}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching rekap daspen:", error);
     throw error;
   }
 };
@@ -4518,4 +4557,8 @@ export default {
   getPosLainLainNames,
   updatePosLainLain,
   deletePosLainLain,
+  getIuranPersenDaspen,
+  updateIuranPersenDaspen,
+  saveRekapDaspenBatch,
+  getRekapDaspenByPeriode,
 };

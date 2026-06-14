@@ -348,9 +348,9 @@ const IuranPgriSection = () => {
       const amountBank = parseCurrency(item.potongan);
       const amountTotal = parseCurrency(item.totalIuran);
 
-      if (item.keterangan === "Sukses") {
+      if (item.keterangan?.toLowerCase() === "sukses") {
         acc[cab].potBank += amountBank;
-      } else if (item.keterangan === "Tunai") {
+      } else if (item.keterangan?.toLowerCase().startsWith("tunai")) {
         acc[cab].tunai += amountTotal;
       }
       return acc;

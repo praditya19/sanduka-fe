@@ -131,15 +131,33 @@ const KalenderSection = () => {
     }
   };
 
+  const MONTHS = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
   const fetchTableData = useCallback(async () => {
     if (!selectedMonth || !selectedYear) return;
     setLoadingTable(true);
     try {
-      const data = await GlobalApi.getTableKalender(
+      let data = await GlobalApi.getTableKalender(
         selectedMonth,
         selectedYear,
         [],
       );
+
+      // Isi cabang yg belum punya data dari bulan sebelumnya
+      const currentMonthId = MONTHS.indexOf(selectedMonth);
+      let prevMonthId = currentMonthId - 1;
+      let prevYear = selectedYear;
+      if (prevMonthId < 1) { prevMonthId = 12; prevYear = selectedYear - 1; }
+
+      const prevData = await GlobalApi.getTableKalender(MONTHS[prevMonthId], prevYear, []);
+      if (prevData && prevData.length > 0) {
+        const currentNonZero = (data || []).filter((d) => (parseInt(d.jumlah) || 0) > 0);
+        const nonZeroCabangs = new Set(currentNonZero.map((d) => d.cabang?.toUpperCase()));
+        data = prevData
+          .filter((item) => !nonZeroCabangs.has(item.cabang?.toUpperCase()))
+          .map((item) => ({ ...item, bulan: selectedMonth, tahun: selectedYear }))
+          .concat(currentNonZero);
+      }
 
       const bulanObj = bulanList.find((b) => b.namaBulan === selectedMonth);
       const monthNumber = bulanObj ? bulanObj.id : new Date().getMonth() + 1;
@@ -167,7 +185,7 @@ const KalenderSection = () => {
           const cabangMatch =
             (item.cabang || "").toLowerCase() === cabangName.toLowerCase();
 
-          const isSukses = item.keterangan === "Sukses";
+          const isSukses = item.keterangan?.toLowerCase() === "sukses";
 
           if (cabangMatch && isSukses) {
             return total + parseCurrency(item.totalIuranKalender);
@@ -204,7 +222,7 @@ const KalenderSection = () => {
         };
       });
 
-      setTableData(mappedData);
+      setTableData(mappedData.sort((a, b) => (a.cabang || "").localeCompare(b.cabang || "")));
     } catch (error) {
       console.error("Error fetching Kalender table:", error);
     } finally {
