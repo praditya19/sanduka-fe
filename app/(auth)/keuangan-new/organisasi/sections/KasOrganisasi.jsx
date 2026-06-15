@@ -21,7 +21,6 @@ import {
   FaCalendarAlt,
   FaMoneyBillWave,
   FaTag,
-  FaBuilding,
   FaAlignLeft,
   FaUndo,
   FaUniversity,
@@ -56,13 +55,9 @@ const KasOrganisasi = () => {
   const currentYear = new Date().getFullYear();
   const yearOptions = Array.from({ length: 11 }, (_, index) => currentYear - 5 + index);
 
-  const monthValueToLabel = Object.fromEntries(months.map(m => [m.value, m.label]));
-  const POS_WITH_PERUNTUKAN = ["Iuran PGRI"];
-
   // Modal States
   const [showModalIn, setShowModalIn] = useState(false);
   const [showModalOut, setShowModalOut] = useState(false);
-  const [showModalCabang, setShowModalCabang] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editJenis, setEditJenis] = useState("");
   const [editForm, setEditForm] = useState({
@@ -119,20 +114,6 @@ const KasOrganisasi = () => {
     nominal: 0,
     keterangan: ""
   });
-
-  const [formCabang, setFormCabang] = useState({
-    tanggalTransaksi: new Date().toISOString().split('T')[0],
-    jenisTransaksi: "PEMASUKAN",
-    pos: "",
-    cabang: "",
-    setoranBulan: months[new Date().getMonth()].value,
-    setoranTahun: new Date().getFullYear(),
-    jenisPenerimaan: "Transfer",
-    keterangan: "",
-    tagihan: "",
-    pembayaran: ""
-  });
-  const [showTagihanFields, setShowTagihanFields] = useState(false);
 
   const fetchAuxData = async () => {
     try {
@@ -383,20 +364,23 @@ const KasOrganisasi = () => {
     }
   };
 
+  const terbilangAngka = (n) => {
+    if (n === 0 || !n) return "";
+    const bilangan = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"];
+    if (n < 12) return " " + bilangan[n];
+    if (n < 20) return terbilangAngka(n - 10) + " Belas";
+    if (n < 100) return terbilangAngka(Math.floor(n / 10)) + " Puluh" + terbilangAngka(n % 10);
+    if (n < 200) return " Seratus" + terbilangAngka(n - 100);
+    if (n < 1000) return terbilangAngka(Math.floor(n / 100)) + " Ratus" + terbilangAngka(n % 100);
+    if (n < 2000) return " Seribu" + terbilangAngka(n - 1000);
+    if (n < 1000000) return terbilangAngka(Math.floor(n / 1000)) + " Ribu" + terbilangAngka(n % 1000);
+    if (n < 1000000000) return terbilangAngka(Math.floor(n / 1000000)) + " Juta" + terbilangAngka(n % 1000000);
+    return terbilangAngka(Math.floor(n / 1000000000)) + " Miliar" + terbilangAngka(n % 1000000000);
+  };
+
   const terbilang = (n) => {
     if (n === 0 || !n) return "Tidak ada nominal";
-    const bilangan = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"];
-    let temp = "";
-    if (n < 12) temp = " " + bilangan[n];
-    else if (n < 20) temp = terbilang(n - 10) + " Belas";
-    else if (n < 100) temp = terbilang(Math.floor(n / 10)) + " Puluh" + terbilang(n % 10);
-    else if (n < 200) temp = " Seratus" + terbilang(n - 100);
-    else if (n < 1000) temp = terbilang(Math.floor(n / 100)) + " Ratus" + terbilang(n % 100);
-    else if (n < 2000) temp = " Seribu" + terbilang(n - 1000);
-    else if (n < 1000000) temp = terbilang(Math.floor(n / 1000)) + " Ribu" + terbilang(n % 1000);
-    else if (n < 1000000000) temp = terbilang(Math.floor(n / 1000000)) + " Juta" + terbilang(n % 1000000);
-    else if (n < 1000000000000) temp = terbilang(Math.floor(n / 1000000000)) + " Miliar" + terbilang(n % 1000000000);
-    return temp.trim();
+    return terbilangAngka(n).trim() + " Rupiah";
   };
 
   const formatCurrency = (val) => new Intl.NumberFormat("id-ID", {
@@ -525,79 +509,6 @@ const KasOrganisasi = () => {
     }
   };
 
-  const fetchPeruntukanCabang = async (pos, cabang, bulanVal, tahun) => {
-    if (!POS_WITH_PERUNTUKAN.includes(pos) || !cabang || !bulanVal || !tahun) return;
-    try {
-      const namaBulan = monthValueToLabel[bulanVal];
-      if (!namaBulan) return;
-      const data = await GlobalApi.getRekapByPeriode(namaBulan, tahun);
-      const cabangNormalized = cabang.trim().toUpperCase();
-      const match = data?.find(item => item.cabang?.trim().toUpperCase() === cabangNormalized);
-      if (match && match.cabangIuran !== undefined && match.cabangIuran !== null) {
-        setFormCabang(prev => ({ ...prev, tagihan: Number(match.cabangIuran) }));
-      } else if (data && data.length > 0) {
-        toast("Data peruntukan untuk cabang ini belum tersedia", { icon: "ℹ️" });
-      }
-    } catch (error) {
-      console.error("Error fetching peruntukan:", error);
-    }
-  };
-
-  const handlePosCabangChange = (selectedPos) => {
-    setFormCabang(prev => ({ ...prev, pos: selectedPos, tagihan: POS_WITH_PERUNTUKAN.includes(selectedPos) ? prev.tagihan : "" }));
-    setShowTagihanFields(!!selectedPos);
-    if (selectedPos) {
-      fetchPeruntukanCabang(selectedPos, formCabang.cabang, formCabang.setoranBulan, formCabang.setoranTahun);
-    }
-  };
-
-  const handleSubmitCabang = async (e) => {
-    e.preventDefault();
-    if (!formCabang.pos || !formCabang.setoranBulan || !formCabang.setoranTahun || !formCabang.cabang) {
-      toast.error("Harap isi semua field yang wajib!");
-      return;
-    }
-    setSubmitting(true);
-    try {
-      await GlobalApi.createTransaksiCabang({
-        tanggalTransaksi: formCabang.tanggalTransaksi,
-        jenisTransaksi: formCabang.jenisTransaksi,
-        pos: formCabang.pos,
-        cabang: formCabang.cabang,
-        setoranBulan: Number(formCabang.setoranBulan),
-        setoranTahun: Number(formCabang.setoranTahun),
-        jenisPenerimaan: formCabang.jenisPenerimaan,
-        keterangan: formCabang.keterangan,
-        tagihan: formCabang.tagihan ? Number(formCabang.tagihan) : null,
-        pembayaran: formCabang.pembayaran ? Number(formCabang.pembayaran) : null,
-      });
-      toast.success("Transaksi cabang berhasil dicatat!");
-      setShowModalCabang(false);
-      resetFormCabang();
-    } catch (error) {
-      console.error("Error post transaksi cabang:", error);
-      toast.error("Gagal mencatat transaksi cabang.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const resetFormCabang = () => {
-    setFormCabang({
-      tanggalTransaksi: new Date().toISOString().split('T')[0],
-      jenisTransaksi: "PEMASUKAN",
-      pos: "",
-      cabang: "",
-      setoranBulan: months[new Date().getMonth()].value,
-      setoranTahun: new Date().getFullYear(),
-      jenisPenerimaan: "Transfer",
-      keterangan: "",
-      tagihan: "",
-      pembayaran: ""
-    });
-    setShowTagihanFields(false);
-  };
-
   const resetFormIn = () => {
     setFormIn({
       tanggalTransaksi: new Date().toISOString().split('T')[0],
@@ -700,7 +611,7 @@ const KasOrganisasi = () => {
       </div>
 
       {/* Entry Buttons (Large) */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 print:hidden">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 print:hidden">
         <button
           onClick={() => setShowModalIn(true)}
           className="flex items-center justify-center space-x-3 p-6 bg-white border-2 border-emerald-100 rounded-[32px] hover:border-emerald-500 hover:bg-emerald-50 transition-all group"
@@ -723,18 +634,6 @@ const KasOrganisasi = () => {
           <div className="text-left">
             <h4 className="text-base font-black text-slate-800 uppercase">Input Pengeluaran Umum</h4>
             <p className="text-xs text-slate-400 font-bold tracking-tight">Catat pengeluaran organisasi</p>
-          </div>
-        </button>
-        <button
-          onClick={() => setShowModalCabang(true)}
-          className="flex items-center justify-center space-x-3 p-6 bg-white border-2 border-violet-100 rounded-[32px] hover:border-violet-500 hover:bg-violet-50 transition-all group"
-        >
-          <div className="w-12 h-12 bg-violet-500 text-white rounded-2xl flex items-center justify-center text-xl shadow-lg group-hover:scale-110 transition-all">
-            <FaBuilding />
-          </div>
-          <div className="text-left">
-            <h4 className="text-base font-black text-slate-800 uppercase">Input Keuangan Cabang</h4>
-            <p className="text-xs text-slate-400 font-bold tracking-tight">Catat transaksi keuangan cabang</p>
           </div>
         </button>
       </div>
@@ -1081,107 +980,7 @@ const KasOrganisasi = () => {
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {showModalCabang && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowModalCabang(false)} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="relative bg-white w-full max-w-2xl rounded-[40px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-              <div className="p-8 bg-violet-500 text-white flex justify-between items-center">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-2xl backdrop-blur-md"><FaBuilding /></div>
-                  <div>
-                    <h3 className="text-xl font-black uppercase tracking-tight">Keuangan Cabang</h3>
-                    <p className="text-violet-100 text-xs font-bold">Catat transaksi keuangan cabang</p>
-                  </div>
-                </div>
-                <button onClick={() => setShowModalCabang(false)} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-all"><FaTimes /></button>
-              </div>
-              <form onSubmit={handleSubmitCabang} className="p-8 overflow-y-auto space-y-6">
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tanggal</label>
-                    <input type="date" required value={formCabang.tanggalTransaksi} onChange={(e) => setFormCabang({ ...formCabang, tanggalTransaksi: e.target.value })} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-violet-500/10 focus:border-violet-500 outline-none font-bold text-slate-700" />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Metode</label>
-                    <select required value={formCabang.jenisPenerimaan} onChange={(e) => setFormCabang({ ...formCabang, jenisPenerimaan: e.target.value })} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
-                      <option value="Transfer">Transfer</option>
-                      <option value="Tunai">Tunai</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Bulan Pembayaran</label>
-                     <select required value={formCabang.setoranBulan} onChange={(e) => {
-                      const bulanVal = e.target.value;
-                      setFormCabang(prev => ({ ...prev, setoranBulan: bulanVal }));
-                      fetchPeruntukanCabang(formCabang.pos, formCabang.cabang, bulanVal, formCabang.setoranTahun);
-                    }} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
-                      {months.map((month) => (<option key={month.value} value={month.value}>{month.label}</option>))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tahun Pembayaran</label>
-                    <select required value={formCabang.setoranTahun} onChange={(e) => {
-                      const tahunVal = Number(e.target.value);
-                      setFormCabang(prev => ({ ...prev, setoranTahun: tahunVal }));
-                      fetchPeruntukanCabang(formCabang.pos, formCabang.cabang, formCabang.setoranBulan, tahunVal);
-                    }} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
-                      {yearOptions.map((year) => (<option key={year} value={year}>{year}</option>))}
-                    </select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Pos</label>
-                    <select required value={formCabang.pos} onChange={(e) => handlePosCabangChange(e.target.value)} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
-                      <option value="">Pilih Pos</option>
-                      {posPenerimaanList.map(p => <option key={p.id} value={p.namaPosPenerimaan}>{p.namaPosPenerimaan}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Cabang</label>
-                    <select required value={formCabang.cabang} onChange={(e) => {
-                      const cabangVal = e.target.value;
-                      setFormCabang(prev => ({ ...prev, cabang: cabangVal }));
-                      fetchPeruntukanCabang(formCabang.pos, cabangVal, formCabang.setoranBulan, formCabang.setoranTahun);
-                    }} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
-                      <option value="">Pilih Cabang</option>
-                      {cabangList.map(c => <option key={c.id} value={c.kecamatan}>{c.kecamatan}</option>)}
-                    </select>
-                  </div>
-                </div>
-                {showTagihanFields && (
-                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="space-y-6 overflow-hidden">
-                    <div className="p-5 bg-violet-50 border border-violet-100 rounded-[24px]">
-                      <h4 className="text-xs font-black text-violet-800 uppercase tracking-widest mb-4 flex items-center space-x-2">
-                        <FaFileInvoice className="text-violet-500" />
-                        <span>Detail Tagihan & Pembayaran</span>
-                      </h4>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tagihan</label>
-                          <input type="number" value={formCabang.tagihan} onChange={(e) => setFormCabang({ ...formCabang, tagihan: e.target.value })} placeholder="0" className="w-full px-4 py-4 bg-white border border-violet-100 rounded-2xl outline-none font-black text-lg text-violet-600" />
-                        </div>
-                        <div>
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Pembayaran</label>
-                          <input type="number" value={formCabang.pembayaran} onChange={(e) => setFormCabang({ ...formCabang, pembayaran: e.target.value })} placeholder="0" className="w-full px-4 py-4 bg-white border border-violet-100 rounded-2xl outline-none font-black text-lg text-violet-600" />
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-                <textarea value={formCabang.keterangan} onChange={(e) => setFormCabang({ ...formCabang, keterangan: e.target.value })} placeholder="Keterangan..." className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl font-medium text-slate-700 h-24 resize-none" />
-                <div className="flex gap-4">
-                  <button type="button" onClick={() => setShowModalCabang(false)} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase text-xs">Batal</button>
-                  <button type="submit" disabled={submitting} className="flex-1 py-4 bg-violet-500 text-white rounded-2xl font-black uppercase text-xs shadow-lg shadow-violet-100">Simpan</button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+
 
       <AnimatePresence>
         {showModalPos && (
