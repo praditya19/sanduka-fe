@@ -58,6 +58,8 @@ const TagihanForm = () => {
     isLoading: false
   });
 
+  const [transaksiSuksesTotal, setTransaksiSuksesTotal] = useState(0);
+
   // Data Lists
   const [posPenerimaanList, setPosPenerimaanList] = useState([]);
   const [cabangList, setCabangList] = useState([]);
@@ -137,8 +139,7 @@ const TagihanForm = () => {
   const filteredTransactions = transactions.filter(t =>
     t.keterangan?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     t.cabang?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.pos?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.nomorBukti?.toLowerCase().includes(searchQuery.toLowerCase())
+    t.pos?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const exportToExcel = () => {
@@ -199,9 +200,14 @@ const TagihanForm = () => {
     cabang: "",
     setoranBulan: "",
     setoranTahun: "",
+    jenisTransaksi: "PEMASUKAN",
     jenisPenerimaan: "Transfer",
     tagihan: 0,
     pembayaran: 0,
+    transaksiSukses: 0,
+    totalTagihan: 0,
+    totalPembayaran: 0,
+    totalAkhir: 0,
     keterangan: ""
   });
 
@@ -216,9 +222,14 @@ const TagihanForm = () => {
       cabang: item.cabang,
       setoranBulan: item.setoranBulan || "",
       setoranTahun: item.setoranTahun || "",
+      jenisTransaksi: item.jenisTransaksi || "PEMASUKAN",
       jenisPenerimaan: item.jenisPenerimaan || "Transfer",
       tagihan: item.tagihan || 0,
       pembayaran: item.pembayaran || 0,
+      transaksiSukses: item.transaksiSukses || 0,
+      totalTagihan: item.totalTagihan || 0,
+      totalPembayaran: item.totalPembayaran || 0,
+      totalAkhir: item.totalAkhir || 0,
       keterangan: item.keterangan || ""
     });
     setShowEditModal(true);
@@ -230,6 +241,7 @@ const TagihanForm = () => {
     try {
       await GlobalApi.updateTransaksiCabang(editForm.id, {
         tanggalTransaksi: editForm.tanggalTransaksi,
+        jenisTransaksi: editForm.jenisTransaksi,
         pos: editForm.pos,
         cabang: editForm.cabang,
         setoranBulan: Number(editForm.setoranBulan),
@@ -237,6 +249,10 @@ const TagihanForm = () => {
         jenisPenerimaan: editForm.jenisPenerimaan,
         tagihan: Number(editForm.tagihan),
         pembayaran: Number(editForm.pembayaran),
+        transaksiSukses: Number(editForm.transaksiSukses),
+        totalTagihan: Number(editForm.totalTagihan),
+        totalPembayaran: Number(editForm.totalPembayaran),
+        totalAkhir: Number(editForm.totalAkhir),
         keterangan: editForm.keterangan
       });
       toast.success("Transaksi berhasil diperbarui!");
@@ -271,10 +287,31 @@ const TagihanForm = () => {
   };
 
   const PERUNTUKAN_CONFIG = {
-    "Iuran PGRI": { api: GlobalApi.getRekapByPeriode, fields: ["cabangIuran"] },
-    "Daspen": { api: GlobalApi.getRekapDaspenByPeriode, fields: ["tagihan", "peruntukanCabang"] },
-    "Derap": { api: GlobalApi.getRekapDerapByPeriode, fields: ["peruntukanCabang", "totalCabang"] },
-    "Kalender": { api: GlobalApi.getRekapKalenderByPeriode, fields: ["peruntukanCabang", "totalCabang"] },
+    "Iuran PGRI": { api: GlobalApi.getRekapByPeriode, tagihanField: "cabangIuran", bankField: "potonganBank" },
+    "Daspen": { api: GlobalApi.getRekapDaspenByPeriode, tagihanField: "tagihan", bankField: "transfer" },
+    "Derap": { api: GlobalApi.getRekapDerapByPeriode, tagihanField: "peruntukanCabang", bankField: "transfer" },
+    "Kalender": { api: GlobalApi.getRekapKalenderByPeriode, tagihanField: "peruntukanCabang", bankField: "transfer" },
+  };
+
+  const fetchAllBankValues = async (cabang, bulanVal, tahun) => {
+    const namaBulan = monthValueToLabel[bulanVal];
+    if (!namaBulan || !cabang) return 0;
+    const cabangNormalized = cabang.trim().toUpperCase();
+    let total = 0;
+    for (const [, cfg] of Object.entries(PERUNTUKAN_CONFIG)) {
+      try {
+        const data = await cfg.api(namaBulan, tahun);
+        const records = Array.isArray(data) ? data : data?.data || [];
+        const match = records.find(r => r.cabang?.trim().toUpperCase() === cabangNormalized);
+        if (match) {
+          total += Number(match[cfg.bankField] || 0);
+        }
+      } catch (e) {
+        console.error("Error fetching bank value:", e);
+      }
+    }
+    setTransaksiSuksesTotal(total);
+    return total;
   };
 
   const fetchPeruntukanCabang = async (cabang, bulanVal, tahun, itemIndex, pos) => {
@@ -288,11 +325,11 @@ const TagihanForm = () => {
       const cabangNormalized = cabang.trim().toUpperCase();
       const match = records.find(item => item.cabang?.trim().toUpperCase() === cabangNormalized);
       if (match) {
-        const nilai = cfg.calc ? cfg.calc(match) : cfg.fields.reduce((acc, f) => acc ?? match[f], null);
-        if (nilai !== null && nilai > 0) {
+        const tagihanVal = cfg.calc ? cfg.calc(match) : match[cfg.tagihanField];
+        if (tagihanVal !== null && tagihanVal !== undefined) {
           setFormCabang(prev => {
             const newItems = [...prev.items];
-            newItems[itemIndex] = { ...newItems[itemIndex], tagihan: Number(nilai) };
+            newItems[itemIndex] = { ...newItems[itemIndex], tagihan: tagihanVal > 0 ? Number(tagihanVal) : "" };
             return { ...prev, items: newItems };
           });
         }
@@ -361,6 +398,10 @@ const TagihanForm = () => {
         keterangan: item.keterangan,
         tagihan: item.tagihan ? Number(item.tagihan) : null,
         pembayaran: item.pembayaran ? Number(item.pembayaran) : null,
+        transaksiSukses: transaksiSuksesTotal || null,
+        totalTagihan: formCabang.items.reduce((s, i) => s + (Number(i.tagihan) || 0), 0),
+        totalPembayaran: formCabang.items.reduce((s, i) => s + (Number(i.pembayaran) || 0), 0),
+        totalAkhir: Math.max(0, transaksiSuksesTotal - formCabang.items.reduce((s, i) => s + (Number(i.pembayaran) || 0), 0)),
       }));
       await GlobalApi.createTransaksiCabangBatch(payload);
       toast.success(`${validItems.length} transaksi cabang berhasil dicatat!`);
@@ -384,6 +425,7 @@ const TagihanForm = () => {
       setoranTahun: new Date().getFullYear(),
       items: [{ pos: "", tagihan: "", pembayaran: "", keterangan: "" }]
     });
+    setTransaksiSuksesTotal(0);
   };
 
   return (
@@ -595,6 +637,7 @@ const TagihanForm = () => {
                     const cabangVal = e.target.value;
                     setFormCabang(prev => ({ ...prev, cabang: cabangVal }));
                     formCabang.items.forEach((_, idx) => fetchPeruntukanCabang(cabangVal, formCabang.setoranBulan, formCabang.setoranTahun, idx));
+                    fetchAllBankValues(cabangVal, formCabang.setoranBulan, formCabang.setoranTahun);
                   }} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
                     <option value="">Pilih Cabang</option>
                     {cabangList.map(c => <option key={c.id} value={c.kecamatan}>{c.kecamatan}</option>)}
@@ -624,6 +667,7 @@ const TagihanForm = () => {
                       const bulanVal = e.target.value;
                       setFormCabang(prev => ({ ...prev, setoranBulan: bulanVal }));
                       formCabang.items.forEach((_, idx) => fetchPeruntukanCabang(formCabang.cabang, bulanVal, formCabang.setoranTahun, idx));
+                      fetchAllBankValues(formCabang.cabang, bulanVal, formCabang.setoranTahun);
                     }} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
                       {months.map((month) => (<option key={month.value} value={month.value}>{month.label}</option>))}
                     </select>
@@ -634,9 +678,19 @@ const TagihanForm = () => {
                       const tahunVal = Number(e.target.value);
                       setFormCabang(prev => ({ ...prev, setoranTahun: tahunVal }));
                       formCabang.items.forEach((_, idx) => fetchPeruntukanCabang(formCabang.cabang, formCabang.setoranBulan, tahunVal, idx));
+                      fetchAllBankValues(formCabang.cabang, formCabang.setoranBulan, tahunVal);
                     }} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
                       {yearOptions.map((year) => (<option key={year} value={year}>{year}</option>))}
                     </select>
+                  </div>
+                </div>
+
+                {/* Transaksi Sukses Total */}
+                <div>
+                  <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2 block px-1">Transaksi Sukses</label>
+                  <div className="relative">
+                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-lg font-black text-blue-400">Rp</span>
+                    <input type="text" readOnly value={transaksiSuksesTotal.toLocaleString("id-ID")} placeholder="0" className="w-full pl-14 pr-5 py-5 bg-blue-50 border-2 border-blue-100 rounded-2xl outline-none font-black text-2xl text-blue-600" />
                   </div>
                 </div>
 
@@ -698,6 +752,24 @@ const TagihanForm = () => {
                     </motion.div>
                   ))}
                 </div>
+
+                {/* Totals */}
+                {formCabang.items.some(i => i.pos) && (
+                  <div className="p-5 bg-slate-50 border border-slate-200 rounded-[32px] space-y-3">
+                    <div className="flex items-center justify-between py-1">
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Tagihan</span>
+                      <span className="text-lg font-black text-violet-600">Rp {formCabang.items.reduce((s, i) => s + (Number(i.tagihan) || 0), 0).toLocaleString("id-ID")}</span>
+                    </div>
+                    <div className="flex items-center justify-between py-1">
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Pembayaran</span>
+                      <span className="text-lg font-black text-emerald-600">Rp {formCabang.items.reduce((s, i) => s + (Number(i.pembayaran) || 0), 0).toLocaleString("id-ID")}</span>
+                    </div>
+                    <div className="border-t border-slate-200 pt-3 flex items-center justify-between">
+                      <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Total Akhir</span>
+                      <span className="text-xl font-black text-blue-600">Rp {(transaksiSuksesTotal - formCabang.items.reduce((s, i) => s + (Number(i.pembayaran) || 0), 0)).toLocaleString("id-ID")}</span>
+                    </div>
+                  </div>
+                )}
 
                 {/* Actions */}
                 <div className="flex gap-4 pt-2">
@@ -785,6 +857,13 @@ const TagihanForm = () => {
                       <option value="Transfer">Transfer</option>
                       <option value="Tunai">Tunai</option>
                     </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2 block px-1">Transaksi Sukses</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-blue-400">Rp</span>
+                    <input type="text" readOnly value={Number(editForm.transaksiSukses).toLocaleString("id-ID")} className="w-full pl-10 pr-4 py-3.5 bg-blue-50 border border-blue-100 rounded-2xl outline-none font-black text-lg text-blue-600" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-6">
