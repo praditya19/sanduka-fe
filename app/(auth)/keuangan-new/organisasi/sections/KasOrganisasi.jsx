@@ -57,7 +57,7 @@ const KasOrganisasi = () => {
   const yearOptions = Array.from({ length: 11 }, (_, index) => currentYear - 5 + index);
 
   const monthValueToLabel = Object.fromEntries(months.map(m => [m.value, m.label]));
-  const POS_WITH_PERUNTUKAN = ["Iuran PGRI"];
+  
 
   // Modal States
   const [showModalIn, setShowModalIn] = useState(false);
@@ -121,18 +121,15 @@ const KasOrganisasi = () => {
   });
 
   const [formCabang, setFormCabang] = useState({
-    tanggalTransaksi: new Date().toISOString().split('T')[0],
-    jenisTransaksi: "PEMASUKAN",
-    pos: "",
     cabang: "",
+    tanggalTransaksi: new Date().toISOString().split('T')[0],
+    jenisPenerimaan: "Transfer",
     setoranBulan: months[new Date().getMonth()].value,
     setoranTahun: new Date().getFullYear(),
-    jenisPenerimaan: "Transfer",
-    keterangan: "",
-    tagihan: "",
-    pembayaran: ""
+    items: [
+      { pos: "", tagihan: "", pembayaran: "", keterangan: "" }
+    ]
   });
-  const [showTagihanFields, setShowTagihanFields] = useState(false);
 
   const fetchAuxData = async () => {
     try {
@@ -383,20 +380,23 @@ const KasOrganisasi = () => {
     }
   };
 
+  const terbilangAngka = (n) => {
+    if (n === 0 || !n) return "";
+    const bilangan = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"];
+    if (n < 12) return " " + bilangan[n];
+    if (n < 20) return terbilangAngka(n - 10) + " Belas";
+    if (n < 100) return terbilangAngka(Math.floor(n / 10)) + " Puluh" + terbilangAngka(n % 10);
+    if (n < 200) return " Seratus" + terbilangAngka(n - 100);
+    if (n < 1000) return terbilangAngka(Math.floor(n / 100)) + " Ratus" + terbilangAngka(n % 100);
+    if (n < 2000) return " Seribu" + terbilangAngka(n - 1000);
+    if (n < 1000000) return terbilangAngka(Math.floor(n / 1000)) + " Ribu" + terbilangAngka(n % 1000);
+    if (n < 1000000000) return terbilangAngka(Math.floor(n / 1000000)) + " Juta" + terbilangAngka(n % 1000000);
+    return terbilangAngka(Math.floor(n / 1000000000)) + " Miliar" + terbilangAngka(n % 1000000000);
+  };
+
   const terbilang = (n) => {
     if (n === 0 || !n) return "Tidak ada nominal";
-    const bilangan = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"];
-    let temp = "";
-    if (n < 12) temp = " " + bilangan[n];
-    else if (n < 20) temp = terbilang(n - 10) + " Belas";
-    else if (n < 100) temp = terbilang(Math.floor(n / 10)) + " Puluh" + terbilang(n % 10);
-    else if (n < 200) temp = " Seratus" + terbilang(n - 100);
-    else if (n < 1000) temp = terbilang(Math.floor(n / 100)) + " Ratus" + terbilang(n % 100);
-    else if (n < 2000) temp = " Seribu" + terbilang(n - 1000);
-    else if (n < 1000000) temp = terbilang(Math.floor(n / 1000)) + " Ribu" + terbilang(n % 1000);
-    else if (n < 1000000000) temp = terbilang(Math.floor(n / 1000000)) + " Juta" + terbilang(n % 1000000);
-    else if (n < 1000000000000) temp = terbilang(Math.floor(n / 1000000000)) + " Miliar" + terbilang(n % 1000000000);
-    return temp.trim();
+    return terbilangAngka(n).trim() + " Rupiah";
   };
 
   const formatCurrency = (val) => new Intl.NumberFormat("id-ID", {
@@ -525,17 +525,33 @@ const KasOrganisasi = () => {
     }
   };
 
-  const fetchPeruntukanCabang = async (pos, cabang, bulanVal, tahun) => {
-    if (!POS_WITH_PERUNTUKAN.includes(pos) || !cabang || !bulanVal || !tahun) return;
+  const PERUNTUKAN_CONFIG = {
+    "Iuran PGRI": { api: GlobalApi.getRekapByPeriode, fields: ["cabangIuran"] },
+    "Daspen": { api: GlobalApi.getRekapDaspenByPeriode, fields: ["tagihan", "peruntukanCabang"] },
+    "Derap": { api: GlobalApi.getRekapDerapByPeriode, fields: ["peruntukanCabang", "totalCabang"] },
+    "Kalender": { api: GlobalApi.getRekapKalenderByPeriode, fields: ["peruntukanCabang", "totalCabang"] },
+  };
+
+  const fetchPeruntukanCabang = async (cabang, bulanVal, tahun, itemIndex, pos) => {
+    const cfg = PERUNTUKAN_CONFIG[pos];
+    if (!cfg || !cabang || !bulanVal || !tahun) return;
     try {
       const namaBulan = monthValueToLabel[bulanVal];
       if (!namaBulan) return;
-      const data = await GlobalApi.getRekapByPeriode(namaBulan, tahun);
+      const data = await cfg.api(namaBulan, tahun);
+      const records = Array.isArray(data) ? data : data?.data || [];
       const cabangNormalized = cabang.trim().toUpperCase();
-      const match = data?.find(item => item.cabang?.trim().toUpperCase() === cabangNormalized);
-      if (match && match.cabangIuran !== undefined && match.cabangIuran !== null) {
-        setFormCabang(prev => ({ ...prev, tagihan: Number(match.cabangIuran) }));
-      } else if (data && data.length > 0) {
+      const match = records.find(item => item.cabang?.trim().toUpperCase() === cabangNormalized);
+      if (match) {
+        const nilai = cfg.calc ? cfg.calc(match) : cfg.fields.reduce((acc, f) => acc ?? match[f], null);
+        if (nilai !== null && nilai > 0) {
+          setFormCabang(prev => {
+            const newItems = [...prev.items];
+            newItems[itemIndex] = { ...newItems[itemIndex], tagihan: Number(nilai) };
+            return { ...prev, items: newItems };
+          });
+        }
+      } else if (records.length > 0) {
         toast("Data peruntukan untuk cabang ini belum tersedia", { icon: "ℹ️" });
       }
     } catch (error) {
@@ -543,39 +559,73 @@ const KasOrganisasi = () => {
     }
   };
 
-  const handlePosCabangChange = (selectedPos) => {
-    setFormCabang(prev => ({ ...prev, pos: selectedPos, tagihan: POS_WITH_PERUNTUKAN.includes(selectedPos) ? prev.tagihan : "" }));
-    setShowTagihanFields(!!selectedPos);
+  const handleItemPosChange = (itemIndex, selectedPos) => {
+    setFormCabang(prev => {
+      const newItems = [...prev.items];
+      newItems[itemIndex] = {
+        ...newItems[itemIndex],
+        pos: selectedPos
+      };
+      return { ...prev, items: newItems };
+    });
     if (selectedPos) {
-      fetchPeruntukanCabang(selectedPos, formCabang.cabang, formCabang.setoranBulan, formCabang.setoranTahun);
+      fetchPeruntukanCabang(formCabang.cabang, formCabang.setoranBulan, formCabang.setoranTahun, itemIndex, selectedPos);
     }
+  };
+
+  const addCabangItem = () => {
+    setFormCabang(prev => ({
+      ...prev,
+      items: [...prev.items, { pos: "", tagihan: "", pembayaran: "", keterangan: "" }]
+    }));
+  };
+
+  const removeCabangItem = (itemIndex) => {
+    setFormCabang(prev => {
+      const newItems = prev.items.filter((_, i) => i !== itemIndex);
+      return { ...prev, items: newItems.length > 0 ? newItems : [{ pos: "", tagihan: "", pembayaran: "", keterangan: "" }] };
+    });
+  };
+
+  const updateCabangItem = (itemIndex, field, value) => {
+    setFormCabang(prev => {
+      const newItems = [...prev.items];
+      newItems[itemIndex] = { ...newItems[itemIndex], [field]: value };
+      return { ...prev, items: newItems };
+    });
   };
 
   const handleSubmitCabang = async (e) => {
     e.preventDefault();
-    if (!formCabang.pos || !formCabang.setoranBulan || !formCabang.setoranTahun || !formCabang.cabang) {
-      toast.error("Harap isi semua field yang wajib!");
+    if (!formCabang.cabang || !formCabang.setoranBulan || !formCabang.setoranTahun) {
+      toast.error("Harap isi Cabang, Bulan, dan Tahun Pembayaran!");
+      return;
+    }
+    const validItems = formCabang.items.filter(item => item.pos);
+    if (validItems.length === 0) {
+      toast.error("Minimal satu Pos harus dipilih!");
       return;
     }
     setSubmitting(true);
     try {
-      await GlobalApi.createTransaksiCabang({
+      const payload = validItems.map(item => ({
         tanggalTransaksi: formCabang.tanggalTransaksi,
-        jenisTransaksi: formCabang.jenisTransaksi,
-        pos: formCabang.pos,
+        jenisTransaksi: "PEMASUKAN",
+        pos: item.pos,
         cabang: formCabang.cabang,
         setoranBulan: Number(formCabang.setoranBulan),
         setoranTahun: Number(formCabang.setoranTahun),
         jenisPenerimaan: formCabang.jenisPenerimaan,
-        keterangan: formCabang.keterangan,
-        tagihan: formCabang.tagihan ? Number(formCabang.tagihan) : null,
-        pembayaran: formCabang.pembayaran ? Number(formCabang.pembayaran) : null,
-      });
-      toast.success("Transaksi cabang berhasil dicatat!");
+        keterangan: item.keterangan,
+        tagihan: item.tagihan ? Number(item.tagihan) : null,
+        pembayaran: item.pembayaran ? Number(item.pembayaran) : null,
+      }));
+      await GlobalApi.createTransaksiCabangBatch(payload);
+      toast.success(`${validItems.length} transaksi cabang berhasil dicatat!`);
       setShowModalCabang(false);
       resetFormCabang();
     } catch (error) {
-      console.error("Error post transaksi cabang:", error);
+      console.error("Error post transaksi cabang batch:", error);
       toast.error("Gagal mencatat transaksi cabang.");
     } finally {
       setSubmitting(false);
@@ -584,18 +634,15 @@ const KasOrganisasi = () => {
 
   const resetFormCabang = () => {
     setFormCabang({
-      tanggalTransaksi: new Date().toISOString().split('T')[0],
-      jenisTransaksi: "PEMASUKAN",
-      pos: "",
       cabang: "",
+      tanggalTransaksi: new Date().toISOString().split('T')[0],
+      jenisPenerimaan: "Transfer",
       setoranBulan: months[new Date().getMonth()].value,
       setoranTahun: new Date().getFullYear(),
-      jenisPenerimaan: "Transfer",
-      keterangan: "",
-      tagihan: "",
-      pembayaran: ""
+      items: [
+        { pos: "", tagihan: "", pembayaran: "", keterangan: "" }
+      ]
     });
-    setShowTagihanFields(false);
   };
 
   const resetFormIn = () => {
@@ -1097,6 +1144,19 @@ const KasOrganisasi = () => {
                 <button onClick={() => setShowModalCabang(false)} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-all"><FaTimes /></button>
               </div>
               <form onSubmit={handleSubmitCabang} className="p-8 overflow-y-auto space-y-6">
+                {/* Cabang - PERTAMA */}
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Cabang</label>
+                  <select required value={formCabang.cabang} onChange={(e) => {
+                    const cabangVal = e.target.value;
+                    setFormCabang(prev => ({ ...prev, cabang: cabangVal }));
+                    formCabang.items.forEach((_, idx) => fetchPeruntukanCabang(cabangVal, formCabang.setoranBulan, formCabang.setoranTahun, idx));
+                  }} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
+                    <option value="">Pilih Cabang</option>
+                    {cabangList.map(c => <option key={c.id} value={c.kecamatan}>{c.kecamatan}</option>)}
+                  </select>
+                </div>
+                {/* Tanggal & Metode */}
                 <div className="grid grid-cols-2 gap-6">
                   <div>
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tanggal</label>
@@ -1110,13 +1170,14 @@ const KasOrganisasi = () => {
                     </select>
                   </div>
                 </div>
+                {/* Bulan & Tahun Pembayaran */}
                 <div className="grid grid-cols-2 gap-6">
                   <div>
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Bulan Pembayaran</label>
                      <select required value={formCabang.setoranBulan} onChange={(e) => {
                       const bulanVal = e.target.value;
                       setFormCabang(prev => ({ ...prev, setoranBulan: bulanVal }));
-                      fetchPeruntukanCabang(formCabang.pos, formCabang.cabang, bulanVal, formCabang.setoranTahun);
+                      formCabang.items.forEach((_, idx) => fetchPeruntukanCabang(formCabang.cabang, bulanVal, formCabang.setoranTahun, idx));
                     }} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
                       {months.map((month) => (<option key={month.value} value={month.value}>{month.label}</option>))}
                     </select>
@@ -1126,56 +1187,75 @@ const KasOrganisasi = () => {
                     <select required value={formCabang.setoranTahun} onChange={(e) => {
                       const tahunVal = Number(e.target.value);
                       setFormCabang(prev => ({ ...prev, setoranTahun: tahunVal }));
-                      fetchPeruntukanCabang(formCabang.pos, formCabang.cabang, formCabang.setoranBulan, tahunVal);
+                      formCabang.items.forEach((_, idx) => fetchPeruntukanCabang(formCabang.cabang, formCabang.setoranBulan, tahunVal, idx));
                     }} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
                       {yearOptions.map((year) => (<option key={year} value={year}>{year}</option>))}
                     </select>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Pos</label>
-                    <select required value={formCabang.pos} onChange={(e) => handlePosCabangChange(e.target.value)} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
-                      <option value="">Pilih Pos</option>
-                      {posPenerimaanList.map(p => <option key={p.id} value={p.namaPosPenerimaan}>{p.namaPosPenerimaan}</option>)}
-                    </select>
+                {/* Dynamic Pos + Keterangan Items */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Pos & Keterangan</label>
+                    <button type="button" onClick={addCabangItem} disabled={!formCabang.cabang} className="flex items-center space-x-1 px-3 py-1.5 bg-violet-100 text-violet-600 rounded-xl text-[10px] font-black hover:bg-violet-200 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+                      <FaPlus size={10} /> <span>Tambah</span>
+                    </button>
                   </div>
-                  <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Cabang</label>
-                    <select required value={formCabang.cabang} onChange={(e) => {
-                      const cabangVal = e.target.value;
-                      setFormCabang(prev => ({ ...prev, cabang: cabangVal }));
-                      fetchPeruntukanCabang(formCabang.pos, cabangVal, formCabang.setoranBulan, formCabang.setoranTahun);
-                    }} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
-                      <option value="">Pilih Cabang</option>
-                      {cabangList.map(c => <option key={c.id} value={c.kecamatan}>{c.kecamatan}</option>)}
-                    </select>
-                  </div>
-                </div>
-                {showTagihanFields && (
-                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="space-y-6 overflow-hidden">
-                    <div className="p-5 bg-violet-50 border border-violet-100 rounded-[24px]">
-                      <h4 className="text-xs font-black text-violet-800 uppercase tracking-widest mb-4 flex items-center space-x-2">
-                        <FaFileInvoice className="text-violet-500" />
-                        <span>Detail Tagihan & Pembayaran</span>
-                      </h4>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tagihan</label>
-                          <input type="number" value={formCabang.tagihan} onChange={(e) => setFormCabang({ ...formCabang, tagihan: e.target.value })} placeholder="0" className="w-full px-4 py-4 bg-white border border-violet-100 rounded-2xl outline-none font-black text-lg text-violet-600" />
+                  {formCabang.items.map((item, idx) => (
+                    <motion.div key={idx} initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-4 bg-violet-50/50 border border-violet-100 rounded-[24px] space-y-3">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-1 space-y-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Pos</label>
+                              <select disabled={!formCabang.cabang} required={idx === 0} value={item.pos} onChange={(e) => handleItemPosChange(idx, e.target.value)} className="w-full px-3 py-2.5 bg-white border border-violet-100 rounded-xl outline-none font-bold text-sm text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <option value="">{formCabang.cabang ? "Pilih Pos" : "Pilih Cabang dulu"}</option>
+                                {posPenerimaanList.map(p => <option key={p.id} value={p.namaPosPenerimaan}>{p.namaPosPenerimaan}</option>)}
+                              </select>
+                            </div>
+                            {item.pos && (
+                              <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Tagihan</label>
+                                  <div className="relative">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400">Rp</span>
+                                    <input type="text" value={item.tagihan ? Number(item.tagihan).toLocaleString("id-ID") : ""} onChange={(e) => updateCabangItem(idx, "tagihan", e.target.value.replace(/[^0-9]/g, ''))} placeholder="0" className="w-full pl-9 pr-3 py-2.5 bg-white border border-violet-100 rounded-xl outline-none font-black text-sm text-violet-600" />
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Pembayaran</label>
+                                  <div className="relative">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400">Rp</span>
+                                    <input type="text" value={item.pembayaran ? Number(item.pembayaran).toLocaleString("id-ID") : ""} onChange={(e) => updateCabangItem(idx, "pembayaran", e.target.value.replace(/[^0-9]/g, ''))} placeholder="0" className="w-full pl-9 pr-3 py-2.5 bg-white border border-violet-100 rounded-xl outline-none font-black text-sm text-violet-600" />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                            {item.tagihan > 0 && (
+                              <p className="text-[9px] text-slate-400 font-medium italic px-1">
+                                {terbilang(Number(item.tagihan))}
+                              </p>
+                            )}
+                          </div>
+                          <div>
+                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Keterangan</label>
+                            <input type="text" value={item.keterangan} onChange={(e) => updateCabangItem(idx, "keterangan", e.target.value)} placeholder="Keterangan..." className="w-full px-3 py-2.5 bg-white border border-violet-100 rounded-xl outline-none font-medium text-sm text-slate-700" />
+                          </div>
                         </div>
-                        <div>
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Pembayaran</label>
-                          <input type="number" value={formCabang.pembayaran} onChange={(e) => setFormCabang({ ...formCabang, pembayaran: e.target.value })} placeholder="0" className="w-full px-4 py-4 bg-white border border-violet-100 rounded-2xl outline-none font-black text-lg text-violet-600" />
-                        </div>
+                        {formCabang.items.length > 1 && (
+                          <button type="button" onClick={() => removeCabangItem(idx)} className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all mt-6">
+                            <FaTimes size={14} />
+                          </button>
+                        )}
                       </div>
-                    </div>
-                  </motion.div>
-                )}
-                <textarea value={formCabang.keterangan} onChange={(e) => setFormCabang({ ...formCabang, keterangan: e.target.value })} placeholder="Keterangan..." className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl font-medium text-slate-700 h-24 resize-none" />
-                <div className="flex gap-4">
+                    </motion.div>
+                  ))}
+                </div>
+                <div className="flex gap-4 pt-2">
                   <button type="button" onClick={() => setShowModalCabang(false)} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase text-xs">Batal</button>
-                  <button type="submit" disabled={submitting} className="flex-1 py-4 bg-violet-500 text-white rounded-2xl font-black uppercase text-xs shadow-lg shadow-violet-100">Simpan</button>
+                  <button type="submit" disabled={submitting} className="flex-1 py-4 bg-violet-500 text-white rounded-2xl font-black uppercase text-xs shadow-lg shadow-violet-100">
+                    {submitting ? "Menyimpan..." : `Simpan (${formCabang.items.filter(i => i.pos).length || 0})`}
+                  </button>
                 </div>
               </form>
             </motion.div>

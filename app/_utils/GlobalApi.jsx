@@ -3530,6 +3530,18 @@ const updateTransaksiCabang = async (id, payload) => {
   }
 };
 
+const createTransaksiCabangBatch = async (dataList) => {
+  try {
+    const response = await axiosClient.post("/api/transaksi-cabang/batch", dataList, {
+      headers: { "Content-Type": "application/json" },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error create transaksi cabang batch:", error);
+    throw error;
+  }
+};
+
 const deleteTransaksiCabang = async (id) => {
   try {
     const response = await axiosClient.delete(`/api/transaksi-cabang/${id}`);
@@ -4545,6 +4557,7 @@ export default {
   deleteBalancing,
   getTableUmum,
   createTransaksiCabang,
+  createTransaksiCabangBatch,
   getTransaksiCabang,
   getTransaksiCabangById,
   getTransaksiCabangByBulanTahun,
