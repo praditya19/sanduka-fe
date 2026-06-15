@@ -1,13 +1,14 @@
 "use client";
 import React from "react";
 import { motion } from "framer-motion";
-import { 
-  FaPlus, 
-  FaFileInvoiceDollar, 
-  FaPrint, 
+import {
+  FaPlus,
+  FaFileInvoiceDollar,
+  FaPrint,
   FaChartLine,
   FaBook,
-  FaUniversity
+  FaUniversity,
+  FaTags
 } from "react-icons/fa";
 import Link from "next/link";
 
@@ -35,6 +36,13 @@ const QuickActions = () => {
       href: "/keuangan-new/organisasi",
     },
     {
+      title: "Tagihan",
+      subtitle: "Input Keuangan Cabang",
+      icon: <FaTags />,
+      color: "bg-violet-500",
+      href: "/keuangan-new/tagihan",
+    },
+    {
       title: "Laporan Keuangan Sanduka",
       subtitle: "Cetak & Export PDF",
       icon: <FaPrint />,
@@ -60,7 +68,7 @@ const QuickActions = () => {
   return (
     <div className="mb-8">
       <h2 className="text-xl font-bold text-gray-800 mb-4 tracking-tight uppercase text-xs">Akses Cepat</h2>
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-7 gap-4">
         {actions.map((action, index) => (
           <Link href={action.href} key={index}>
             <motion.div
