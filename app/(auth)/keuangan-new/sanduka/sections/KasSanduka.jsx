@@ -108,8 +108,8 @@ const KasSanduka = () => {
         GlobalApi.getPosPengeluaranSanduka(),
         GlobalApi.getCabang()
       ]);
-      setPosPenerimaanList(resPosIn || []);
-      setPosPengeluaranList(resPosOut || []);
+      setPosPenerimaanList((resPosIn || []).sort((a, b) => a.namaPosPenerimaan.localeCompare(b.namaPosPenerimaan)));
+      setPosPengeluaranList((resPosOut || []).sort((a, b) => a.namaPosPengeluaran.localeCompare(b.namaPosPengeluaran)));
       setCabangList(resCabang.data || []);
     } catch (error) {
       console.error("Error fetching aux data:", error);

@@ -1135,6 +1135,7 @@ const IuranPgriSection = () => {
                                   "Tambahan Cabang",
                                   "Total Cabang",
                                   "Sanduka",
+                                  "Total Tagihan Cabang",
                                   "Total Tagihan",
                                   "Potongan Bank",
                                   "Dana Tunai",
@@ -1157,7 +1158,7 @@ const IuranPgriSection = () => {
                                   .fill(0)
                                   .map((_, i) => (
                                     <tr key={i} className="animate-pulse">
-                                      <td colSpan={14} className="p-6">
+                                      <td colSpan={15} className="p-6">
                                         <div className="h-3 bg-slate-100 rounded-full w-full" />
                                       </td>
                                     </tr>
@@ -1212,6 +1213,13 @@ const IuranPgriSection = () => {
                                         </td>
                                         <td className="px-3 py-4">
                                           {formatCurrency(row[8])}
+                                        </td>
+                                        <td className="px-3 py-4 text-amber-700 bg-amber-50/50 font-bold">
+                                          {formatCurrency(
+                                            parseInt(row[2] || 0) +
+                                            parseInt(row[3] || 0) +
+                                            parseInt(row[4] || 0),
+                                          )}
                                         </td>
                                         <td className="px-3 py-4 text-slate-900 bg-slate-50/50 font-black">
                                           {formatCurrency(
@@ -1287,6 +1295,11 @@ const IuranPgriSection = () => {
                                     <td className="px-3 py-5">
                                       {formatCurrency(columnTotals[8])}
                                     </td>
+                                    <td className="px-3 py-5 bg-amber-500/20 text-amber-300 font-bold">
+                                      {formatCurrency(
+                                        columnTotals[2] + columnTotals[3] + columnTotals[4],
+                                      )}
+                                    </td>
                                     <td className="px-3 py-5 bg-slate-800 font-black text-amber-400">
                                       {formatCurrency(columnTotals[9])}
                                     </td>
@@ -1308,7 +1321,7 @@ const IuranPgriSection = () => {
                               ) : (
                                 <tr>
                                   <td
-                                    colSpan={14}
+                                    colSpan={15}
                                     className="py-16 text-center text-slate-300 font-black uppercase tracking-widest text-xs"
                                   >
                                     Data Kosong

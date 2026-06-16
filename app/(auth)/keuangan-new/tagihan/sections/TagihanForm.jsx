@@ -89,7 +89,7 @@ const TagihanForm = () => {
         GlobalApi.getPosPenerimaanUmum(),
         GlobalApi.getCabang()
       ]);
-      setPosPenerimaanList(resPosIn || []);
+      setPosPenerimaanList((resPosIn || []).sort((a, b) => a.namaPosPenerimaan.localeCompare(b.namaPosPenerimaan)));
       setCabangList((resCabang.data || []).sort((a, b) => a.kecamatan.localeCompare(b.kecamatan)));
     } catch (error) {
       console.error("Error fetching aux data:", error);
@@ -287,10 +287,11 @@ const TagihanForm = () => {
   };
 
   const PERUNTUKAN_CONFIG = {
-    "Iuran PGRI": { api: GlobalApi.getRekapByPeriode, tagihanField: "cabangIuran", bankField: "potonganBank" },
+    "Iuran PGRI": { api: GlobalApi.getRekapByPeriode, tagihanField: null, bankField: "potonganBank" },
     "Daspen": { api: GlobalApi.getRekapDaspenByPeriode, tagihanField: "tagihan", bankField: "transfer" },
     "Derap": { api: GlobalApi.getRekapDerapByPeriode, tagihanField: "peruntukanCabang", bankField: "transfer" },
     "Kalender": { api: GlobalApi.getRekapKalenderByPeriode, tagihanField: "peruntukanCabang", bankField: "transfer" },
+    "Sanduka": { api: GlobalApi.getRekapByPeriode, tagihanField: "sanduka", bankField: null },
   };
 
   const fetchAllBankValues = async (cabang, bulanVal, tahun) => {
@@ -324,7 +325,12 @@ const TagihanForm = () => {
       const cabangNormalized = cabang.trim().toUpperCase();
       const match = records.find(item => item.cabang?.trim().toUpperCase() === cabangNormalized);
       if (match) {
-        const tagihanVal = cfg.calc ? cfg.calc(match) : match[cfg.tagihanField];
+        let tagihanVal;
+        if (pos === "Iuran PGRI") {
+          tagihanVal = Number(match.pb || 0) + Number(match.provinsi || 0) + Number(match.kabupaten || 0);
+        } else {
+          tagihanVal = cfg.calc ? cfg.calc(match) : match[cfg.tagihanField];
+        }
         if (tagihanVal !== null && tagihanVal !== undefined) {
           setFormCabang(prev => {
             const newItems = [...prev.items];
