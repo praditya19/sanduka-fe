@@ -1068,6 +1068,7 @@ const DerapSection = () => {
                         "Peruntukan Cabang",
                         "Tambahan Cabang",
                         "Total Cabang",
+                        "Tagihan Cabang",
                         "Transfer",
                         "Kurang",
                         "Setoran Tunai",
@@ -1089,7 +1090,7 @@ const DerapSection = () => {
                         .fill(0)
                         .map((_, i) => (
                           <tr key={i} className="animate-pulse">
-                            <td colSpan={13} className="p-6">
+                            <td colSpan={14} className="p-6">
                               <div className="h-3 bg-slate-100 rounded-full w-full" />
                             </td>
                           </tr>
@@ -1136,6 +1137,12 @@ const DerapSection = () => {
                             <td className="px-4 py-4 text-indigo-600 font-black">
                               {formatCurrency(row.totalCabang)}
                             </td>
+                            <td className="px-4 py-4 text-amber-700 bg-amber-50/30 font-bold">
+                              {formatCurrency(
+                                (parseInt(row.peruntukanProvinsi) || 0) +
+                                (parseInt(row.peruntukanKabupaten) || 0),
+                              )}
+                            </td>
                             <td className="px-4 py-4 text-emerald-600 font-bold">
                               {formatCurrency(row.transfer)}
                             </td>
@@ -1168,7 +1175,7 @@ const DerapSection = () => {
                     ) : (
                       <tr>
                         <td
-                          colSpan={13}
+                          colSpan={14}
                           className="py-16 text-center text-slate-300 font-black uppercase tracking-widest text-xs"
                         >
                           Data Kosong
@@ -1272,6 +1279,23 @@ const DerapSection = () => {
                               .reduce(
                                 (sum, row) =>
                                   sum + (parseInt(row.totalCabang) || 0),
+                                0,
+                              ),
+                          )}
+                        </td>
+                        <td className="px-4 py-4 text-amber-600 bg-amber-50/30 font-bold">
+                          {formatCurrency(
+                            tableData
+                              .filter((r) =>
+                                r.cabang
+                                  ?.toLowerCase()
+                                  .includes(searchQuery.toLowerCase()),
+                              )
+                              .reduce(
+                                (sum, row) =>
+                                  sum +
+                                  (parseInt(row.peruntukanProvinsi) || 0) +
+                                  (parseInt(row.peruntukanKabupaten) || 0),
                                 0,
                               ),
                           )}

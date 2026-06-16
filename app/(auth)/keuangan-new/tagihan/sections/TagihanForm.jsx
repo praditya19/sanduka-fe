@@ -289,8 +289,8 @@ const TagihanForm = () => {
   const PERUNTUKAN_CONFIG = {
     "Iuran PGRI": { api: GlobalApi.getRekapByPeriode, tagihanField: null, bankField: "potonganBank" },
     "Daspen": { api: GlobalApi.getRekapDaspenByPeriode, tagihanField: "tagihan", bankField: "transfer" },
-    "Derap": { api: GlobalApi.getRekapDerapByPeriode, tagihanField: "peruntukanCabang", bankField: "transfer" },
-    "Kalender": { api: GlobalApi.getRekapKalenderByPeriode, tagihanField: "peruntukanCabang", bankField: "transfer" },
+    "Derap": { api: GlobalApi.getRekapDerapByPeriode, tagihanField: null, bankField: "transfer" },
+    "Kalender": { api: GlobalApi.getRekapKalenderByPeriode, tagihanField: null, bankField: "transfer" },
     "Sanduka": { api: GlobalApi.getRekapByPeriode, tagihanField: "sanduka", bankField: null },
   };
 
@@ -328,6 +328,8 @@ const TagihanForm = () => {
         let tagihanVal;
         if (pos === "Iuran PGRI") {
           tagihanVal = Number(match.pb || 0) + Number(match.provinsi || 0) + Number(match.kabupaten || 0);
+        } else if (pos === "Derap" || pos === "Kalender") {
+          tagihanVal = Number(match.peruntukanProvinsi || 0) + Number(match.peruntukanKabupaten || 0);
         } else {
           tagihanVal = cfg.calc ? cfg.calc(match) : match[cfg.tagihanField];
         }
