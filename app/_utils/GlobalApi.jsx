@@ -1926,6 +1926,50 @@ const getIuranAnggotaAll = async (bulan, tahun) => {
     throw error;
   }
 };
+const getTotalIuranSumbanganHut = async (tahun, bulan) => {
+  try {
+    const response = await axiosClient.get(`/api/iuran-sumbangan-hut/total-by-cabang`, {
+      params: { tahun, bulan },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching total iuran sumbangan hut:", error);
+    throw error;
+  }
+};
+const getIuranSumbanganHutByNpa = async (npa, bulan) => {
+  try {
+    const response = await axiosClient.get(`/api/iuran-sumbangan-hut/by-npa/${npa}`, {
+      params: { bulan },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching iuran sumbangan hut by npa:", error);
+    throw error;
+  }
+};
+const saveIuranSumbanganHut = async (npa, cabang, tagihanUntukBulan, defaultHut, manualHut) => {
+  try {
+    const response = await axiosClient.post(`/api/iuran-sumbangan-hut/save`, null, {
+      params: { npa, cabang, tagihanUntukBulan, defaultHut, manualHut },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error saving iuran sumbangan hut:", error);
+    throw error;
+  }
+};
+const updateIuranSumbanganHut = async (npa, cabang, tagihanUntukBulan, defaultHut, manualHut) => {
+  try {
+    const response = await axiosClient.put(`/api/iuran-sumbangan-hut/update`, null, {
+      params: { npa, cabang, tagihanUntukBulan, defaultHut, manualHut },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error updating iuran sumbangan hut:", error);
+    throw error;
+  }
+};
 const getIuranAnggota = async (npa) => {
   try {
     const response = await axiosClient.get(`/api/iuran-anggota/npa/${npa}`);
@@ -4489,6 +4533,10 @@ export default {
   deleteTargetLainLain,
   deleteTargetDaspen,
   getIuranAnggotaAll,
+  getTotalIuranSumbanganHut,
+  getIuranSumbanganHutByNpa,
+  saveIuranSumbanganHut,
+  updateIuranSumbanganHut,
   updateTargetDaspen,
   deleteDerap,
   updateDerap,
