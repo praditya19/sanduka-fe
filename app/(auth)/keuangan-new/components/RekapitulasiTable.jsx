@@ -28,6 +28,7 @@ const RekapitulasiTable = ({ data, loading, onPrint, onExport }) => {
     "Tambahan Cabang",
     "Total Cabang",
     "Sanduka",
+    "Total Tagihan Cabang",
     "Total Tagihan",
     "Potongan Bank",
     "Setoran Tunai",
@@ -107,6 +108,7 @@ const RekapitulasiTable = ({ data, loading, onPrint, onExport }) => {
                 const tambahan = item[6] || 0;
                 const totalCabang = item[7] || (cab + tambahan);
                 const sanduka = item[8] || 0;
+                const totalTagihanCabang = pb + prov + kab;
                 const totalTagihan = item[9] || (pb + prov + kab + totalCabang + sanduka);
                 const potBank = item[10] || 0;
                 const setorTunai = item[11] || 0;
@@ -145,6 +147,9 @@ const RekapitulasiTable = ({ data, loading, onPrint, onExport }) => {
                     </td>
                     <td className="px-4 py-5 text-center text-[10px] font-bold text-slate-500 italic">
                       {formatCurrency(sanduka)}
+                    </td>
+                    <td className="px-4 py-5 text-center text-[10px] font-black text-slate-700 bg-amber-50/20">
+                      {formatCurrency(totalTagihanCabang)}
                     </td>
                     <td className="px-4 py-5 text-center text-[11px] font-black text-slate-900 bg-slate-100/30">
                       {formatCurrency(totalTagihan)}

@@ -3208,7 +3208,7 @@ const getPosPengeluaranUmum = async () => {
 
 const deletePosPengeluaranUmum = async (id) => {
   try {
-    const response = await axiosClient.delete(`/api/pos-pengeluaran/${id}`);
+    const response = await axiosClient.delete(`/api/pos-pengeluaran-kas-umum/${id}`);
     return response.data;
   } catch (error) {
     if (error.response) {

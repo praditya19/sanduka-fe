@@ -122,8 +122,8 @@ const KasOrganisasi = () => {
         GlobalApi.getPosPengeluaranUmum(),
         GlobalApi.getCabang()
       ]);
-      setPosPenerimaanList(resPosIn || []);
-      setPosPengeluaranList(resPosOut || []);
+      setPosPenerimaanList((resPosIn || []).sort((a, b) => a.namaPosPenerimaan.localeCompare(b.namaPosPenerimaan)));
+      setPosPengeluaranList((resPosOut || []).sort((a, b) => a.namaPosPengeluaran.localeCompare(b.namaPosPengeluaran)));
       setCabangList((resCabang.data || []).sort((a, b) => a.kecamatan.localeCompare(b.kecamatan)));
     } catch (error) {
       console.error("Error fetching aux data:", error);
@@ -242,7 +242,7 @@ const KasOrganisasi = () => {
           setConfirmModal(prev => ({ ...prev, isOpen: false }));
         } catch (error) {
           console.error("Error delete pos:", error);
-          toast.error("Gagal menghapus pos.");
+          toast.error(error.message || "Gagal menghapus pos.");
           setConfirmModal(prev => ({ ...prev, isOpen: false }));
         }
       }
