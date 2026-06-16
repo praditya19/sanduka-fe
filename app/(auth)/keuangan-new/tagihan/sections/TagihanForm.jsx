@@ -298,17 +298,16 @@ const TagihanForm = () => {
     if (!namaBulan || !cabang) return 0;
     const cabangNormalized = cabang.trim().toUpperCase();
     let total = 0;
-    for (const [, cfg] of Object.entries(PERUNTUKAN_CONFIG)) {
-      try {
-        const data = await cfg.api(namaBulan, tahun);
-        const records = Array.isArray(data) ? data : data?.data || [];
-        const match = records.find(r => r.cabang?.trim().toUpperCase() === cabangNormalized);
-        if (match) {
-          total += Number(match[cfg.bankField] || 0);
-        }
-      } catch (e) {
-        console.error("Error fetching bank value:", e);
+    const cfg = PERUNTUKAN_CONFIG["Iuran PGRI"];
+    try {
+      const data = await cfg.api(namaBulan, tahun);
+      const records = Array.isArray(data) ? data : data?.data || [];
+      const match = records.find(r => r.cabang?.trim().toUpperCase() === cabangNormalized);
+      if (match) {
+        total = Number(match[cfg.bankField] || 0);
       }
+    } catch (e) {
+      console.error("Error fetching bank value:", e);
     }
     setTransaksiSuksesTotal(total);
     return total;
