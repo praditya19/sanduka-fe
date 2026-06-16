@@ -161,7 +161,8 @@ const EditFinanceModal = ({
                 if (["pgri", "sanduka"].includes(item.key)) return true;
                 
                 // Hitung total nilai (Awal + Penyesuaian)
-                const totalVal = parseInt(item.iuran || 0) + (nominalBaruList[item.key] || 0);
+                const awalnya = parseInt(item.defaultJumlah ?? item.iuran ?? 0);
+                const totalVal = awalnya + (nominalBaruList[item.key] || 0);
 
                 // Selalu tampilkan jika baru saja ditambahkan lewat tombol "Tambah Kategori" 
                 // agar user bisa mengisi nominalnya (meskipun masih 0)
@@ -173,7 +174,7 @@ const EditFinanceModal = ({
               })
               .map((item, idx) => {
                 const isReset = resetKeys.includes(item.key);
-                const oldValue = isReset ? 0 : (newValues[item.key] ?? parseInt(item.iuran || 0));
+                const oldValue = isReset ? 0 : (newValues[item.key] ?? parseInt(item.defaultJumlah ?? item.iuran ?? 0));
                 const inputValue = isReset ? 0 : nominalBaruList[item.key] || 0;
                 const totalValue = oldValue + inputValue;
 

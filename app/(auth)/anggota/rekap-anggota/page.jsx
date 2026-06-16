@@ -157,6 +157,8 @@ function RekapAnggota() {
           key: lowKey,
           label: s.namaSumbangan,
           iuran: s.jumlah,
+          defaultJumlah: s.defaultJumlah || s.jumlah,
+          manualJumlah: s.manualJumlah || 0,
           isExistingSumbangan: true,
         });
       }
@@ -186,9 +188,8 @@ function RekapAnggota() {
   useEffect(() => {
     let total = groupedIuran.reduce((sum, item) => {
       const isReset = resetKeys.includes(item.key);
-      const val = isReset
-        ? 0
-        : parseInt(item.iuran || 0) + (nominalBaruList[item.key] || 0);
+      const awalnya = parseInt(item.defaultJumlah ?? item.iuran ?? 0);
+      const val = isReset ? 0 : awalnya + (nominalBaruList[item.key] || 0);
       return sum + val;
     }, 0);
 
@@ -622,6 +623,14 @@ function RekapAnggota() {
           manualValues[key.toLowerCase()] = dataIuran[manualKey];
         }
       });
+      // Isi Penyesuaian tiap sumbangan item dari manualJumlah
+      (member.detailSumbangan || []).forEach((s) => {
+        const lowKey = s.namaSumbangan.toLowerCase().trim();
+        if (["pgri", "sanduka", "daspen", "derap", "kalender"].includes(lowKey)) return;
+        if (s.manualJumlah && parseInt(s.manualJumlah) > 0) {
+          manualValues[lowKey] = parseInt(s.manualJumlah);
+        }
+      });
       setNominalBaruList(manualValues);
 
       // --- TRIPLE FALLBACK: Pastikan nominal tidak 0 ---
@@ -1028,12 +1037,18 @@ function RekapAnggota() {
           (selectedMember.detailSumbangan || []).forEach((s) => {
             const lowKey = s.namaSumbangan.toLowerCase().trim();
             if (baseKeys.includes(lowKey)) return;
+            const isReset = resetKeys.includes(lowKey);
+            const defaultJml = s.defaultJumlah || s.jumlah || 0;
+            const manualJml = nominalBaruList[lowKey] || 0;
+            const totalJml = defaultJml + manualJml;
             itemsMap.set(lowKey, {
               jenis: s.namaSumbangan,
               keterangan: s.keterangan || s.namaSumbangan,
               namaSumbangan: s.namaSumbangan,
               namaIuran: s.namaSumbangan,
-              jumlah: resetKeys.includes(lowKey) ? 0 : s.jumlah || 0,
+              jumlah: isReset ? 0 : totalJml,
+              defaultJumlah: isReset ? 0 : defaultJml,
+              manualJumlah: isReset ? 0 : manualJml,
               cabang: cabangName,
               tagihanUntukBulan,
             });
@@ -1043,14 +1058,17 @@ function RekapAnggota() {
           addedCategories.forEach((c) => {
             const lowKey = c.key.toLowerCase().trim();
             if (baseKeys.includes(lowKey)) return;
+            const catReset = resetKeys.includes(lowKey);
+            const catDefault = newValues[lowKey] || 0;
+            const catManual = nominalBaruList[lowKey] || 0;
             itemsMap.set(lowKey, {
               jenis: c.label || c.key,
               keterangan: c.keterangan || c.label || c.key,
               namaSumbangan: c.label || c.key,
               namaIuran: c.label || c.key,
-              jumlah: resetKeys.includes(lowKey)
-                ? 0
-                : (newValues[lowKey] || 0) + (nominalBaruList[lowKey] || 0),
+              jumlah: catReset ? 0 : catDefault + catManual,
+              defaultJumlah: catReset ? 0 : catDefault,
+              manualJumlah: catReset ? 0 : catManual,
               cabang: cabangName,
               tagihanUntukBulan,
             });
