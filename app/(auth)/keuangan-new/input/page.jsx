@@ -13,7 +13,8 @@ import {
   FaNewspaper, 
   FaCalendarAlt, 
   FaEllipsisH,
-  FaChevronRight
+  FaChevronRight,
+  FaChartBar
 } from "react-icons/fa";
 
 // Import sections (we will create these next)
@@ -22,6 +23,7 @@ import DaspenSection from "./sections/Daspen";
 import DerapSection from "./sections/Derap";
 import KalenderSection from "./sections/Kalender";
 import LainLainSection from "./sections/LainLain";
+import RekapitulasiSection from "./sections/Rekapitulasi";
 
 export default function KeuanganInput() {
   return (
@@ -57,6 +59,7 @@ function KeuanganInputContent() {
     { id: "derap", label: "Derap", icon: <FaNewspaper />, color: "text-indigo-500", bg: "bg-indigo-50" },
     { id: "kalender", label: "Kalender", icon: <FaCalendarAlt />, color: "text-amber-500", bg: "bg-amber-50" },
     { id: "lain-lain", label: "Lain-Lain", icon: <FaEllipsisH />, color: "text-slate-500", bg: "bg-slate-50" },
+    { id: "rekap", label: "Rekapitulasi", icon: <FaChartBar />, color: "text-purple-500", bg: "bg-purple-50" },
   ];
 
   return (
@@ -137,6 +140,7 @@ function KeuanganInputContent() {
                   {activeTab === "derap" && <DerapSection />}
                   {activeTab === "kalender" && <KalenderSection />}
                   {activeTab === "lain-lain" && <LainLainSection />}
+                  {activeTab === "rekap" && <RekapitulasiSection />}
                 </motion.div>
               </AnimatePresence>
             </div>
