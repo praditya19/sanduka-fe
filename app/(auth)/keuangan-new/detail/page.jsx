@@ -7,7 +7,6 @@ import Sidebar from "@/app/_components/Sidebar";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { motion } from "framer-motion";
 import { FaArrowLeft, FaUniversity, FaCalendarAlt, FaDownload } from "react-icons/fa";
-import * as XLSX from "xlsx";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
 const MONTHS_FULL = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
@@ -36,6 +35,7 @@ function KeuanganDetailContent() {
   const [tagihanData, setTagihanData] = useState([]);
   const [realisasiTrans, setRealisasiTrans] = useState([]);
   const [rekap, setRekap] = useState({ anggota: 0, subtotal: 0, peruntukanCabang: 0, totalTagihan: 0, totalRealisasi: 0, kekurangan: 0 });
+  const [cabangTrans, setCabangTrans] = useState([]);
 
   const formatCurrency = (val) =>
     new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(val || 0);
@@ -56,13 +56,15 @@ function KeuanganDetailContent() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [balancingRes, orgRes, iuranRes, rekapIuran, rekapDerap, rekapDaspen] = await Promise.all([
+      const [balancingRes, orgRes, iuranRes, rekapIuran, rekapDerap, rekapDaspen, rekapKalender, transaksiCabangRes] = await Promise.all([
         GlobalApi.getTransaksiBankBalancing("", null, selectedYear, selectedMonth, null, null),
         GlobalApi.getPemasukanUmum(),
         GlobalApi.getDefaultIuranById(2),
         GlobalApi.getRekapByPeriode(MONTHS_FULL[selectedMonth], selectedYear),
         GlobalApi.getRekapDerapByPeriode(MONTHS_FULL[selectedMonth], selectedYear),
         GlobalApi.getRekapDaspenByPeriode(MONTHS_FULL[selectedMonth], selectedYear),
+        GlobalApi.getRekapKalenderByPeriode(MONTHS_FULL[selectedMonth], selectedYear),
+        GlobalApi.getTransaksiCabangByBulanTahun(selectedMonth, selectedYear),
       ]);
 
       const safeData = Array.isArray(balancingRes) ? balancingRes : [];
@@ -158,12 +160,76 @@ function KeuanganDetailContent() {
           total = rekapDaspenTotal;
           if (rekapDaspenAnggota > 0) count = rekapDaspenAnggota;
         }
+        if (cat.label === "KALENDER") {
+          const rekapKalenderData = Array.isArray(rekapKalender) ? rekapKalender : [];
+          const kalenderCabang = rekapKalenderData.find(r => (r.cabang || "").trim().toUpperCase() === cabangKey);
+          if (kalenderCabang) {
+            const kalTotal = (kalenderCabang.peruntukanProvinsi || 0) + (kalenderCabang.peruntukanKabupaten || 0);
+            if (kalTotal > 0) {
+              total = kalTotal;
+              count = kalenderCabang.jumlah || count;
+            }
+          }
+        }
         subtotal += total;
         return { label: cat.label, count, total };
       });
 
-      // Only show categories with data
-      const filteredTagihan = tagihanRows.filter((r) => r.count > 0 || r.total > 0);
+      // --- TAGIHAN CABANG (from transaksi_cabang table) ---
+      const catPosMap = { "IURAN": "Iuran PGRI", "SANDUKA": "Sanduka", "DASPEN": "Daspen", "DERAP": "Derap", "KALENDER": "Kalender" };
+      const catPosReverse = Object.fromEntries(Object.entries(catPosMap).map(([k, v]) => [v.toUpperCase(), k]));
+      const cabangTransData = Array.isArray(transaksiCabangRes) ? transaksiCabangRes : transaksiCabangRes?.data || [];
+      const cabangTrans = cabangTransData.filter(t => t.cabang?.trim().toUpperCase() === cabangKey);
+
+      // Group transaksi_cabang by pos, sum tagihan & pembayaran
+      const posGroup = {};
+      cabangTrans.forEach(t => {
+        const p = t.pos || "Lain-lain";
+        if (!posGroup[p]) posGroup[p] = { count: 0, tagihan: 0, pembayaran: 0 };
+        posGroup[p].count++;
+        posGroup[p].tagihan += Number(t.tagihan || 0);
+        posGroup[p].pembayaran += Number(t.pembayaran || 0);
+      });
+
+      // Replace rekap values with transaksi_cabang values where available
+      // Track keterangan per pos from individual transaksi_cabang items
+      const posKeterangan = {};
+      cabangTrans.forEach(t => {
+        const p = t.pos || "Lain-lain";
+        if (t.keterangan && !posKeterangan[p]) {
+          posKeterangan[p] = t.keterangan;
+        }
+      });
+
+      const usedPosLabels = new Set();
+      const updatedTagihanRows = tagihanRows.map(row => {
+        const matchingPos = Object.keys(catPosMap).find(k => k === row.label);
+        if (matchingPos) {
+          const tcPos = catPosMap[matchingPos];
+          const tcData = posGroup[tcPos];
+          if (tcData && tcData.tagihan > 0) {
+            usedPosLabels.add(tcPos.toUpperCase());
+            subtotal += tcData.tagihan - row.total;
+            return { label: row.label, count: row.count, total: tcData.tagihan, keterangan: posKeterangan[tcPos] || "" };
+          }
+        }
+        return row;
+      });
+
+      // Add non-overlapping pos as extra tagihan rows (skip Pemasukan Dari Bank — shown in REALISASI)
+      const extraTagihanRows = [];
+      Object.entries(posGroup).forEach(([pos, vals]) => {
+        if (!usedPosLabels.has(pos.toUpperCase())) {
+          if (pos.toUpperCase() === "PEMASUKAN DARI BANK") return;
+          extraTagihanRows.push({ label: pos.toUpperCase(), count: vals.count, total: vals.tagihan, keterangan: posKeterangan[pos] || "" });
+          subtotal += vals.tagihan;
+        }
+      });
+
+      // Custom sort order: PGRI, SANDUKA, DASPEN, DERAP, KALENDER, then others
+      const sortOrder = { "IURAN": 1, "SANDUKA": 2, "DASPEN": 3, "DERAP": 4, "KALENDER": 5 };
+      const filteredTagihan = [...updatedTagihanRows.filter((r) => r.count > 0 || r.total > 0), ...extraTagihanRows]
+        .sort((a, b) => (sortOrder[a.label] || 99) - (sortOrder[b.label] || 99));
       totalAnggota = new Set(cabangData.map((d) => d.npa)).size;
       if (totalAnggota === 0) totalAnggota = cabangData.length;
 
@@ -171,10 +237,9 @@ function KeuanganDetailContent() {
       const rateCabang = parseCurrency(iuranRes.cabang);
       const peruntukanCabang = rateCabang * totalAnggota;
 
-      const totalTagihan = subtotal - peruntukanCabang;
+      const totalTagihan = subtotal;
 
       // --- REALISASI ---
-      // Group potongan bank entries by date
       let totalPotBank = 0;
       cabangData.forEach((item) => {
         if (item.keterangan === "Sukses") {
@@ -182,10 +247,31 @@ function KeuanganDetailContent() {
         }
       });
 
+      const formatDateLocal = (d) => {
+        if (!d) return "";
+        if (Array.isArray(d)) {
+          const [y, m, day] = d;
+          return `${String(day).padStart(2, "0")}/${String(m).padStart(2, "0")}/${y}`;
+        }
+        const dt = new Date(d);
+        if (isNaN(dt)) return String(d);
+        return `${String(dt.getDate()).padStart(2, "0")}/${String(dt.getMonth() + 1).padStart(2, "0")}/${dt.getFullYear()}`;
+      };
+
       const trans = [];
       if (totalPotBank > 0) {
-        trans.push({ date: "", desc: "Potongan Bank", amount: totalPotBank });
+        trans.push({ date: `01/${String(selectedMonth).padStart(2, "0")}/${selectedYear}`, desc: "Transfer System Bank", keterangan: "", amount: totalPotBank });
       }
+
+      // Pemasukan Dari Bank items from transaksi_cabang → shown in REALISASI
+      cabangTrans.forEach((t) => {
+        if ((t.pos || "").toUpperCase() === "PEMASUKAN DARI BANK") {
+          const nominal = Number(t.tagihan || 0);
+          if (nominal > 0) {
+            trans.push({ date: formatDateLocal(t.tanggalTransaksi), desc: t.pos || "Pemasukan Dari Bank", keterangan: t.keterangan || "", amount: nominal });
+          }
+        }
+      });
 
       // Add pemasukan organisasi for this cabang, filtered by month/year
       if (orgRes && Array.isArray(orgRes)) {
@@ -196,7 +282,6 @@ function KeuanganDetailContent() {
           const cabangName = cabangValue || item.namaCabang || item.nama_cabang || "";
           if (cabangName.toUpperCase().trim() !== cabang.toUpperCase().trim()) return;
 
-          // Filter by month/year
           const setoranBulan = Number(item.setoranBulan || item.setoran_bulan || 0);
           const setoranTahun = Number(item.setoranTahun || item.setoran_tahun || 0);
           if (setoranBulan !== selectedMonth || setoranTahun !== selectedYear) return;
@@ -217,6 +302,7 @@ function KeuanganDetailContent() {
       setTagihanData(filteredTagihan);
       setRealisasiTrans(trans);
       setRekap({ anggota: totalAnggota, subtotal, peruntukanCabang, totalTagihan, totalRealisasi, kekurangan });
+      setCabangTrans(cabangTrans);
     } catch (error) {
       console.error("Error fetching detail data:", error);
     } finally {
@@ -236,20 +322,19 @@ function KeuanganDetailContent() {
     localStorage.setItem("isSidebarOpen", newState);
   };
 
-  const exportToExcel = () => {
-    const rows = [];
-    tagihanData.forEach((r) => rows.push({ Keterangan: r.label, Anggota: r.count, Jumlah: r.total }));
-    rows.push({ Keterangan: "Subtotal", Jumlah: rekap.subtotal });
-    rows.push({ Keterangan: "Peruntukan Cabang", Jumlah: -rekap.peruntukanCabang });
-    rows.push({ Keterangan: "Total Tagihan", Jumlah: rekap.totalTagihan });
-    rows.push({});
-    realisasiTrans.forEach((r) => rows.push({ Keterangan: `${r.date} ${r.desc}`, Jumlah: r.amount }));
-    rows.push({ Keterangan: "Total Realisasi", Jumlah: rekap.totalRealisasi });
-    rows.push({ Keterangan: "Kekurangan", Jumlah: rekap.kekurangan });
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Detail");
-    XLSX.writeFile(wb, `Target_Realisasi_${cabang}_${selectedMonth}_${selectedYear}.xlsx`);
+  const exportToPDF = async () => {
+    const html2pdf = (await import("html2pdf.js")).default;
+    const element = document.getElementById("receipt-content");
+    if (!element) return;
+    const opt = {
+      margin: 1,
+      filename: `Target_Realisasi_${cabang}_${selectedMonth}_${selectedYear}.pdf`,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
+      pagebreak: { mode: "avoid-all" },
+    };
+    html2pdf().from(element).set(opt).save();
   };
 
   return (
@@ -284,8 +369,8 @@ function KeuanganDetailContent() {
                   </select>
                 </div>
               </div>
-              <button onClick={exportToExcel} className="flex items-center space-x-2 bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-2xl font-bold shadow-lg shadow-emerald-200 transition-all active:scale-95">
-                <FaDownload /><span>Export Excel</span>
+              <button onClick={exportToPDF} className="flex items-center space-x-2 bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-2xl font-bold shadow-lg shadow-emerald-200 transition-all active:scale-95">
+                <FaDownload /><span>Export PDF</span>
               </button>
             </div>
           </div>
@@ -295,106 +380,127 @@ function KeuanganDetailContent() {
               {Array(6).fill(0).map((_, i) => (<div key={i} className="h-6 bg-slate-100 rounded-full w-full" />))}
             </div>
           ) : (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-[32px] p-6 md:p-10 shadow-xl border border-slate-100 max-w-3xl mx-auto">
-              {/* Title */}
-              <div className="text-center mb-8">
-                <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Target dan Realisasi</h2>
-                <div className="w-16 h-1 bg-emerald-500 mx-auto mt-3 rounded-full" />
-              </div>
-
-              {/* Info */}
-              <div className="space-y-1.5 mb-8 text-sm font-bold text-slate-600">
-                <div className="flex">
-                  <span className="w-28 text-slate-400 font-black uppercase tracking-wider text-[10px]">Bulan</span>
-                  <span className="text-slate-800">: {MONTHS_FULL[selectedMonth]} {selectedYear}</span>
+            <motion.div id="receipt-content" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-[32px] p-6 md:p-8 shadow-xl border border-slate-100 max-w-lg mx-auto">
+              {/* Receipt Header */}
+              <div className="text-center mb-6 pb-6 border-b-2 border-dashed border-slate-200">
+                <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight">TARGET & REALISASI</h2>
+                <div className="flex items-center justify-center gap-4 mt-2 text-xs font-bold text-slate-500">
+                  <span>{MONTHS_FULL[selectedMonth]} {selectedYear}</span>
+                  <span className="text-slate-300">|</span>
+                  <span className="uppercase">{cabang}</span>
                 </div>
-                <div className="flex">
-                  <span className="w-28 text-slate-400 font-black uppercase tracking-wider text-[10px]">Cabang</span>
-                  <span className="text-slate-800 uppercase font-black">: {cabang}</span>
+                <div className="mt-1 text-[10px] font-mono font-bold text-slate-400">
+                  {(() => { const d = new Date(); return d.toLocaleDateString("id-ID", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + ", " + d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }); })()}
                 </div>
               </div>
 
               {/* TAGIHAN Section */}
-              <div className="mb-8">
-                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">TAGIHAN</h3>
-                <div className="space-y-2">
+              <div className="mb-6">
+                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">TAGIHAN</h3>
+                <div className="space-y-1">
                   {tagihanData.map((row, i) => (
-                    <div key={i} className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <span className="font-black text-slate-700 w-28 md:w-32">{row.label}</span>
-                        <span className="text-slate-500 font-bold">{row.count.toLocaleString("id-ID")}</span>
+                    <div key={i}>
+                      <div className="grid grid-cols-[auto_45px_120px] gap-x-1.5 text-sm">
+                        <span className="font-bold text-slate-700 truncate">{row.label}</span>
+                        <span className="font-bold text-slate-500 text-right tabular-nums">{row.count > 1 ? row.count.toLocaleString("id-ID") : ""}</span>
+                        <span className="font-black text-slate-800 text-right tabular-nums">{formatCurrency(row.total)}</span>
                       </div>
-                      <span className="font-black text-slate-800 tabular-nums">{formatCurrency(row.total)}</span>
+                      {row.keterangan ? <div className="text-[10px] text-slate-400 font-medium ml-1">{row.keterangan}</div> : <div className="text-[10px] text-slate-300 font-medium ml-1">-</div>}
                     </div>
                   ))}
-                  <div className="border-t border-dashed border-slate-200 pt-2 flex items-center justify-between text-sm">
-                    <span className="font-black text-slate-600"></span>
-                    <span className="font-black text-slate-800 tabular-nums">{formatCurrency(rekap.subtotal)}</span>
-                  </div>
                 </div>
 
-                {/* Peruntukan Cabang */}
-                <div className="mt-4 bg-slate-50 rounded-2xl p-4 space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-black text-indigo-600">Peruntukan Cabang</span>
-                    <span className="font-black text-indigo-600 tabular-nums">({formatCurrency(rekap.peruntukanCabang)})</span>
-                  </div>
-                  <div className="flex items-center justify-between text-base border-t border-indigo-100 pt-2">
-                    <span className="font-black text-slate-800">Total Tagihan</span>
-                    <span className="font-black text-slate-900 text-lg tabular-nums">{formatCurrency(rekap.totalTagihan)}</span>
-                  </div>
+                {/* Total Tagihan */}
+                <div className="mt-4 flex items-center justify-between bg-slate-50 rounded-xl px-4 py-3 border border-slate-100">
+                  <span className="font-black text-slate-800 text-sm">Total Tagihan</span>
+                  <span className="font-black text-slate-900 text-base tabular-nums">{formatCurrency(rekap.totalTagihan)}</span>
                 </div>
 
                 {/* Previous Month */}
-                <div className="mt-4 text-xs text-slate-400 font-bold">
-                  Tagihan bulan sebelumnya — {MONTHS_FULL[selectedMonth === 1 ? 12 : selectedMonth - 1]} {selectedMonth === 1 ? selectedYear - 1 : selectedYear}
-                </div>
+                {cabangTrans.filter(t => {
+                  const prevBulan = selectedMonth === 1 ? 12 : selectedMonth - 1;
+                  const prevTahun = selectedMonth === 1 ? selectedYear - 1 : selectedYear;
+                  return t.setoranBulan === prevBulan && t.setoranTahun === prevTahun;
+                }).length > 0 && (
+                    <div className="mt-3 p-3 bg-amber-50/70 border border-amber-200 rounded-xl space-y-1">
+                      <div className="text-[9px] font-black text-amber-700 uppercase tracking-widest mb-1.5">
+                        Tagihan bln sebelumnya — {MONTHS_FULL[selectedMonth === 1 ? 12 : selectedMonth - 1]} {selectedMonth === 1 ? selectedYear - 1 : selectedYear}
+                      </div>
+                      {(() => {
+                        const prevBulan = selectedMonth === 1 ? 12 : selectedMonth - 1;
+                        const prevTahun = selectedMonth === 1 ? selectedYear - 1 : selectedYear;
+                        const prevTrans = cabangTrans.filter(t => t.setoranBulan === prevBulan && t.setoranTahun === prevTahun);
+                        const prevGroups = {};
+                        prevTrans.forEach(t => {
+                          const p = t.pos || "Lain-lain";
+                          if (!prevGroups[p]) prevGroups[p] = { tagihan: 0, pembayaran: 0 };
+                          prevGroups[p].tagihan += Number(t.tagihan || 0);
+                          prevGroups[p].pembayaran += Number(t.pembayaran || 0);
+                        });
+                        return Object.entries(prevGroups).map(([pos, v]) => (
+                          <div key={pos} className="flex items-center justify-between text-[11px]">
+                            <span className="font-bold text-amber-800">{pos}</span>
+                            <span className="font-black text-rose-600">{formatCurrency(v.tagihan - v.pembayaran)}</span>
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  )}
               </div>
 
+              {/* Divider */}
+              <div className="border-t border-dashed border-slate-200 mb-6" />
+
               {/* REALISASI Section */}
-              <div className="mb-8">
-                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">REALISASI</h3>
-                <div className="space-y-2">
+              <div className="mb-6">
+                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">REALISASI</h3>
+                <div className="space-y-1.5">
                   {realisasiTrans.length > 0 ? realisasiTrans.map((t, i) => (
-                    <div key={i} className="flex items-center justify-between text-sm py-0.5">
-                      <div className="flex items-center gap-2">
-                        <span className="text-slate-500 font-mono text-xs font-bold w-24">{t.date}</span>
-                        <span className="font-bold text-slate-600">{t.desc}</span>
+                    <div key={i} className="flex items-start justify-between text-sm">
+                      <div className="min-w-0 mr-4">
+                        <div>
+                          {t.date && <span className="text-slate-400 text-[10px] font-mono font-bold mr-1.5">{t.date}</span>}
+                          <span className="font-bold text-slate-600">{t.desc}</span>
+                        </div>
+                        {t.keterangan && <div className="text-[10px] text-slate-400 font-medium ml-1">{t.keterangan}</div>}
                       </div>
-                      <span className="font-black text-emerald-600 tabular-nums">{formatCurrency(t.amount)}</span>
+                      <span className="font-black text-emerald-600 tabular-nums text-right w-[150px]">{formatCurrency(t.amount)}</span>
                     </div>
                   )) : (
-                    <div className="text-sm text-slate-400 font-bold italic">Belum ada realisasi</div>
+                    <div className="text-sm text-slate-400 font-bold italic py-2">Belum ada realisasi</div>
                   )}
                 </div>
 
                 {/* Total Realisasi */}
-                <div className="mt-4 bg-emerald-50 rounded-2xl p-4">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-black text-emerald-700">Total Realisasi</span>
-                    <span className="font-black text-emerald-700 text-lg tabular-nums">{formatCurrency(rekap.totalRealisasi)}</span>
-                  </div>
-                </div>
-
-                {/* Kekurangan */}
-                <div className={`mt-3 rounded-2xl p-4 ${rekap.kekurangan <= 0 ? "bg-blue-50" : "bg-rose-50"}`}>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className={`font-black ${rekap.kekurangan <= 0 ? "text-blue-700" : "text-rose-700"}`}>
-                      {rekap.kekurangan <= 0 ? "KELEBIHAN" : "KEKURANGAN"} CABANG
-                    </span>
-                    <span className={`font-black text-lg tabular-nums ${rekap.kekurangan <= 0 ? "text-blue-700" : "text-rose-700"}`}>
-                      {formatCurrency(Math.abs(rekap.kekurangan))}
-                    </span>
-                  </div>
+                <div className="mt-4 flex items-center justify-between bg-slate-50 rounded-xl px-4 py-3 border border-slate-200">
+                  <span className="font-black text-slate-700 text-sm">Total Realisasi</span>
+                  <span className="font-black text-slate-800 text-base tabular-nums">{formatCurrency(rekap.totalRealisasi)}</span>
                 </div>
               </div>
 
-              {/* Kalender Note */}
-              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-amber-600 font-black text-xs uppercase tracking-widest">Kalender</span>
-                  <span className="text-amber-500">—</span>
-                  <span className="text-amber-600 text-sm font-bold italic">Distribusi belum terisi otomatis</span>
+              {/* Summary Cards */}
+              <div className="space-y-2">
+                <div className="rounded-xl px-4 py-3 border border-slate-200 bg-slate-50">
+                  <div className="text-sm">
+                    <div className="font-black text-slate-700">Target - Realisasi</div>
+                    <div className="font-black text-slate-800 text-base tabular-nums mt-1">
+                      {formatCurrency(rekap.totalTagihan)} - {formatCurrency(rekap.totalRealisasi)}
+                </div>
+              </div>
+              </div>
+              </div>
+
+              {/* Sisa / Kurang */}
+              <div className="space-y-2 mt-3">
+                <div className={`rounded-xl px-4 py-3 border ${rekap.kekurangan > 0 ? "bg-red-50 border-red-200" : "bg-emerald-50 border-emerald-200"}`}>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className={`font-black ${rekap.kekurangan > 0 ? "text-red-700" : "text-emerald-700"}`}>
+                      {rekap.kekurangan > 0 ? "Kurang" : "Sisa"}
+                    </span>
+                    <span className={`font-black text-base tabular-nums ${rekap.kekurangan > 0 ? "text-red-700" : "text-emerald-700"}`}>
+                      {rekap.kekurangan > 0 ? "-" + formatCurrency(rekap.kekurangan) : formatCurrency(Math.abs(rekap.kekurangan))}
+                    </span>
+                  </div>
                 </div>
               </div>
             </motion.div>

@@ -148,7 +148,7 @@ const TagihanForm = () => {
   const exportToExcel = () => {
     try {
       const excelData = [
-        ["No", "Tanggal", "Cabang", "Pos", "Tagihan", "Pembayaran", "Sisa"]
+        ["No", "Tanggal", "Cabang", "Pos", "Keterangan", "Tagihan", "Pembayaran", "Sisa"]
       ];
       transactions.forEach((t, i) => {
         excelData.push([
@@ -156,13 +156,14 @@ const TagihanForm = () => {
           t.formattedDate,
           t.cabang || "-",
           t.pos || "-",
+          t.keterangan || "-",
           t.tagihan,
           t.pembayaran,
           t.sisa
         ]);
       });
       excelData.push([]);
-      excelData.push(["", "", "", "", "TOTAL", summary.totalTagihan, summary.totalPembayaran, summary.sisa]);
+      excelData.push(["", "", "", "", "", "TOTAL", summary.totalTagihan, summary.totalPembayaran, summary.sisa]);
 
       const ws = XLSX.utils.aoa_to_sheet(excelData);
       const wb = XLSX.utils.book_new();
@@ -636,6 +637,7 @@ const TagihanForm = () => {
                 <th className="px-3 sm:px-6 py-4">Tgl Transaksi</th>
                 <th className="px-3 sm:px-6 py-4">Cabang</th>
                 <th className="px-3 sm:px-6 py-4">Pos</th>
+                <th className="px-3 sm:px-6 py-4">Keterangan</th>
                 <th className="px-3 sm:px-6 py-4 text-right">Tagihan (Rp)</th>
                 <th className="px-3 sm:px-6 py-4 text-right">Pembayaran (Rp)</th>
                 <th className="px-3 sm:px-6 py-4 text-right">Sisa (Rp)</th>
@@ -646,7 +648,7 @@ const TagihanForm = () => {
               {loading ? (
                 Array(5).fill(0).map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    <td colSpan="8" className="px-6 py-6"><div className="h-4 bg-slate-100 rounded w-full"></div></td>
+                    <td colSpan="9" className="px-6 py-6"><div className="h-4 bg-slate-100 rounded w-full"></div></td>
                   </tr>
                 ))
               ) : filteredTransactions.length > 0 ? (
@@ -657,6 +659,9 @@ const TagihanForm = () => {
                     <td className="px-3 sm:px-6 py-4 text-[10px] sm:text-sm font-bold text-slate-600">{t.cabang}</td>
                     <td className="px-3 sm:px-6 py-4">
                       <span className="inline-block px-2 py-0.5 bg-violet-50 text-violet-600 rounded-lg text-[9px] sm:text-[10px] font-black">{t.pos}</span>
+                    </td>
+                    <td className="px-3 sm:px-6 py-4 text-[10px] sm:text-sm text-slate-500 max-w-[160px] truncate" title={t.keterangan || ""}>
+                      {t.keterangan || "-"}
                     </td>
                     <td className="px-3 sm:px-6 py-4 text-right text-[10px] sm:text-sm font-black text-violet-600">
                       {formatCurrency(t.tagihan)}
@@ -679,7 +684,7 @@ const TagihanForm = () => {
                 ))
               ) : (
                 <tr>
-                    <td colSpan="8" className="px-6 py-20 text-center">
+                    <td colSpan="9" className="px-6 py-20 text-center">
                     <FaInfoCircle className="text-slate-100 text-6xl mx-auto mb-4" />
                     <p className="text-slate-400 font-bold">Data tagihan tidak ditemukan</p>
                   </td>
@@ -689,7 +694,7 @@ const TagihanForm = () => {
             {!loading && filteredTransactions.length > 0 && (
               <tfoot className="bg-slate-800 text-white">
                 <tr className="font-black text-[10px] sm:text-sm">
-                  <td colSpan="4" className="px-3 sm:px-6 py-5 uppercase tracking-wider">Total Tagihan Cabang</td>
+                  <td colSpan="5" className="px-3 sm:px-6 py-5 uppercase tracking-wider">Total Tagihan Cabang</td>
                   <td className="px-3 sm:px-6 py-5 text-right">{formatCurrency(summary.totalTagihan)}</td>
                   <td className="px-3 sm:px-6 py-5 text-right">{formatCurrency(summary.totalPembayaran)}</td>
                   <td className="px-3 sm:px-6 py-5 text-right bg-blue-600">{formatCurrency(summary.sisa)}</td>
