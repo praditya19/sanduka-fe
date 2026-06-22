@@ -175,18 +175,27 @@ const TagihanForm = () => {
           posMap[pos] = (posMap[pos] || 0) + item.tagihan;
         });
         const iuranKey = posMap['IURAN'] !== undefined ? 'IURAN' : 'IURAN PGRI';
+        const excludedPos = ['PEMASUKAN DARI BANK'];
+        const tagihanWithoutExcluded = g.items
+          .filter(item => !excludedPos.includes((item.pos || "").toUpperCase()))
+          .reduce((sum, item) => sum + item.tagihan, 0);
+        const pembayaranWithoutExcluded = g.items
+          .filter(item => !excludedPos.includes((item.pos || "").toUpperCase()))
+          .reduce((sum, item) => sum + item.pembayaran, 0);
         return {
           ...g,
+          totalTagihan: tagihanWithoutExcluded,
+          totalPembayaran: pembayaranWithoutExcluded,
           daspen: posMap['DASPEN'] || 0,
           iuran: posMap[iuranKey] || 0,
           studiTiru: posMap['STUDI TIRU'] || 0,
           derap: posMap['DERAP'] || 0,
           sanduka: posMap['SANDUKA'] || 0,
           lainnya: Object.entries(posMap).reduce((sum, [k, v]) => {
-            if (!['DASPEN', 'IURAN', 'IURAN PGRI', 'STUDI TIRU', 'DERAP', 'SANDUKA'].includes(k)) sum += v;
+            if (!['DASPEN', 'IURAN', 'IURAN PGRI', 'STUDI TIRU', 'DERAP', 'SANDUKA'].includes(k) && !excludedPos.includes(k)) sum += v;
             return sum;
           }, 0),
-          selisih: g.totalPembayaran - g.totalTagihan
+          selisih: pembayaranWithoutExcluded - tagihanWithoutExcluded
         };
       })
       .sort((a, b) => a.cabang.localeCompare(b.cabang));
