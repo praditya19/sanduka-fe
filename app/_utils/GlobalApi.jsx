@@ -3558,6 +3558,18 @@ const getTransaksiCabangByBulanTahun = async (bulan, tahun) => {
   }
 };
 
+const getTunggakanTransaksiCabang = async (cabang, bulan, tahun) => {
+  try {
+    const response = await axiosClient.get(
+      `/api/transaksi-cabang/tunggakan?cabang=${encodeURIComponent(cabang)}&bulan=${bulan}&tahun=${tahun}`,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error get tunggakan transaksi cabang:", error);
+    throw error;
+  }
+};
+
 const updateTransaksiCabang = async (id, payload) => {
   try {
     const response = await axiosClient.put(
@@ -4609,6 +4621,7 @@ export default {
   getTransaksiCabang,
   getTransaksiCabangById,
   getTransaksiCabangByBulanTahun,
+  getTunggakanTransaksiCabang,
   updateTransaksiCabang,
   deleteTransaksiCabang,
   getAllByNominal,
