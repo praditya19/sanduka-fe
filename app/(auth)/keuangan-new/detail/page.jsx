@@ -226,9 +226,18 @@ function KeuanganDetailContent() {
         }
       });
 
+      // Only show KALENDER if there's a matching transaksi_cabang entry
+      const hasKalenderTc = Object.keys(posGroup).some(p => p.toUpperCase() === "KALENDER");
       // Custom sort order: PGRI, SANDUKA, DASPEN, DERAP, KALENDER, then others
       const sortOrder = { "IURAN": 1, "SANDUKA": 2, "DASPEN": 3, "DERAP": 4, "KALENDER": 5 };
-      const filteredTagihan = [...updatedTagihanRows.filter((r) => r.count > 0 || r.total > 0), ...extraTagihanRows]
+      const filteredTagihan = [...updatedTagihanRows.filter((r) => {
+        if (r.total === 0) return false;
+        if (r.label === "KALENDER" && !hasKalenderTc) {
+          subtotal -= r.total;
+          return false;
+        }
+        return r.count > 0 || r.total > 0;
+      }), ...extraTagihanRows]
         .sort((a, b) => (sortOrder[a.label] || 99) - (sortOrder[b.label] || 99));
       totalAnggota = new Set(cabangData.map((d) => d.npa)).size;
       if (totalAnggota === 0) totalAnggota = cabangData.length;
