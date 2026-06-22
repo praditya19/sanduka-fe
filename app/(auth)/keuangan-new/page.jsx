@@ -57,14 +57,29 @@ export default function KeuanganNew() {
   const fetchTableData = useCallback(async () => {
     setTableLoading(true);
     try {
-      const [balancingRes, orgRes] = await Promise.all([
+      const [transaksiCabangRes, balancingRes, orgRes] = await Promise.all([
+        GlobalApi.getTransaksiCabangByBulanTahun(selectedMonth, selectedYear),
         GlobalApi.getTransaksiBankBalancing("", null, selectedYear, selectedMonth, null, null),
         GlobalApi.getPemasukanUmum(),
       ]);
 
+      const cabangTransData = Array.isArray(transaksiCabangRes) ? transaksiCabangRes : transaksiCabangRes?.data || [];
       const balancingData = Array.isArray(balancingRes) ? balancingRes : [];
 
-      // Filter unique records per NPA
+      // Transaksi cabang: group by cabang (normalized), sum tagihan (excl Pemasukan Dari Bank) and pembayaran
+      const tcGrouped = {};
+      cabangTransData.forEach((item) => {
+        const cabang = (item.cabang || "Lainnya").trim().toUpperCase();
+        if (!tcGrouped[cabang]) {
+          tcGrouped[cabang] = { cabang: item.cabang || "Lainnya", target: 0, realisasi: 0 };
+        }
+        if ((item.pos || "").toUpperCase() !== "PEMASUKAN DARI BANK") {
+          tcGrouped[cabang].target += Number(item.tagihan || 0);
+        }
+        tcGrouped[cabang].realisasi += Number(item.pembayaran || 0);
+      });
+
+      // Balancing: group by cabang for potongan bank and target
       const npaMap = {};
       balancingData.forEach((item) => {
         const key = `${item.cabang}-${item.unitKerja}-${item.npa}`;
@@ -74,7 +89,41 @@ export default function KeuanganNew() {
       });
       const uniqueData = Object.values(npaMap);
 
-      // Parse pemasukan organisasi for additional payments per cabang
+      const balGrouped = {};
+      uniqueData.forEach((item) => {
+        const cabang = (item.cabang || "Lainnya").trim().toUpperCase();
+        if (!balGrouped[cabang]) {
+          balGrouped[cabang] = { target: 0, potBank: 0, iuranAnggota: 0, iuranSanduka: 0, iuranDaspen: 0, iuranDerap: 0, iuranKalender: 0, iuranSumbangan: 0 };
+        }
+        const ia = parseFloat(item.totalIuranAnggota) || 0;
+        const isk = parseFloat(item.totalIuranSanduka) || 0;
+        const idp = parseFloat(item.totalIuranDaspen) || 0;
+        const idr = parseFloat(item.totalIuranDerap) || 0;
+        const ikl = parseFloat(item.totalIuranKalender) || 0;
+        const isb = parseFloat(item.totalIuranSumbangan) || 0;
+        balGrouped[cabang].target += ia + isk + idp + idr + ikl + isb;
+        balGrouped[cabang].iuranAnggota += ia;
+        balGrouped[cabang].iuranSanduka += isk;
+        balGrouped[cabang].iuranDaspen += idp;
+        balGrouped[cabang].iuranDerap += idr;
+        balGrouped[cabang].iuranKalender += ikl;
+        balGrouped[cabang].iuranSumbangan += isb;
+        if (item.keterangan === "Sukses") {
+          balGrouped[cabang].potBank += parseFloat(item.potongan) || 0;
+        }
+      });
+
+      // Main categories and their balancing field names
+      const mainCategoryPos = ["IURAN PGRI", "SANDUKA", "DASPEN", "DERAP", "KALENDER"];
+      const balFieldMap = {
+        "IURAN PGRI": "iuranAnggota",
+        "SANDUKA": "iuranSanduka",
+        "DASPEN": "iuranDaspen",
+        "DERAP": "iuranDerap",
+        "KALENDER": "iuranKalender",
+      };
+
+      // Parse pemasukan organisasi for realisasi per cabang
       const orgPayments = {};
       if (orgRes && Array.isArray(orgRes)) {
         orgRes.forEach((item) => {
@@ -83,40 +132,49 @@ export default function KeuanganNew() {
               ? item.cabang?.kecamatan || item.cabang?.cabang || item.cabang?.namaCabang
               : item.cabang;
           const cabangName = cabangValue || item.namaCabang || item.nama_cabang || "";
-          const cabangKey = normalizeCabangKey(cabangName);
+          const cabangKey = cabangName.trim().toUpperCase();
           if (!cabangKey) return;
+          const setoranBulan = Number(item.setoranBulan || item.setoran_bulan || 0);
+          const setoranTahun = Number(item.setoranTahun || item.setoran_tahun || 0);
+          if (setoranBulan !== selectedMonth || setoranTahun !== selectedYear) return;
           const nominal = parseCurrency(item.nominal || item.debet || item.debit);
           orgPayments[cabangKey] = (orgPayments[cabangKey] || 0) + nominal;
         });
       }
 
-      // Group by cabang
-      const grouped = uniqueData.reduce((acc, item) => {
-        const key = item.cabang || "Lainnya";
-        if (!acc[key]) {
-          acc[key] = { cabang: key, target: 0, realisasi: 0 };
+      // Only include cabang with transaksi_cabang data
+      const grouped = {};
+      Object.keys(tcGrouped).forEach((cabang) => {
+        const tc = tcGrouped[cabang];
+        const bal = balGrouped[cabang];
+        let target = tc.target;
+        let realisasi = 0;
+
+        // Add balancing categories not represented in transaksi_cabang
+        const tcPositions = new Set(cabangTransData.filter(t => (t.cabang || "").trim().toUpperCase() === cabang).map(t => (t.pos || "").trim().toUpperCase()));
+        if (bal) {
+          mainCategoryPos.forEach((pos) => {
+            if (!tcPositions.has(pos)) {
+              const field = balFieldMap[pos];
+              if (field && bal[field] > 0) {
+                target += bal[field];
+              }
+            }
+          });
         }
 
-        const targetItem =
-          (parseFloat(item.totalIuranAnggota) || 0) +
-          (parseFloat(item.totalIuranSanduka) || 0) +
-          (parseFloat(item.totalIuranDaspen) || 0) +
-          (parseFloat(item.totalIuranDerap) || 0) +
-          (parseFloat(item.totalIuranKalender) || 0) +
-          (parseFloat(item.totalIuranSumbangan) || 0);
+        // realisasi = transaksi_cabang pembayaran for Pemasukan Dari Bank + potBank
+        const tcRealisasi = cabangTransData
+          .filter((t) => (t.cabang || "").trim().toUpperCase() === cabang && (t.pos || "").toUpperCase() === "PEMASUKAN DARI BANK")
+          .reduce((s, t) => s + Number(t.pembayaran || 0), 0);
+        realisasi = tcRealisasi + (bal?.potBank || 0);
 
-        acc[key].target += targetItem;
-        acc[key].realisasi += parseFloat(item.potongan) || 0;
-
-        return acc;
-      }, {});
-
-      // Add organisasi payments to realisasi
-      Object.keys(grouped).forEach((cabang) => {
-        const key = normalizeCabangKey(cabang);
-        if (orgPayments[key]) {
-          grouped[cabang].realisasi += orgPayments[key];
+        // Add organisasi payments
+        if (orgPayments[cabang]) {
+          realisasi += orgPayments[cabang];
         }
+
+        grouped[cabang] = { cabang: tc.cabang, target, realisasi };
       });
 
       setTableData(Object.values(grouped).sort((a, b) => a.cabang.localeCompare(b.cabang)));
