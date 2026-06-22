@@ -59,6 +59,9 @@ const TagihanForm = () => {
   });
 
   const [transaksiSuksesTotal, setTransaksiSuksesTotal] = useState(0);
+  const [tunggakanList, setTunggakanList] = useState([]);
+  const [totalTunggakan, setTotalTunggakan] = useState(0);
+  const [showTunggakan, setShowTunggakan] = useState(false);
 
   // Data Lists
   const [posPenerimaanList, setPosPenerimaanList] = useState([]);
@@ -314,6 +317,44 @@ const TagihanForm = () => {
     return total;
   };
 
+  const fetchTunggakan = async (cabang, bulanVal, tahun, autoAdd = false) => {
+    if (!cabang || !bulanVal || !tahun) {
+      setTunggakanList([]);
+      setTotalTunggakan(0);
+      return;
+    }
+    try {
+      const data = await GlobalApi.getTunggakanTransaksiCabang(cabang, Number(bulanVal), tahun);
+      const list = Array.isArray(data) ? data : [];
+      setTunggakanList(list);
+      setShowTunggakan(list.length > 0);
+      const total = list.reduce((sum, t) => sum + (Number(t.tagihan) - Number(t.pembayaran || 0)), 0);
+      setTotalTunggakan(total);
+
+      if (autoAdd && list.length > 0) {
+        const newItems = list.map(t => {
+          const sisa = Number(t.tagihan) - Number(t.pembayaran || 0);
+          return {
+            pos: t.pos,
+            tagihan: sisa > 0 ? sisa : "",
+            pembayaran: "",
+            keterangan: `Tunggakan ${monthNumToLabel(t.setoranBulan)} ${t.setoranTahun}${t.keterangan ? " - " + t.keterangan : ""}`
+          };
+        });
+        setFormCabang(prev => ({
+          ...prev,
+          items: [...prev.items, ...newItems]
+        }));
+      }
+
+      return list;
+    } catch (error) {
+      console.error("Error fetching tunggakan:", error);
+      setTunggakanList([]);
+      setTotalTunggakan(0);
+    }
+  };
+
   const fetchPeruntukanCabang = async (cabang, bulanVal, tahun, itemIndex, pos) => {
     const cfg = PERUNTUKAN_CONFIG[pos];
     if (!cfg || !cabang || !bulanVal || !tahun) return;
@@ -346,6 +387,43 @@ const TagihanForm = () => {
     } catch (error) {
       console.error("Error fetching peruntukan:", error);
     }
+  };
+
+  const monthNumToLabel = (num) => {
+    const m = months.find(m => m.value === String(num).padStart(2, "0"));
+    return m ? m.label : num;
+  };
+
+  const groupTunggakanByMonth = (list) => {
+    const groups = {};
+    list.forEach(t => {
+      const key = `${t.setoranTahun}-${String(t.setoranBulan).padStart(2, "0")}`;
+      if (!groups[key]) {
+        groups[key] = { tahun: t.setoranTahun, bulan: t.setoranBulan, items: [], totalSisa: 0 };
+      }
+      const sisa = Number(t.tagihan) - Number(t.pembayaran || 0);
+      groups[key].items.push({ ...t, sisa });
+      groups[key].totalSisa += sisa;
+    });
+    return Object.values(groups).sort((a, b) => b.tahun - a.tahun || b.bulan - a.bulan);
+  };
+
+  const addTunggakanToForm = () => {
+    if (tunggakanList.length === 0) return;
+    const newItems = tunggakanList.map(t => {
+      const sisa = Number(t.tagihan) - Number(t.pembayaran || 0);
+      return {
+        pos: t.pos,
+        tagihan: sisa > 0 ? sisa : "",
+        pembayaran: "",
+        keterangan: `Tunggakan ${monthNumToLabel(t.setoranBulan)} ${t.setoranTahun}${t.keterangan ? " - " + t.keterangan : ""}`
+      };
+    });
+    setFormCabang(prev => ({
+      ...prev,
+      items: [...prev.items, ...newItems]
+    }));
+    toast.success(`${newItems.length} item tunggakan ditambahkan ke tagihan`);
   };
 
   const handleItemPosChange = (itemIndex, selectedPos) => {
@@ -433,6 +511,9 @@ const TagihanForm = () => {
       items: [{ pos: "", tagihan: "", pembayaran: "", keterangan: "" }]
     });
     setTransaksiSuksesTotal(0);
+    setTunggakanList([]);
+    setTotalTunggakan(0);
+    setShowTunggakan(false);
   };
 
   return (
@@ -640,11 +721,12 @@ const TagihanForm = () => {
                 {/* Cabang */}
                 <div>
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Cabang</label>
-                  <select required value={formCabang.cabang} onChange={(e) => {
+                    <select required value={formCabang.cabang} onChange={(e) => {
                     const cabangVal = e.target.value;
-                    setFormCabang(prev => ({ ...prev, cabang: cabangVal }));
-                    formCabang.items.forEach((_, idx) => fetchPeruntukanCabang(cabangVal, formCabang.setoranBulan, formCabang.setoranTahun, idx));
+                    setFormCabang(prev => ({ ...prev, cabang: cabangVal, items: [{ pos: "", tagihan: "", pembayaran: "", keterangan: "" }] }));
+                    fetchPeruntukanCabang(cabangVal, formCabang.setoranBulan, formCabang.setoranTahun, 0);
                     fetchAllBankValues(cabangVal, formCabang.setoranBulan, formCabang.setoranTahun);
+                    fetchTunggakan(cabangVal, formCabang.setoranBulan, formCabang.setoranTahun, true);
                   }} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
                     <option value="">Pilih Cabang</option>
                     {cabangList.map(c => <option key={c.id} value={c.kecamatan}>{c.kecamatan}</option>)}
@@ -675,6 +757,7 @@ const TagihanForm = () => {
                       setFormCabang(prev => ({ ...prev, setoranBulan: bulanVal }));
                       formCabang.items.forEach((_, idx) => fetchPeruntukanCabang(formCabang.cabang, bulanVal, formCabang.setoranTahun, idx));
                       fetchAllBankValues(formCabang.cabang, bulanVal, formCabang.setoranTahun);
+                      fetchTunggakan(formCabang.cabang, bulanVal, formCabang.setoranTahun);
                     }} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
                       {months.map((month) => (<option key={month.value} value={month.value}>{month.label}</option>))}
                     </select>
@@ -686,6 +769,7 @@ const TagihanForm = () => {
                       setFormCabang(prev => ({ ...prev, setoranTahun: tahunVal }));
                       formCabang.items.forEach((_, idx) => fetchPeruntukanCabang(formCabang.cabang, formCabang.setoranBulan, tahunVal, idx));
                       fetchAllBankValues(formCabang.cabang, formCabang.setoranBulan, tahunVal);
+                      fetchTunggakan(formCabang.cabang, formCabang.setoranBulan, tahunVal);
                     }} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
                       {yearOptions.map((year) => (<option key={year} value={year}>{year}</option>))}
                     </select>
@@ -700,6 +784,61 @@ const TagihanForm = () => {
                     <input type="text" readOnly value={transaksiSuksesTotal.toLocaleString("id-ID")} placeholder="0" className="w-full pl-14 pr-5 py-5 bg-blue-50 border-2 border-blue-100 rounded-2xl outline-none font-black text-2xl text-blue-600" />
                   </div>
                 </div>
+
+                {/* Tunggakan Bulan Sebelumnya */}
+                {showTunggakan && formCabang.cabang && (
+                  <div className="bg-amber-50 border-2 border-amber-200 rounded-[24px] p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <FaInfoCircle className="text-amber-500 text-sm" />
+                        <span className="text-xs font-black text-amber-700 uppercase tracking-widest">
+                          Tunggakan {tunggakanList.length} transaksi dari {groupTunggakanByMonth(tunggakanList).length} bulan sebelumnya
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowTunggakan(false)}
+                        className="text-amber-400 hover:text-amber-600 p-1"
+                      >
+                        <FaTimes size={12} />
+                      </button>
+                    </div>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {groupTunggakanByMonth(tunggakanList).map(group => (
+                        <div key={`${group.tahun}-${group.bulan}`} className="bg-white rounded-xl p-3 border border-amber-100">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-black text-amber-700 uppercase">
+                              {monthNumToLabel(group.bulan)} {group.tahun}
+                            </span>
+                            <span className="text-xs font-black text-rose-600">
+                              Rp {group.totalSisa.toLocaleString("id-ID")}
+                            </span>
+                          </div>
+                          {group.items.map((item, i) => (
+                            <div key={i} className="flex items-center justify-between text-[10px] text-slate-500 py-0.5">
+                              <span>{item.pos}</span>
+                              <span className="font-medium">Rp {item.sisa.toLocaleString("id-ID")}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-between border-t border-amber-200 pt-3">
+                      <span className="text-xs font-black text-amber-700 uppercase">Total Tunggakan</span>
+                      <span className="text-sm font-black text-rose-600">Rp {totalTunggakan.toLocaleString("id-ID")}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={addTunggakanToForm}
+                      className="w-full py-2.5 bg-amber-500 text-white rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-amber-600 transition-all"
+                    >
+                      + Tambahkan {tunggakanList.length} Item ke Tagihan
+                    </button>
+                    <p className="text-[9px] text-amber-500 font-medium text-center">
+                      Item tunggakan otomatis ditambahkan ke form saat ganti cabang
+                    </p>
+                  </div>
+                )}
 
                 {/* Dynamic Items */}
                 <div className="space-y-3">
