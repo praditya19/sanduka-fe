@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FaPlus,
@@ -26,6 +26,8 @@ const TagihanForm = () => {
   const [monthFilter, setMonthFilter] = useState(String(new Date().getMonth() + 1).padStart(2, "0"));
   const [yearFilter, setYearFilter] = useState(new Date().getFullYear());
   const [searchQuery, setSearchQuery] = useState("");
+  const [cabangFilter, setCabangFilter] = useState("");
+  const [viewMode, setViewMode] = useState("rekap");
 
   const [summary, setSummary] = useState({
     totalTagihan: 0,
@@ -139,36 +141,107 @@ const TagihanForm = () => {
     fetchAuxData();
   }, [fetchData]);
 
-  const filteredTransactions = transactions.filter(t =>
-    t.keterangan?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.cabang?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.pos?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredTransactions = transactions.filter(t => {
+    if (cabangFilter && (t.cabang || "").toUpperCase() !== cabangFilter.toUpperCase()) return false;
+    if (!searchQuery) return true;
+    return (
+      t.keterangan?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.cabang?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.pos?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  });
+
+  const cabangSummary = useMemo(() => {
+    const grouped = {};
+    transactions.forEach(t => {
+      const c = t.cabang;
+      if (!c) return;
+      if (!grouped[c]) grouped[c] = { cabang: c, items: [], totalTagihan: 0, totalPembayaran: 0 };
+      grouped[c].items.push(t);
+      grouped[c].totalTagihan += t.tagihan;
+      grouped[c].totalPembayaran += t.pembayaran;
+    });
+
+    const filtered = cabangFilter
+      ? Object.values(grouped).filter(g => g.cabang.toUpperCase() === cabangFilter.toUpperCase())
+      : Object.values(grouped);
+
+    return filtered
+      .filter(g => !searchQuery || g.cabang.toLowerCase().includes(searchQuery.toLowerCase()))
+      .map(g => {
+        const posMap = {};
+        g.items.forEach(item => {
+          const pos = (item.pos || "").toUpperCase();
+          posMap[pos] = (posMap[pos] || 0) + item.tagihan;
+        });
+        const iuranKey = posMap['IURAN'] !== undefined ? 'IURAN' : 'IURAN PGRI';
+        return {
+          ...g,
+          daspen: posMap['DASPEN'] || 0,
+          iuran: posMap[iuranKey] || 0,
+          studiTiru: posMap['STUDI TIRU'] || 0,
+          derap: posMap['DERAP'] || 0,
+          sanduka: posMap['SANDUKA'] || 0,
+          lainnya: Object.entries(posMap).reduce((sum, [k, v]) => {
+            if (!['DASPEN', 'IURAN', 'IURAN PGRI', 'STUDI TIRU', 'DERAP', 'SANDUKA'].includes(k)) sum += v;
+            return sum;
+          }, 0),
+          selisih: g.totalPembayaran - g.totalTagihan
+        };
+      })
+      .sort((a, b) => a.cabang.localeCompare(b.cabang));
+  }, [transactions, cabangFilter, searchQuery]);
 
   const exportToExcel = () => {
     try {
-      const excelData = [
-        ["No", "Tanggal", "Cabang", "Pos", "Keterangan", "Tagihan", "Pembayaran", "Sisa"]
-      ];
-      transactions.forEach((t, i) => {
-        excelData.push([
-          i + 1,
-          t.formattedDate,
-          t.cabang || "-",
-          t.pos || "-",
-          t.keterangan || "-",
-          t.tagihan,
-          t.pembayaran,
-          t.sisa
+      if (viewMode === "rekap") {
+        const excelData = [
+          ["No", "Cabang", "Daspen", "Iuran", "Studi Tiru", "Derap", "Sanduka", "Lainnya", "Jumlah", "Pembayaran", "Selisih"]
+        ];
+        cabangSummary.forEach((g, i) => {
+          excelData.push([
+            i + 1, g.cabang,
+            g.daspen || "", g.iuran || "", g.studiTiru || "", g.derap || "", g.sanduka || "", g.lainnya || "",
+            g.totalTagihan, g.totalPembayaran, g.selisih
+          ]);
+        });
+        excelData.push([]);
+        excelData.push(["JUMLAH", "",
+          cabangSummary.reduce((s, g) => s + g.daspen, 0),
+          cabangSummary.reduce((s, g) => s + g.iuran, 0),
+          cabangSummary.reduce((s, g) => s + g.studiTiru, 0),
+          cabangSummary.reduce((s, g) => s + g.derap, 0),
+          cabangSummary.reduce((s, g) => s + g.sanduka, 0),
+          cabangSummary.reduce((s, g) => s + g.lainnya, 0),
+          summary.totalTagihan, summary.totalPembayaran, summary.sisa
         ]);
-      });
-      excelData.push([]);
-      excelData.push(["", "", "", "", "", "TOTAL", summary.totalTagihan, summary.totalPembayaran, summary.sisa]);
-
-      const ws = XLSX.utils.aoa_to_sheet(excelData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Tagihan Cabang");
-      XLSX.writeFile(wb, `Tagihan_Cabang_${monthFilter}_${yearFilter}.xlsx`);
+        const ws = XLSX.utils.aoa_to_sheet(excelData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Rekap Tagihan");
+        XLSX.writeFile(wb, `Rekap_Tagihan_${monthFilter}_${yearFilter}.xlsx`);
+      } else {
+        const excelData = [
+          ["No", "Tanggal", "Cabang", "Pos", "Keterangan", "Tagihan", "Pembayaran", "Sisa"]
+        ];
+        transactions.forEach((t, i) => {
+          excelData.push([
+            i + 1,
+            t.formattedDate,
+            t.cabang || "-",
+            t.pos || "-",
+            t.keterangan || "-",
+            t.tagihan,
+            t.pembayaran,
+            t.sisa
+          ]);
+        });
+        excelData.push([]);
+        excelData.push(["", "", "", "", "", "TOTAL", summary.totalTagihan, summary.totalPembayaran, summary.sisa]);
+        const ws = XLSX.utils.aoa_to_sheet(excelData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Tagihan Cabang");
+        XLSX.writeFile(wb, `Tagihan_Cabang_${monthFilter}_${yearFilter}.xlsx`);
+      }
     } catch (err) {
       console.error("Export error:", err);
     }
@@ -579,6 +652,24 @@ const TagihanForm = () => {
                 className="pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm font-black w-48 focus:ring-2 focus:ring-violet-500/20"
               />
             </div>
+            <select
+              value={cabangFilter}
+              onChange={(e) => setCabangFilter(e.target.value)}
+              className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-black text-slate-600 outline-none focus:ring-2 focus:ring-violet-500/20"
+            >
+              <option value="">Semua Cabang</option>
+              {cabangList.map(c => <option key={c.id} value={c.kecamatan}>{c.kecamatan}</option>)}
+            </select>
+            <div className="flex bg-slate-50 rounded-xl p-0.5 border border-slate-100">
+              <button
+                onClick={() => setViewMode("rekap")}
+                className={`px-3 py-2 rounded-lg text-[10px] font-black transition-all uppercase tracking-wider ${viewMode === "rekap" ? "bg-violet-500 text-white shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+              >Rekap</button>
+              <button
+                onClick={() => setViewMode("detail")}
+                className={`px-3 py-2 rounded-lg text-[10px] font-black transition-all uppercase tracking-wider ${viewMode === "detail" ? "bg-violet-500 text-white shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+              >Detail</button>
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <button
@@ -629,81 +720,160 @@ const TagihanForm = () => {
             </button>
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50/50 text-[10px] sm:text-xs uppercase font-black text-slate-500 tracking-wider border-b border-slate-100">
-                <th className="px-3 sm:px-6 py-4 text-center">No</th>
-                <th className="px-3 sm:px-6 py-4">Tgl Transaksi</th>
-                <th className="px-3 sm:px-6 py-4">Cabang</th>
-                <th className="px-3 sm:px-6 py-4">Pos</th>
-                <th className="px-3 sm:px-6 py-4">Keterangan</th>
-                <th className="px-3 sm:px-6 py-4 text-right">Tagihan (Rp)</th>
-                <th className="px-3 sm:px-6 py-4 text-right">Pembayaran (Rp)</th>
-                <th className="px-3 sm:px-6 py-4 text-right">Sisa (Rp)</th>
-                <th className="px-3 sm:px-6 py-4 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {loading ? (
-                Array(5).fill(0).map((_, i) => (
-                  <tr key={i} className="animate-pulse">
-                    <td colSpan="9" className="px-6 py-6"><div className="h-4 bg-slate-100 rounded w-full"></div></td>
-                  </tr>
-                ))
-              ) : filteredTransactions.length > 0 ? (
-                filteredTransactions.map((t, i) => (
-                  <tr key={t.id || i} className="hover:bg-slate-50/50 transition-all group">
-                    <td className="px-3 sm:px-6 py-4 text-[10px] sm:text-sm font-bold text-slate-500 text-center">{i + 1}</td>
-                    <td className="px-3 sm:px-6 py-4 text-[10px] sm:text-sm font-bold text-slate-500">{t.formattedDate}</td>
-                    <td className="px-3 sm:px-6 py-4 text-[10px] sm:text-sm font-bold text-slate-600">{t.cabang}</td>
-                    <td className="px-3 sm:px-6 py-4">
-                      <span className="inline-block px-2 py-0.5 bg-violet-50 text-violet-600 rounded-lg text-[9px] sm:text-[10px] font-black">{t.pos}</span>
-                    </td>
-                    <td className="px-3 sm:px-6 py-4 text-[10px] sm:text-sm text-slate-500 max-w-[160px] truncate" title={t.keterangan || ""}>
-                      {t.keterangan || "-"}
-                    </td>
-                    <td className="px-3 sm:px-6 py-4 text-right text-[10px] sm:text-sm font-black text-violet-600">
-                      {formatCurrency(t.tagihan)}
-                    </td>
-                    <td className="px-3 sm:px-6 py-4 text-right text-[10px] sm:text-sm font-black text-emerald-600">
-                      {t.pembayaran > 0 ? formatCurrency(t.pembayaran) : "0"}
-                    </td>
-                    <td className="px-3 sm:px-6 py-4 text-right text-[10px] sm:text-sm font-black text-rose-600">
-                      {t.sisa > 0 ? formatCurrency(t.sisa) : "0"}
-                    </td>
-                    <td className="px-3 sm:px-6 py-4 text-center">
-                      <button onClick={() => handleEditClick(t)} className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-1.5 rounded-lg transition-all text-xs" title="Edit">
-                        <FaEdit />
-                      </button>
-                      <button onClick={() => handleDeleteTransaksi(t.id)} className="text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1.5 rounded-lg transition-all text-xs" title="Hapus">
-                        <FaTrash />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                    <td colSpan="9" className="px-6 py-20 text-center">
-                    <FaInfoCircle className="text-slate-100 text-6xl mx-auto mb-4" />
-                    <p className="text-slate-400 font-bold">Data tagihan tidak ditemukan</p>
-                  </td>
+
+        {viewMode === "rekap" ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-900 text-[9px] uppercase font-black text-white tracking-wider">
+                  <th className="px-2 sm:px-3 py-3 text-center w-8">No</th>
+                  <th className="px-2 sm:px-3 py-3 text-left whitespace-nowrap">Cabang</th>
+                  <th className="px-2 sm:px-3 py-3 text-right whitespace-nowrap">Daspen</th>
+                  <th className="px-2 sm:px-3 py-3 text-right whitespace-nowrap">Iuran</th>
+                  <th className="px-2 sm:px-3 py-3 text-right whitespace-nowrap">Studi Tiru</th>
+                  <th className="px-2 sm:px-3 py-3 text-right whitespace-nowrap">Derap</th>
+                  <th className="px-2 sm:px-3 py-3 text-right whitespace-nowrap">Sanduka</th>
+                  <th className="px-2 sm:px-3 py-3 text-right whitespace-nowrap">Lainnya</th>
+                  <th className="px-2 sm:px-3 py-3 text-right whitespace-nowrap">Jumlah</th>
+                  <th className="px-2 sm:px-3 py-3 text-right whitespace-nowrap">Pembayaran</th>
+                  <th className="px-2 sm:px-3 py-3 text-right whitespace-nowrap">Selisih</th>
                 </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {loading ? (
+                  Array(5).fill(0).map((_, i) => (
+                    <tr key={i} className="animate-pulse">
+                      <td colSpan="11" className="px-3 py-5"><div className="h-4 bg-slate-100 rounded w-full"></div></td>
+                    </tr>
+                  ))
+                ) : cabangSummary.length > 0 ? (
+                  cabangSummary.map((g, i) => {
+                    const selisih = g.selisih;
+                    const isDefisit = selisih < 0;
+                    return (
+                      <tr key={g.cabang} onClick={() => { setCabangFilter(g.cabang); setViewMode("detail"); }} className="hover:bg-violet-50/50 transition-all text-[11px] sm:text-xs cursor-pointer">
+                        <td className="px-2 sm:px-3 py-3 text-center font-bold text-slate-400">{i + 1}</td>
+                        <td className="px-2 sm:px-3 py-3 font-bold text-slate-700 whitespace-nowrap">{g.cabang}</td>
+                        <td className="px-2 sm:px-3 py-3 text-right font-mono font-bold text-slate-600">{g.daspen > 0 ? formatCurrency(g.daspen) : "-"}</td>
+                        <td className="px-2 sm:px-3 py-3 text-right font-mono font-bold text-slate-600">{g.iuran > 0 ? formatCurrency(g.iuran) : "-"}</td>
+                        <td className="px-2 sm:px-3 py-3 text-right font-mono font-bold text-slate-600">{g.studiTiru > 0 ? formatCurrency(g.studiTiru) : "-"}</td>
+                        <td className="px-2 sm:px-3 py-3 text-right font-mono font-bold text-slate-600">{g.derap > 0 ? formatCurrency(g.derap) : "-"}</td>
+                        <td className="px-2 sm:px-3 py-3 text-right font-mono font-bold text-slate-600">{g.sanduka > 0 ? formatCurrency(g.sanduka) : "-"}</td>
+                        <td className="px-2 sm:px-3 py-3 text-right font-mono font-bold text-slate-400">{g.lainnya > 0 ? formatCurrency(g.lainnya) : "-"}</td>
+                        <td className="px-2 sm:px-3 py-3 text-right font-mono font-bold text-violet-600">{formatCurrency(g.totalTagihan)}</td>
+                        <td className="px-2 sm:px-3 py-3 text-right font-mono font-bold text-emerald-600">{formatCurrency(g.totalPembayaran)}</td>
+                        <td className={`px-2 sm:px-3 py-3 text-right font-mono font-bold ${isDefisit ? "text-rose-600" : "text-emerald-600"}`}>
+                          {isDefisit ? `(${formatCurrency(Math.abs(selisih))})` : formatCurrency(selisih)}
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan="11" className="px-3 py-16 text-center">
+                      <FaInfoCircle className="text-slate-100 text-5xl mx-auto mb-3" />
+                      <p className="text-slate-400 font-bold text-sm">Data tagihan tidak ditemukan</p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+              {!loading && cabangSummary.length > 0 && (
+                <tfoot>
+                  <tr className="bg-slate-800 text-white font-black text-xs">
+                    <td colSpan="2" className="px-2 sm:px-3 py-4 uppercase tracking-wider">Jumlah</td>
+                    <td className="px-2 sm:px-3 py-4 text-right font-mono">{formatCurrency(cabangSummary.reduce((s, g) => s + g.daspen, 0))}</td>
+                    <td className="px-2 sm:px-3 py-4 text-right font-mono">{formatCurrency(cabangSummary.reduce((s, g) => s + g.iuran, 0))}</td>
+                    <td className="px-2 sm:px-3 py-4 text-right font-mono">{formatCurrency(cabangSummary.reduce((s, g) => s + g.studiTiru, 0))}</td>
+                    <td className="px-2 sm:px-3 py-4 text-right font-mono">{formatCurrency(cabangSummary.reduce((s, g) => s + g.derap, 0))}</td>
+                    <td className="px-2 sm:px-3 py-4 text-right font-mono">{formatCurrency(cabangSummary.reduce((s, g) => s + g.sanduka, 0))}</td>
+                    <td className="px-2 sm:px-3 py-4 text-right font-mono">{formatCurrency(cabangSummary.reduce((s, g) => s + g.lainnya, 0))}</td>
+                    <td className="px-2 sm:px-3 py-4 text-right font-mono text-violet-300">{formatCurrency(summary.totalTagihan)}</td>
+                    <td className="px-2 sm:px-3 py-4 text-right font-mono text-emerald-300">{formatCurrency(summary.totalPembayaran)}</td>
+                    <td className={`px-2 sm:px-3 py-4 text-right font-mono ${summary.sisa < 0 ? "text-rose-300" : "text-emerald-300"}`}>
+                      {summary.sisa < 0 ? `(${formatCurrency(Math.abs(summary.sisa))})` : formatCurrency(summary.sisa)}
+                    </td>
+                  </tr>
+                </tfoot>
               )}
-            </tbody>
-            {!loading && filteredTransactions.length > 0 && (
-              <tfoot className="bg-slate-800 text-white">
-                <tr className="font-black text-[10px] sm:text-sm">
-                  <td colSpan="5" className="px-3 sm:px-6 py-5 uppercase tracking-wider">Total Tagihan Cabang</td>
-                  <td className="px-3 sm:px-6 py-5 text-right">{formatCurrency(summary.totalTagihan)}</td>
-                  <td className="px-3 sm:px-6 py-5 text-right">{formatCurrency(summary.totalPembayaran)}</td>
-                  <td className="px-3 sm:px-6 py-5 text-right bg-blue-600">{formatCurrency(summary.sisa)}</td>
-                  <td></td>
+            </table>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50/50 text-[10px] sm:text-xs uppercase font-black text-slate-500 tracking-wider border-b border-slate-100">
+                  <th className="px-3 sm:px-6 py-4 text-center">No</th>
+                  <th className="px-3 sm:px-6 py-4">Tgl Transaksi</th>
+                  <th className="px-3 sm:px-6 py-4">Cabang</th>
+                  <th className="px-3 sm:px-6 py-4">Pos</th>
+                  <th className="px-3 sm:px-6 py-4">Keterangan</th>
+                  <th className="px-3 sm:px-6 py-4 text-right">Tagihan (Rp)</th>
+                  <th className="px-3 sm:px-6 py-4 text-right">Pembayaran (Rp)</th>
+                  <th className="px-3 sm:px-6 py-4 text-right">Sisa (Rp)</th>
+                  <th className="px-3 sm:px-6 py-4 text-center">Aksi</th>
                 </tr>
-              </tfoot>
-            )}
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {loading ? (
+                  Array(5).fill(0).map((_, i) => (
+                    <tr key={i} className="animate-pulse">
+                      <td colSpan="9" className="px-6 py-6"><div className="h-4 bg-slate-100 rounded w-full"></div></td>
+                    </tr>
+                  ))
+                ) : filteredTransactions.length > 0 ? (
+                  filteredTransactions.map((t, i) => (
+                    <tr key={t.id || i} className="hover:bg-slate-50/50 transition-all group">
+                      <td className="px-3 sm:px-6 py-4 text-[10px] sm:text-sm font-bold text-slate-500 text-center">{i + 1}</td>
+                      <td className="px-3 sm:px-6 py-4 text-[10px] sm:text-sm font-bold text-slate-500">{t.formattedDate}</td>
+                      <td className="px-3 sm:px-6 py-4 text-[10px] sm:text-sm font-bold text-slate-600">{t.cabang}</td>
+                      <td className="px-3 sm:px-6 py-4">
+                        <span className="inline-block px-2 py-0.5 bg-violet-50 text-violet-600 rounded-lg text-[9px] sm:text-[10px] font-black">{t.pos}</span>
+                      </td>
+                      <td className="px-3 sm:px-6 py-4 text-[10px] sm:text-sm text-slate-500 max-w-[160px] truncate" title={t.keterangan || ""}>
+                        {t.keterangan || "-"}
+                      </td>
+                      <td className="px-3 sm:px-6 py-4 text-right text-[10px] sm:text-sm font-black text-violet-600">
+                        {formatCurrency(t.tagihan)}
+                      </td>
+                      <td className="px-3 sm:px-6 py-4 text-right text-[10px] sm:text-sm font-black text-emerald-600">
+                        {t.pembayaran > 0 ? formatCurrency(t.pembayaran) : "0"}
+                      </td>
+                      <td className="px-3 sm:px-6 py-4 text-right text-[10px] sm:text-sm font-black text-rose-600">
+                        {t.sisa > 0 ? formatCurrency(t.sisa) : "0"}
+                      </td>
+                      <td className="px-3 sm:px-6 py-4 text-center">
+                        <button onClick={() => handleEditClick(t)} className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-1.5 rounded-lg transition-all text-xs" title="Edit">
+                          <FaEdit />
+                        </button>
+                        <button onClick={() => handleDeleteTransaksi(t.id)} className="text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1.5 rounded-lg transition-all text-xs" title="Hapus">
+                          <FaTrash />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="9" className="px-6 py-20 text-center">
+                      <FaInfoCircle className="text-slate-100 text-6xl mx-auto mb-4" />
+                      <p className="text-slate-400 font-bold">Data tagihan tidak ditemukan</p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+              {!loading && filteredTransactions.length > 0 && (
+                <tfoot className="bg-slate-800 text-white">
+                  <tr className="font-black text-[10px] sm:text-sm">
+                    <td colSpan="5" className="px-3 sm:px-6 py-5 uppercase tracking-wider">Total Tagihan Cabang</td>
+                    <td className="px-3 sm:px-6 py-5 text-right">{formatCurrency(summary.totalTagihan)}</td>
+                    <td className="px-3 sm:px-6 py-5 text-right">{formatCurrency(summary.totalPembayaran)}</td>
+                    <td className="px-3 sm:px-6 py-5 text-right bg-blue-600">{formatCurrency(summary.sisa)}</td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              )}
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Modal: Input Keuangan Cabang */}
