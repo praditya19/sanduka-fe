@@ -208,7 +208,7 @@ const FormStep1 = ({
       if (!selectedUnitKerja) return;
 
       try {
-        const response = await GlobalApi.getTemanUnitKerja(selectedUnitKerja);
+        const response = await GlobalApi.getTemanUnitKerja(selectedUnitKerja, selectedCabang);
         console.log("Data teman unit kerja yang diterima:", response);
 
         const temanData = Array.isArray(response?.content)
@@ -258,7 +258,7 @@ const FormStep1 = ({
     if (selectedMemberInfo) setSelectedMemberInfo(null);
 
     try {
-      const response = await GlobalApi.getTemanUnitKerja(unitKerja);
+      const response = await GlobalApi.getTemanUnitKerja(unitKerja, selectedCabang);
       setTemanUnitKerjaData(response.content || []);
     } catch (error) {
       console.error("Error fetching teman unit kerja:", error);
