@@ -635,17 +635,34 @@ const getAdminBantuan = () =>
   axiosClient.get("/api/register-admin/admins-per-cabang");
 
 // Teman Unit Kerja
-const getTemanUnitKerja = async (unitKerja, cabang = null, page = 0, size = 50) => {
+const getTemanUnitKerja = async (unitKerja, cabang = null) => {
   try {
-    const response = await axiosClient.get("/api/auth/teman-unit-kerja", {
-      params: {
+    const size = 200;
+    let page = 0;
+    let allContent = [];
+    let totalPages = 1;
+    let lastResponse = null;
+
+    while (page < totalPages) {
+      const params = {
         unitKerja: unitKerja,
-        cabang: cabang,
         page: page,
         size: size,
-      },
-    });
-    return response.data;
+      };
+      if (cabang != null) {
+        params.cabang = cabang;
+      }
+      const response = await axiosClient.get("/api/auth/teman-unit-kerja", { params });
+      lastResponse = response;
+      const data = response.data;
+      if (data?.content) {
+        allContent = allContent.concat(data.content);
+      }
+      totalPages = data?.totalPages ?? 0;
+      page++;
+    }
+
+    return { ...lastResponse.data, content: allContent };
   } catch (error) {
     console.error("Error fetching teman unit kerja:", error);
     throw error;
