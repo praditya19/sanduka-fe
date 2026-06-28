@@ -10,7 +10,6 @@ const MemberRow = React.memo(({
   formatTanggal,
   handleMemberClick,
   handlePrintClick,
-  handleTagihanClick
 }) => {
   return (
     <tr
@@ -128,13 +127,6 @@ const MemberRow = React.memo(({
             title="Cetak Kartu Iuran"
           >
             <FaPrint />
-          </button>
-          <button
-            className="text-teal-600 hover:text-teal-800 text-xl md:text-lg p-2 md:p-1 hover:bg-teal-50 rounded-full md:rounded transition-colors border md:border-0"
-            onClick={() => handleTagihanClick(member)}
-            title="Lihat Tagihan"
-          >
-            <FaFileInvoiceDollar />
           </button>
         </div>
       </td>

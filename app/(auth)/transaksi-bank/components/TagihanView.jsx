@@ -1,117 +1,5 @@
-"use client";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import HeaderMobile from "@/app/_components/HeaderMobile";
-import HeaderMenu from "@/app/_components/HeaderMenu";
-import Sidebar from "@/app/_components/Sidebar";
-import { useAuth } from "@/app/AuthContext";
-import GlobalApi from "@/app/_utils/GlobalApi";
-
-export default function Tagihan() {
-  const router = useRouter();
-  const { token } = useAuth();
-  const [isMobile, setIsMobile] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [dataIuran, setDataIuran] = useState(null);
-  const [dataAnggota, setDataAnggota] = useState(null);
-
-  useEffect(() => {
-    if (!token) {
-      router.push("/sign-in");
-    }
-
-    getIuranAnggotaById();
-    cekNpa();
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, [token, router]);
-
-  useEffect(() => {
-    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
-    setIsSidebarOpen(sidebarState);
-  }, []);
-
-  const toggleSidebar = () => {
-    const newSidebarState = !isSidebarOpen;
-    setIsSidebarOpen(newSidebarState);
-    localStorage.setItem("isSidebarOpen", newSidebarState);
-  };
-
- const getIuranAnggotaById = async () => {
-  try {
-    const npa = sessionStorage.getItem("npa");
-    if (!npa) return;
-
-    const now = new Date();
-    const bulan = now.getMonth() + 1;
-    const tahun = now.getFullYear();
-
-    const res = await GlobalApi.getTransaksiBankBalancing(
-      null,
-      null,
-      tahun,
-      bulan,
-      null,
-      npa
-    );
-
-    const list = Array.isArray(res) ? res : res?.data || [];
-    const balancing = list[0];
-
-    if (balancing) {
-      setDataIuran({
-        pgri: balancing.totalIuranAnggota || 0,
-        sanduka: balancing.totalIuranSanduka || 0,
-        daspen: balancing.totalIuranDaspen || 0,
-        derap: balancing.totalIuranDerap || 0,
-        kalender: balancing.totalIuranKalender || 0,
-        sumbangan: balancing.totalIuranSumbangan || 0,
-        namaLengkap: balancing.nama,
-        unitKerja: balancing.unitKerja,
-        cabang: balancing.cabang,
-        jabatan: balancing.statusPegawai,
-      });
-    }
-  } catch (error) {
-    console.error("Error fetching iuran:", error);
-  }
-  };
-  
-  const formatTanggal = (tgl) => (tgl ? `${tgl[2]}-${tgl[1]}-${tgl[0]}` : "-");
-
-  const cekNpa = async () => {
-  try {
-    const npa = sessionStorage.getItem("npa");
-    if (!npa) return;
-
-    const member = await GlobalApi.cekNpa(npa);
-
-    if (member) {
-      const detail = await GlobalApi.getUserById(member.id);
-
-      setDataAnggota(detail);
-      setDataIuran((prev) => ({
-          ...(prev || {}),
-          tempatTanggalLahir: `${detail.tempatLahir}, ${formatTanggal(
-            detail.tanggalLahir,
-          )}`,
-          jabatan: detail.jabatan,
-        }));
-    }
-  } catch (error) {
-    console.error("Error fetching npa:", error);
-    setDataAnggota(null);
-  }
-};
-
+const TagihanView = ({ dataIuran, dataAnggota, loading }) => {
+  if (loading) return <div>Loading...</div>;
   const formatTanggalLengkap = () => {
     const hariIndo = [
       "Minggu",
@@ -138,17 +26,12 @@ export default function Tagihan() {
     ];
 
     const now = new Date();
-    const hari = hariIndo[now.getDay()];
-    const tanggal = now.getDate();
-    const bulan = bulanIndo[now.getMonth()];
-    const tahun = now.getFullYear();
-    const jam = now.getHours().toString().padStart(2, "0");
-    const menit = now.getMinutes().toString().padStart(2, "0");
-
-    return `${hari}, ${tanggal} ${bulan} ${tahun} pukul ${jam}:${menit}`;
+    return `${hariIndo[now.getDay()]}, ${now.getDate()} ${
+      bulanIndo[now.getMonth()]
+    } ${now.getFullYear()} pukul ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
   };
 
-  const generatePowerOfAttorneyPDF = async () => {
+  const generateSuratKuasa = async () => {
     const tanggalSekarang = formatTanggalLengkap();
     const content = `
       <div style="font-family: Arial, sans-serif; padding: 10px;">
@@ -161,24 +44,33 @@ export default function Tagihan() {
   
         <div style="margin-top: 30px;">
           <table style="width: 100%;">
-            <tr><td style="width: 150px;">Nama</td><td style="width: 20px;">:</td><td>${dataAnggota?.namaLengkap || "............................."
-      }</td></tr>
-            <tr><td>NIP</td><td>:</td><td>${dataAnggota?.nip || "............................."
-      }</td></tr>
-            <tr><td>NPA PGRI</td><td>:</td><td>${dataAnggota?.npaPgri || "............................."
-      }</td></tr>
-            <tr><td>Pangkat/Gol</td><td>:</td><td>${dataAnggota?.pangkatGolongan || "............................."
-      }</td></tr>
-            <tr><td>Jabatan</td><td>:</td><td>${dataAnggota?.jabatan || "............................."
-      }</td></tr>
-            <tr><td>Kantor/sekolah</td><td>:</td><td>${dataAnggota?.unitKerja || "............................."
-      }</td></tr>
-            <tr><td>KTP Nomor</td><td>:</td><td>${dataAnggota?.nik || "............................."
-      }</td></tr>
-            <tr><td>HP Nomor</td><td>:</td><td>${dataAnggota?.nomorHp || "............................."
-      }</td></tr>
-            <tr><td>Alamat Rumah</td><td>:</td><td>${dataAnggota?.alamat || "............................."
-      }</td></tr>
+            <tr><td style="width: 150px;">Nama</td><td style="width: 20px;">:</td><td>${
+              dataAnggota?.namaLengkap || "............................."
+            }</td></tr>
+            <tr><td>NIP</td><td>:</td><td>${
+              dataAnggota?.nip || "............................."
+            }</td></tr>
+            <tr><td>NPA PGRI</td><td>:</td><td>${
+              dataAnggota?.npaPgri || "............................."
+            }</td></tr>
+            <tr><td>Pangkat/Gol</td><td>:</td><td>${
+              dataAnggota?.pangkatGolongan || "............................."
+            }</td></tr>
+            <tr><td>Jabatan</td><td>:</td><td>${
+              dataAnggota?.jabatan || "............................."
+            }</td></tr>
+            <tr><td>Kantor/sekolah</td><td>:</td><td>${
+              dataAnggota?.unitKerja || "............................."
+            }</td></tr>
+            <tr><td>KTP Nomor</td><td>:</td><td>${
+              dataAnggota?.nik || "............................."
+            }</td></tr>
+            <tr><td>HP Nomor</td><td>:</td><td>${
+              dataAnggota?.nomorHp || "............................."
+            }</td></tr>
+            <tr><td>Alamat Rumah</td><td>:</td><td>${
+              dataAnggota?.alamat || "............................."
+            }</td></tr>
           </table>
         </div>
   
@@ -195,39 +87,44 @@ export default function Tagihan() {
         <div style="margin-left: 20px;">
           <table style="width: 100%;">
             <tr><td style="width: 150px;">Nomor Rekening</td><td style="width: 20px;">:</td><td>.............................</td></tr>
-            <tr><td>Atas nama</td><td>:</td><td>${dataAnggota?.namaLengkap || "............................."
-      }</td></tr>
+            <tr><td>Atas nama</td><td>:</td><td>${
+              dataAnggota?.namaLengkap || "............................."
+            }</td></tr>
           </table>
         </div>
   
         <p>Untuk pembayaran :</p>
         <div style="margin-left: 20px;">
           <table style="width: 100%;">
-            <tr><td style="width: 30px;">1.</td><td style="width: 120px;">Iuran PGRI</td><td style="width: 20px;">:</td><td>Rp. ${dataIuran?.pgri || "............................."
-      }</td></tr>
-            <tr><td>2.</td><td>Sanduka</td><td>:</td><td>Rp. ${dataIuran?.sanduka || "............................."
-      }</td></tr>
-            <tr><td>3.</td><td>Daspen</td><td>:</td><td>Rp. ${dataIuran?.daspen || "............................."
-      }</td></tr>
-            <tr><td>4.</td><td>Derap</td><td>:</td><td>Rp. ${dataIuran?.derap || "............................."
-      }</td></tr>
-            <tr><td>5.</td><td>Kalender</td><td>:</td><td>Rp. ${dataIuran?.kalender || "............................."
-      }</td></tr>
-            <tr><td>6.</td><td>Lain - Lain</td><td>:</td><td>Rp. ${dataIuran?.sumbangan || "............................."
-      }</td></tr>
+            <tr><td style="width: 30px;">1.</td><td style="width: 120px;">Iuran PGRI</td><td style="width: 20px;">:</td><td>Rp. ${
+              dataIuran?.pgri || "............................."
+            }</td></tr>
+            <tr><td>2.</td><td>Sanduka</td><td>:</td><td>Rp. ${
+              dataIuran?.sanduka || "............................."
+            }</td></tr>
+            <tr><td>3.</td><td>Daspen</td><td>:</td><td>Rp. ${
+              dataIuran?.daspen || "............................."
+            }</td></tr>
+            <tr><td>4.</td><td>Derap</td><td>:</td><td>Rp. ${
+              dataIuran?.derap || "............................."
+            }</td></tr>
+            <tr><td>5.</td><td>Kalender</td><td>:</td><td>Rp. ${
+              dataIuran?.kalender || "............................."
+            }</td></tr>
+            <tr><td>6.</td><td>Lain - Lain</td><td>:</td><td>Rp. ${
+              dataIuran?.sumbangan || "............................."
+            }</td></tr>
             <tr><td>7.</td><td>Total</td><td>:</td><td>Rp. ${[
-        dataIuran?.pgri,
-        dataIuran?.sanduka,
-        dataIuran?.daspen,
-        dataIuran?.derap,
-        dataIuran?.kalender,
-        dataIuran?.sumbangan,
-      ]
-        .map((val) => Number(val) || 0)
-        .reduce((acc, curr) => acc + curr, 0)
-        .toLocaleString(
-          "id-ID"
-        )}</td></tr>
+              dataIuran?.pgri,
+              dataIuran?.sanduka,
+              dataIuran?.daspen,
+              dataIuran?.derap,
+              dataIuran?.kalender,
+              dataIuran?.sumbangan,
+            ]
+              .map((val) => Number(val) || 0)
+              .reduce((acc, curr) => acc + curr, 0)
+              .toLocaleString("id-ID")}</td></tr>
           </table>
         </div>
   
@@ -286,12 +183,12 @@ export default function Tagihan() {
     }
   };
 
-  const handleDownloadInformasiAnggota = async (dataIuran) => {
-    const tanggalSekarang = new Date().toLocaleDateString('id-ID', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+  const generateTagihanPDF = async () => {
+    const tanggalSekarang = new Date().toLocaleDateString("id-ID", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
 
     const content = `
@@ -314,60 +211,62 @@ export default function Tagihan() {
       <td style="width: 40px; padding: 10px 5px; color: #7f8c8d;">1.</td>
       <td style="padding: 10px 5px; color: #7f8c8d;">Iuran Anggota</td>
       <td style="width: 20px; padding: 10px 5px; color: #7f8c8d;">:</td>
-      <td style="text-align: right; padding: 10px 5px;">Rp. ${dataIuran.pgri?.toLocaleString('id-ID') || '0'}</td>
+      <td style="text-align: right; padding: 10px 5px;">Rp. ${dataIuran.pgri?.toLocaleString("id-ID") || "0"}</td>
     </tr>
     <tr>
       <td style="padding: 10px 5px; color: #7f8c8d;">2.</td>
       <td style="padding: 10px 5px; color: #7f8c8d;">Sanduka</td>
       <td style="padding: 10px 5px; color: #7f8c8d;">:</td>
-      <td style="text-align: right; padding: 10px 5px;">Rp. ${dataIuran.sanduka?.toLocaleString('id-ID') || '0'}</td>
+      <td style="text-align: right; padding: 10px 5px;">Rp. ${dataIuran.sanduka?.toLocaleString("id-ID") || "0"}</td>
     </tr>
     <tr>
       <td style="padding: 10px 5px; color: #7f8c8d;">3.</td>
       <td style="padding: 10px 5px; color: #7f8c8d;">Daspen</td>
       <td style="padding: 10px 5px; color: #7f8c8d;">:</td>
-      <td style="text-align: right; padding: 10px 5px;">Rp. ${dataIuran.daspen?.toLocaleString('id-ID') || '0'}</td>
+      <td style="text-align: right; padding: 10px 5px;">Rp. ${dataIuran.daspen?.toLocaleString("id-ID") || "0"}</td>
     </tr>
 
-    ${dataIuran.sumbangan > 0
+    ${
+      dataIuran.sumbangan > 0
         ? `
         <tr>
           <td style="padding: 10px 5px; color: #7f8c8d;">4.</td>
           <td style="padding: 10px 5px; color: #7f8c8d;">Sumbangan</td>
           <td style="padding: 10px 5px; color: #7f8c8d;">:</td>
         </tr>
-        ${dataIuran.detailSumbangan?.length > 0
-          ? `<tr>
+        ${
+          dataIuran.detailSumbangan?.length > 0
+            ? `<tr>
                 <td></td>
                 <td colspan="3" style="padding: 8px 5px 8px 20px;">
                   <ul style="margin: 0; padding-left: 20px; color: #555; font-size: 13px; list-style-type: disc;">
                     ${dataIuran.detailSumbangan
-            .map(
-              (item) =>
-                `<li style="margin-bottom: 4px; display: flex; justify-content: space-between;">
+                      .map(
+                        (item) =>
+                          `<li style="margin-bottom: 4px; display: flex; justify-content: space-between;">
                             <span>${item.namaSumbangan}</span>
-                            <span style="font-weight: 500;">Rp. ${item.jumlah.toLocaleString('id-ID')}</span>
-                          </li>`
-            )
-            .join("")}
+                            <span style="font-weight: 500;">Rp. ${item.jumlah.toLocaleString("id-ID")}</span>
+                          </li>`,
+                      )
+                      .join("")}
                   </ul>
                 </td>
               </tr>`
-          : ""
+            : ""
         }
         `
         : ""
-      }
+    }
   </table>
 
   <div style="margin-top: 20px; background-color: #2c3e50; color: white; padding: 12px 15px; border-radius: 6px; display: flex; justify-content: space-between;">
     <span style="font-weight: bold; font-size: 15px;">Total Tagihan</span>
     <span style="font-weight: bold; font-size: 15px;">Rp. ${(
-        (dataIuran.pgri || 0) +
-        (dataIuran.sanduka || 0) +
-        (dataIuran.daspen || 0) +
-        (dataIuran.sumbangan || 0)
-      ).toLocaleString('id-ID')}</span>
+      (dataIuran.pgri || 0) +
+      (dataIuran.sanduka || 0) +
+      (dataIuran.daspen || 0) +
+      (dataIuran.sumbangan || 0)
+    ).toLocaleString("id-ID")}</span>
   </div>
 </section>
       
@@ -394,14 +293,9 @@ export default function Tagihan() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-100">
-      {isMobile ? <HeaderMobile /> : <HeaderMenu />}
+    <div className="max-h-[80vh] overflow-y-auto pr-2">
       <div className="flex flex-grow">
-        <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-        <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
-        >
+        <div className={`flex-1 transition-all duration-300 ease-in-out`}>
           <main className="container mx-auto py-6 md:py-10 px-4 flex-grow bg-gray-50 min-h-screen">
             <div className="max-w-4xl mx-auto">
               <div className="relative bg-gradient-to-r from-blue-700 to-blue-900 rounded-t-2xl shadow-xl overflow-hidden">
@@ -438,12 +332,12 @@ export default function Tagihan() {
               <div className="bg-white shadow-lg rounded-b-2xl overflow-hidden">
                 <div className="p-4 md:p-8">
                   {dataIuran &&
-                    (dataIuran.pgri > 0 ||
-                      dataIuran.daspen > 0 ||
-                      dataIuran.derap > 0 ||
-                      dataIuran.kalender > 0 ||
-                      dataIuran.sanduka > 0 ||
-                      dataIuran.sumbangan > 0) ? (
+                  (dataIuran.pgri > 0 ||
+                    dataIuran.daspen > 0 ||
+                    dataIuran.derap > 0 ||
+                    dataIuran.kalender > 0 ||
+                    dataIuran.sanduka > 0 ||
+                    dataIuran.sumbangan > 0) ? (
                     <div className="space-y-6">
                       <div className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl border border-blue-100 overflow-hidden">
                         <div className="p-4 border-b border-blue-100 flex items-center">
@@ -705,10 +599,7 @@ export default function Tagihan() {
                                   </span>
                                 </div>
                                 <span className="font-semibold text-gray-900">
-                                  Rp.{" "}
-                                  {dataIuran.pgri?.toLocaleString(
-                                    "id-ID"
-                                  )}
+                                  Rp. {dataIuran.pgri?.toLocaleString("id-ID")}
                                 </span>
                               </div>
                             )}
@@ -723,9 +614,7 @@ export default function Tagihan() {
                                 </div>
                                 <span className="font-semibold text-gray-900">
                                   Rp.{" "}
-                                  {dataIuran.sanduka?.toLocaleString(
-                                    "id-ID"
-                                  )}
+                                  {dataIuran.sanduka?.toLocaleString("id-ID")}
                                 </span>
                               </div>
                             )}
@@ -740,9 +629,7 @@ export default function Tagihan() {
                                 </div>
                                 <span className="font-semibold text-gray-900">
                                   Rp.{" "}
-                                  {dataIuran.daspen?.toLocaleString(
-                                    "id-ID"
-                                  )}
+                                  {dataIuran.daspen?.toLocaleString("id-ID")}
                                 </span>
                               </div>
                             )}
@@ -756,10 +643,7 @@ export default function Tagihan() {
                                   </span>
                                 </div>
                                 <span className="font-semibold text-gray-900">
-                                  Rp.{" "}
-                                  {dataIuran.derap?.toLocaleString(
-                                    "id-ID"
-                                  )}
+                                  Rp. {dataIuran.derap?.toLocaleString("id-ID")}
                                 </span>
                               </div>
                             )}
@@ -774,9 +658,7 @@ export default function Tagihan() {
                                 </div>
                                 <span className="font-semibold text-gray-900">
                                   Rp.{" "}
-                                  {dataIuran.kalender?.toLocaleString(
-                                    "id-ID"
-                                  )}
+                                  {dataIuran.kalender?.toLocaleString("id-ID")}
                                 </span>
                               </div>
                             )}
@@ -786,7 +668,9 @@ export default function Tagihan() {
                                 <div className="flex justify-between items-center">
                                   <div className="flex items-center">
                                     <div className="w-3 h-3 bg-pink-500 rounded-full mr-3"></div>
-                                    <span className="text-gray-700 font-medium">Sumbangan</span>
+                                    <span className="text-gray-700 font-medium">
+                                      Sumbangan
+                                    </span>
                                   </div>
                                 </div>
 
@@ -797,9 +681,12 @@ export default function Tagihan() {
                                         key={item.id}
                                         className="flex justify-between text-gray-700"
                                       >
-                                        <span className="text-sm">• {item.namaSumbangan}</span>
+                                        <span className="text-sm">
+                                          • {item.namaSumbangan}
+                                        </span>
                                         <span className="font-semibold text-gray-900 text-base">
-                                          Rp. {item.jumlah.toLocaleString("id-ID")}
+                                          Rp.{" "}
+                                          {item.jumlah.toLocaleString("id-ID")}
                                         </span>
                                       </div>
                                     ))}
@@ -832,7 +719,7 @@ export default function Tagihan() {
 
                       <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
                         <button
-                          onClick={generatePowerOfAttorneyPDF}
+                          onClick={generateSuratKuasa}
                           className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-3 px-6 rounded-xl shadow-md transition duration-300 ease-in-out flex items-center justify-center"
                         >
                           <svg
@@ -840,20 +727,19 @@ export default function Tagihan() {
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
                           >
                             <path
                               strokeLinecap="round"
                               strokeLinejoin="round"
                               strokeWidth="2"
                               d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                            ></path>
+                            />
                           </svg>
                           Download Surat Kuasa
                         </button>
 
                         <button
-                          onClick={() => handleDownloadInformasiAnggota(dataIuran)}
+                          onClick={generateTagihanPDF}
                           className="flex items-center justify-center px-6 py-3 font-bold text-white transition duration-300 ease-in-out rounded-xl shadow-md bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
                         >
                           <svg
@@ -861,7 +747,6 @@ export default function Tagihan() {
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
                           >
                             <path
                               strokeLinecap="round"
@@ -904,7 +789,8 @@ export default function Tagihan() {
 
                       <p className="text-gray-600 mb-8 max-w-md mx-auto">
                         Terima kasih atas kesabaran Anda. Detail tagihan Anda
-                        sedang diproses dan akan tersedia dalam beberapa saat lagi.
+                        sedang diproses dan akan tersedia dalam beberapa saat
+                        lagi.
                       </p>
 
                       <div className="w-full max-w-md mx-auto bg-white rounded-full h-3 shadow-inner overflow-hidden">
@@ -935,4 +821,6 @@ export default function Tagihan() {
       </div>
     </div>
   );
-}
+};
+
+export default TagihanView;

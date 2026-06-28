@@ -202,7 +202,9 @@ function RekapAnggota() {
       try {
         // 1. Fetch Nama Pos Lain-Lain
         let responseLain = await GlobalApi.getPosLainLainNames();
-        const actualLain = Array.isArray(responseLain) ? responseLain : responseLain?.data || [];
+        const actualLain = Array.isArray(responseLain)
+          ? responseLain
+          : responseLain?.data || [];
         setKeteranganLainLain(actualLain);
 
         // 2. Fetch Iuran Standar (PGRI, Kalender, Derap, dll)
@@ -626,7 +628,8 @@ function RekapAnggota() {
       // Isi Penyesuaian tiap sumbangan item dari manualJumlah
       (member.detailSumbangan || []).forEach((s) => {
         const lowKey = s.namaSumbangan.toLowerCase().trim();
-        if (["pgri", "sanduka", "daspen", "derap", "kalender"].includes(lowKey)) return;
+        if (["pgri", "sanduka", "daspen", "derap", "kalender"].includes(lowKey))
+          return;
         if (s.manualJumlah && parseInt(s.manualJumlah) > 0) {
           manualValues[lowKey] = parseInt(s.manualJumlah);
         }
@@ -650,7 +653,7 @@ function RekapAnggota() {
             ? parseInt(dataIuran.defaultSanduka)
             : dataIuran.sanduka && parseInt(dataIuran.sanduka) > 0
               ? parseInt(dataIuran.sanduka) -
-              (parseInt(dataIuran.manualSanduka) || 0)
+                (parseInt(dataIuran.manualSanduka) || 0)
               : member.sanduka > 0
                 ? parseInt(member.sanduka)
                 : parseInt(profile.sanduka) || 3000,
@@ -659,7 +662,7 @@ function RekapAnggota() {
             ? parseInt(dataIuran.defaultDaspen)
             : dataIuran.daspen && parseInt(dataIuran.daspen) > 0
               ? parseInt(dataIuran.daspen) -
-              (parseInt(dataIuran.manualDaspen) || 0)
+                (parseInt(dataIuran.manualDaspen) || 0)
               : member.daspen > 0
                 ? parseInt(member.daspen)
                 : parseInt(profile.daspen) || 0,
@@ -668,7 +671,7 @@ function RekapAnggota() {
             ? parseInt(dataIuran.defaultDerap)
             : dataIuran.derap && parseInt(dataIuran.derap) > 0
               ? parseInt(dataIuran.derap) -
-              (parseInt(dataIuran.manualDerap) || 0)
+                (parseInt(dataIuran.manualDerap) || 0)
               : member.derap > 0
                 ? parseInt(member.derap)
                 : parseInt(profile.derap) || 0,
@@ -677,7 +680,7 @@ function RekapAnggota() {
             ? parseInt(dataIuran.defaultKalender)
             : dataIuran.kalender && parseInt(dataIuran.kalender) > 0
               ? parseInt(dataIuran.kalender) -
-              (parseInt(dataIuran.manualKalender) || 0)
+                (parseInt(dataIuran.manualKalender) || 0)
               : member.kalender > 0
                 ? parseInt(member.kalender)
                 : parseInt(profile.kalender) || 0,
@@ -764,11 +767,8 @@ function RekapAnggota() {
     // 1. Handle uniqueKey khusus lainlain
     if (selectedKategori === "lainlain") {
       uniqueKey =
-        selectedKeterangan
-          ?.toString()
-          .replace(/"/g, "")
-          .trim()
-          .toLowerCase() || `lain-lain-${Date.now()}`;
+        selectedKeterangan?.toString().replace(/"/g, "").trim().toLowerCase() ||
+        `lain-lain-${Date.now()}`;
     }
 
     // 2. Ambil standard iuran (fallback jika kosong)
@@ -861,7 +861,10 @@ function RekapAnggota() {
       try {
         console.log("🔍 Nama dipilih:", selectedKeterangan);
 
-        const searchNama = selectedKeterangan.toString().replace(/"/g, "").trim();
+        const searchNama = selectedKeterangan
+          .toString()
+          .replace(/"/g, "")
+          .trim();
 
         const response = await GlobalApi.getPosLainLain();
 
@@ -878,9 +881,10 @@ function RekapAnggota() {
         console.log("🎯 Matching item:", matchingItem);
 
         if (matchingItem) {
-          initialValue = (parseInt(matchingItem.peruntukanProvinsi, 10) || 0)
-            + (parseInt(matchingItem.peruntukanKabupaten, 10) || 0)
-            + (parseInt(matchingItem.peruntukanCabang, 10) || 0);
+          initialValue =
+            (parseInt(matchingItem.peruntukanProvinsi, 10) || 0) +
+            (parseInt(matchingItem.peruntukanKabupaten, 10) || 0) +
+            (parseInt(matchingItem.peruntukanCabang, 10) || 0);
           console.log("💰 Initial value:", initialValue);
         } else {
           console.warn(
@@ -925,9 +929,9 @@ function RekapAnggota() {
       if (selectedKategori === "pgri") {
         initialValue = pgriItem
           ? parseInt(pgriItem.pb || 0) +
-          parseInt(pgriItem.propinsi || 0) +
-          parseInt(pgriItem.kabupaten || 0) +
-          parseInt(pgriItem.cabang || 0)
+            parseInt(pgriItem.propinsi || 0) +
+            parseInt(pgriItem.kabupaten || 0) +
+            parseInt(pgriItem.cabang || 0)
           : 8000;
       } else {
         initialValue = pgriItem?.sanduka
@@ -1115,15 +1119,6 @@ function RekapAnggota() {
         setIsExporting,
       ),
     [data, selectedCabang, selectedUnitKerja, namaAnggotaInput],
-  );
-
-  const handleTagihanClick = useCallback(
-    (member) => {
-      sessionStorage.setItem("idTagihan", member.idByNominal);
-      sessionStorage.setItem("npa", member.npaPgri);
-      router.push(`/anggota/rekap-anggota/tagihanByAdmin`);
-    },
-    [router],
   );
 
   const handleBackupTarget = () => {
@@ -1404,7 +1399,6 @@ function RekapAnggota() {
                             formatTanggal={formatTanggal}
                             handleMemberClick={handleMemberClick}
                             handlePrintClick={handlePrint}
-                            handleTagihanClick={handleTagihanClick}
                           />
                         ))}
                       {displayLimit < memoizedFlattenedMembers.length && (
