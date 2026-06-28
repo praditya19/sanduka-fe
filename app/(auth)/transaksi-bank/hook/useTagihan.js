@@ -26,6 +26,7 @@ const useTagihan = (npa, bulan, tahun, token) => {
       );
       const list = Array.isArray(res) ? res : res?.data || [];
       const balancing = list[0];
+      console.log(balancing);
 
       if (balancing) {
         setDataIuran({
@@ -39,6 +40,9 @@ const useTagihan = (npa, bulan, tahun, token) => {
           unitKerja: balancing.unitKerja,
           cabang: balancing.cabang,
           jabatan: balancing.statusPegawai,
+          keterangan: balancing.keterangan,
+          bulan,
+          tahun,
         });
       }
 
