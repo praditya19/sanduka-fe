@@ -8,7 +8,6 @@ import {
 import { useRouter } from "next/navigation";
 import Sidebar from "@/app/_components/Sidebar";
 import { Input } from "@/components/ui/input";
-import GlobalApi from "@/app/_utils/GlobalApi";
 
 // components
 import HeaderSection from "./components/HeaderSection";
@@ -20,6 +19,8 @@ import UploadModal from "./components/UploadModal";
 import TebNavigation from "./components/TebNavigation";
 import EditBalancingModal from "./components/EditBalancingModal";
 import DeleteModal from "./components/DeleteModal";
+import TagihanModal from "./components/TagihanModal";
+import TagihanView from "./components/TagihanView";
 // component potongan
 import PotonganHeaderActions from "./components/potongan/PotonganHeaderActions";
 import PotonganFilters from "./components/potongan/PotonganFilters";
@@ -39,6 +40,7 @@ import useBalancing from "./hook/useBalancing";
 import useExportExcel from "./hook/useExportExcel";
 import useDropdownFilter from "./hook/useDropdownFilter";
 import useRekapitulasi from "./hook/useRekapitulasi";
+import useTagihan from "./hook/useTagihan";
 
 const NotificationPopup = ({ type, message, onClose }) => {
   useEffect(() => {
@@ -195,6 +197,7 @@ export default function BankTransactionPage() {
     totalPages,
     setCurrentPage,
   } = usePotonganBank(month, year);
+
   const {
     handleDeleteUpload,
     resetData,
@@ -257,6 +260,13 @@ export default function BankTransactionPage() {
     setShowDeleteBalancing,
     setNotification,
   });
+
+  const {
+    dataIuran,
+    dataAnggota,
+    generateSuratKuasa,
+    generateTagihanPDF,
+  } = useTagihan();
 
   // Note: handleDelete dipindahkan ke useBalancing hook
   // Akses via: handleDelete dari destructure hook
@@ -394,6 +404,12 @@ export default function BankTransactionPage() {
     await handleDeleteClick(selectedId);
     setShowDeletePopup(false);
   };
+
+  const [showTagihanModal, setShowTagihanModal] = useState(false);
+const [selectedNpa, setSelectedNpa] = useState(null);
+const [selectedBulan, setSelectedBulan] = useState(null);
+  const [selectedTahun, setSelectedTahun] = useState(null);
+  
   const handlePreviousPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
@@ -687,6 +703,21 @@ export default function BankTransactionPage() {
                   handleEditClick={handleEditClick}
                   setSelectedId={setSelectedId}
                   setShowDeletePopup={setShowDeletePopup}
+                   month={month}
+  year={year}
+  setSelectedNpa={setSelectedNpa}
+  setSelectedBulan={setSelectedBulan}
+  setSelectedTahun={setSelectedTahun}
+  setShowTagihanModal={setShowTagihanModal}
+                />
+              <TagihanModal
+  isOpen={showTagihanModal}
+  onClose={() => setShowTagihanModal(false)}
+  npa={selectedNpa}
+  bulan={selectedBulan}
+                  tahun={selectedTahun}
+                  generateSuratKuasa={generateSuratKuasa}
+      generateTagihanPDF={generateTagihanPDF}
                 />
               </div>
             </div>

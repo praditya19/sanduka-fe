@@ -849,12 +849,6 @@ export default function IconGrid() {
             href: "/tagihan",
             color: "text-blue-700",
           })
-          .concat({
-            icon: faFileInvoiceDollar,
-            label: "Tagihan",
-            href: "/tagihan",
-            color: "text-blue-700",
-          })
           .sort((a, b) => {
             const order = [
               "Lapor",

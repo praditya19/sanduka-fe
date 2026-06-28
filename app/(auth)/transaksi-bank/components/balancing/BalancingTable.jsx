@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
-import { FaEdit, FaTrash } from "react-icons/fa";
+import { FaEdit, FaTrash, FaFileInvoiceDollar } from "react-icons/fa";
 
 const BalancingTable = ({
   loadingBalancing,
@@ -16,6 +16,12 @@ const BalancingTable = ({
   setSelectedId,
   setShowDeletePopup,
   handleEditClick,
+  month,
+  year,
+  setSelectedNpa,
+  setSelectedBulan,
+  setSelectedTahun,
+  setShowTagihanModal,
 }) => {
   const [startIndex, setStartIndex] = useState(0);
 
@@ -239,6 +245,17 @@ const BalancingTable = ({
                               title="Hapus"
                             >
                               <FaTrash className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedNpa(item.npa);
+                                setSelectedBulan(month);
+                                setSelectedTahun(year);
+                                setShowTagihanModal(true);
+                              }}
+                              className="text-teal-600 hover:text-teal-800 text-xl md:text-lg p-2 md:p-1 hover:bg-teal-50 rounded-full md:rounded transition-colors border md:border-0"
+                            >
+                              <FaFileInvoiceDollar />
                             </button>
                           </div>
                         </td>
