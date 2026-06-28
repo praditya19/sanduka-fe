@@ -6,7 +6,6 @@ import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  FaArrowLeft,
   FaArrowTrendUp,
   FaArrowTrendDown,
   FaCalendarDays,
@@ -19,6 +18,7 @@ import TargetRealisasiOrganisasi from "./sections/TargetRealisasiOrganisasi";
 import PemasukanOrganisasiSection from "./sections/PemasukanOrganisasi";
 import PengeluaranOrganisasiSection from "./sections/PengeluaranOrganisasi";
 import RekapTransaksiSection from "./sections/RekapTahunan";
+import BackButton from "../components/BackButton";
 import SaldoAkhirOrganisasiSection from "./sections/SaldoAkhirOrganisasi";
 
 export default function LaporanOrganisasi() {
@@ -67,12 +67,7 @@ function LaporanOrganisasiContent() {
         <main className="p-4 md:p-8 mt-24 md:mt-20 max-w-[95%] mx-auto">
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <div className="flex items-center space-x-4">
-              <button
-                onClick={() => router.back()}
-                className="p-3 bg-white rounded-2xl shadow-sm border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all active:scale-95"
-              >
-                <FaArrowLeft />
-              </button>
+              <BackButton />
               <div>
                 <h1 className="text-2xl font-black text-slate-800 tracking-tight">Laporan Keuangan Organisasi</h1>
                 <p className="text-slate-400 text-sm font-medium">Analisis transparan data kas organisasi</p>

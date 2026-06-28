@@ -1003,7 +1003,7 @@ const DerapSection = () => {
                       }
                       className="bg-transparent px-4 py-2.5 outline-none font-black text-slate-600 text-xs uppercase tracking-widest cursor-pointer"
                     >
-                      {[2024, 2025, 2026, 2027].map((y) => (
+                      {Array.from({ length: new Date().getFullYear() + 2 - 2020 + 1 }, (_, i) => 2020 + i).map((y) => (
                         <option key={y} value={y}>
                           {y}
                         </option>
@@ -1452,7 +1452,7 @@ const DerapSection = () => {
                       }
                       className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white transition-all text-sm"
                     >
-                      {[2024, 2025, 2026, 2027].map((y) => (
+                      {Array.from({ length: new Date().getFullYear() + 2 - 2020 + 1 }, (_, i) => 2020 + i).map((y) => (
                         <option key={y} value={y}>
                           {y}
                         </option>

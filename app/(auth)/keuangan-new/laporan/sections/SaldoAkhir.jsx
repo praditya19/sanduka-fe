@@ -196,7 +196,7 @@ const SaldoAkhirSection = () => {
               onChange={(e) => setSelectedYear(parseInt(e.target.value))}
               className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-amber-500/20"
             >
-              {[2024, 2025, 2026, 2027].map((y) => (
+              {Array.from({ length: new Date().getFullYear() + 2 - 2020 + 1 }, (_, i) => 2020 + i).map((y) => (
                 <option key={y} value={y}>
                   {y}
                 </option>

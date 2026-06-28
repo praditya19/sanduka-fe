@@ -7,7 +7,6 @@ import Sidebar from "@/app/_components/Sidebar";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  FaArrowLeft, 
   FaCoins, 
   FaHandHoldingHeart, 
   FaNewspaper, 
@@ -22,6 +21,7 @@ import IuranPgriSection from "./sections/IuranPgri";
 import DaspenSection from "./sections/Daspen";
 import DerapSection from "./sections/Derap";
 import KalenderSection from "./sections/Kalender";
+import BackButton from "../components/BackButton";
 import LainLainSection from "./sections/LainLain";
 import RekapitulasiSection from "./sections/Rekapitulasi";
 
@@ -74,12 +74,7 @@ function KeuanganInputContent() {
           <div className="max-w-[1400px] mx-auto">
             {/* Header Section */}
             <div className="flex items-center space-x-5 mb-8 px-2">
-              <button 
-                onClick={() => router.back()}
-                className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 text-slate-600 hover:bg-slate-50 hover:text-emerald-500 transition-all active:scale-90"
-              >
-                <FaArrowLeft className="text-lg" />
-              </button>
+              <BackButton />
               <div>
                 <h1 className="text-3xl font-black text-slate-800 tracking-tight">Manajemen Input Keuangan</h1>
                 <p className="text-slate-400 text-sm font-medium uppercase tracking-widest text-[10px]">Administrasi Iuran & Pendapatan Organisasi</p>
