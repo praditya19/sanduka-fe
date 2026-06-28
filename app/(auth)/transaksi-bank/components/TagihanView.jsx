@@ -292,6 +292,25 @@ const TagihanView = ({ dataIuran, dataAnggota, loading }) => {
     }
   };
 
+  const getNamaBulan = (bulan) => {
+    const bulanIndo = [
+      "Januari",
+      "Februari",
+      "Maret",
+      "April",
+      "Mei",
+      "Juni",
+      "Juli",
+      "Agustus",
+      "September",
+      "Oktober",
+      "November",
+      "Desember",
+    ];
+
+    return bulanIndo[bulan - 1] || "-";
+  };
+
   return (
     <div className="max-h-[80vh] overflow-y-auto pr-2">
       <div className="flex flex-grow">
@@ -584,7 +603,20 @@ const TagihanView = ({ dataIuran, dataAnggota, loading }) => {
                             </svg>
                           </div>
                           <h3 className="text-lg md:text-xl font-bold text-white">
-                            Rincian Tagihan
+                            Rincian Tagihan Bulan{" "}
+                            <span className="relative inline-block">
+                              <span className="text-yellow-300 font-black">
+                                {getNamaBulan(dataIuran.bulan)}
+                              </span>
+                              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-yellow-400/50 to-yellow-400/0"></span>
+                            </span>{" "}
+                            Tahun{" "}
+                            <span className="relative inline-block">
+                              <span className="text-yellow-300 font-black">
+                                {dataIuran.tahun}
+                              </span>
+                              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-yellow-400/50 to-yellow-400/0"></span>
+                            </span>
                           </h3>
                         </div>
 
@@ -694,6 +726,37 @@ const TagihanView = ({ dataIuran, dataAnggota, loading }) => {
                                 )}
                               </div>
                             )}
+                            <div className="flex justify-between items-center p-4 mt-3 bg-gradient-to-r from-blue-50 to-white rounded-xl border border-blue-200 shadow-sm hover:shadow-md transition-all duration-300 group">
+                              <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 bg-blue-500 rounded-lg flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300">
+                                  <svg
+                                    className="w-4 h-4 text-white"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="2.5"
+                                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    />
+                                  </svg>
+                                </div>
+                                <span className="text-sm font-bold text-blue-700 uppercase tracking-wider">
+                                  Keterangan
+                                </span>
+                              </div>
+                              <div className="flex-1 text-right ml-6">
+                                <p className="text-base md:text-lg font-semibold text-gray-800 leading-relaxed">
+                                  {dataIuran.keterangan || (
+                                    <span className="text-gray-400 font-normal italic">
+                                      Tidak ada keterangan
+                                    </span>
+                                  )}
+                                </p>
+                              </div>
+                            </div>
                           </div>
 
                           <div className="mt-6 pt-4 border-t border-dashed border-gray-200">
