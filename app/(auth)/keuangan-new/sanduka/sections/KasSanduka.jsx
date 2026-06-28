@@ -25,6 +25,7 @@ import {
   FaAlignLeft,
   FaUndo
 } from "react-icons/fa";
+import BackButton from "../../components/BackButton";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import * as XLSX from "xlsx";
 import toast, { Toaster } from "react-hot-toast";
@@ -416,6 +417,16 @@ const KasSanduka = () => {
   return (
     <div className="space-y-6">
       <Toaster position="top-center" />
+
+      {/* Page Title */}
+      <div className="flex items-center gap-3">
+        <BackButton />
+        <div>
+          <h1 className="text-2xl font-black text-slate-800 tracking-tight">Kas Sanduka</h1>
+          <p className="text-slate-400 text-sm font-medium italic">Kelola penerimaan dan pengeluaran kas sanduka</p>
+        </div>
+      </div>
+
       {/* Period Summary Cards - Integrated & Compact */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 print:hidden">
         {[
@@ -453,7 +464,7 @@ const KasSanduka = () => {
               onChange={(e) => setYearFilter(Number(e.target.value))}
               className="bg-transparent text-[10px] font-black px-3 py-1.5 outline-none text-slate-600 appearance-none cursor-pointer hover:text-emerald-600 transition-all"
             >
-              {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
+              {Array.from({ length: new Date().getFullYear() + 2 - 2020 + 1 }, (_, i) => 2020 + i).map(y => <option key={y} value={y}>{y}</option>)}
             </select>
           </div>
           <div className="relative flex-1 lg:flex-none">
@@ -756,7 +767,7 @@ const KasSanduka = () => {
                       onChange={(e) => setFormIn({ ...formIn, setoranTahun: Number(e.target.value) })}
                       className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none font-bold text-slate-700 transition-all"
                     >
-                      {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
+                      {Array.from({ length: new Date().getFullYear() + 2 - 2020 + 1 }, (_, i) => 2020 + i).map(y => <option key={y} value={y}>{y}</option>)}
                     </select>
                   </div>
                 </div>
@@ -946,7 +957,7 @@ const KasSanduka = () => {
                       onChange={(e) => setFormOut({ ...formOut, pengeluaranTahun: Number(e.target.value) })}
                       className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 outline-none font-bold text-slate-700 transition-all"
                     >
-                      {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
+                      {Array.from({ length: new Date().getFullYear() + 2 - 2020 + 1 }, (_, i) => 2020 + i).map(y => <option key={y} value={y}>{y}</option>)}
                     </select>
                   </div>
                 </div>

@@ -26,6 +26,7 @@ import {
   FaUniversity,
   FaFileInvoice
 } from "react-icons/fa";
+import BackButton from "../../components/BackButton";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import * as XLSX from "xlsx";
 import toast, { Toaster } from "react-hot-toast";
@@ -53,7 +54,7 @@ const KasOrganisasi = () => {
     { value: "11", label: "November" }, { value: "12", label: "Desember" }
   ];
   const currentYear = new Date().getFullYear();
-  const yearOptions = Array.from({ length: 11 }, (_, index) => currentYear - 5 + index);
+  const yearOptions = Array.from({ length: new Date().getFullYear() + 2 - 2020 + 1 }, (_, i) => 2020 + i);
 
   // Modal States
   const [showModalIn, setShowModalIn] = useState(false);
@@ -540,7 +541,8 @@ const KasOrganisasi = () => {
       <Toaster position="top-center" />
 
       {/* Page Title & Module Info */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-2">
+      <div className="flex items-center gap-3 mb-2">
+        <BackButton />
         <div>
           <h1 className="text-2xl font-black text-slate-800 tracking-tight">Buku Kas Organisasi (Umum)</h1>
           <p className="text-slate-400 text-sm font-medium italic">Kelola arus kas operasional organisasi</p>
@@ -585,7 +587,7 @@ const KasOrganisasi = () => {
                 onChange={(e) => setYearFilter(Number(e.target.value))}
                 className="bg-transparent text-sm font-black px-3 py-2 outline-none text-slate-600"
               >
-                {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
+                {Array.from({ length: new Date().getFullYear() + 2 - 2020 + 1 }, (_, i) => 2020 + i).map(y => <option key={y} value={y}>{y}</option>)}
               </select>
             </div>
             <div className="relative">

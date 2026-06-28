@@ -7,7 +7,6 @@ import Sidebar from "@/app/_components/Sidebar";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  FaArrowLeft, 
   FaChartPie, 
   FaArrowTrendUp, 
   FaArrowTrendDown, 
@@ -21,6 +20,7 @@ import TargetRealisasiSection from "./sections/TargetRealisasi";
 import PemasukanSection from "./sections/Pemasukan";
 import PengeluaranSection from "./sections/Pengeluaran";
 import TahunanSection from "./sections/Tahunan";
+import BackButton from "../components/BackButton";
 import SaldoAkhirSection from "./sections/SaldoAkhir";
 
 export default function KeuanganLaporan() {
@@ -70,12 +70,7 @@ function KeuanganLaporanContent() {
           {/* Header Section */}
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <div className="flex items-center space-x-4">
-              <button 
-                onClick={() => router.back()}
-                className="p-3 bg-white rounded-2xl shadow-sm border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all active:scale-95"
-              >
-                <FaArrowLeft />
-              </button>
+              <BackButton />
               <div>
                 <h1 className="text-2xl font-black text-slate-800 tracking-tight">Laporan Keuangan</h1>
                 <p className="text-slate-400 text-sm font-medium">Analisis transparan data kas & iuran</p>

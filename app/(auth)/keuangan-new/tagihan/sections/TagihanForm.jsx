@@ -16,6 +16,7 @@ import {
   FaCog,
   FaTag
 } from "react-icons/fa";
+import BackButton from "../../components/BackButton";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import * as XLSX from "xlsx";
 import toast, { Toaster } from "react-hot-toast";
@@ -32,7 +33,9 @@ const TagihanForm = () => {
   const [summary, setSummary] = useState({
     totalTagihan: 0,
     totalPembayaran: 0,
-    sisa: 0
+    sisa: 0,
+    totalTargetRealisasi: 0,
+    sisaRealisasi: 0
   });
 
   const months = [
@@ -44,7 +47,7 @@ const TagihanForm = () => {
     { value: "11", label: "November" }, { value: "12", label: "Desember" }
   ];
   const currentYear = new Date().getFullYear();
-  const yearOptions = Array.from({ length: 11 }, (_, index) => currentYear - 5 + index);
+  const yearOptions = Array.from({ length: new Date().getFullYear() + 2 - 2020 + 1 }, (_, i) => 2020 + i);
 
   const monthValueToLabel = Object.fromEntries(months.map(m => [m.value, m.label]));
 
@@ -64,6 +67,7 @@ const TagihanForm = () => {
   const [tunggakanList, setTunggakanList] = useState([]);
   const [totalTunggakan, setTotalTunggakan] = useState(0);
   const [showTunggakan, setShowTunggakan] = useState(false);
+  const [bankTargetMap, setBankTargetMap] = useState({});
 
   // Data Lists
   const [posPenerimaanList, setPosPenerimaanList] = useState([]);
@@ -104,8 +108,19 @@ const TagihanForm = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await GlobalApi.getTransaksiCabangByBulanTahun(Number(monthFilter), Number(yearFilter));
+      const [data, bankIuran] = await Promise.all([
+        GlobalApi.getTransaksiCabangByBulanTahun(Number(monthFilter), Number(yearFilter)),
+        GlobalApi.getRekapByPeriode(months.find(m => m.value === monthFilter)?.label, yearFilter).catch(() => []),
+      ]);
       const rawList = Array.isArray(data) ? data : data?.data || [];
+
+      const toArray = (d) => Array.isArray(d) ? d : d?.data || [];
+      const bankMap = {};
+      toArray(bankIuran).forEach(item => {
+        const key = (item.cabang || "").trim().toUpperCase();
+        bankMap[key] = Number(item.potonganBank || 0);
+      });
+      setBankTargetMap(bankMap);
 
       let totalTagihan = 0;
       let totalPembayaran = 0;
@@ -127,7 +142,8 @@ const TagihanForm = () => {
       });
 
       setTransactions(processed);
-      setSummary({ totalTagihan, totalPembayaran, sisa: totalTagihan - totalPembayaran });
+      const totalTarget = Object.values(bankMap).reduce((s, v) => s + v, 0);
+      setSummary({ totalTagihan, totalPembayaran, sisa: totalTagihan - totalPembayaran, totalTargetRealisasi: totalTarget, sisaRealisasi: totalPembayaran - totalTarget });
     } catch (error) {
       console.error("Error fetching cabang transactions:", error);
       toast.error("Gagal memuat data tagihan cabang.");
@@ -182,6 +198,8 @@ const TagihanForm = () => {
         const pembayaranWithoutExcluded = g.items
           .filter(item => !excludedPos.includes((item.pos || "").toUpperCase()))
           .reduce((sum, item) => sum + item.pembayaran, 0);
+        const cabangKey = g.cabang.trim().toUpperCase();
+        const targetRealisasi = bankTargetMap[cabangKey] || 0;
         return {
           ...g,
           totalTagihan: tagihanWithoutExcluded,
@@ -195,23 +213,24 @@ const TagihanForm = () => {
             if (!['DASPEN', 'IURAN', 'IURAN PGRI', 'STUDI TIRU', 'DERAP', 'SANDUKA'].includes(k) && !excludedPos.includes(k)) sum += v;
             return sum;
           }, 0),
-          selisih: pembayaranWithoutExcluded - tagihanWithoutExcluded
+          targetRealisasi,
+          selisih: targetRealisasi - tagihanWithoutExcluded
         };
       })
       .sort((a, b) => a.cabang.localeCompare(b.cabang));
-  }, [transactions, cabangFilter, searchQuery]);
+  }, [transactions, cabangFilter, searchQuery, bankTargetMap]);
 
   const exportToExcel = () => {
     try {
       if (viewMode === "rekap") {
         const excelData = [
-          ["No", "Cabang", "Daspen", "Iuran", "Studi Tiru", "Derap", "Sanduka", "Lainnya", "Jumlah", "Pembayaran", "Selisih"]
+          ["No", "Cabang", "Daspen", "Iuran", "Studi Tiru", "Derap", "Sanduka", "Lainnya", "Jumlah", "Pembayaran", "Target Realisasi", "Selisih"]
         ];
         cabangSummary.forEach((g, i) => {
           excelData.push([
             i + 1, g.cabang,
             g.daspen || "", g.iuran || "", g.studiTiru || "", g.derap || "", g.sanduka || "", g.lainnya || "",
-            g.totalTagihan, g.totalPembayaran, g.selisih
+            g.totalTagihan, g.totalPembayaran, g.targetRealisasi, g.selisih
           ]);
         });
         excelData.push([]);
@@ -222,7 +241,9 @@ const TagihanForm = () => {
           cabangSummary.reduce((s, g) => s + g.derap, 0),
           cabangSummary.reduce((s, g) => s + g.sanduka, 0),
           cabangSummary.reduce((s, g) => s + g.lainnya, 0),
-          summary.totalTagihan, summary.totalPembayaran, summary.sisa
+          summary.totalTagihan, summary.totalPembayaran,
+          cabangSummary.reduce((s, g) => s + g.targetRealisasi, 0),
+          summary.sisa
         ]);
         const ws = XLSX.utils.aoa_to_sheet(excelData);
         const wb = XLSX.utils.book_new();
@@ -604,7 +625,8 @@ const TagihanForm = () => {
       <Toaster position="top-center" />
 
       {/* Page Title */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-2">
+      <div className="flex items-center gap-3 mb-2">
+        <BackButton />
         <div>
           <h1 className="text-2xl font-black text-slate-800 tracking-tight">Tagihan Cabang</h1>
           <p className="text-slate-400 text-sm font-medium italic">Kelola tagihan dan pembayaran cabang</p>
@@ -744,7 +766,8 @@ const TagihanForm = () => {
                   <th className="px-2 sm:px-3 py-3 text-right whitespace-nowrap">Sanduka</th>
                   <th className="px-2 sm:px-3 py-3 text-right whitespace-nowrap">Lainnya</th>
                   <th className="px-2 sm:px-3 py-3 text-right whitespace-nowrap">Jumlah</th>
-                  <th className="px-2 sm:px-3 py-3 text-right whitespace-nowrap">Pembayaran</th>
+                  <th className="px-2 sm:px-3 py-3 text-right whitespace-nowrap">Total Tagihan</th>
+                  <th className="px-2 sm:px-3 py-3 text-right whitespace-nowrap">Target Realisasi</th>
                   <th className="px-2 sm:px-3 py-3 text-right whitespace-nowrap">Selisih</th>
                 </tr>
               </thead>
@@ -752,13 +775,11 @@ const TagihanForm = () => {
                 {loading ? (
                   Array(5).fill(0).map((_, i) => (
                     <tr key={i} className="animate-pulse">
-                      <td colSpan="11" className="px-3 py-5"><div className="h-4 bg-slate-100 rounded w-full"></div></td>
+                      <td colSpan="12" className="px-3 py-5"><div className="h-4 bg-slate-100 rounded w-full"></div></td>
                     </tr>
                   ))
                 ) : cabangSummary.length > 0 ? (
                   cabangSummary.map((g, i) => {
-                    const selisih = g.selisih;
-                    const isDefisit = selisih < 0;
                     return (
                       <tr key={g.cabang} onClick={() => { setCabangFilter(g.cabang); setViewMode("detail"); }} className="hover:bg-violet-50/50 transition-all text-[11px] sm:text-xs cursor-pointer">
                         <td className="px-2 sm:px-3 py-3 text-center font-bold text-slate-400">{i + 1}</td>
@@ -771,15 +792,16 @@ const TagihanForm = () => {
                         <td className="px-2 sm:px-3 py-3 text-right font-mono font-bold text-slate-400">{g.lainnya > 0 ? formatCurrency(g.lainnya) : "-"}</td>
                         <td className="px-2 sm:px-3 py-3 text-right font-mono font-bold text-violet-600">{formatCurrency(g.totalTagihan)}</td>
                         <td className="px-2 sm:px-3 py-3 text-right font-mono font-bold text-emerald-600">{formatCurrency(g.totalPembayaran)}</td>
-                        <td className={`px-2 sm:px-3 py-3 text-right font-mono font-bold ${isDefisit ? "text-rose-600" : "text-emerald-600"}`}>
-                          {isDefisit ? `(${formatCurrency(Math.abs(selisih))})` : formatCurrency(selisih)}
+                        <td className="px-2 sm:px-3 py-3 text-right font-mono font-bold text-blue-600">{g.targetRealisasi > 0 ? formatCurrency(g.targetRealisasi) : "-"}</td>
+                        <td className={`px-2 sm:px-3 py-3 text-right font-mono font-bold ${g.selisih > 0 ? "text-emerald-600" : g.selisih < 0 ? "text-rose-600" : "text-slate-400"}`}>
+                          {g.selisih > 0 ? formatCurrency(g.selisih) : g.selisih < 0 ? `- ${formatCurrency(Math.abs(g.selisih))}` : "Rp 0"}
                         </td>
                       </tr>
                     );
                   })
                 ) : (
                   <tr>
-                    <td colSpan="11" className="px-3 py-16 text-center">
+                    <td colSpan="12" className="px-3 py-16 text-center">
                       <FaInfoCircle className="text-slate-100 text-5xl mx-auto mb-3" />
                       <p className="text-slate-400 font-bold text-sm">Data tagihan tidak ditemukan</p>
                     </td>
@@ -798,8 +820,9 @@ const TagihanForm = () => {
                     <td className="px-2 sm:px-3 py-4 text-right font-mono">{formatCurrency(cabangSummary.reduce((s, g) => s + g.lainnya, 0))}</td>
                     <td className="px-2 sm:px-3 py-4 text-right font-mono text-violet-300">{formatCurrency(summary.totalTagihan)}</td>
                     <td className="px-2 sm:px-3 py-4 text-right font-mono text-emerald-300">{formatCurrency(summary.totalPembayaran)}</td>
-                    <td className={`px-2 sm:px-3 py-4 text-right font-mono ${summary.sisa < 0 ? "text-rose-300" : "text-emerald-300"}`}>
-                      {summary.sisa < 0 ? `(${formatCurrency(Math.abs(summary.sisa))})` : formatCurrency(summary.sisa)}
+                    <td className="px-2 sm:px-3 py-4 text-right font-mono text-blue-300">{formatCurrency(cabangSummary.reduce((s, g) => s + g.targetRealisasi, 0))}</td>
+                    <td className={`px-2 sm:px-3 py-4 text-right font-mono ${(() => { const sel = cabangSummary.reduce((s, g) => s + g.targetRealisasi, 0) - summary.totalTagihan; return sel > 0 ? "text-emerald-300" : sel < 0 ? "text-rose-300" : "text-slate-300"; })()}`}>
+                      {(() => { const sel = cabangSummary.reduce((s, g) => s + g.targetRealisasi, 0) - summary.totalTagihan; return sel > 0 ? formatCurrency(sel) : sel < 0 ? `- ${formatCurrency(Math.abs(sel))}` : "Rp 0"; })()}
                     </td>
                   </tr>
                 </tfoot>
@@ -905,7 +928,7 @@ const TagihanForm = () => {
                 {/* Cabang */}
                 <div>
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Cabang</label>
-                    <select required value={formCabang.cabang} onChange={(e) => {
+                  <select required value={formCabang.cabang} onChange={(e) => {
                     const cabangVal = e.target.value;
                     setFormCabang(prev => ({ ...prev, cabang: cabangVal, items: [{ pos: "", tagihan: "", pembayaran: "", keterangan: "" }] }));
                     fetchPeruntukanCabang(cabangVal, formCabang.setoranBulan, formCabang.setoranTahun, 0);

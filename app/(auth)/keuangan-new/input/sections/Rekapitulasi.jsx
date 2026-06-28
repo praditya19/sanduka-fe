@@ -208,7 +208,7 @@ export default function RekapitulasiSection() {
         </select>
         <select value={selectedYear} onChange={e => setSelectedYear(Number(e.target.value))}
           className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl outline-none text-sm font-bold text-slate-700">
-          {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map(y => (
+          {Array.from({ length: new Date().getFullYear() + 2 - 2020 + 1 }, (_, i) => 2020 + i).map(y => (
             <option key={y} value={y}>{y}</option>
           ))}
         </select>
