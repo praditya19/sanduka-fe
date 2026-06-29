@@ -8,7 +8,8 @@ import {
   FaChartLine,
   FaBook,
   FaUniversity,
-  FaTags
+  FaTags,
+  FaReceipt
 } from "react-icons/fa";
 import Link from "next/link";
 
@@ -41,6 +42,13 @@ const QuickActions = () => {
       icon: <FaTags />,
       color: "bg-violet-500",
       href: "/keuangan-new/tagihan",
+    },
+    {
+      title: "Kwitansi",
+      subtitle: "Cetak Tanda Terima",
+      icon: <FaReceipt />,
+      color: "bg-rose-500",
+      href: "/keuangan-new/kwitansi",
     },
     {
       title: "Laporan Keuangan Sanduka",

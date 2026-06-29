@@ -3,9 +3,9 @@ import React, { useState, useEffect } from "react";
 import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
-import TagihanForm from "./sections/TagihanForm";
+import KwitansiForm from "./sections/KwitansiForm";
 
-export default function TagihanPage() {
+export default function KwitansiPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -28,7 +28,7 @@ export default function TagihanPage() {
         <HeaderMobile toggleSidebar={toggleSidebar} />
 
         <main className="p-4 md:p-8 mt-24 md:mt-20">
-          <TagihanForm />
+          <KwitansiForm />
         </main>
       </div>
     </div>
