@@ -71,6 +71,7 @@ const TagihanForm = () => {
 
   // Data Lists
   const [posPenerimaanList, setPosPenerimaanList] = useState([]);
+
   const [cabangList, setCabangList] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
@@ -96,7 +97,7 @@ const TagihanForm = () => {
     try {
       const [resPosIn, resCabang] = await Promise.all([
         GlobalApi.getPosPenerimaanUmum(),
-        GlobalApi.getCabang()
+        GlobalApi.getCabang(),
       ]);
       setPosPenerimaanList((resPosIn || []).sort((a, b) => a.namaPosPenerimaan.localeCompare(b.namaPosPenerimaan)));
       setCabangList((resCabang.data || []).sort((a, b) => a.kecamatan.localeCompare(b.kecamatan)));
@@ -226,8 +227,10 @@ const TagihanForm = () => {
           studiTiru: posMap['STUDI TIRU'] || 0,
           derap: posMap['DERAP'] || 0,
           sanduka: posMap['SANDUKA'] || 0,
+          kalender: posMap['KALENDER'] || 0,
+          hut: posMap['HUT'] || 0,
           lainnya: Object.entries(posMap).reduce((sum, [k, v]) => {
-            if (!['DASPEN', 'IURAN', 'IURAN PGRI', 'STUDI TIRU', 'DERAP', 'SANDUKA'].includes(k) && !excludedPos.includes(k)) sum += v;
+            if (!['DASPEN', 'IURAN', 'IURAN PGRI', 'STUDI TIRU', 'DERAP', 'SANDUKA', 'KALENDER', 'HUT'].includes(k) && !excludedPos.includes(k)) sum += v;
             return sum;
           }, 0),
           targetRealisasi: targetRealisasiFinal,
@@ -241,12 +244,13 @@ const TagihanForm = () => {
     try {
       if (viewMode === "rekap") {
         const excelData = [
-          ["No", "Cabang", "Daspen", "Iuran", "Studi Tiru", "Derap", "Sanduka", "Lainnya", "Jumlah", "Pembayaran", "Target Realisasi", "Selisih"]
+          ["No", "Cabang", "Daspen", "Iuran", "Studi Tiru", "Derap", "Sanduka", "Kalender", "Hut", "Lainnya", "Jumlah", "Pembayaran", "Target Realisasi", "Selisih"]
         ];
         cabangSummary.forEach((g, i) => {
           excelData.push([
             i + 1, g.cabang,
-            g.daspen || "", g.iuran || "", g.studiTiru || "", g.derap || "", g.sanduka || "", g.lainnya || "",
+            g.daspen || "", g.iuran || "", g.studiTiru || "", g.derap || "", g.sanduka || "",
+            g.kalender || "", g.hut || "", g.lainnya || "",
             g.totalTagihan, g.totalPembayaran, g.targetRealisasi, g.selisih
           ]);
         });
@@ -257,6 +261,8 @@ const TagihanForm = () => {
           cabangSummary.reduce((s, g) => s + g.studiTiru, 0),
           cabangSummary.reduce((s, g) => s + g.derap, 0),
           cabangSummary.reduce((s, g) => s + g.sanduka, 0),
+          cabangSummary.reduce((s, g) => s + g.kalender, 0),
+          cabangSummary.reduce((s, g) => s + g.hut, 0),
           cabangSummary.reduce((s, g) => s + g.lainnya, 0),
           summary.totalTagihan, summary.totalPembayaran,
           cabangSummary.reduce((s, g) => s + g.targetRealisasi, 0),
@@ -774,43 +780,47 @@ const TagihanForm = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-900 text-[9px] uppercase font-black text-white tracking-wider">
-                  <th className="px-2 sm:px-3 py-3 text-center w-8">No</th>
-                  <th className="px-2 sm:px-3 py-3 text-left whitespace-nowrap">Cabang</th>
-                  <th className="px-2 sm:px-3 py-3 text-right whitespace-nowrap">Daspen</th>
-                  <th className="px-2 sm:px-3 py-3 text-right whitespace-nowrap">Iuran</th>
-                  <th className="px-2 sm:px-3 py-3 text-right whitespace-nowrap">Studi Tiru</th>
-                  <th className="px-2 sm:px-3 py-3 text-right whitespace-nowrap">Derap</th>
-                  <th className="px-2 sm:px-3 py-3 text-right whitespace-nowrap">Sanduka</th>
-                  <th className="px-2 sm:px-3 py-3 text-right whitespace-nowrap">Lainnya</th>
-                  <th className="px-2 sm:px-3 py-3 text-right whitespace-nowrap">Jumlah</th>
-                  <th className="px-2 sm:px-3 py-3 text-right whitespace-nowrap">Total Tagihan</th>
-                  <th className="px-2 sm:px-3 py-3 text-right whitespace-nowrap">Target Realisasi</th>
-                  <th className="px-2 sm:px-3 py-3 text-right whitespace-nowrap">Selisih</th>
+                  <th className="px-1.5 sm:px-2 py-3 text-center w-6">No</th>
+                  <th className="px-1.5 sm:px-2 py-3 text-left whitespace-nowrap">Cabang</th>
+                  <th className="px-1.5 sm:px-2 py-3 text-right whitespace-nowrap">Daspen</th>
+                  <th className="px-1.5 sm:px-2 py-3 text-right whitespace-nowrap">Iuran</th>
+                  <th className="px-1.5 sm:px-2 py-3 text-right whitespace-nowrap">Studi Tiru</th>
+                  <th className="px-1.5 sm:px-2 py-3 text-right whitespace-nowrap">Derap</th>
+                  <th className="px-1.5 sm:px-2 py-3 text-right whitespace-nowrap">Sanduka</th>
+                  <th className="px-1.5 sm:px-2 py-3 text-right whitespace-nowrap">Kalender</th>
+                  <th className="px-1.5 sm:px-2 py-3 text-right whitespace-nowrap">Hut</th>
+                  <th className="px-1.5 sm:px-2 py-3 text-right whitespace-nowrap">Lainnya</th>
+                  <th className="px-1.5 sm:px-2 py-3 text-right whitespace-nowrap">Jumlah</th>
+                  <th className="px-1.5 sm:px-2 py-3 text-right whitespace-nowrap">Total Tagihan</th>
+                  <th className="px-1.5 sm:px-2 py-3 text-right whitespace-nowrap">Target Realisasi</th>
+                  <th className="px-1.5 sm:px-2 py-3 text-right whitespace-nowrap">Selisih</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {loading ? (
                   Array(5).fill(0).map((_, i) => (
                     <tr key={i} className="animate-pulse">
-                      <td colSpan="12" className="px-3 py-5"><div className="h-4 bg-slate-100 rounded w-full"></div></td>
+                      <td colSpan="14" className="px-3 py-5"><div className="h-4 bg-slate-100 rounded w-full"></div></td>
                     </tr>
                   ))
                 ) : cabangSummary.length > 0 ? (
                   cabangSummary.map((g, i) => {
                     return (
                       <tr key={g.cabang} onClick={() => { setCabangFilter(g.cabang); setViewMode("detail"); }} className="hover:bg-violet-50/50 transition-all text-[11px] sm:text-xs cursor-pointer">
-                        <td className="px-2 sm:px-3 py-3 text-center font-bold text-slate-400">{i + 1}</td>
-                        <td className="px-2 sm:px-3 py-3 font-bold text-slate-700 whitespace-nowrap">{g.cabang}</td>
-                        <td className="px-2 sm:px-3 py-3 text-right font-mono font-bold text-slate-600">{g.daspen > 0 ? formatCurrency(g.daspen) : "-"}</td>
-                        <td className="px-2 sm:px-3 py-3 text-right font-mono font-bold text-slate-600">{g.iuran > 0 ? formatCurrency(g.iuran) : "-"}</td>
-                        <td className="px-2 sm:px-3 py-3 text-right font-mono font-bold text-slate-600">{g.studiTiru > 0 ? formatCurrency(g.studiTiru) : "-"}</td>
-                        <td className="px-2 sm:px-3 py-3 text-right font-mono font-bold text-slate-600">{g.derap > 0 ? formatCurrency(g.derap) : "-"}</td>
-                        <td className="px-2 sm:px-3 py-3 text-right font-mono font-bold text-slate-600">{g.sanduka > 0 ? formatCurrency(g.sanduka) : "-"}</td>
-                        <td className="px-2 sm:px-3 py-3 text-right font-mono font-bold text-slate-400">{g.lainnya > 0 ? formatCurrency(g.lainnya) : "-"}</td>
-                        <td className="px-2 sm:px-3 py-3 text-right font-mono font-bold text-violet-600">{formatCurrency(g.totalTagihan)}</td>
-                        <td className="px-2 sm:px-3 py-3 text-right font-mono font-bold text-emerald-600">{formatCurrency(g.totalPembayaran)}</td>
-                        <td className="px-2 sm:px-3 py-3 text-right font-mono font-bold text-blue-600">{g.targetRealisasi > 0 ? formatCurrency(g.targetRealisasi) : "-"}</td>
-                        <td className={`px-2 sm:px-3 py-3 text-right font-mono font-bold ${g.selisih > 0 ? "text-emerald-600" : g.selisih < 0 ? "text-rose-600" : "text-slate-400"}`}>
+                        <td className="px-1.5 sm:px-2 py-3 text-center font-bold text-slate-400">{i + 1}</td>
+                        <td className="px-1.5 sm:px-2 py-3 font-bold text-slate-700 whitespace-nowrap">{g.cabang}</td>
+                        <td className="px-1.5 sm:px-2 py-3 text-right font-mono font-bold text-slate-600">{g.daspen > 0 ? formatCurrency(g.daspen) : "-"}</td>
+                        <td className="px-1.5 sm:px-2 py-3 text-right font-mono font-bold text-slate-600">{g.iuran > 0 ? formatCurrency(g.iuran) : "-"}</td>
+                        <td className="px-1.5 sm:px-2 py-3 text-right font-mono font-bold text-slate-600">{g.studiTiru > 0 ? formatCurrency(g.studiTiru) : "-"}</td>
+                        <td className="px-1.5 sm:px-2 py-3 text-right font-mono font-bold text-slate-600">{g.derap > 0 ? formatCurrency(g.derap) : "-"}</td>
+                        <td className="px-1.5 sm:px-2 py-3 text-right font-mono font-bold text-slate-600">{g.sanduka > 0 ? formatCurrency(g.sanduka) : "-"}</td>
+                        <td className="px-1.5 sm:px-2 py-3 text-right font-mono font-bold text-slate-600">{g.kalender > 0 ? formatCurrency(g.kalender) : "-"}</td>
+                        <td className="px-1.5 sm:px-2 py-3 text-right font-mono font-bold text-slate-600">{g.hut > 0 ? formatCurrency(g.hut) : "-"}</td>
+                        <td className="px-1.5 sm:px-2 py-3 text-right font-mono font-bold text-slate-400">{g.lainnya > 0 ? formatCurrency(g.lainnya) : "-"}</td>
+                        <td className="px-1.5 sm:px-2 py-3 text-right font-mono font-bold text-violet-600">{formatCurrency(g.totalTagihan)}</td>
+                        <td className="px-1.5 sm:px-2 py-3 text-right font-mono font-bold text-emerald-600">{formatCurrency(g.totalPembayaran)}</td>
+                        <td className="px-1.5 sm:px-2 py-3 text-right font-mono font-bold text-blue-600">{g.targetRealisasi > 0 ? formatCurrency(g.targetRealisasi) : "-"}</td>
+                        <td className={`px-1.5 sm:px-2 py-3 text-right font-mono font-bold ${g.selisih > 0 ? "text-emerald-600" : g.selisih < 0 ? "text-rose-600" : "text-slate-400"}`}>
                           {g.selisih > 0 ? formatCurrency(g.selisih) : g.selisih < 0 ? `- ${formatCurrency(Math.abs(g.selisih))}` : "Rp 0"}
                         </td>
                       </tr>
@@ -818,7 +828,7 @@ const TagihanForm = () => {
                   })
                 ) : (
                   <tr>
-                    <td colSpan="12" className="px-3 py-16 text-center">
+                    <td colSpan="14" className="px-3 py-16 text-center">
                       <FaInfoCircle className="text-slate-100 text-5xl mx-auto mb-3" />
                       <p className="text-slate-400 font-bold text-sm">Data tagihan tidak ditemukan</p>
                     </td>
@@ -828,17 +838,19 @@ const TagihanForm = () => {
               {!loading && cabangSummary.length > 0 && (
                 <tfoot>
                   <tr className="bg-slate-800 text-white font-black text-xs">
-                    <td colSpan="2" className="px-2 sm:px-3 py-4 uppercase tracking-wider">Jumlah</td>
-                    <td className="px-2 sm:px-3 py-4 text-right font-mono">{formatCurrency(cabangSummary.reduce((s, g) => s + g.daspen, 0))}</td>
-                    <td className="px-2 sm:px-3 py-4 text-right font-mono">{formatCurrency(cabangSummary.reduce((s, g) => s + g.iuran, 0))}</td>
-                    <td className="px-2 sm:px-3 py-4 text-right font-mono">{formatCurrency(cabangSummary.reduce((s, g) => s + g.studiTiru, 0))}</td>
-                    <td className="px-2 sm:px-3 py-4 text-right font-mono">{formatCurrency(cabangSummary.reduce((s, g) => s + g.derap, 0))}</td>
-                    <td className="px-2 sm:px-3 py-4 text-right font-mono">{formatCurrency(cabangSummary.reduce((s, g) => s + g.sanduka, 0))}</td>
-                    <td className="px-2 sm:px-3 py-4 text-right font-mono">{formatCurrency(cabangSummary.reduce((s, g) => s + g.lainnya, 0))}</td>
-                    <td className="px-2 sm:px-3 py-4 text-right font-mono text-violet-300">{formatCurrency(summary.totalTagihan)}</td>
-                    <td className="px-2 sm:px-3 py-4 text-right font-mono text-emerald-300">{formatCurrency(summary.totalPembayaran)}</td>
-                    <td className="px-2 sm:px-3 py-4 text-right font-mono text-blue-300">{formatCurrency(cabangSummary.reduce((s, g) => s + g.targetRealisasi, 0))}</td>
-                    <td className={`px-2 sm:px-3 py-4 text-right font-mono ${(() => { const sel = cabangSummary.reduce((s, g) => s + g.targetRealisasi, 0) - summary.totalTagihan; return sel > 0 ? "text-emerald-300" : sel < 0 ? "text-rose-300" : "text-slate-300"; })()}`}>
+                    <td colSpan="2" className="px-1.5 sm:px-2 py-4 uppercase tracking-wider">Jumlah</td>
+                    <td className="px-1.5 sm:px-2 py-4 text-right font-mono">{formatCurrency(cabangSummary.reduce((s, g) => s + g.daspen, 0))}</td>
+                    <td className="px-1.5 sm:px-2 py-4 text-right font-mono">{formatCurrency(cabangSummary.reduce((s, g) => s + g.iuran, 0))}</td>
+                    <td className="px-1.5 sm:px-2 py-4 text-right font-mono">{formatCurrency(cabangSummary.reduce((s, g) => s + g.studiTiru, 0))}</td>
+                    <td className="px-1.5 sm:px-2 py-4 text-right font-mono">{formatCurrency(cabangSummary.reduce((s, g) => s + g.derap, 0))}</td>
+                    <td className="px-1.5 sm:px-2 py-4 text-right font-mono">{formatCurrency(cabangSummary.reduce((s, g) => s + g.sanduka, 0))}</td>
+                    <td className="px-1.5 sm:px-2 py-4 text-right font-mono">{formatCurrency(cabangSummary.reduce((s, g) => s + g.kalender, 0))}</td>
+                    <td className="px-1.5 sm:px-2 py-4 text-right font-mono">{formatCurrency(cabangSummary.reduce((s, g) => s + g.hut, 0))}</td>
+                    <td className="px-1.5 sm:px-2 py-4 text-right font-mono">{formatCurrency(cabangSummary.reduce((s, g) => s + g.lainnya, 0))}</td>
+                    <td className="px-1.5 sm:px-2 py-4 text-right font-mono text-violet-300">{formatCurrency(summary.totalTagihan)}</td>
+                    <td className="px-1.5 sm:px-2 py-4 text-right font-mono text-emerald-300">{formatCurrency(summary.totalPembayaran)}</td>
+                    <td className="px-1.5 sm:px-2 py-4 text-right font-mono text-blue-300">{formatCurrency(cabangSummary.reduce((s, g) => s + g.targetRealisasi, 0))}</td>
+                    <td className={`px-1.5 sm:px-2 py-4 text-right font-mono ${(() => { const sel = cabangSummary.reduce((s, g) => s + g.targetRealisasi, 0) - summary.totalTagihan; return sel > 0 ? "text-emerald-300" : sel < 0 ? "text-rose-300" : "text-slate-300"; })()}`}>
                       {(() => { const sel = cabangSummary.reduce((s, g) => s + g.targetRealisasi, 0) - summary.totalTagihan; return sel > 0 ? formatCurrency(sel) : sel < 0 ? `- ${formatCurrency(Math.abs(sel))}` : "Rp 0"; })()}
                     </td>
                   </tr>
@@ -1079,7 +1091,9 @@ const TagihanForm = () => {
                           <div className="grid grid-cols-2 gap-3">
                             <div>
                               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Pos</label>
-                              <select disabled={!formCabang.cabang} required={idx === 0} value={item.pos} onChange={(e) => handleItemPosChange(idx, e.target.value)} className="w-full px-3 py-2.5 bg-white border border-violet-100 rounded-xl outline-none font-bold text-sm text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                              <select disabled={!formCabang.cabang} required={idx === 0} value={item.pos} onChange={(e) => {
+                                handleItemPosChange(idx, e.target.value);
+                              }} className="w-full px-3 py-2.5 bg-white border border-violet-100 rounded-xl outline-none font-bold text-sm text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
                                 <option value="">{formCabang.cabang ? "Pilih Pos" : "Pilih Cabang dulu"}</option>
                                 {posPenerimaanList.map(p => <option key={p.id} value={p.namaPosPenerimaan}>{p.namaPosPenerimaan}</option>)}
                               </select>
