@@ -143,7 +143,18 @@ const TagihanForm = () => {
 
       setTransactions(processed);
       const totalTarget = Object.values(bankMap).reduce((s, v) => s + v, 0);
-      setSummary({ totalTagihan, totalPembayaran, sisa: totalTagihan - totalPembayaran, totalTargetRealisasi: totalTarget, sisaRealisasi: totalPembayaran - totalTarget });
+
+      const pemasukanBankGlobal = rawList
+        .filter(item => (item.pos || "").toUpperCase() === 'PEMASUKAN DARI BANK')
+        .reduce((sum, item) => sum + Number(item.pembayaran || 0), 0);
+
+      setSummary({
+        totalTagihan,
+        totalPembayaran,
+        sisa: totalTagihan - totalPembayaran,
+        totalTargetRealisasi: totalTarget + pemasukanBankGlobal,
+        sisaRealisasi: totalPembayaran - (totalTarget + pemasukanBankGlobal)
+      });
     } catch (error) {
       console.error("Error fetching cabang transactions:", error);
       toast.error("Gagal memuat data tagihan cabang.");
@@ -200,6 +211,12 @@ const TagihanForm = () => {
           .reduce((sum, item) => sum + item.pembayaran, 0);
         const cabangKey = g.cabang.trim().toUpperCase();
         const targetRealisasi = bankTargetMap[cabangKey] || 0;
+        const pemasukanBankTotal = g.items
+          .filter(item => (item.pos || "").toUpperCase() === 'PEMASUKAN DARI BANK')
+          .reduce((sum, item) => sum + (item.pembayaran || 0), 0);
+
+        const targetRealisasiFinal = targetRealisasi + pemasukanBankTotal;
+
         return {
           ...g,
           totalTagihan: tagihanWithoutExcluded,
@@ -213,8 +230,8 @@ const TagihanForm = () => {
             if (!['DASPEN', 'IURAN', 'IURAN PGRI', 'STUDI TIRU', 'DERAP', 'SANDUKA'].includes(k) && !excludedPos.includes(k)) sum += v;
             return sum;
           }, 0),
-          targetRealisasi,
-          selisih: targetRealisasi - tagihanWithoutExcluded
+          targetRealisasi: targetRealisasiFinal,
+          selisih: targetRealisasiFinal - tagihanWithoutExcluded
         };
       })
       .sort((a, b) => a.cabang.localeCompare(b.cabang));
