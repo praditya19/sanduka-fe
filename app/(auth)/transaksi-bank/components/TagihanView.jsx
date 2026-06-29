@@ -584,9 +584,10 @@ const TagihanView = ({ dataIuran, dataAnggota, loading }) => {
                         </div>
                       </div> */}
 
-                      <div className="rounded-xl overflow-hidden shadow-lg">
-                        <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-4 flex items-center">
-                          <div className="bg-white/20 rounded-full p-2 mr-3 backdrop-blur-sm">
+                      <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-4 rounded-xl shadow-lg">
+                        {/* Header */}
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="bg-white/20 rounded-full p-2 backdrop-blur-sm flex-shrink-0">
                             <svg
                               className="w-5 h-5 text-white"
                               fill="none"
@@ -602,179 +603,51 @@ const TagihanView = ({ dataIuran, dataAnggota, loading }) => {
                               ></path>
                             </svg>
                           </div>
-                          <h3 className="text-lg md:text-xl font-bold text-white">
-                            Rincian Tagihan Bulan{" "}
-                            <span className="relative inline-block">
-                              <span className="text-yellow-300 font-black">
-                                {getNamaBulan(dataIuran.bulan)}
-                              </span>
-                              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-yellow-400/50 to-yellow-400/0"></span>
-                            </span>{" "}
-                            Tahun{" "}
-                            <span className="relative inline-block">
-                              <span className="text-yellow-300 font-black">
-                                {dataIuran.tahun}
-                              </span>
-                              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-yellow-400/50 to-yellow-400/0"></span>
-                            </span>
+                          <h3 className="text-lg md:text-xl text-white font-normal">
+                            RINCIAN TAGIHAN ANGGOTA
                           </h3>
                         </div>
 
-                        <div className="bg-white p-4 md:p-6">
-                          <div className="space-y-3">
-                            {dataIuran.pgri > 0 && (
-                              <div className="flex justify-between items-center p-2 hover:bg-blue-50 rounded-lg transition-colors">
-                                <div className="flex items-center">
-                                  <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
-                                  <span className="text-gray-700 font-medium">
-                                    Iuran Anggota
-                                  </span>
-                                </div>
-                                <span className="font-semibold text-gray-900">
-                                  Rp. {dataIuran.pgri?.toLocaleString("id-ID")}
-                                </span>
-                              </div>
-                            )}
-
-                            {dataIuran.sanduka > 0 && (
-                              <div className="flex justify-between items-center p-2 hover:bg-green-50 rounded-lg transition-colors">
-                                <div className="flex items-center">
-                                  <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
-                                  <span className="text-gray-700 font-medium">
-                                    Sanduka
-                                  </span>
-                                </div>
-                                <span className="font-semibold text-gray-900">
-                                  Rp.{" "}
-                                  {dataIuran.sanduka?.toLocaleString("id-ID")}
-                                </span>
-                              </div>
-                            )}
-
-                            {dataIuran.daspen > 0 && (
-                              <div className="flex justify-between items-center p-2 hover:bg-purple-50 rounded-lg transition-colors">
-                                <div className="flex items-center">
-                                  <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
-                                  <span className="text-gray-700 font-medium">
-                                    Daspen
-                                  </span>
-                                </div>
-                                <span className="font-semibold text-gray-900">
-                                  Rp.{" "}
-                                  {dataIuran.daspen?.toLocaleString("id-ID")}
-                                </span>
-                              </div>
-                            )}
-
-                            {dataIuran.derap > 0 && (
-                              <div className="flex justify-between items-center p-2 hover:bg-yellow-50 rounded-lg transition-colors">
-                                <div className="flex items-center">
-                                  <div className="w-3 h-3 bg-yellow-500 rounded-full mr-3"></div>
-                                  <span className="text-gray-700 font-medium">
-                                    Derap
-                                  </span>
-                                </div>
-                                <span className="font-semibold text-gray-900">
-                                  Rp. {dataIuran.derap?.toLocaleString("id-ID")}
-                                </span>
-                              </div>
-                            )}
-
-                            {dataIuran.kalender > 0 && (
-                              <div className="flex justify-between items-center p-2 hover:bg-red-50 rounded-lg transition-colors">
-                                <div className="flex items-center">
-                                  <div className="w-3 h-3 bg-red-500 rounded-full mr-3"></div>
-                                  <span className="text-gray-700 font-medium">
-                                    Kalender
-                                  </span>
-                                </div>
-                                <span className="font-semibold text-gray-900">
-                                  Rp.{" "}
-                                  {dataIuran.kalender?.toLocaleString("id-ID")}
-                                </span>
-                              </div>
-                            )}
-
-                            {dataIuran.sumbangan > 0 && (
-                              <div className="p-2 rounded-lg hover:bg-pink-50 transition-colors">
-                                <div className="flex justify-between items-center">
-                                  <div className="flex items-center">
-                                    <div className="w-3 h-3 bg-pink-500 rounded-full mr-3"></div>
-                                    <span className="text-gray-700 font-medium">
-                                      Sumbangan
-                                    </span>
-                                  </div>
-                                </div>
-
-                                {dataIuran?.detailSumbangan?.length > 0 && (
-                                  <div className="mt-2 ml-6 border-l-2 border-pink-300 pl-3 space-y-1">
-                                    {dataIuran.detailSumbangan.map((item) => (
-                                      <div
-                                        key={item.id}
-                                        className="flex justify-between text-gray-700"
-                                      >
-                                        <span className="text-sm">
-                                          • {item.namaSumbangan}
-                                        </span>
-                                        <span className="font-semibold text-gray-900 text-base">
-                                          Rp.{" "}
-                                          {item.jumlah.toLocaleString("id-ID")}
-                                        </span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                            <div className="flex justify-between items-center p-4 mt-3 bg-gradient-to-r from-blue-50 to-white rounded-xl border border-blue-200 shadow-sm hover:shadow-md transition-all duration-300 group">
-                              <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 bg-blue-500 rounded-lg flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300">
-                                  <svg
-                                    className="w-4 h-4 text-white"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth="2.5"
-                                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                  </svg>
-                                </div>
-                                <span className="text-sm font-bold text-blue-700 uppercase tracking-wider">
-                                  Keterangan
-                                </span>
-                              </div>
-                              <div className="flex-1 text-right ml-6">
-                                <p className="text-base md:text-lg font-semibold text-gray-800 leading-relaxed">
-                                  {dataIuran.keterangan || (
-                                    <span className="text-gray-400 font-normal italic">
-                                      Tidak ada keterangan
-                                    </span>
-                                  )}
-                                </p>
-                              </div>
-                            </div>
+                        {/* Informasi Bulan & Tahun */}
+                        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 mb-3">
+                          <div className="flex flex-wrap items-baseline gap-2">
+                            <span className="text-sm text-blue-200">Bulan</span>
+                            <span className="text-lg text-yellow-300">
+                              {getNamaBulan(dataIuran.bulan)}
+                            </span>
+                            <span className="text-sm text-blue-200 ml-2">
+                              Tahun
+                            </span>
+                            <span className="text-lg text-yellow-300">
+                              {dataIuran.tahun}
+                            </span>
                           </div>
+                        </div>
 
-                          <div className="mt-6 pt-4 border-t border-dashed border-gray-200">
-                            <div className="flex flex-col sm:flex-row justify-between items-center">
-                              <span className="text-lg font-bold text-blue-800 mb-2 sm:mb-0">
-                                Total Tagihan
-                              </span>
-                              <div className="bg-gradient-to-r from-blue-700 to-blue-900 text-white px-6 py-3 rounded-lg font-bold shadow-md">
-                                Rp.{" "}
-                                {(
-                                  dataIuran.pgri +
-                                  dataIuran.sanduka +
-                                  dataIuran.daspen +
-                                  dataIuran.derap +
-                                  dataIuran.kalender +
-                                  dataIuran.sumbangan
-                                ).toLocaleString("id-ID")}
-                              </div>
+                        {/* Keterangan */}
+                        <div className="bg-white rounded-lg p-3 shadow-inner">
+                          <div className="flex items-start gap-3">
+                            <div className="flex-1">
+                              <p className="text-sm md:text-base text-gray-800 leading-relaxed">
+                                {dataIuran.keterangan === "Sukses" ? (
+                                  <span className="text-green-600">
+                                    ✅ Pembayaran Anda Melalui Bank Jateng
+                                    Sukses
+                                  </span>
+                                ) : dataIuran.keterangan === "Tunai" ? (
+                                  <span className="text-blue-600">
+                                    💰 Pembayaran Anda Tunai
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-600">
+                                    {dataIuran.keterangan || (
+                                      <span className="text-gray-400 italic">
+                                        Tidak ada keterangan
+                                      </span>
+                                    )}
+                                  </span>
+                                )}
+                              </p>
                             </div>
                           </div>
                         </div>
