@@ -129,6 +129,7 @@ function RekapAnggota() {
   const [idIuran, setIdIuran] = useState(null);
   const [statusPegawai, setStatusPegawai] = useState(null);
   const [idByNominal, setIdByNominal] = useState(null);
+  const cekRole = sessionStorage.getItem("role");
 
   // Computed values for Modal
   const groupedIuran = useMemo(() => {
@@ -1263,13 +1264,15 @@ function RekapAnggota() {
                     </div>
                   )}
                 </div>
-                <button
-                  onClick={handleBackupTarget}
-                  disabled={isExporting}
-                  className="flex-1 lg:flex-none px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm shadow-sm"
-                >
-                  Backup Target
-                </button>
+                {cekRole === "SUPERADMIN" && (
+                  <button
+                    onClick={handleBackupTarget}
+                    disabled={isExporting}
+                    className="flex-1 lg:flex-none px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm shadow-sm"
+                  >
+                    Backup Target
+                  </button>
+                )}
               </div>
             </div>
 
