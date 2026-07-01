@@ -509,7 +509,7 @@ const CreateBerita = () => {
                             <option value="DRAFT">
                               📝 Draft - Dalam Proses
                             </option>
-                            {role !== "USER" && (
+                            {role === "SUPERADMIN" && (
                               <option value="PUBLISH">
                                 🚀 Publish - Siap Tayang
                               </option>
