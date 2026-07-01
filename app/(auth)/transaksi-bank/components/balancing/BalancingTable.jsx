@@ -137,7 +137,7 @@ const BalancingTable = ({
                     Keterangan
                   </th>
 
-                  {(cekRole === "SUPERADMIN" || cekRole === "ADMIN") && (
+                  {cekRole === "SUPERADMIN" && (
                     <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
                       Aksi
                     </th>
@@ -226,34 +226,26 @@ const BalancingTable = ({
                         </span>
                       </td>
 
-                      {(cekRole === "SUPERADMIN" || cekRole === "ADMIN") && (
+                      {cekRole === "SUPERADMIN" && (
                         <td className="px-4 py-3 text-center whitespace-nowrap">
                           <div className="flex items-center justify-center gap-2">
-                            {/* Khusus SUPERADMIN */}
-                            {cekRole === "SUPERADMIN" && (
-                              <>
-                                <button
-                                  onClick={() => handleEditClick(item.id)}
-                                  className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-150"
-                                  title="Edit"
-                                >
-                                  <FaEdit className="w-4 h-4" />
-                                </button>
-
-                                <button
-                                  onClick={() => {
-                                    setSelectedId(item.id);
-                                    setShowDeletePopup(true);
-                                  }}
-                                  className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-150"
-                                  title="Hapus"
-                                >
-                                  <FaTrash className="w-4 h-4" />
-                                </button>
-                              </>
-                            )}
-
-                            {/* SUPERADMIN & ADMIN */}
+                            <button
+                              onClick={() => handleEditClick(item.id)}
+                              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-150"
+                              title="Edit"
+                            >
+                              <FaEdit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedId(item.id);
+                                setShowDeletePopup(true);
+                              }}
+                              className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-150"
+                              title="Hapus"
+                            >
+                              <FaTrash className="w-4 h-4" />
+                            </button>
                             <button
                               onClick={() => {
                                 setSelectedNpa(item.npa);
@@ -262,7 +254,6 @@ const BalancingTable = ({
                                 setShowTagihanModal(true);
                               }}
                               className="text-teal-600 hover:text-teal-800 text-xl md:text-lg p-2 md:p-1 hover:bg-teal-50 rounded-full md:rounded transition-colors border md:border-0"
-                              title="Tagihan"
                             >
                               <FaFileInvoiceDollar />
                             </button>
@@ -328,8 +319,9 @@ const BalancingTable = ({
                       </td>
                     ))}
                     <td className="px-4 py-3"></td>
-                    {cekRole === "SUPERADMIN" ||
-                      (cekRole === "ADMIN" && <td className="px-4 py-3"></td>)}
+                    {cekRole === "SUPERADMIN" && (
+                      <td className="px-4 py-3"></td>
+                    )}
                   </tr>
                 </tfoot>
               )}
