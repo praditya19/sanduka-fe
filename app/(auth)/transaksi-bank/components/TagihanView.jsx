@@ -653,6 +653,135 @@ const TagihanView = ({ dataIuran, dataAnggota, loading }) => {
                         </div>
                       </div>
 
+                        <div className="bg-white p-4 md:p-6">
+                          <div className="space-y-3">
+                            {dataIuran.pgri > 0 && (
+                              <div className="flex justify-between items-center p-2 hover:bg-blue-50 rounded-lg transition-colors">
+                                <div className="flex items-center">
+                                  <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+                                  <span className="text-gray-700 font-medium">
+                                    Iuran Anggota
+                                  </span>
+                                </div>
+                                <span className="font-semibold text-gray-900">
+                                  Rp. {dataIuran.pgri?.toLocaleString("id-ID")}
+                                </span>
+                              </div>
+                            )}
+
+                            {dataIuran.sanduka > 0 && (
+                              <div className="flex justify-between items-center p-2 hover:bg-green-50 rounded-lg transition-colors">
+                                <div className="flex items-center">
+                                  <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+                                  <span className="text-gray-700 font-medium">
+                                    Sanduka
+                                  </span>
+                                </div>
+                                <span className="font-semibold text-gray-900">
+                                  Rp.{" "}
+                                  {dataIuran.sanduka?.toLocaleString("id-ID")}
+                                </span>
+                              </div>
+                            )}
+
+                            {dataIuran.daspen > 0 && (
+                              <div className="flex justify-between items-center p-2 hover:bg-purple-50 rounded-lg transition-colors">
+                                <div className="flex items-center">
+                                  <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
+                                  <span className="text-gray-700 font-medium">
+                                    Daspen
+                                  </span>
+                                </div>
+                                <span className="font-semibold text-gray-900">
+                                  Rp.{" "}
+                                  {dataIuran.daspen?.toLocaleString("id-ID")}
+                                </span>
+                              </div>
+                            )}
+
+                            {dataIuran.derap > 0 && (
+                              <div className="flex justify-between items-center p-2 hover:bg-yellow-50 rounded-lg transition-colors">
+                                <div className="flex items-center">
+                                  <div className="w-3 h-3 bg-yellow-500 rounded-full mr-3"></div>
+                                  <span className="text-gray-700 font-medium">
+                                    Derap
+                                  </span>
+                                </div>
+                                <span className="font-semibold text-gray-900">
+                                  Rp. {dataIuran.derap?.toLocaleString("id-ID")}
+                                </span>
+                              </div>
+                            )}
+
+                            {dataIuran.kalender > 0 && (
+                              <div className="flex justify-between items-center p-2 hover:bg-red-50 rounded-lg transition-colors">
+                                <div className="flex items-center">
+                                  <div className="w-3 h-3 bg-red-500 rounded-full mr-3"></div>
+                                  <span className="text-gray-700 font-medium">
+                                    Kalender
+                                  </span>
+                                </div>
+                                <span className="font-semibold text-gray-900">
+                                  Rp.{" "}
+                                  {dataIuran.kalender?.toLocaleString("id-ID")}
+                                </span>
+                              </div>
+                            )}
+
+                            {dataIuran.sumbangan > 0 && (
+                              <div className="p-2 rounded-lg hover:bg-pink-50 transition-colors">
+                                <div className="flex justify-between items-center">
+                                  <div className="flex items-center">
+                                    <div className="w-3 h-3 bg-pink-500 rounded-full mr-3"></div>
+                                    <span className="text-gray-700 font-medium">
+                                      Sumbangan
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {dataIuran?.detailSumbangan?.length > 0 && (
+                                  <div className="mt-2 ml-6 border-l-2 border-pink-300 pl-3 space-y-1">
+                                    {dataIuran.detailSumbangan.map((item) => (
+                                      <div
+                                        key={item.id}
+                                        className="flex justify-between text-gray-700"
+                                      >
+                                        <span className="text-sm">
+                                          • {item.namaSumbangan}
+                                        </span>
+                                        <span className="font-semibold text-gray-900 text-base">
+                                          Rp.{" "}
+                                          {item.jumlah.toLocaleString("id-ID")}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="mt-6 pt-4 border-t border-dashed border-gray-200">
+                            <div className="flex flex-col sm:flex-row justify-between items-center">
+                              <span className="text-lg font-bold text-blue-800 mb-2 sm:mb-0">
+                                Total Tagihan
+                              </span>
+                              <div className="bg-gradient-to-r from-blue-700 to-blue-900 text-white px-6 py-3 rounded-lg font-bold shadow-md">
+                                Rp.{" "}
+                                {(
+                                  dataIuran.pgri +
+                                  dataIuran.sanduka +
+                                  dataIuran.daspen +
+                                  dataIuran.derap +
+                                  dataIuran.kalender +
+                                  dataIuran.sumbangan
+                                ).toLocaleString("id-ID")}
+                              </div>
+                            </div>
+                          </div>
+                          </div>
+                     
+                        
                       <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
                         <button
                           onClick={generateSuratKuasa}
