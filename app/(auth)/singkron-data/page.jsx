@@ -72,10 +72,14 @@ const TableSkeleton = () => (
         <td className="py-4 px-6"><div className="h-4 bg-gray-200 rounded"></div></td>
         <td className="py-4 px-6 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded"></div></td>
         <td className="py-4 px-6 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded"></div></td>
+        <td className="py-4 px-6 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded"></div></td>
+        <td className="py-4 px-6 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded"></div></td>
+        <td className="py-4 px-6 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded-full w-12 h-6"></div></td>
         <td className="py-4 px-6 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded-full w-12 h-6"></div></td>
         <td className="py-4 px-6 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded-full w-12 h-6"></div></td>
         <td className="py-4 px-6 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded-full w-12 h-6"></div></td>
         <td className="py-4 px-6 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded w-20"></div></td>
+        <td className="py-4 px-6 hidden md:table-cell"><div className="h-8 bg-gray-200 rounded-full w-8"></div></td>
         <td className="py-4 px-6 hidden md:table-cell"><div className="h-8 bg-gray-200 rounded-full w-8"></div></td>
       </tr>
     ))}
@@ -353,6 +357,18 @@ const SyncData = () => {
     return <span className={`text-[11px] font-black px-2 py-0.5 rounded-md ${colors[kat.trim()] || "bg-gray-100 text-gray-700"}`}>Kat {kat.trim()}</span>;
   };
 
+  const formatDate = (value) => {
+    if (!value) return "-";
+    try {
+      const d = new Date(value);
+      if (isNaN(d.getTime())) return value;
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd}`;
+    } catch { return value; }
+  };
+
   const handleBackClick = () => router.back();
 
   useEffect(() => {
@@ -536,12 +552,14 @@ const SyncData = () => {
                       <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('namaAnggota')}>Nama <SortIcon field="namaAnggota" /></th>
                       <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('npa')}>NPA <SortIcon field="npa" /></th>
                       <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('nip')}>NIP <SortIcon field="nip" /></th>
+                      <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('tanggalLahir')}>Tgl Lahir <SortIcon field="tanggalLahir" /></th>
                       {activeTab !== "kta" && <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('kategoriDaspen')}>Kat Daspen <SortIcon field="kategoriDaspen" /></th>}
                       <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('dataKtaDigital')}>KTA <SortIcon field="dataKtaDigital" /></th>
                       <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('dataDaspen')}>Daspen <SortIcon field="dataDaspen" /></th>
                       <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('dataSanduka')}>Sanduka <SortIcon field="dataSanduka" /></th>
                       <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('verifikasi')}>Verifikasi <SortIcon field="verifikasi" /></th>
                       <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('statusKeanggotaan')}>Status <SortIcon field="statusKeanggotaan" /></th>
+                      <th scope="col" className="py-3 px-6 text-center">Aksi</th>
                     </>)}
                   </tr>
                 </thead>
@@ -565,12 +583,18 @@ const SyncData = () => {
                               <td className="py-4 px-6 font-medium text-slate-800">{item.namaAnggota}</td>
                               <td className="py-4 px-6 text-center">{item.npa || "-"}</td>
                               <td className="py-4 px-6 text-center">{item.nip || "-"}</td>
+                              <td className="py-4 px-6 text-center">{formatDate(item.tanggalLahir)}</td>
                               {activeTab !== "kta" && <td className="py-4 px-6 text-center">{getKatPill(item.kategoriDaspen)}</td>}
                               <td className="py-4 px-6 text-center">{getBooleanPill(item.dataKtaDigital)}</td>
                               <td className="py-4 px-6 text-center">{getBooleanPill(item.dataDaspen)}</td>
                               <td className="py-4 px-6 text-center">{getBooleanPill(item.dataSanduka)}</td>
                               <td className="py-4 px-6 text-center">{getVerificationPill(item.verifikasi)}</td>
                               <td className="py-4 px-6 text-center">{getStatusPill(item.statusKeanggotaan)}</td>
+                              <td className="py-4 px-6 text-center">
+                                <button onClick={() => handleDeleteClick(item.id)} className="text-red-500 hover:text-red-700 transition p-1" title="Hapus">
+                                  <FaTrash size={16} />
+                                </button>
+                              </td>
                             </>)}
                           </tr>
                           {isMobile && isExpanded && (
@@ -580,6 +604,7 @@ const SyncData = () => {
                                   <div className="flex justify-between text-sm"><span className="font-semibold">Nama</span><span>{item.namaAnggota}</span></div>
                                   <div className="flex justify-between text-sm"><span className="font-semibold">NPA</span><span>{item.npa || "-"}</span></div>
                                   <div className="flex justify-between text-sm"><span className="font-semibold">NIP</span><span>{item.nip || "-"}</span></div>
+                                  <div className="flex justify-between text-sm"><span className="font-semibold">Tgl Lahir</span><span>{formatDate(item.tanggalLahir)}</span></div>
                                   <div className="border-t my-2"></div>
                                   {activeTab !== "kta" && <div className="flex justify-between items-center text-sm"><span className="font-semibold">Kat Daspen</span>{getKatPill(item.kategoriDaspen)}</div>}
                                   <div className="flex justify-between items-center text-sm"><span className="font-semibold">KTA Digital</span>{getBooleanPill(item.dataKtaDigital)}</div>
