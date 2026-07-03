@@ -832,63 +832,62 @@ useEffect(() => {
   };
 
   const handleEditClick = async (id, jenis) => {
-    try {
-      setEditJenis(jenis);
-      let data;
+  try {
+    setEditJenis(jenis);
 
-      if (jenis === "PEMASUKAN") {
-        data = await GlobalApi.getPemasukanKasSandukaById(id);
-        const tanggal = `${data.tanggalTransaksi[0]}-${String(
-          data.tanggalTransaksi[1]
-        ).padStart(2, "0")}-${String(data.tanggalTransaksi[2]).padStart(
-          2,
-          "0"
-        )}`;
+    let data;
 
-        setEditForm({
-          id: data.id,
-          tanggalTransaksi: tanggal,
-          nomorBukti: data.nomorBukti,
-          pos: data.posPenerimaan,
-          setoranBulan: data.setoranBulan,
-          setoranTahun: data.setoranTahun,
-          jenis: data.jenisPenerimaan,
-          cabang: data.cabang,
-          nominal: data.nominal,
-          keterangan: data.keterangan,
-          yangMeninggal: "",
-          namaPenerima: "",
-        });
-      } else if (jenis === "PENGELUARAN") {
-        data = await GlobalApi.getPengeluaranKasSandukaById(id);
-        const tanggal = `${data.tanggalTransaksi[0]}-${String(
-          data.tanggalTransaksi[1]
-        ).padStart(2, "0")}-${String(data.tanggalTransaksi[2]).padStart(
-          2,
-          "0"
-        )}`;
+    if (jenis === "PEMASUKAN") {
+      data = await GlobalApi.getPemasukanKasSandukaById(id);
 
-        setEditForm({
-          id: data.id,
-          tanggalTransaksi: tanggal,
-          nomorBukti: data.nomorBukti,
-          pos: data.posPengeluaran,
-          setoranBulan: data.setoranBulan,
-          setoranTahun: data.setoranTahun,
-          jenis: data.jenisPegeluaran,
-          cabang: data.cabang,
-          nominal: data.nominal,
-          keterangan: data.keterangan,
-          yangMeninggal: data.yangMeninggal,
-          namaPenerima: data.namaPenerima,
-        });
-      }
+      const tanggal = `${data.tanggalTransaksi[0]}-${String(
+        data.tanggalTransaksi[1]
+      ).padStart(2, "0")}-${String(data.tanggalTransaksi[2]).padStart(2, "0")}`;
 
-      setShowEditModal(true);
-    } catch (error) {
-      console.error("Gagal mengambil data:", error);
+      setEditForm({
+        id: data.id,
+        tanggalTransaksi: tanggal,
+        nomorBukti: data.nomorBukti,
+        pos: data.posPenerimaan,
+        setoranBulan: data.setoranBulan,
+        setoranTahun: data.setoranTahun,
+        jenis: data.jenisPenerimaan,
+        cabang: data.cabang,
+        nominal: data.nominal,
+        keterangan: data.keterangan,
+        yangMeninggal: "",
+        namaPenerima: "",
+      });
+
+    } else if (jenis === "PENGELUARAN") {
+      data = await GlobalApi.getPengeluaranKasSandukaById(id);
+
+      const tanggal = `${data.tanggalTransaksi[0]}-${String(
+        data.tanggalTransaksi[1]
+      ).padStart(2, "0")}-${String(data.tanggalTransaksi[2]).padStart(2, "0")}`;
+
+      setEditForm({
+        id: data.id,
+        tanggalTransaksi: tanggal,
+        nomorBukti: data.nomorBukti,
+        pos: data.posPengeluaran,
+        setoranBulan: data.setoranBulan,
+        setoranTahun: data.setoranTahun,
+        jenis: data.jenisPegeluaran, // hati-hati typo
+        cabang: data.cabang,
+        nominal: data.nominal,
+        keterangan: data.keterangan,
+        yangMeninggal: data.yangMeninggal,
+        namaPenerima: data.namaPenerima,
+      });
     }
-  };
+
+    setShowEditModal(true); // ⬅️ buka modal di sini
+  } catch (error) {
+    console.error("Gagal ambil data:", error);
+    toast.error("Gagal mengambil data.");
+  }
+};
 
   const handleSaveEdit = async () => {
     try {
