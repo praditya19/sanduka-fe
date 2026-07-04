@@ -66,6 +66,7 @@ const TagihanForm = () => {
   const [transaksiSuksesTotal, setTransaksiSuksesTotal] = useState(0);
   const [tunggakanList, setTunggakanList] = useState([]);
   const [totalTunggakan, setTotalTunggakan] = useState(0);
+  const [totalKekuranganBulanSebelumnya, setTotalKekuranganBulanSebelumnya] = useState(0);
   const [showTunggakan, setShowTunggakan] = useState(false);
   const [bankTargetMap, setBankTargetMap] = useState({});
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -450,6 +451,7 @@ const TagihanForm = () => {
     if (!cabang || !bulanVal || !tahun) {
       setTunggakanList([]);
       setTotalTunggakan(0);
+      setTotalKekuranganBulanSebelumnya(0);
       return;
     }
     try {
@@ -476,11 +478,55 @@ const TagihanForm = () => {
         }));
       }
 
+      // Calculate previous month's shortage (kekurangan)
+      let prevMonthNum = Number(bulanVal) - 1;
+      let prevYear = tahun;
+      if (prevMonthNum === 0) {
+        prevMonthNum = 12;
+        prevYear = tahun - 1;
+      }
+      const prevMonthStr = String(prevMonthNum).padStart(2, "0");
+      const prevMonthLabel = months.find(m => m.value === prevMonthStr)?.label;
+
+      const [dataTrans, bankIuran] = await Promise.all([
+        GlobalApi.getTransaksiCabangByBulanTahun(prevMonthNum, prevYear),
+        GlobalApi.getRekapByPeriode(prevMonthLabel, prevYear).catch(() => []),
+      ]);
+
+      const rawList = Array.isArray(dataTrans) ? dataTrans : dataTrans?.data || [];
+      const cabangNormalized = cabang.trim().toUpperCase();
+      const cabangTrans = rawList.filter(item => item.cabang?.trim().toUpperCase() === cabangNormalized);
+
+      const toArray = (d) => Array.isArray(d) ? d : d?.data || [];
+      let targetRealisasi = 0;
+      toArray(bankIuran).forEach(item => {
+        if ((item.cabang || "").trim().toUpperCase() === cabangNormalized) {
+          targetRealisasi = Number(item.potonganBank || 0);
+        }
+      });
+
+      const excludedPos = ['PEMASUKAN DARI BANK'];
+      const tagihanWithoutExcluded = cabangTrans
+        .filter(item => !excludedPos.includes((item.pos || "").toUpperCase()))
+        .reduce((sum, item) => sum + Number(item.tagihan || 0), 0);
+
+      const pemasukanBankTotal = cabangTrans
+        .filter(item => (item.pos || "").toUpperCase() === 'PEMASUKAN DARI BANK')
+        .reduce((sum, item) => sum + Number(item.pembayaran || 0), 0);
+
+      const targetRealisasiFinal = targetRealisasi + pemasukanBankTotal;
+      const selisih = targetRealisasiFinal - tagihanWithoutExcluded;
+      const shortage = selisih < 0 ? Math.abs(selisih) : 0;
+
+      const finalKekurangan = Math.max(0, shortage - total);
+      setTotalKekuranganBulanSebelumnya(finalKekurangan);
+
       return list;
     } catch (error) {
       console.error("Error fetching tunggakan:", error);
       setTunggakanList([]);
       setTotalTunggakan(0);
+      setTotalKekuranganBulanSebelumnya(0);
     }
   };
 
@@ -642,6 +688,7 @@ const TagihanForm = () => {
     setTransaksiSuksesTotal(0);
     setTunggakanList([]);
     setTotalTunggakan(0);
+    setTotalKekuranganBulanSebelumnya(0);
     setShowTunggakan(false);
   };
 
@@ -1135,7 +1182,7 @@ const TagihanForm = () => {
                         Total Kekurangan Bulan Sebelumnya
                       </div>
                       <div className="text-3xl font-bold text-white">
-                        Rp {totalTunggakan.toLocaleString("id-ID")}
+                        Rp {totalKekuranganBulanSebelumnya.toLocaleString("id-ID")}
                       </div>
                     </div>
 
