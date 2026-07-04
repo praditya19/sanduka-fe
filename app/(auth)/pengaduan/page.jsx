@@ -617,43 +617,6 @@ export default function PengaduanPage() {
     }
   };
 
-  const handleCreateHistory = async (category, role) => {
-    const now = new Date();
-    
-    const nama = sessionStorage.getItem("nama");
-    const npa = sessionStorage.getItem("npa");
-    const cabang = sessionStorage.getItem("cabang");
-
-    const hari = now.toLocaleDateString("id-ID", { weekday: "long" });
-    const tanggal = now.toISOString().split("T")[0];
-    const jam = now.toTimeString().split(" ")[0];
-    const bulan = now.toLocaleString("id-ID", { month: "long" });
-    const tahun = now.getFullYear();
-
-    const historyData = {
-      hari,
-      tanggal,
-      jam,
-      npa: npa,
-      nama: nama,
-      cabang: cabang,
-      uraian: `Mengajukan ${category}`,
-      masuk: "-",
-      keluar: "-",
-      bulan,
-      tahun,
-      cabang_ke_2: "-",
-      user: nama,
-    };
-
-    try {
-      await GlobalApi.createHistoryData(historyData);
-    } catch (error) {
-      console.error("Failed to create history data:", error);
-      throw new Error("Gagal menyimpan riwayat edit data");
-    }
-  };
-
   const onSubmit = async (data) => {
     try {
       setLoading(true);
@@ -677,7 +640,6 @@ export default function PengaduanPage() {
       };
 
       const response = await GlobalApi.createPengaduan(pengaduanData);
-      await handleCreateHistory(selectedCategory, role); 
 
       reset();
       setBuktiFoto(null);

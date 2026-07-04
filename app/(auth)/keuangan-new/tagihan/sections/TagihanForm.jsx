@@ -67,6 +67,7 @@ const TagihanForm = () => {
   const [tunggakanList, setTunggakanList] = useState([]);
   const [totalTunggakan, setTotalTunggakan] = useState(0);
   const [totalKekuranganBulanSebelumnya, setTotalKekuranganBulanSebelumnya] = useState(0);
+  const [piutangCabangBulanLalu, setPiutangCabangBulanLalu] = useState(0);
   const [showTunggakan, setShowTunggakan] = useState(false);
   const [bankTargetMap, setBankTargetMap] = useState({});
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -173,6 +174,13 @@ const TagihanForm = () => {
   }, [fetchData]);
 
   const filteredTransactions = transactions.filter(t => {
+    // Filter ketat berdasarkan tanggal transaksi
+    if (t.tanggalTransaksi) {
+      const txMonth = Array.isArray(t.tanggalTransaksi)
+        ? t.tanggalTransaksi[1] // [year, month, day]
+        : new Date(t.tanggalTransaksi).getMonth() + 1;
+      if (Number(txMonth) !== Number(monthFilter)) return false;
+    }
     if (cabangFilter && (t.cabang || "").toUpperCase() !== cabangFilter.toUpperCase()) return false;
     if (!searchQuery) return true;
     return (
@@ -181,6 +189,13 @@ const TagihanForm = () => {
       t.pos?.toLowerCase().includes(searchQuery.toLowerCase())
     );
   });
+
+  // Summary dari data yang tampil di tabel
+  const visibleSummary = useMemo(() => ({
+    totalTagihan: filteredTransactions.reduce((s, t) => s + Number(t.tagihan), 0),
+    totalPembayaran: filteredTransactions.reduce((s, t) => s + Number(t.pembayaran), 0),
+    sisa: filteredTransactions.reduce((s, t) => s + Number(t.sisa || t.tagihan - t.pembayaran), 0),
+  }), [filteredTransactions]);
 
   const cabangSummary = useMemo(() => {
     const grouped = {};
@@ -267,9 +282,9 @@ const TagihanForm = () => {
           cabangSummary.reduce((s, g) => s + g.kalender, 0),
           cabangSummary.reduce((s, g) => s + g.hut, 0),
           cabangSummary.reduce((s, g) => s + g.lainnya, 0),
-          summary.totalTagihan, summary.totalPembayaran,
+          visibleSummary.totalTagihan, visibleSummary.totalPembayaran,
           cabangSummary.reduce((s, g) => s + g.targetRealisasi, 0),
-          summary.sisa
+          visibleSummary.sisa
         ]);
         const ws = XLSX.utils.aoa_to_sheet(excelData);
         const wb = XLSX.utils.book_new();
@@ -292,7 +307,7 @@ const TagihanForm = () => {
           ]);
         });
         excelData.push([]);
-        excelData.push(["", "", "", "", "", "TOTAL", summary.totalTagihan, summary.totalPembayaran, summary.sisa]);
+        excelData.push(["", "", "", "", "", "TOTAL", visibleSummary.totalTagihan, visibleSummary.totalPembayaran, visibleSummary.sisa]);
         const ws = XLSX.utils.aoa_to_sheet(excelData);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Tagihan Cabang");
@@ -462,22 +477,6 @@ const TagihanForm = () => {
       const total = list.reduce((sum, t) => sum + (Number(t.tagihan) - Number(t.pembayaran || 0)), 0);
       setTotalTunggakan(total);
 
-      if (autoAdd && list.length > 0) {
-        const newItems = list.map(t => {
-          const sisa = Number(t.tagihan) - Number(t.pembayaran || 0);
-          return {
-            pos: t.pos,
-            tagihan: sisa > 0 ? sisa : "",
-            pembayaran: "",
-            keterangan: `Tunggakan ${monthNumToLabel(t.setoranBulan)} ${t.setoranTahun}${t.keterangan ? " - " + t.keterangan : ""}`
-          };
-        });
-        setFormCabang(prev => ({
-          ...prev,
-          items: [...prev.items, ...newItems]
-        }));
-      }
-
       // Calculate previous month's shortage (kekurangan)
       let prevMonthNum = Number(bulanVal) - 1;
       let prevYear = tahun;
@@ -519,7 +518,46 @@ const TagihanForm = () => {
       const shortage = selisih < 0 ? Math.abs(selisih) : 0;
 
       const finalKekurangan = Math.max(0, shortage - total);
-      setTotalKekuranganBulanSebelumnya(finalKekurangan);
+      setTotalKekuranganBulanSebelumnya(shortage);
+      setPiutangCabangBulanLalu(finalKekurangan);
+
+      if (autoAdd) {
+        const autoAddedItems = [];
+        // 1. Add tunggakan items
+        list.forEach(t => {
+          const sisa = Number(t.tagihan) - Number(t.pembayaran || 0);
+          if (sisa > 0) {
+            autoAddedItems.push({
+              pos: t.pos,
+              tagihan: sisa,
+              pembayaran: "",
+              keterangan: `Tunggakan ${monthNumToLabel(t.setoranBulan)} ${t.setoranTahun}${t.keterangan ? " - " + t.keterangan : ""}`
+            });
+          }
+        });
+
+        // 2. Add finalKekurangan if > 0
+        if (finalKekurangan > 0) {
+          autoAddedItems.push({
+            pos: "Piutang Cabang",
+            tagihan: finalKekurangan,
+            pembayaran: "",
+            keterangan: `Tunggakan ${monthNumToLabel(prevMonthNum)} ${prevYear}`
+          });
+        }
+
+        if (autoAddedItems.length > 0) {
+          setFormCabang(prev => ({
+            ...prev,
+            items: autoAddedItems
+          }));
+        } else {
+          setFormCabang(prev => ({
+            ...prev,
+            items: [{ pos: "", tagihan: "", pembayaran: "", keterangan: "" }]
+          }));
+        }
+      }
 
       return list;
     } catch (error) {
@@ -580,6 +618,27 @@ const TagihanForm = () => {
       groups[key].items.push({ ...t, sisa });
       groups[key].totalSisa += sisa;
     });
+
+    if (piutangCabangBulanLalu > 0 && formCabang.setoranBulan && formCabang.setoranTahun) {
+      let prevMonthNum = Number(formCabang.setoranBulan) - 1;
+      let prevYear = Number(formCabang.setoranTahun);
+      if (prevMonthNum === 0) {
+        prevMonthNum = 12;
+        prevYear = prevYear - 1;
+      }
+      const key = `${prevYear}-${String(prevMonthNum).padStart(2, "0")}`;
+      if (!groups[key]) {
+        groups[key] = { tahun: prevYear, bulan: prevMonthNum, items: [], totalSisa: 0 };
+      }
+      if (!groups[key].items.some(item => item.pos === "Piutang Cabang")) {
+        groups[key].items.push({
+          pos: "Piutang Cabang",
+          sisa: piutangCabangBulanLalu
+        });
+        groups[key].totalSisa += piutangCabangBulanLalu;
+      }
+    }
+
     return Object.values(groups).sort((a, b) => b.tahun - a.tahun || b.bulan - a.bulan);
   };
 
@@ -689,6 +748,7 @@ const TagihanForm = () => {
     setTunggakanList([]);
     setTotalTunggakan(0);
     setTotalKekuranganBulanSebelumnya(0);
+    setPiutangCabangBulanLalu(0);
     setShowTunggakan(false);
   };
 
@@ -708,9 +768,9 @@ const TagihanForm = () => {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:hidden">
         {[
-          { label: "Total Tagihan", value: summary.totalTagihan, color: "text-violet-600", icon: <FaTag /> },
-          { label: "Total Pembayaran", value: summary.totalPembayaran, color: "text-emerald-600", icon: <FaArrowUp /> },
-          { label: "Sisa Tagihan", value: summary.sisa, color: "text-rose-600", icon: <FaCheckDouble /> },
+          { label: "Total Tagihan", value: visibleSummary.totalTagihan, color: "text-violet-600", icon: <FaTag /> },
+          { label: "Total Pembayaran", value: visibleSummary.totalPembayaran, color: "text-emerald-600", icon: <FaArrowUp /> },
+          { label: "Sisa Tagihan", value: visibleSummary.sisa, color: "text-rose-600", icon: <FaCheckDouble /> },
         ].map((item, i) => (
           <div key={i} className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">
             <div className="flex items-center justify-between mb-2">
@@ -896,11 +956,11 @@ const TagihanForm = () => {
                     <td className="px-1.5 sm:px-2 py-4 text-right font-mono">{formatCurrency(cabangSummary.reduce((s, g) => s + g.kalender, 0))}</td>
                     <td className="px-1.5 sm:px-2 py-4 text-right font-mono">{formatCurrency(cabangSummary.reduce((s, g) => s + g.hut, 0))}</td>
                     <td className="px-1.5 sm:px-2 py-4 text-right font-mono">{formatCurrency(cabangSummary.reduce((s, g) => s + g.lainnya, 0))}</td>
-                    <td className="px-1.5 sm:px-2 py-4 text-right font-mono text-violet-300">{formatCurrency(summary.totalTagihan)}</td>
-                    <td className="px-1.5 sm:px-2 py-4 text-right font-mono text-emerald-300">{formatCurrency(summary.totalPembayaran)}</td>
+                    <td className="px-1.5 sm:px-2 py-4 text-right font-mono text-violet-300">{formatCurrency(visibleSummary.totalTagihan)}</td>
+                    <td className="px-1.5 sm:px-2 py-4 text-right font-mono text-emerald-300">{formatCurrency(visibleSummary.totalPembayaran)}</td>
                     <td className="px-1.5 sm:px-2 py-4 text-right font-mono text-blue-300">{formatCurrency(cabangSummary.reduce((s, g) => s + g.targetRealisasi, 0))}</td>
-                    <td className={`px-1.5 sm:px-2 py-4 text-right font-mono ${(() => { const sel = cabangSummary.reduce((s, g) => s + g.targetRealisasi, 0) - summary.totalTagihan; return sel > 0 ? "text-emerald-300" : sel < 0 ? "text-rose-300" : "text-slate-300"; })()}`}>
-                      {(() => { const sel = cabangSummary.reduce((s, g) => s + g.targetRealisasi, 0) - summary.totalTagihan; return sel > 0 ? formatCurrency(sel) : sel < 0 ? `- ${formatCurrency(Math.abs(sel))}` : "Rp 0"; })()}
+                    <td className={`px-1.5 sm:px-2 py-4 text-right font-mono ${(() => { const sel = cabangSummary.reduce((s, g) => s + g.targetRealisasi, 0) - visibleSummary.totalTagihan; return sel > 0 ? "text-emerald-300" : sel < 0 ? "text-rose-300" : "text-slate-300"; })()}`}>
+                      {(() => { const sel = cabangSummary.reduce((s, g) => s + g.targetRealisasi, 0) - visibleSummary.totalTagihan; return sel > 0 ? formatCurrency(sel) : sel < 0 ? `- ${formatCurrency(Math.abs(sel))}` : "Rp 0"; })()}
                     </td>
                   </tr>
                 </tfoot>
@@ -1128,7 +1188,7 @@ const TagihanForm = () => {
                       setFormCabang(prev => ({ ...prev, setoranBulan: bulanVal }));
                       formCabang.items.forEach((_, idx) => fetchPeruntukanCabang(formCabang.cabang, bulanVal, formCabang.setoranTahun, idx));
                       fetchAllBankValues(formCabang.cabang, bulanVal, formCabang.setoranTahun);
-                      fetchTunggakan(formCabang.cabang, bulanVal, formCabang.setoranTahun);
+                      fetchTunggakan(formCabang.cabang, bulanVal, formCabang.setoranTahun, true);
                     }} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
                       {months.map((month) => (<option key={month.value} value={month.value}>{month.label}</option>))}
                     </select>
@@ -1140,7 +1200,7 @@ const TagihanForm = () => {
                       setFormCabang(prev => ({ ...prev, setoranTahun: tahunVal }));
                       formCabang.items.forEach((_, idx) => fetchPeruntukanCabang(formCabang.cabang, formCabang.setoranBulan, tahunVal, idx));
                       fetchAllBankValues(formCabang.cabang, formCabang.setoranBulan, tahunVal);
-                      fetchTunggakan(formCabang.cabang, formCabang.setoranBulan, tahunVal);
+                      fetchTunggakan(formCabang.cabang, formCabang.setoranBulan, tahunVal, true);
                     }} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
                       {yearOptions.map((year) => (<option key={year} value={year}>{year}</option>))}
                     </select>
@@ -1210,7 +1270,7 @@ const TagihanForm = () => {
 
                     <div className="flex items-center justify-between border-t border-amber-200 pt-3">
                       <span className="text-xs font-bold text-amber-700 uppercase">Total Tunggakan</span>
-                      <span className="text-sm font-bold text-rose-600">Rp {totalTunggakan.toLocaleString("id-ID")}</span>
+                      <span className="text-sm font-bold text-rose-600">Rp {(totalTunggakan + piutangCabangBulanLalu).toLocaleString("id-ID")}</span>
                     </div>
                   </div>
                 )}
