@@ -809,7 +809,6 @@ const KasSanduka = () => {
               <tr className="bg-white text-[9px] uppercase font-bold text-slate-400 tracking-[0.15em] border-b border-slate-50">
                 <th className="px-4 py-4 text-center w-24">Tgl Transaksi</th>
                 <th className="px-4 py-4">Nomor Bukti / Keterangan</th>
-
                 <th className="px-4 py-4 text-right">Debet</th>
                 <th className="px-4 py-4 text-right">Kredit</th>
                 <th className="px-4 py-4 text-right">Running Saldo</th>
@@ -846,9 +845,7 @@ const KasSanduka = () => {
                       </div>
                       <div className="text-[9px] text-slate-400 font-medium italic">
                         {t.keterangan}{" "}
-                        {t.cabang ||
-                          extractCabangFromKeterangan(t.keterangan) ||
-                          "-"}
+                        {/* {t.cabang  || "-"} */}
                       </div>
                     </td>
                     <td className="px-4 py-3 text-right text-[11px] font-bold text-emerald-600">
