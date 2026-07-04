@@ -389,40 +389,65 @@ function KeuanganDetailContent() {
               {Array(6).fill(0).map((_, i) => (<div key={i} className="h-6 bg-slate-100 rounded-full w-full" />))}
             </div>
           ) : (
-            <motion.div id="receipt-content" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-[32px] p-6 md:p-8 shadow-xl border border-slate-100 max-w-lg mx-auto">
+            <motion.div id="receipt-content" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-[32px] shadow-xl border border-slate-100 max-w-lg mx-auto overflow-hidden">
+              {/* Top Accent Bar */}
+              <div className="h-2 bg-gradient-to-r from-violet-500 via-emerald-500 to-violet-500" />
+
               {/* Receipt Header */}
-              <div className="text-center mb-6 pb-6 border-b-2 border-dashed border-slate-200">
-                <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight">TARGET & REALISASI</h2>
-                <div className="flex items-center justify-center gap-4 mt-2 text-xs font-bold text-slate-500">
-                  <span>{MONTHS_FULL[selectedMonth]} {selectedYear}</span>
-                  <span className="text-slate-300">|</span>
-                  <span className="uppercase">{cabang}</span>
+              <div className="px-6 md:px-8 pt-6 pb-5 text-center">
+                <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-violet-500 to-violet-700 rounded-2xl shadow-lg shadow-violet-200 mb-4">
+                  <FaUniversity className="text-white text-xl" />
                 </div>
-                <div className="mt-1 text-[10px] font-mono font-bold text-slate-400">
+                <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight">Target &amp; Realisasi</h2>
+                <div className="flex items-center justify-center gap-3 mt-3">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-violet-50 text-violet-700 rounded-xl text-[10px] font-black uppercase tracking-wider">
+                    <FaCalendarAlt className="text-[9px]" />
+                    {MONTHS_FULL[selectedMonth]} {selectedYear}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 text-white rounded-xl text-[10px] font-black uppercase tracking-wider">
+                    <FaUniversity className="text-[9px]" />
+                    {cabang}
+                  </span>
+                </div>
+                <div className="mt-3 text-[9px] font-mono font-bold text-slate-400 bg-slate-50 inline-block px-4 py-1.5 rounded-full">
                   {(() => { const d = new Date(); return d.toLocaleDateString("id-ID", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + ", " + d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }); })()}
                 </div>
               </div>
 
+              {/* Dashed Divider */}
+              <div className="border-t-2 border-dashed border-slate-200 mx-6 md:mx-8" />
+
               {/* TAGIHAN Section */}
-              <div className="mb-6">
-                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">TAGIHAN</h3>
-                <div className="space-y-1">
+              <div className="px-6 md:px-8 pt-5 pb-2">
+                <div className="flex items-center space-x-2 mb-4">
+                  <div className="w-1 h-4 bg-violet-500 rounded-full" />
+                  <h3 className="text-[10px] font-black text-violet-600 uppercase tracking-[0.2em]">Tagihan</h3>
+                </div>
+                <div className="space-y-0.5">
                   {tagihanData.map((row, i) => (
-                    <div key={i}>
-                      <div className="grid grid-cols-[auto_45px_120px] gap-x-1.5 text-sm">
-                        <span className="font-bold text-slate-700 truncate">{row.label}</span>
-                        <span className="font-bold text-slate-500 text-right tabular-nums">{row.count > 1 ? row.count.toLocaleString("id-ID") : ""}</span>
-                        <span className="font-black text-slate-800 text-right tabular-nums">{formatCurrency(row.total)}</span>
+                    <div key={i} className={`${i % 2 === 0 ? "bg-violet-50/40" : ""} -mx-2 px-2 py-1.5 rounded-lg`}>
+                      <div className="grid grid-cols-[1fr_auto] gap-x-2 text-sm">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="font-bold text-slate-700 truncate">{row.label}</span>
+                          {row.count > 1 && (
+                            <span className="text-[9px] font-black text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-md shrink-0">{row.count.toLocaleString("id-ID")} org</span>
+                          )}
+                        </div>
+                        <span className="font-black text-violet-600 text-right tabular-nums">{formatCurrency(row.total)}</span>
                       </div>
-                      {row.keterangan ? <div className="text-[10px] text-slate-400 font-medium ml-1">{row.keterangan}</div> : <div className="text-[10px] text-slate-300 font-medium ml-1">-</div>}
+                      {row.keterangan ? (
+                        <div className="text-[9px] text-slate-400 font-medium mt-0.5 ml-1">{row.keterangan}</div>
+                      ) : (
+                        <div className="text-[9px] text-slate-200 font-medium mt-0.5 ml-1">-</div>
+                      )}
                     </div>
                   ))}
                 </div>
 
                 {/* Total Tagihan */}
-                <div className="mt-4 flex items-center justify-between bg-slate-50 rounded-xl px-4 py-3 border border-slate-100">
-                  <span className="font-black text-slate-800 text-sm">Total Tagihan</span>
-                  <span className="font-black text-slate-900 text-base tabular-nums">{formatCurrency(rekap.totalTagihan)}</span>
+                <div className="mt-4 flex items-center justify-between bg-gradient-to-r from-violet-500 to-violet-600 rounded-2xl px-5 py-4 shadow-lg shadow-violet-200">
+                  <span className="font-black text-white text-sm uppercase tracking-wider">Total Tagihan</span>
+                  <span className="font-black text-white text-lg tabular-nums">{formatCurrency(rekap.totalTagihan)}</span>
                 </div>
 
                 {/* Previous Month */}
@@ -431,9 +456,12 @@ function KeuanganDetailContent() {
                   const prevTahun = selectedMonth === 1 ? selectedYear - 1 : selectedYear;
                   return t.setoranBulan === prevBulan && t.setoranTahun === prevTahun;
                 }).length > 0 && (
-                    <div className="mt-3 p-3 bg-amber-50/70 border border-amber-200 rounded-xl space-y-1">
-                      <div className="text-[9px] font-black text-amber-700 uppercase tracking-widest mb-1.5">
-                        Tagihan bln sebelumnya — {MONTHS_FULL[selectedMonth === 1 ? 12 : selectedMonth - 1]} {selectedMonth === 1 ? selectedYear - 1 : selectedYear}
+                    <div className="mt-3 p-4 bg-gradient-to-br from-amber-50 to-amber-100/50 border-2 border-amber-200 rounded-2xl space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 bg-amber-500 rounded-full" />
+                        <span className="text-[9px] font-black text-amber-700 uppercase tracking-widest">
+                          Tagihan bln sebelumnya — {MONTHS_FULL[selectedMonth === 1 ? 12 : selectedMonth - 1]} {selectedMonth === 1 ? selectedYear - 1 : selectedYear}
+                        </span>
                       </div>
                       {(() => {
                         const prevBulan = selectedMonth === 1 ? 12 : selectedMonth - 1;
@@ -447,7 +475,7 @@ function KeuanganDetailContent() {
                           prevGroups[p].pembayaran += Number(t.pembayaran || 0);
                         });
                         return Object.entries(prevGroups).map(([pos, v]) => (
-                          <div key={pos} className="flex items-center justify-between text-[11px]">
+                          <div key={pos} className="flex items-center justify-between text-[11px] bg-white/70 rounded-xl px-3 py-2 border border-amber-100">
                             <span className="font-bold text-amber-800">{pos}</span>
                             <span className="font-black text-rose-600">{formatCurrency(v.tagihan - v.pembayaran)}</span>
                           </div>
@@ -457,56 +485,56 @@ function KeuanganDetailContent() {
                   )}
               </div>
 
-              {/* Divider */}
-              <div className="border-t border-dashed border-slate-200 mb-6" />
-
               {/* REALISASI Section */}
-              <div className="mb-6">
-                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">REALISASI</h3>
-                <div className="space-y-1.5">
+              <div className="px-6 md:px-8 pt-5 pb-2">
+                <div className="flex items-center space-x-2 mb-4">
+                  <div className="w-1 h-4 bg-emerald-500 rounded-full" />
+                  <h3 className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em]">Realisasi</h3>
+                </div>
+                <div className="space-y-1">
                   {realisasiTrans.length > 0 ? realisasiTrans.map((t, i) => (
-                    <div key={i} className="flex items-start justify-between text-sm">
-                      <div className="min-w-0 mr-4">
-                        <div>
-                          {t.date && <span className="text-slate-400 text-[10px] font-mono font-bold mr-1.5">{t.date}</span>}
-                          <span className="font-bold text-slate-600">{t.desc}</span>
+                    <div key={i} className={`${i % 2 === 0 ? "bg-emerald-50/40" : ""} -mx-2 px-2 py-2 rounded-lg`}>
+                      <div className="flex items-start justify-between text-sm">
+                        <div className="min-w-0 mr-4">
+                          <div className="flex items-center gap-1.5">
+                            {t.date && <span className="text-[9px] font-mono font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-md">{t.date}</span>}
+                            <span className="font-bold text-slate-700">{t.desc}</span>
+                          </div>
+                          {t.keterangan && <div className="text-[9px] text-slate-400 font-medium mt-0.5 ml-1">{t.keterangan}</div>}
                         </div>
-                        {t.keterangan && <div className="text-[10px] text-slate-400 font-medium ml-1">{t.keterangan}</div>}
+                        <span className="font-black text-emerald-600 tabular-nums text-right shrink-0">{formatCurrency(t.amount)}</span>
                       </div>
-                      <span className="font-black text-emerald-600 tabular-nums text-right w-[150px]">{formatCurrency(t.amount)}</span>
                     </div>
                   )) : (
-                    <div className="text-sm text-slate-400 font-bold italic py-2">Belum ada realisasi</div>
+                    <div className="text-sm text-slate-400 font-bold italic py-2 text-center">Belum ada realisasi</div>
                   )}
                 </div>
 
                 {/* Total Realisasi */}
-                <div className="mt-4 flex items-center justify-between bg-slate-50 rounded-xl px-4 py-3 border border-slate-200">
-                  <span className="font-black text-slate-700 text-sm">Total Realisasi</span>
-                  <span className="font-black text-slate-800 text-base tabular-nums">{formatCurrency(rekap.totalRealisasi)}</span>
+                <div className="mt-4 flex items-center justify-between bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-2xl px-5 py-4 shadow-lg shadow-emerald-200">
+                  <span className="font-black text-white text-sm uppercase tracking-wider">Total Realisasi</span>
+                  <span className="font-black text-white text-lg tabular-nums">{formatCurrency(rekap.totalRealisasi)}</span>
                 </div>
               </div>
 
-              {/* Summary Cards */}
-              <div className="space-y-2">
-                <div className="rounded-xl px-4 py-3 border border-slate-200 bg-slate-50">
-                  <div className="text-sm">
-                    <div className="font-black text-slate-700">Target - Realisasi</div>
-                    <div className="font-black text-slate-800 text-base tabular-nums mt-1">
+              {/* Bottom Summary */}
+              <div className="px-6 md:px-8 pb-6 pt-3">
+                <div className="bg-slate-50 rounded-2xl px-5 py-4 border border-slate-100 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Target - Realisasi</span>
+                    <span className="font-black text-slate-600 text-sm tabular-nums">
                       {formatCurrency(rekap.totalTagihan)} - {formatCurrency(rekap.totalRealisasi)}
+                    </span>
+                  </div>
                 </div>
-              </div>
-              </div>
-              </div>
 
-              {/* Sisa / Kurang */}
-              <div className="space-y-2 mt-3">
-                <div className={`rounded-xl px-4 py-3 border ${rekap.kekurangan > 0 ? "bg-red-50 border-red-200" : "bg-emerald-50 border-emerald-200"}`}>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className={`font-black ${rekap.kekurangan > 0 ? "text-red-700" : "text-emerald-700"}`}>
+                {/* Kurang / Sisa */}
+                <div className={`mt-3 rounded-2xl px-5 py-4 ${rekap.kekurangan > 0 ? "bg-gradient-to-r from-rose-500 to-rose-600 shadow-lg shadow-rose-200" : "bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-lg shadow-emerald-200"}`}>
+                  <div className="flex items-center justify-between">
+                    <span className="font-black text-white text-sm uppercase tracking-wider">
                       {rekap.kekurangan > 0 ? "Kurang" : "Sisa"}
                     </span>
-                    <span className={`font-black text-base tabular-nums ${rekap.kekurangan > 0 ? "text-red-700" : "text-emerald-700"}`}>
+                    <span className="font-black text-white text-xl tabular-nums">
                       {rekap.kekurangan > 0 ? "-" + formatCurrency(rekap.kekurangan) : formatCurrency(Math.abs(rekap.kekurangan))}
                     </span>
                   </div>
