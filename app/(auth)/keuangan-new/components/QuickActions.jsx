@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   FaPlus,
@@ -14,6 +14,14 @@ import {
 import Link from "next/link";
 
 const QuickActions = () => {
+  const [role, setRole] = useState(null);
+
+  useEffect(() => {
+    setRole(sessionStorage.getItem("role"));
+  }, []);
+
+  if (role !== "SUPERADMIN") return null;
+
   const actions = [
     {
       title: "Input Iuran",

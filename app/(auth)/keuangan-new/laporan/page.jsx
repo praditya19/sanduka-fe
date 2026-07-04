@@ -72,7 +72,7 @@ function KeuanganLaporanContent() {
             <div className="flex items-center space-x-4">
               <BackButton />
               <div>
-                <h1 className="text-2xl font-black text-slate-800 tracking-tight">Laporan Keuangan</h1>
+                <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Laporan Keuangan</h1>
                 <p className="text-slate-400 text-sm font-medium">Analisis transparan data kas & iuran</p>
               </div>
             </div>

@@ -641,9 +641,9 @@ const DerapSection = () => {
             <FaNewspaper className="text-2xl" />
           </div>
           <div>
-            <h2 className="text-xl font-black">Publikasi Derap</h2>
+            <h2 className="text-xl font-bold">Publikasi Derap</h2>
             <div className="flex items-center gap-2 mt-1">
-              <span className="px-2 py-0.5 bg-white/20 rounded-md text-[10px] font-black uppercase tracking-widest">
+              <span className="px-2 py-0.5 bg-white/20 rounded-md text-[10px] font-bold uppercase tracking-widest">
                 Periode: {selectedMonth} {selectedYear}
               </span>
               <span className="w-1 h-1 bg-white/40 rounded-full" />
@@ -674,7 +674,7 @@ const DerapSection = () => {
                 <FaCalculator className="text-base" />
               </div>
               <div>
-                <h3 className="text-base font-black text-slate-800 tracking-tight">
+                <h3 className="text-base font-bold text-slate-800 tracking-tight">
                   Konfigurasi Harga Derap
                 </h3>
                 <p className="text-slate-400 text-[9px] font-medium uppercase tracking-widest">
@@ -684,7 +684,7 @@ const DerapSection = () => {
             </div>
             <button
               onClick={() => fetchInitialData()}
-              className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-indigo-500 hover:border-indigo-200 transition-all shadow-sm"
+              className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[9px] font-bold text-slate-400 uppercase tracking-widest hover:text-indigo-500 hover:border-indigo-200 transition-all shadow-sm"
             >
               Reset Default
             </button>
@@ -698,12 +698,12 @@ const DerapSection = () => {
                 { label: "Porsi Cabang", key: "cabang" },
               ].map((field) => (
                 <div key={field.key}>
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">
+                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block px-1">
                     {field.label}
                   </label>
                   <div className="relative group">
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
-                      <span className="text-slate-300 font-black text-sm">
+                      <span className="text-slate-300 font-bold text-sm">
                         Rp
                       </span>
                     </div>
@@ -716,7 +716,7 @@ const DerapSection = () => {
                           [field.key]: parseInt(e.target.value) || 0,
                         })
                       }
-                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-indigo-500 outline-none font-black text-slate-700 transition-all text-base group-hover:bg-slate-100/50 shadow-inner"
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-indigo-500 outline-none font-bold text-slate-700 transition-all text-base group-hover:bg-slate-100/50 shadow-inner"
                     />
                   </div>
                 </div>
@@ -763,7 +763,7 @@ const DerapSection = () => {
                 <FaNewspaper className="text-xl" />
               </div>
               <div>
-                <h3 className="text-xl font-black text-slate-800 tracking-tight">
+                <h3 className="text-xl font-bold text-slate-800 tracking-tight">
                   Pesanan & Distribusi
                 </h3>
                 <p className="text-slate-400 text-xs font-medium">
@@ -801,10 +801,10 @@ const DerapSection = () => {
                   className={`${stat.color} p-5 rounded-[28px] text-white shadow-lg flex items-center justify-between group overflow-hidden relative`}
                 >
                   <div className="relative z-10">
-                    <p className="text-[9px] font-black opacity-60 uppercase tracking-widest mb-0.5">
+                    <p className="text-[9px] font-bold opacity-60 uppercase tracking-widest mb-0.5">
                       {stat.label}
                     </p>
-                    <h4 className="text-lg font-black">
+                    <h4 className="text-lg font-bold">
                       {formatCurrency(stat.val)}
                     </h4>
                   </div>
@@ -826,7 +826,7 @@ const DerapSection = () => {
 
               <div className="relative z-10 flex flex-col xl:flex-row items-end gap-6">
                 <div className="w-full xl:w-1/3 space-y-2">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block px-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block px-1">
                     Pilih Cabang
                   </label>
                   <select
@@ -850,7 +850,7 @@ const DerapSection = () => {
                 </div>
 
                 <div className="w-full xl:w-1/4 space-y-2">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block px-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block px-1">
                     Jumlah Eksemplar
                   </label>
                   <div className="relative">
@@ -867,16 +867,16 @@ const DerapSection = () => {
                       onChange={(e) => {
                         setJumlahPesanan(e.target.value);
                       }}
-                      className="w-full pl-11 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-black text-white text-base focus:bg-white/10 focus:border-indigo-500 transition-all"
+                      className="w-full pl-11 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-bold text-white text-base focus:bg-white/10 focus:border-indigo-500 transition-all"
                     />
                   </div>
                 </div>
 
                 <div className="w-full xl:flex-1 flex xl:flex-col items-center xl:items-end justify-between xl:justify-center gap-2 px-2">
-                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                     Grand Total
                   </span>
-                  <span className="text-2xl font-black text-indigo-400 tracking-tight">
+                  <span className="text-2xl font-bold text-indigo-400 tracking-tight">
                     {formatCurrency(totalAkhir)}
                   </span>
                 </div>
@@ -884,7 +884,7 @@ const DerapSection = () => {
                 <div className="w-full xl:w-auto">
                   <button
                     type="submit"
-                    className="w-full px-10 py-5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-2xl font-black shadow-xl shadow-indigo-900/40 transition-all active:scale-[0.98] text-xs uppercase tracking-widest flex items-center justify-center gap-2"
+                    className="w-full px-10 py-5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-2xl font-bold shadow-xl shadow-indigo-900/40 transition-all active:scale-[0.98] text-xs uppercase tracking-widest flex items-center justify-center gap-2"
                   >
                     <FaSave />
                     Kunci Pesanan
@@ -901,10 +901,10 @@ const DerapSection = () => {
                     <FaNewspaper className="text-xl" />
                   </div>
                   <div>
-                    <h4 className="text-lg font-black text-slate-800 tracking-tight">
+                    <h4 className="text-lg font-bold text-slate-800 tracking-tight">
                     REKAPITULASI DERAP
                     </h4>
-                    <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                    <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
                       Derap - {selectedMonth} {selectedYear}
                     </p>
                   </div>
@@ -951,7 +951,7 @@ const DerapSection = () => {
                         <ul className="overflow-y-auto py-2 custom-scrollbar">
                           <li
                             onClick={() => handleSelectCabang("")}
-                            className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${
+                            className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${
                               !searchQuery
                                 ? "bg-indigo-50 text-indigo-600 border-indigo-500"
                                 : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
@@ -969,7 +969,7 @@ const DerapSection = () => {
                               <li
                                 key={idx}
                                 onClick={() => handleSelectCabang(cab.kecamatan)}
-                                className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${
+                                className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${
                                   searchQuery === cab.kecamatan
                                     ? "bg-indigo-50 text-indigo-600 border-indigo-500"
                                     : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
@@ -987,7 +987,7 @@ const DerapSection = () => {
                     <select
                       value={selectedMonth}
                       onChange={(e) => setSelectedMonth(e.target.value)}
-                      className="bg-transparent px-4 py-2.5 outline-none font-black text-slate-600 text-xs uppercase tracking-widest cursor-pointer"
+                      className="bg-transparent px-4 py-2.5 outline-none font-bold text-slate-600 text-xs uppercase tracking-widest cursor-pointer"
                     >
                       {bulanList.map((b) => (
                         <option key={b.id} value={b.namaBulan}>
@@ -1001,7 +1001,7 @@ const DerapSection = () => {
                       onChange={(e) =>
                         setSelectedYear(parseInt(e.target.value))
                       }
-                      className="bg-transparent px-4 py-2.5 outline-none font-black text-slate-600 text-xs uppercase tracking-widest cursor-pointer"
+                      className="bg-transparent px-4 py-2.5 outline-none font-bold text-slate-600 text-xs uppercase tracking-widest cursor-pointer"
                     >
                       {Array.from({ length: new Date().getFullYear() + 2 - 2020 + 1 }, (_, i) => 2020 + i).map((y) => (
                         <option key={y} value={y}>
@@ -1013,12 +1013,12 @@ const DerapSection = () => {
 
                   <div className="flex items-center gap-2">
                     {isSaved ? (
-                      <span className="px-4 py-2.5 bg-emerald-50 text-emerald-700 rounded-xl font-black text-xs uppercase tracking-widest flex items-center gap-1.5 border border-emerald-200">
+                      <span className="px-4 py-2.5 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center gap-1.5 border border-emerald-200">
                         <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
                         TERSIMPAN ({savedDataCount})
                       </span>
                     ) : (
-                      <span className="px-4 py-2.5 bg-amber-50 text-amber-700 rounded-xl font-black text-xs uppercase tracking-widest flex items-center gap-1.5 border border-amber-200">
+                      <span className="px-4 py-2.5 bg-amber-50 text-amber-700 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center gap-1.5 border border-amber-200">
                         <span className="w-1.5 h-1.5 bg-amber-500 rounded-full" />
                         BELUM DISIMPAN
                       </span>
@@ -1026,7 +1026,7 @@ const DerapSection = () => {
                     <button
                       onClick={handleSaveTable}
                       disabled={saving}
-                      className="px-5 py-3 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-black shadow-sm transition-all active:scale-95 text-xs uppercase tracking-widest flex items-center gap-2"
+                      className="px-5 py-3 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold shadow-sm transition-all active:scale-95 text-xs uppercase tracking-widest flex items-center gap-2"
                       title="Simpan Rekapitulasi"
                     >
                       {saving ? (
@@ -1038,7 +1038,7 @@ const DerapSection = () => {
                     </button>
                     <button
                       onClick={handleDownloadExcel}
-                      className="px-5 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black shadow-sm transition-all active:scale-95 text-xs uppercase tracking-widest flex items-center gap-2"
+                      className="px-5 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold shadow-sm transition-all active:scale-95 text-xs uppercase tracking-widest flex items-center gap-2"
                       title="Unduh Excel"
                     >
                       <FaFileExcel className="text-sm" />
@@ -1046,7 +1046,7 @@ const DerapSection = () => {
                     </button>
                     <button
                       onClick={handleDownloadPDF}
-                      className="px-5 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-black shadow-sm transition-all active:scale-95 text-xs uppercase tracking-widest flex items-center gap-2"
+                      className="px-5 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold shadow-sm transition-all active:scale-95 text-xs uppercase tracking-widest flex items-center gap-2"
                       title="Unduh PDF"
                     >
                       <FaFilePdf className="text-sm" />
@@ -1077,7 +1077,7 @@ const DerapSection = () => {
                       ].map((h, i) => (
                         <th
                           key={i}
-                          className="px-4 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-center whitespace-nowrap"
+                          className="px-4 py-4 text-[9px] font-bold uppercase tracking-widest text-slate-400 text-center whitespace-nowrap"
                         >
                           {h}
                         </th>
@@ -1111,10 +1111,10 @@ const DerapSection = () => {
                             key={i}
                             className="hover:bg-slate-50/80 transition-colors text-center text-[11px] font-bold text-slate-600"
                           >
-                            <td className="px-4 py-4 text-slate-400 font-black">
+                            <td className="px-4 py-4 text-slate-400 font-bold">
                               {i + 1}
                             </td>
-                            <td className="px-4 py-4 font-black text-slate-800 text-left whitespace-nowrap">
+                            <td className="px-4 py-4 font-bold text-slate-800 text-left whitespace-nowrap">
                               {row.cabang}
                             </td>
                             <td className="px-4 py-4">
@@ -1134,7 +1134,7 @@ const DerapSection = () => {
                             <td className="px-4 py-4 text-emerald-600">
                               {formatCurrency(row.tambahanCabang)}
                             </td>
-                            <td className="px-4 py-4 text-indigo-600 font-black">
+                            <td className="px-4 py-4 text-indigo-600 font-bold">
                               {formatCurrency(row.totalCabang)}
                             </td>
                             <td className="px-4 py-4 text-amber-700 bg-amber-50/30 font-bold">
@@ -1176,7 +1176,7 @@ const DerapSection = () => {
                       <tr>
                         <td
                           colSpan={14}
-                          className="py-16 text-center text-slate-300 font-black uppercase tracking-widest text-xs"
+                          className="py-16 text-center text-slate-300 font-bold uppercase tracking-widest text-xs"
                         >
                           Data Kosong
                         </td>
@@ -1188,10 +1188,10 @@ const DerapSection = () => {
                         ?.toLowerCase()
                         .includes(searchQuery.toLowerCase()),
                     ).length > 0 && (
-                      <tr className="bg-indigo-50 border-t-2 border-indigo-200 font-black text-center text-[11px]">
+                      <tr className="bg-indigo-50 border-t-2 border-indigo-200 font-bold text-center text-[11px]">
                         <td
                           colSpan={2}
-                          className="px-4 py-4 text-indigo-700 font-black text-right"
+                          className="px-4 py-4 text-indigo-700 font-bold text-right"
                         >
                           TOTAL REKAP
                         </td>
@@ -1253,7 +1253,7 @@ const DerapSection = () => {
                               ),
                           )}
                         </td>
-                        <td className="px-4 py-4 text-emerald-600 font-black">
+                        <td className="px-4 py-4 text-emerald-600 font-bold">
                           {formatCurrency(
                             tableData
                               .filter((r) =>
@@ -1268,7 +1268,7 @@ const DerapSection = () => {
                               ),
                           )}
                         </td>
-                        <td className="px-4 py-4 text-indigo-600 font-black">
+                        <td className="px-4 py-4 text-indigo-600 font-bold">
                           {formatCurrency(
                             tableData
                               .filter((r) =>
@@ -1300,7 +1300,7 @@ const DerapSection = () => {
                               ),
                           )}
                         </td>
-                        <td className="px-4 py-4 text-emerald-600 font-black">
+                        <td className="px-4 py-4 text-emerald-600 font-bold">
                           {formatCurrency(
                             tableData
                               .filter((r) =>
@@ -1315,7 +1315,7 @@ const DerapSection = () => {
                               ),
                           )}
                         </td>
-                        <td className="px-4 py-4 text-orange-600 font-black">
+                        <td className="px-4 py-4 text-orange-600 font-bold">
                           {formatCurrency(
                             tableData
                               .filter((r) =>
@@ -1369,7 +1369,7 @@ const DerapSection = () => {
                     <FaEdit className="text-2xl" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-black">Edit Data Derap</h3>
+                    <h3 className="text-xl font-bold">Edit Data Derap</h3>
                     <p className="text-indigo-100 text-xs">
                       Perbarui informasi pesanan
                     </p>
@@ -1379,7 +1379,7 @@ const DerapSection = () => {
                 <div className="p-6 space-y-4">
                   {/* Cabang */}
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block px-1">
                       Cabang
                     </label>
                     <select
@@ -1400,7 +1400,7 @@ const DerapSection = () => {
 
                   {/* Jumlah */}
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block px-1">
                       Jumlah Pesanan
                     </label>
                     <input
@@ -1418,7 +1418,7 @@ const DerapSection = () => {
 
                   {/* Bulan */}
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block px-1">
                       Bulan
                     </label>
                     <select
@@ -1439,7 +1439,7 @@ const DerapSection = () => {
 
                   {/* Tahun */}
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block px-1">
                       Tahun
                     </label>
                     <select
@@ -1464,14 +1464,14 @@ const DerapSection = () => {
                 <div className="p-6 border-t border-slate-100 flex gap-3">
                   <button
                     onClick={() => setShowEditModal(false)}
-                    className="flex-1 px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-black hover:bg-slate-200 transition-all text-sm"
+                    className="flex-1 px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-all text-sm"
                   >
                     Batal
                   </button>
                   <button
                     onClick={handleSaveEdit}
                     disabled={loadingAction}
-                    className="flex-1 px-4 py-2.5 bg-indigo-500 text-white rounded-xl font-black hover:bg-indigo-600 transition-all disabled:opacity-50 text-sm flex items-center justify-center gap-2"
+                    className="flex-1 px-4 py-2.5 bg-indigo-500 text-white rounded-xl font-bold hover:bg-indigo-600 transition-all disabled:opacity-50 text-sm flex items-center justify-center gap-2"
                   >
                     {loadingAction ? (
                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />

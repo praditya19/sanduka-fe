@@ -31,6 +31,14 @@ export default function KeuanganNew() {
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
 
+  const [userRole, setUserRole] = useState(null);
+  const [userCabang, setUserCabang] = useState("");
+
+  useEffect(() => {
+    setUserRole(sessionStorage.getItem("role"));
+    setUserCabang((sessionStorage.getItem("cabang") || "").toUpperCase());
+  }, []);
+
   const formatCurrency = (val) =>
     new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(val || 0);
 
@@ -237,8 +245,13 @@ export default function KeuanganNew() {
     localStorage.setItem("isSidebarOpen", newState);
   };
 
-  const totalTarget = tableData.reduce((sum, row) => sum + row.target, 0);
-  const totalRealisasi = tableData.reduce((sum, row) => sum + row.realisasi, 0);
+  const isSuperAdmin = userRole === "SUPERADMIN";
+  const filteredCabangData = isSuperAdmin
+    ? tableData
+    : tableData.filter(r => r.cabang.toUpperCase() === userCabang);
+
+  const totalTarget = filteredCabangData.reduce((sum, row) => sum + row.target, 0);
+  const totalRealisasi = filteredCabangData.reduce((sum, row) => sum + row.realisasi, 0);
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row overflow-hidden">
@@ -255,7 +268,7 @@ export default function KeuanganNew() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
             >
-              <h1 className="text-3xl font-black text-slate-800 tracking-tight">
+              <h1 className="text-3xl font-bold text-slate-800 tracking-tight">
                 Target <span className="text-emerald-500">&</span> Realisasi{" "}
                 <span className="text-blue-500">Keuangan</span>
               </h1>
@@ -271,7 +284,7 @@ export default function KeuanganNew() {
                   <select
                     value={selectedMonth}
                     onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                    className="bg-transparent border-none text-sm font-black text-slate-700 focus:ring-0 cursor-pointer pl-3 pr-8 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_8px_center] bg-no-repeat"
+                    className="bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0 cursor-pointer pl-3 pr-8 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_8px_center] bg-no-repeat"
                   >
                     {MONTHS.map((m, i) => (
                       <option key={i} value={i + 1}>{m}</option>
@@ -281,7 +294,7 @@ export default function KeuanganNew() {
                   <select
                     value={selectedYear}
                     onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                    className="bg-transparent border-none text-sm font-black text-slate-700 focus:ring-0 cursor-pointer pl-3 pr-8 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_8px_center] bg-no-repeat"
+                    className="bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0 cursor-pointer pl-3 pr-8 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_8px_center] bg-no-repeat"
                   >
                     {Array.from({ length: new Date().getFullYear() + 2 - 2020 + 1 }, (_, i) => 2020 + i).map(y => (
                       <option key={y} value={y}>{y}</option>
@@ -343,7 +356,7 @@ export default function KeuanganNew() {
               <div className="bg-white rounded-[40px] p-8 shadow-xl border border-slate-100 mt-8 overflow-hidden">
                 <div className="flex items-center justify-between mb-8">
                   <div>
-                    <h2 className="text-2xl font-black text-slate-800 tracking-tight">Data Setoran <span className="text-emerald-500">Per Cabang</span></h2>
+                    <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Data Setoran <span className="text-emerald-500">Per Cabang</span></h2>
                     <p className="text-sm font-medium text-slate-400 mt-1">Target dan realisasi iuran berdasarkan wilayah</p>
                   </div>
                 </div>
@@ -351,7 +364,7 @@ export default function KeuanganNew() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
                     <thead>
-                      <tr className="text-slate-400 text-[10px] font-black uppercase tracking-widest border-b border-slate-100">
+                      <tr className="text-slate-400 text-[10px] font-bold uppercase tracking-widest border-b border-slate-100">
                         <th className="pb-5 text-center w-16">No</th>
                         <th className="pb-5">Cabang</th>
                         <th className="pb-5 text-right">Target</th>
@@ -372,24 +385,24 @@ export default function KeuanganNew() {
                             <td className="py-6 text-center"><div className="h-8 w-20 bg-slate-100 mx-auto rounded-xl" /></td>
                           </tr>
                         ))
-                      ) : tableData.length > 0 ? (
-                        tableData.map((row, i) => {
+                      ) : filteredCabangData.length > 0 ? (
+                        filteredCabangData.map((row, i) => {
                           const selisih = row.target - row.realisasi;
                           const isLunas = selisih <= 0;
                           return (
                             <tr key={i} className="hover:bg-slate-50/50 transition-colors group">
                               <td className="py-6 text-center text-slate-400 font-bold text-xs">{i + 1}</td>
                               <td className="py-6">
-                                <span className="font-black text-slate-700 block uppercase text-sm tracking-tight">{row.cabang}</span>
+                                <span className="font-bold text-slate-700 block uppercase text-sm tracking-tight">{row.cabang}</span>
                               </td>
                               <td className="py-6 text-right">
-                                <span className="font-black text-slate-700 text-sm">{formatCurrency(row.target)}</span>
+                                <span className="font-bold text-slate-700 text-sm">{formatCurrency(row.target)}</span>
                               </td>
                               <td className="py-6 text-right">
                                 <span className="font-bold text-emerald-600 text-sm">{formatCurrency(row.realisasi)}</span>
                               </td>
                               <td className="py-6 text-center">
-                                <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-black border shadow-sm ${
+                                <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-bold border shadow-sm ${
                                   isLunas
                                     ? "bg-emerald-50 text-emerald-700 border-emerald-100"
                                     : "bg-rose-50 text-rose-700 border-rose-100"
@@ -404,7 +417,7 @@ export default function KeuanganNew() {
                               <td className="py-6 text-center">
                                 <button
                                   onClick={() => router.push(`/keuangan-new/detail?cabang=${encodeURIComponent(row.cabang)}&bulan=${selectedMonth}&tahun=${selectedYear}`)}
-                                  className="inline-flex items-center gap-2 bg-slate-100 hover:bg-emerald-500 hover:text-white text-slate-600 px-5 py-2 rounded-2xl text-[10px] font-black transition-all active:scale-95 shadow-sm hover:shadow-lg hover:shadow-emerald-100"
+                                  className="inline-flex items-center gap-2 bg-slate-100 hover:bg-emerald-500 hover:text-white text-slate-600 px-5 py-2 rounded-2xl text-[10px] font-bold transition-all active:scale-95 shadow-sm hover:shadow-lg hover:shadow-emerald-100"
                                 >
                                   <FaEye className="text-[10px]" />
                                   DETAIL
@@ -426,14 +439,14 @@ export default function KeuanganNew() {
                         </tr>
                       )}
                     </tbody>
-                    {tableData.length > 0 && (
+                    {filteredCabangData.length > 0 && (
                       <tfoot>
-                        <tr className="bg-slate-900 text-white font-black">
+                        <tr className="bg-slate-900 text-white font-bold">
                           <td colSpan="2" className="px-4 py-5 text-[10px] uppercase tracking-widest">Total</td>
                           <td className="px-4 py-5 text-right text-sm">{formatCurrency(totalTarget)}</td>
                           <td className="px-4 py-5 text-right text-sm text-emerald-300">{formatCurrency(totalRealisasi)}</td>
                           <td className="px-4 py-5 text-center">
-                            <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-black border ${
+                            <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-bold border ${
                               totalTarget - totalRealisasi <= 0
                                 ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
                                 : "bg-rose-500/20 text-rose-300 border-rose-500/30"

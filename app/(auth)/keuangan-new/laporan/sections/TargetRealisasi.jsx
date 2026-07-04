@@ -216,7 +216,7 @@ const TargetRealisasiSection = () => {
               <FaChartPie className="text-2xl" />
             </div>
             <div>
-              <h2 className="text-xl font-black">Target & Realisasi</h2>
+              <h2 className="text-xl font-bold">Target & Realisasi</h2>
               <p className="text-blue-100 text-xs font-medium uppercase tracking-wider">
                 Laporan perbandingan setoran iuran per cabang
               </p>
@@ -245,7 +245,7 @@ const TargetRealisasiSection = () => {
         {/* Filters */}
         <div className="bg-slate-50 p-4 rounded-[24px] border border-slate-100 flex flex-wrap gap-4 items-end">
           <div className="flex-1 min-w-[200px]">
-            <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block px-1">
+            <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block px-1">
               Pilih Bulan
             </label>
             <select
@@ -261,7 +261,7 @@ const TargetRealisasiSection = () => {
             </select>
           </div>
           <div className="flex-1 min-w-[150px]">
-            <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block px-1">
+            <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block px-1">
               Pilih Tahun
             </label>
             <select
@@ -277,7 +277,7 @@ const TargetRealisasiSection = () => {
             </select>
           </div>
           <div className="flex-1 min-w-[200px] relative">
-            <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block px-1">
+            <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block px-1">
               Cari Cabang
             </label>
             <FaSearch className="absolute left-4 bottom-4 text-slate-300" />
@@ -296,7 +296,7 @@ const TargetRealisasiSection = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-slate-900 text-white text-[10px] uppercase font-black tracking-widest">
+                <tr className="bg-slate-900 text-white text-[10px] uppercase font-bold tracking-widest">
                   <th
                     rowSpan="2"
                     className="px-6 py-4 text-center border-r border-white/10"
@@ -325,7 +325,7 @@ const TargetRealisasiSection = () => {
                     Selisih
                   </th>
                 </tr>
-                <tr className="bg-slate-800 text-white/70 text-[9px] uppercase font-black tracking-widest">
+                <tr className="bg-slate-800 text-white/70 text-[9px] uppercase font-bold tracking-widest">
                   <th className="px-6 py-3 text-center border-r border-white/10">
                     Anggota
                   </th>
@@ -361,7 +361,7 @@ const TargetRealisasiSection = () => {
                         {i + 1}
                       </td>
                       <td className="px-6 py-4 border-r border-slate-50">
-                        <span className="font-black text-slate-700 text-sm block uppercase">
+                        <span className="font-bold text-slate-700 text-sm block uppercase">
                           {row.cabang}
                         </span>
                       </td>
@@ -378,7 +378,7 @@ const TargetRealisasiSection = () => {
                         {formatCurrency(row.realisasi)}
                       </td>
                       <td
-                        className={`px-6 py-4 text-right font-black ${row.selisih < 0 ? "text-rose-600" : "text-emerald-600"}`}
+                        className={`px-6 py-4 text-right font-bold ${row.selisih < 0 ? "text-rose-600" : "text-emerald-600"}`}
                       >
                         {formatCurrency(row.selisih)}
                       </td>
@@ -399,7 +399,7 @@ const TargetRealisasiSection = () => {
               </tbody>
               {!loading && filteredData.length > 0 && (
                 <tfoot className="bg-slate-50 border-t-2 border-slate-100">
-                  <tr className="font-black text-slate-800 text-xs">
+                  <tr className="font-bold text-slate-800 text-xs">
                     <td colSpan="2" className="px-6 py-4 uppercase">
                       Total Keseluruhan
                     </td>

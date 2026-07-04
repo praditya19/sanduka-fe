@@ -895,10 +895,10 @@ const DaspenSection = () => {
           <div className="bg-white rounded-3xl p-6 md:p-8 w-full max-w-2xl shadow-2xl animate-fade-in-up">
             <div className="flex justify-between items-start mb-6 border-b pb-4">
               <div>
-                <h3 className="font-black text-2xl text-slate-800">Edit Data Cabang</h3>
+                <h3 className="font-bold text-2xl text-slate-800">Edit Data Cabang</h3>
                 <div className="flex items-center gap-2 mt-2">
                   <span className="text-sm font-bold text-slate-500">{editModal.data?.cabang}</span>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-black text-white ${editModal.data?.jenisData === 'DASPEN' ? 'bg-teal-500' : 'bg-rose-500'}`}>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold text-white ${editModal.data?.jenisData === 'DASPEN' ? 'bg-teal-500' : 'bg-rose-500'}`}>
                     {editModal.data?.jenisData || "SANDUKA"} {editModal.data?.isAuto && "(Auto-Generated)"}
                   </span>
                 </div>
@@ -910,7 +910,7 @@ const DaspenSection = () => {
               <div className="grid grid-cols-3 gap-4">
                 {['kategori1', 'kategori2', 'kategori3'].map((kat, idx) => (
                   <div key={idx}>
-                    <label className="text-[10px] font-black text-slate-500 uppercase">Jumlah Kat {idx + 1}</label>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">Jumlah Kat {idx + 1}</label>
                     <input
                       type="number" value={editModal.data[kat] || 0}
                       onChange={(e) => setEditModal(prev => ({ ...prev, data: { ...prev.data, [kat]: e.target.value } }))}
@@ -923,7 +923,7 @@ const DaspenSection = () => {
               {/* BAGIAN PEMBAYARAN */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">Transfer Balancing</label>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Transfer Balancing</label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">Rp</span>
                     <input
@@ -934,7 +934,7 @@ const DaspenSection = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">Pembayaran 1</label>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Pembayaran 1</label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">Rp</span>
                     <input
@@ -945,7 +945,7 @@ const DaspenSection = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">Pembayaran 2</label>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Pembayaran 2</label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">Rp</span>
                     <input
@@ -958,8 +958,8 @@ const DaspenSection = () => {
               </div>
 
               <div className="flex justify-end gap-3 mt-8">
-                <button type="button" onClick={() => setEditModal({ show: false, data: null })} className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-black transition-colors">Batal</button>
-                <button type="submit" className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black transition-colors flex items-center gap-2"><FaSave /> Simpan Perubahan</button>
+                <button type="button" onClick={() => setEditModal({ show: false, data: null })} className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold transition-colors">Batal</button>
+                <button type="submit" className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-colors flex items-center gap-2"><FaSave /> Simpan Perubahan</button>
               </div>
             </form>
           </div>
@@ -980,7 +980,7 @@ const DaspenSection = () => {
                 <FaTrash className="text-3xl text-rose-500" />
               </div>
 
-              <h3 className="font-black text-2xl text-slate-800 mb-2">Hapus Data?</h3>
+              <h3 className="font-bold text-2xl text-slate-800 mb-2">Hapus Data?</h3>
               <p className="text-xs text-slate-500 font-bold mb-4 leading-relaxed">
                 Anda akan menghapus data ini secara permanen:
               </p>
@@ -989,12 +989,12 @@ const DaspenSection = () => {
               <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 mb-8 text-left">
                 <div className="flex flex-col gap-2">
                   <div className="flex justify-between items-center border-b border-slate-200 pb-2">
-                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Target Cabang</span>
-                    <span className="text-xs font-black text-slate-700">{deleteModal.cabang}</span>
+                    <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Target Cabang</span>
+                    <span className="text-xs font-bold text-slate-700">{deleteModal.cabang}</span>
                   </div>
                   <div className="flex justify-between items-center pt-1">
-                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Tipe Data</span>
-                    <span className={`text-[10px] px-2 py-1 rounded-md font-black ${deleteModal.jenis.includes('Realisasi') ? 'bg-red-100 text-red-600' : 'bg-teal-50 text-teal-600'}`}>
+                    <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Tipe Data</span>
+                    <span className={`text-[10px] px-2 py-1 rounded-md font-bold ${deleteModal.jenis.includes('Realisasi') ? 'bg-red-100 text-red-600' : 'bg-teal-50 text-teal-600'}`}>
                       {deleteModal.jenis}
                     </span>
                   </div>
@@ -1004,13 +1004,13 @@ const DaspenSection = () => {
               <div className="flex gap-3 justify-center">
                 <button
                   onClick={() => setDeleteModal({ show: false, id: null, jenis: "", cabang: "" })}
-                  className="flex-1 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl font-black transition-colors"
+                  className="flex-1 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl font-bold transition-colors"
                 >
                   Batal
                 </button>
                 <button
                   onClick={confirmDelete}
-                  className="flex-1 px-4 py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-black transition-colors shadow-lg shadow-rose-500/30"
+                  className="flex-1 px-4 py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-bold transition-colors shadow-lg shadow-rose-500/30"
                 >
                   Ya, Hapus
                 </button>
@@ -1026,8 +1026,8 @@ const DaspenSection = () => {
           <div className="flex items-center space-x-4">
             <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-md"><FaHandHoldingHeart className="text-2xl" /></div>
             <div>
-              <h2 className="text-xl font-black">Dana Sosial Pensiun (Daspen)</h2>
-              <div className="flex items-center gap-2 mt-1"><span className="px-2 py-0.5 bg-white/20 rounded-md text-[10px] font-black uppercase tracking-widest">Periode: {selectedMonth} {selectedYear}</span></div>
+              <h2 className="text-xl font-bold">Dana Sosial Pensiun (Daspen)</h2>
+              <div className="flex items-center gap-2 mt-1"><span className="px-2 py-0.5 bg-white/20 rounded-md text-[10px] font-bold uppercase tracking-widest">Periode: {selectedMonth} {selectedYear}</span></div>
             </div>
           </div>
           <button onClick={() => setShowConfig(!showConfig)} className="p-3 bg-white/20 hover:bg-white/30 rounded-2xl backdrop-blur-md transition-all">
@@ -1041,17 +1041,17 @@ const DaspenSection = () => {
           <div className="bg-slate-50/50 p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-rose-500 text-white flex items-center justify-center"><FaCalculator /></div>
-              <div><h3 className="text-base font-black text-slate-800">Konfigurasi Besaran Daspen</h3></div>
+              <div><h3 className="text-base font-bold text-slate-800">Konfigurasi Besaran Daspen</h3></div>
             </div>
           </div>
 
           <div className="p-6 sm:p-8">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
               <div>
-                <label className="text-[9px] font-black text-slate-400 uppercase">Kuota Dasar</label>
+                <label className="text-[9px] font-bold text-slate-400 uppercase">Kuota Dasar</label>
                 <div className="relative group">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 font-black">Rp</span>
-                  <input type="number" value={kuota} onChange={(e) => setKuota(parseInt(e.target.value) || 0)} className="w-full pl-11 pr-4 py-3 bg-slate-50 rounded-[16px] font-black outline-none" />
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 font-bold">Rp</span>
+                  <input type="number" value={kuota} onChange={(e) => setKuota(parseInt(e.target.value) || 0)} className="w-full pl-11 pr-4 py-3 bg-slate-50 rounded-[16px] font-bold outline-none" />
                 </div>
               </div>
               {[
@@ -1060,47 +1060,47 @@ const DaspenSection = () => {
                 { label: "Kat III", key: "katagori3", val: kat3Val }
               ].map(cat => (
                 <div key={cat.key}>
-                  <label className="text-[9px] font-black text-slate-400 uppercase">{cat.label}</label>
+                  <label className="text-[9px] font-bold text-slate-400 uppercase">{cat.label}</label>
                   <div className="space-y-2">
-                    <input type="number" step="0.01" value={cat.key === "katagori1" ? katagori1 : cat.key === "katagori2" ? katagori2 : katagori3} onChange={(e) => { const v = parseFloat(e.target.value) || 0; if (cat.key === "katagori1") setKatagori1(v); if (cat.key === "katagori2") setKatagori2(v); if (cat.key === "katagori3") setKatagori3(v); }} className="w-full px-4 py-3 bg-slate-50 rounded-[16px] font-black text-center outline-none" />
-                    <div className="px-4 py-1.5 bg-rose-50 rounded-lg text-center"><p className="text-[10px] text-rose-600 font-black">{formatCurrency(cat.val)}</p></div>
+                    <input type="number" step="0.01" value={cat.key === "katagori1" ? katagori1 : cat.key === "katagori2" ? katagori2 : katagori3} onChange={(e) => { const v = parseFloat(e.target.value) || 0; if (cat.key === "katagori1") setKatagori1(v); if (cat.key === "katagori2") setKatagori2(v); if (cat.key === "katagori3") setKatagori3(v); }} className="w-full px-4 py-3 bg-slate-50 rounded-[16px] font-bold text-center outline-none" />
+                    <div className="px-4 py-1.5 bg-rose-50 rounded-lg text-center"><p className="text-[10px] text-rose-600 font-bold">{formatCurrency(cat.val)}</p></div>
                   </div>
                 </div>
               ))}
             </div>
 
-            <button onClick={handleSaveBesaran} className="w-full py-4 bg-rose-500 hover:bg-rose-600 text-white rounded-[24px] font-black flex items-center justify-center gap-2">
+            <button onClick={handleSaveBesaran} className="w-full py-4 bg-rose-500 hover:bg-rose-600 text-white rounded-[24px] font-bold flex items-center justify-center gap-2">
               <FaSave /> Simpan Konfigurasi
             </button>
 
             <div className="mt-6 p-5 bg-emerald-50 rounded-[24px]">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center"><FaCog /></div>
-                <div><h4 className="text-sm font-black text-emerald-800">Pembagian Persentase</h4></div>
+                <div><h4 className="text-sm font-bold text-emerald-800">Pembagian Persentase</h4></div>
               </div>
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="text-[9px] font-black text-slate-400 uppercase">Cabang (%)</label>
+                  <label className="text-[9px] font-bold text-slate-400 uppercase">Cabang (%)</label>
                   <div className="relative group">
                     <input
                       type="number" step="0.01" value={cabangPersen * 100}
                       onChange={(e) => setCabangPersen((parseFloat(e.target.value) || 0) / 100)}
-                      className="w-full px-4 py-3 bg-white rounded-[16px] font-black outline-none border border-slate-200"
+                      className="w-full px-4 py-3 bg-white rounded-[16px] font-bold outline-none border border-slate-200"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="text-[9px] font-black text-slate-400 uppercase">Kabupaten (%)</label>
+                  <label className="text-[9px] font-bold text-slate-400 uppercase">Kabupaten (%)</label>
                   <div className="relative group">
                     <input
                       type="number" step="0.01" value={kabupatenPersen * 100}
                       onChange={(e) => setKabupatenPersen((parseFloat(e.target.value) || 0) / 100)}
-                      className="w-full px-4 py-3 bg-white rounded-[16px] font-black outline-none border border-slate-200"
+                      className="w-full px-4 py-3 bg-white rounded-[16px] font-bold outline-none border border-slate-200"
                     />
                   </div>
                 </div>
               </div>
-              <button onClick={handleSavePersen} className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-[24px] font-black flex items-center justify-center gap-2">
+              <button onClick={handleSavePersen} className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-[24px] font-bold flex items-center justify-center gap-2">
                 <FaSave /> Simpan Persentase
               </button>
             </div>
@@ -1108,11 +1108,11 @@ const DaspenSection = () => {
             <div className="mt-6 p-5 bg-blue-50 rounded-[24px]">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-8 h-8 rounded-xl bg-blue-500 text-white flex items-center justify-center"><FaFileExcel /></div>
-                <div><h4 className="text-sm font-black text-blue-800">Upload Data Provinsi (DASPEN)</h4></div>
+                <div><h4 className="text-sm font-bold text-blue-800">Upload Data Provinsi (DASPEN)</h4></div>
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
-                <button type="button" onClick={() => handleDownloadTemplate("Template_Provinsi_Daspen")} className="flex items-center gap-2 px-4 py-2.5 bg-white text-blue-600 rounded-xl text-xs font-black"><FaFileExcel /> Download Template</button>
-                <label className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-xs font-black cursor-pointer ${isUploadingDaspen ? 'opacity-50' : ''}`}>
+                <button type="button" onClick={() => handleDownloadTemplate("Template_Provinsi_Daspen")} className="flex items-center gap-2 px-4 py-2.5 bg-white text-blue-600 rounded-xl text-xs font-bold"><FaFileExcel /> Download Template</button>
+                <label className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-xs font-bold cursor-pointer ${isUploadingDaspen ? 'opacity-50' : ''}`}>
                   {isUploadingDaspen ? "Menyimpan..." : <><FaUpload /> Upload & Simpan Excel Provinsi</>}
                   <input type="file" accept=".xlsx,.xls" className="hidden" onChange={handleExcelUploadProvinsi} disabled={isUploadingDaspen} />
                 </label>
@@ -1151,7 +1151,7 @@ const DaspenSection = () => {
 
                   {/* 1. BAGIAN PILIH CABANG */}
                   <div className="flex flex-col gap-2 w-full md:w-auto md:flex-1 min-w-[180px]">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
                       Data Pembanding <br className="hidden md:block" />
                       <span className="text-slate-500 font-bold text-[9px] md:ml-1">(Pilih Cabang)</span>
                     </label>
@@ -1159,7 +1159,7 @@ const DaspenSection = () => {
                       <select
                         value={selectedCabang}
                         onChange={(e) => setSelectedCabang(e.target.value)}
-                        className="w-full pl-4 pr-8 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-black text-sm focus:border-indigo-500 outline-none appearance-none cursor-pointer transition-all hover:bg-white/10"
+                        className="w-full pl-4 pr-8 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-bold text-sm focus:border-indigo-500 outline-none appearance-none cursor-pointer transition-all hover:bg-white/10"
                       >
                         <option value="" className="text-slate-800">-- Semua Cabang (Total) --</option>
                         {cabangList.map(c => <option key={c.id} value={c.kecamatan} className="text-slate-800">{c.kecamatan}</option>)}
@@ -1173,40 +1173,40 @@ const DaspenSection = () => {
 
                     {/* KAT I */}
                     <div className="flex flex-col items-center gap-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">KAT I</label>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">KAT I</label>
                       <div className="w-[72px] h-14 sm:h-16 flex items-center justify-center bg-transparent border-2 border-slate-600 rounded-xl">
-                        <span className="text-xl sm:text-2xl font-black text-teal-400">{kat1}</span>
+                        <span className="text-xl sm:text-2xl font-bold text-teal-400">{kat1}</span>
                       </div>
                       {/* LABEL DATA ASLI */}
                       <div className="bg-slate-800 border border-slate-700 w-full py-1.5 rounded-lg text-center shadow-inner">
-                        <span className="text-[8px] font-black uppercase text-slate-400 block mb-0.5">Data Asli</span>
-                        <span className="text-sm font-black text-white">{autoKat1}</span>
+                        <span className="text-[8px] font-bold uppercase text-slate-400 block mb-0.5">Data Asli</span>
+                        <span className="text-sm font-bold text-white">{autoKat1}</span>
                       </div>
                     </div>
 
                     {/* KAT II */}
                     <div className="flex flex-col items-center gap-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">KAT II</label>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">KAT II</label>
                       <div className="w-[72px] h-14 sm:h-16 flex items-center justify-center bg-transparent border-2 border-slate-600 rounded-xl">
-                        <span className="text-xl sm:text-2xl font-black text-teal-400">{kat2}</span>
+                        <span className="text-xl sm:text-2xl font-bold text-teal-400">{kat2}</span>
                       </div>
                       {/* LABEL DATA ASLI */}
                       <div className="bg-slate-800 border border-slate-700 w-full py-1.5 rounded-lg text-center shadow-inner">
-                        <span className="text-[8px] font-black uppercase text-slate-400 block mb-0.5">Data Asli</span>
-                        <span className="text-sm font-black text-white">{autoKat2}</span>
+                        <span className="text-[8px] font-bold uppercase text-slate-400 block mb-0.5">Data Asli</span>
+                        <span className="text-sm font-bold text-white">{autoKat2}</span>
                       </div>
                     </div>
 
                     {/* KAT III */}
                     <div className="flex flex-col items-center gap-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">KAT III</label>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">KAT III</label>
                       <div className="w-[72px] h-14 sm:h-16 flex items-center justify-center bg-transparent border-2 border-slate-600 rounded-xl">
-                        <span className="text-xl sm:text-2xl font-black text-teal-400">{kat3}</span>
+                        <span className="text-xl sm:text-2xl font-bold text-teal-400">{kat3}</span>
                       </div>
                       {/* LABEL DATA ASLI */}
                       <div className="bg-slate-800 border border-slate-700 w-full py-1.5 rounded-lg text-center shadow-inner">
-                        <span className="text-[8px] font-black uppercase text-slate-400 block mb-0.5">Data Asli</span>
-                        <span className="text-sm font-black text-white">{autoKat3}</span>
+                        <span className="text-[8px] font-bold uppercase text-slate-400 block mb-0.5">Data Asli</span>
+                        <span className="text-sm font-bold text-white">{autoKat3}</span>
                       </div>
                     </div>
                   </div>
@@ -1215,14 +1215,14 @@ const DaspenSection = () => {
                   <div className="flex flex-row items-start justify-center gap-4 px-5 py-4 bg-white/5 border border-white/10 rounded-2xl w-full md:w-auto shrink-0 h-full">
                     <div className="text-center flex flex-col justify-between h-full">
                       <div>
-                        <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Tot. Daspen</div>
-                        <div className="text-xl font-black text-teal-400 mt-1 leading-none">
+                        <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Tot. Daspen</div>
+                        <div className="text-xl font-bold text-teal-400 mt-1 leading-none">
                           {kat1 + kat2 + kat3} <span className="text-[10px] text-slate-500 font-bold uppercase">Org</span>
                         </div>
                       </div>
                       <div className="mt-3 bg-slate-800 px-3 py-1 rounded-lg border border-slate-700 inline-block mx-auto">
                         <span className="text-[9px] text-slate-400 font-bold uppercase">Data Asli: </span>
-                        <span className="text-[11px] text-white font-black">{autoTotalAnggota}</span>
+                        <span className="text-[11px] text-white font-bold">{autoTotalAnggota}</span>
                       </div>
                     </div>
 
@@ -1230,12 +1230,12 @@ const DaspenSection = () => {
 
                     <div className="text-center flex flex-col justify-between h-full">
                       <div>
-                        <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Total Target</div>
-                        <div className="text-xl font-black text-teal-400 mt-1 leading-none">{formatCurrency(totalTarget)}</div>
+                        <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Total Target</div>
+                        <div className="text-xl font-bold text-teal-400 mt-1 leading-none">{formatCurrency(totalTarget)}</div>
                       </div>
                       <div className="mt-3 bg-slate-800 px-3 py-1 rounded-lg border border-slate-700 inline-block mx-auto">
                         <span className="text-[9px] text-slate-400 font-bold uppercase">Data Asli: </span>
-                        <span className="text-[11px] text-white font-black">{formatCurrency(autoTotalTarget)}</span>
+                        <span className="text-[11px] text-white font-bold">{formatCurrency(autoTotalTarget)}</span>
                       </div>
                     </div>
                   </div>
@@ -1252,8 +1252,8 @@ const DaspenSection = () => {
                 <div className="flex items-center gap-3">
                   <div className="w-11 h-11 rounded-[18px] bg-rose-50 text-rose-600 flex items-center justify-center"><FaHandHoldingHeart className="text-xl" /></div>
                   <div>
-                    <h4 className="text-lg font-black text-slate-800">Rekapitulasi Daspen</h4>
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Data Hitam Digenerate Langsung dari API Balancing</p>
+                    <h4 className="text-lg font-bold text-slate-800">Rekapitulasi Daspen</h4>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Data Hitam Digenerate Langsung dari API Balancing</p>
                   </div>
                 </div>
 
@@ -1299,7 +1299,7 @@ const DaspenSection = () => {
                         <ul className="overflow-y-auto py-2 custom-scrollbar">
                           <li
                             onClick={() => handleSelectCabang("")}
-                            className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${!searchQuery
+                            className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${!searchQuery
                                 ? "bg-rose-50 text-rose-600 border-rose-500"
                                 : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
                               }`}
@@ -1316,7 +1316,7 @@ const DaspenSection = () => {
                               <li
                                 key={idx}
                                 onClick={() => handleSelectCabang(cab.kecamatan)}
-                                className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${searchQuery === cab.kecamatan
+                                className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${searchQuery === cab.kecamatan
                                     ? "bg-rose-50 text-rose-600 border-rose-500"
                                     : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
                                   }`}
@@ -1329,11 +1329,11 @@ const DaspenSection = () => {
                     )}
                   </div>
                   <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-100">
-                    <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} className="bg-transparent px-4 py-2.5 outline-none font-black text-slate-600 text-xs uppercase tracking-widest cursor-pointer">
+                    <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} className="bg-transparent px-4 py-2.5 outline-none font-bold text-slate-600 text-xs uppercase tracking-widest cursor-pointer">
                       {bulanList.map(b => <option key={b.id} value={b.namaBulan}>{b.namaBulan}</option>)}
                     </select>
                     <div className="w-[1px] h-5 bg-slate-200" />
-                    <select value={selectedYear} onChange={(e) => setSelectedYear(parseInt(e.target.value))} className="bg-transparent px-4 py-2.5 outline-none font-black text-slate-600 text-xs uppercase tracking-widest cursor-pointer">
+                    <select value={selectedYear} onChange={(e) => setSelectedYear(parseInt(e.target.value))} className="bg-transparent px-4 py-2.5 outline-none font-bold text-slate-600 text-xs uppercase tracking-widest cursor-pointer">
                       {Array.from({ length: new Date().getFullYear() + 2 - 2020 + 1 }, (_, i) => 2020 + i).map(y => <option key={y} value={y}>{y}</option>)}
                     </select>
                   </div>
@@ -1344,12 +1344,12 @@ const DaspenSection = () => {
               <div data-html2canvas-ignore="true" className="flex justify-end gap-3 px-6 pt-4">
                 <div className="flex items-center gap-2">
                   {isSaved ? (
-                    <span className="px-4 py-2.5 bg-emerald-50 text-emerald-700 rounded-xl font-black text-xs uppercase tracking-widest flex items-center gap-1.5 border border-emerald-200">
+                    <span className="px-4 py-2.5 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center gap-1.5 border border-emerald-200">
                       <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
                       TERSIMPAN ({savedDataCount})
                     </span>
                   ) : (
-                    <span className="px-4 py-2.5 bg-amber-50 text-amber-700 rounded-xl font-black text-xs uppercase tracking-widest flex items-center gap-1.5 border border-amber-200">
+                    <span className="px-4 py-2.5 bg-amber-50 text-amber-700 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center gap-1.5 border border-amber-200">
                       <span className="w-1.5 h-1.5 bg-amber-500 rounded-full" />
                       BELUM DISIMPAN
                     </span>
@@ -1357,19 +1357,19 @@ const DaspenSection = () => {
                 </div>
                 <button
                   onClick={handleSaveRekapToDB}
-                  className="flex items-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
+                  className="flex items-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
                 >
                   <FaSave className="text-sm" /> Simpan
                 </button>
                 <button
                   onClick={handleExportExcel}
-                  className="flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-emerald-600/20 active:scale-95"
+                  className="flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-emerald-600/20 active:scale-95"
                 >
                   <FaFileExcel className="text-sm" /> Export Excel
                 </button>
                 <button
                   onClick={handleDownloadPDF} /* <-- Panggil fungsi baru di sini */
-                  className="flex items-center gap-2 px-5 py-3 bg-rose-500 hover:bg-rose-600 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-rose-500/20 active:scale-95"
+                  className="flex items-center gap-2 px-5 py-3 bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-rose-500/20 active:scale-95"
                 >
                   <FaFilePdf className="text-sm" /> Cetak PDF
                 </button>
@@ -1505,10 +1505,10 @@ const DaspenSection = () => {
 
                       return (
                         <tr key={i} className="hover:bg-slate-50/80 transition-colors text-[11px] font-bold text-slate-600">
-                          <td className="px-3 py-2 text-slate-400 font-black border-r border-slate-200 text-center">{i + 1}</td>
-                          <td className="px-3 py-2 font-black text-slate-800 whitespace-nowrap border-r border-slate-200 uppercase">{cabangName}</td>
+                          <td className="px-3 py-2 text-slate-400 font-bold border-r border-slate-200 text-center">{i + 1}</td>
+                          <td className="px-3 py-2 font-bold text-slate-800 whitespace-nowrap border-r border-slate-200 uppercase">{cabangName}</td>
 
-                          <td className="px-3 py-2 border-r border-slate-200 text-center whitespace-nowrap"><CellTriple top={totalKatAnggota} middle={pTotAnggota} bottom={uniqueAnggotaPGRI} topClass="text-slate-700 font-black" middleClass="text-teal-500" bottomClass="text-rose-500" /></td>
+                          <td className="px-3 py-2 border-r border-slate-200 text-center whitespace-nowrap"><CellTriple top={totalKatAnggota} middle={pTotAnggota} bottom={uniqueAnggotaPGRI} topClass="text-slate-700 font-bold" middleClass="text-teal-500" bottomClass="text-rose-500" /></td>
                           <td className="px-3 py-2 border-r border-slate-200 text-center"><CellTriple top={autoK1} middle={pk1} /></td>
                           <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap"><CellTriple top={formatCurrency(nomAutoK1)} middle={pNomK1 !== null ? formatCurrency(pNomK1) : null} /></td>
 
@@ -1518,7 +1518,7 @@ const DaspenSection = () => {
                           <td className="px-3 py-2 border-r border-slate-200 text-center"><CellTriple top={autoK3} middle={pk3} /></td>
                           <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap"><CellTriple top={formatCurrency(nomAutoK3)} middle={pNomK3 !== null ? formatCurrency(pNomK3) : null} /></td>
 
-                          <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/50"><CellTriple top={formatCurrency(totAutoNominal)} middle={pTotNominal !== null ? formatCurrency(pTotNominal) : null} topClass="text-slate-900 font-black" /></td>
+                          <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/50"><CellTriple top={formatCurrency(totAutoNominal)} middle={pTotNominal !== null ? formatCurrency(pTotNominal) : null} topClass="text-slate-900 font-bold" /></td>
 
                           <td className="px-3 py-2 border-r border-slate-200 text-right whitespace-nowrap bg-slate-50/30">
                             <CellTriple top={formatCurrency(autoTransfer)} middle={pTransfer !== null ? formatCurrency(pTransfer) : null} />
@@ -1545,8 +1545,8 @@ const DaspenSection = () => {
                           </td>
                           <td className="px-3 py-2 text-center border-r border-slate-200">
                             <div className="flex flex-col gap-1 items-center justify-center">
-                              <span className="text-[9px] font-black text-slate-500">AUTO</span>
-                              {daspen && <span className="px-2 py-0.5 rounded-md text-[9px] font-black bg-teal-50 text-teal-600">DASPEN</span>}
+                              <span className="text-[9px] font-bold text-slate-500">AUTO</span>
+                              {daspen && <span className="px-2 py-0.5 rounded-md text-[9px] font-bold bg-teal-50 text-teal-600">DASPEN</span>}
                             </div>
                           </td>
 
@@ -1582,7 +1582,7 @@ const DaspenSection = () => {
                       );
                     })
                   ) : (
-                    <tr><td colSpan={18} className="py-16 text-center text-slate-300 font-black uppercase tracking-widest text-xs">Data Kosong</td></tr>
+                    <tr><td colSpan={18} className="py-16 text-center text-slate-300 font-bold uppercase tracking-widest text-xs">Data Kosong</td></tr>
                   );
 
                   return (
@@ -1594,7 +1594,7 @@ const DaspenSection = () => {
                             <th
                               key={i}
                               data-html2canvas-ignore={h === 'Aksi' ? "true" : undefined}
-                              className="px-3 py-4 text-[9px] font-black uppercase tracking-widest text-slate-500 text-center whitespace-nowrap border-r border-slate-200 bg-slate-100/50"
+                              className="px-3 py-4 text-[9px] font-bold uppercase tracking-widest text-slate-500 text-center whitespace-nowrap border-r border-slate-200 bg-slate-100/50"
                             >
                               {h}
                             </th>
@@ -1607,9 +1607,9 @@ const DaspenSection = () => {
 
                       {!loadingTable && filteredCabangs.length > 0 && (
                         <tfoot className="bg-slate-100/80 border-t-4 border-slate-300 shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
-                          <tr className="text-[11px] font-black text-slate-800">
+                          <tr className="text-[11px] font-bold text-slate-800">
                             <td colSpan={2} className="px-3 py-4 text-center text-xs uppercase tracking-widest border-r border-slate-300">TOTAL REKAPITULASI</td>
-                            <td className="px-3 py-2 border-r border-slate-300 text-center"><CellTriple top={tAutoAng} middle={tProvAng > 0 ? tProvAng : null} bottom={tRealAng} topClass="text-slate-900 font-black" middleClass="text-teal-500" bottomClass="text-rose-500" /></td>
+                            <td className="px-3 py-2 border-r border-slate-300 text-center"><CellTriple top={tAutoAng} middle={tProvAng > 0 ? tProvAng : null} bottom={tRealAng} topClass="text-slate-900 font-bold" middleClass="text-teal-500" bottomClass="text-rose-500" /></td>
                             <td className="px-3 py-2 border-r border-slate-300 text-center"><CellTriple top={tAutoK1} middle={tProvK1} /></td>
                             <td className="px-3 py-2 border-r border-slate-300 text-right"><CellTriple top={formatCurrency(tAutoNomK1)} middle={formatCurrency(tProvNomK1)} /></td>
                             <td className="px-3 py-2 border-r border-slate-300 text-center"><CellTriple top={tAutoK2} middle={tProvK2} /></td>
