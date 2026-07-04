@@ -68,6 +68,8 @@ const TagihanForm = () => {
   const [totalTunggakan, setTotalTunggakan] = useState(0);
   const [showTunggakan, setShowTunggakan] = useState(false);
   const [bankTargetMap, setBankTargetMap] = useState({});
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [detailCabang, setDetailCabang] = useState(null);
 
   // Data Lists
   const [posPenerimaanList, setPosPenerimaanList] = useState([]);
@@ -806,7 +808,7 @@ const TagihanForm = () => {
                 ) : cabangSummary.length > 0 ? (
                   cabangSummary.map((g, i) => {
                     return (
-                      <tr key={g.cabang} onClick={() => { setCabangFilter(g.cabang); setViewMode("detail"); }} className="hover:bg-violet-50/50 transition-all text-[11px] sm:text-xs cursor-pointer">
+                      <tr key={g.cabang} onClick={() => { setDetailCabang(g.cabang); setShowDetailModal(true); }} className="hover:bg-violet-50/50 transition-all text-[11px] sm:text-xs cursor-pointer">
                         <td className="px-1.5 sm:px-2 py-3 text-center font-bold text-slate-400">{i + 1}</td>
                         <td className="px-1.5 sm:px-2 py-3 font-bold text-slate-700 whitespace-nowrap">{g.cabang}</td>
                         <td className="px-1.5 sm:px-2 py-3 text-right font-mono font-bold text-slate-600">{g.daspen > 0 ? formatCurrency(g.daspen) : "-"}</td>
@@ -936,6 +938,92 @@ const TagihanForm = () => {
           </div>
         )}
       </div>
+
+      {/* Modal: Detail Transaksi Cabang */}
+      <AnimatePresence>
+        {showDetailModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowDetailModal(false)} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
+            <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="relative bg-white w-full max-w-4xl rounded-[40px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+              <div className="p-6 bg-slate-800 text-white flex justify-between items-center">
+                <div className="flex items-center space-x-3">
+                  <FaBuilding className="text-violet-300 text-lg" />
+                  <div>
+                    <h3 className="text-lg font-black uppercase tracking-tight">Detail Transaksi</h3>
+                    <p className="text-slate-300 text-xs font-bold">{detailCabang}</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowDetailModal(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-all"><FaTimes /></button>
+              </div>
+              <div className="overflow-y-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 text-[10px] uppercase font-black text-slate-500 tracking-wider sticky top-0 border-b border-slate-100">
+                      <th className="px-4 py-4 text-center">No</th>
+                      <th className="px-4 py-4">Tgl</th>
+                      <th className="px-4 py-4">Pos</th>
+                      <th className="px-4 py-4">Keterangan</th>
+                      <th className="px-4 py-4 text-right">Tagihan</th>
+                      <th className="px-4 py-4 text-right">Pembayaran</th>
+                      <th className="px-4 py-4 text-right">Sisa</th>
+                      <th className="px-4 py-4 text-center">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {transactions.filter(t => (t.cabang || "").toUpperCase() === (detailCabang || "").toUpperCase()).length > 0 ? (
+                      transactions.filter(t => (t.cabang || "").toUpperCase() === (detailCabang || "").toUpperCase()).map((t, i) => (
+                        <tr key={t.id || i} className="hover:bg-violet-50/30 transition-all">
+                          <td className="px-4 py-3.5 text-xs font-bold text-slate-500 text-center">{i + 1}</td>
+                          <td className="px-4 py-3.5 text-xs font-bold text-slate-500">{t.formattedDate}</td>
+                          <td className="px-4 py-3.5">
+                            <span className="inline-block px-2 py-0.5 bg-violet-50 text-violet-600 rounded-lg text-[10px] font-black">{t.pos}</span>
+                          </td>
+                          <td className="px-4 py-3.5 text-xs text-slate-500 max-w-[200px] truncate" title={t.keterangan || ""}>{t.keterangan || "-"}</td>
+                          <td className="px-4 py-3.5 text-right text-xs font-black text-violet-600">{formatCurrency(t.tagihan)}</td>
+                          <td className="px-4 py-3.5 text-right text-xs font-black text-emerald-600">{t.pembayaran > 0 ? formatCurrency(t.pembayaran) : "0"}</td>
+                          <td className="px-4 py-3.5 text-right text-xs font-black text-rose-600">{t.sisa > 0 ? formatCurrency(t.sisa) : "0"}</td>
+                          <td className="px-4 py-3.5 text-center">
+                            <button onClick={() => { setShowDetailModal(false); handleEditClick(t); }} className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-1.5 rounded-lg transition-all text-xs" title="Edit">
+                              <FaEdit />
+                            </button>
+                            <button onClick={() => { setShowDetailModal(false); handleDeleteTransaksi(t.id); }} className="text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1.5 rounded-lg transition-all text-xs" title="Hapus">
+                              <FaTrash />
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="8" className="px-4 py-16 text-center">
+                          <FaInfoCircle className="text-slate-100 text-5xl mx-auto mb-3" />
+                          <p className="text-slate-400 font-bold text-sm">Tidak ada transaksi untuk cabang ini</p>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                  {transactions.filter(t => (t.cabang || "").toUpperCase() === (detailCabang || "").toUpperCase()).length > 0 && (
+                    <tfoot className="bg-slate-800 text-white">
+                      <tr className="font-black text-xs">
+                        <td colSpan="4" className="px-4 py-4 uppercase tracking-wider">Total</td>
+                        <td className="px-4 py-4 text-right">
+                          {formatCurrency(transactions.filter(t => (t.cabang || "").toUpperCase() === (detailCabang || "").toUpperCase()).reduce((s, t) => s + t.tagihan, 0))}
+                        </td>
+                        <td className="px-4 py-4 text-right">
+                          {formatCurrency(transactions.filter(t => (t.cabang || "").toUpperCase() === (detailCabang || "").toUpperCase()).reduce((s, t) => s + t.pembayaran, 0))}
+                        </td>
+                        <td className="px-4 py-4 text-right bg-blue-600">
+                          {formatCurrency(transactions.filter(t => (t.cabang || "").toUpperCase() === (detailCabang || "").toUpperCase()).reduce((s, t) => s + t.sisa, 0))}
+                        </td>
+                        <td></td>
+                      </tr>
+                    </tfoot>
+                  )}
+                </table>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Modal: Input Keuangan Cabang */}
       <AnimatePresence>
@@ -1077,17 +1165,6 @@ const TagihanForm = () => {
                       <span className="text-xs font-black text-amber-700 uppercase">Total Tunggakan</span>
                       <span className="text-sm font-black text-rose-600">Rp {totalTunggakan.toLocaleString("id-ID")}</span>
                     </div>
-
-                    <button
-                      type="button"
-                      onClick={addTunggakanToForm}
-                      className="w-full py-2.5 bg-amber-500 text-white rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-amber-600 transition-all"
-                    >
-                      + Tambahkan {tunggakanList.length} Item ke Tagihan
-                    </button>
-                    <p className="text-[9px] text-amber-500 font-medium text-center">
-                      Item tunggakan otomatis ditambahkan ke form saat ganti cabang
-                    </p>
                   </div>
                 )}
 
