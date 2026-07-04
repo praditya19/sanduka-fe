@@ -437,10 +437,10 @@ function KeuanganDetailContent() {
                         <div className="flex items-center gap-1.5 min-w-0">
                           <span className="font-semibold text-slate-700 whitespace-nowrap">{row.label}</span>
                           {row.count > 1 && (
-                            <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded shrink-0">{row.count.toLocaleString("id-ID")}</span>
+                            <span className="text-[10px] font-semibold text-slate-800 bg-slate-200 px-1.5 py-0.5 rounded shrink-0 tracking-[0.15em]">{row.count.toLocaleString("id-ID")}</span>
                           )}
                         </div>
-                        <span className="font-bold text-violet-600 text-right tabular-nums">{formatCurrency(row.total)}</span>
+                        <span className="font-semibold text-slate-700 text-right tabular-nums">{formatCurrency(row.total)}</span>
                       </div>
                       {row.keterangan ? (
                         <div className="text-[10px] text-slate-400 font-medium mt-px ml-1">{row.keterangan}</div>
