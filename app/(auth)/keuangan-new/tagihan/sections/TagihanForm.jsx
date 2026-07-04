@@ -1021,9 +1021,10 @@ const TagihanForm = () => {
                   </div>
                 </div>
 
-                {/* Tunggakan Bulan Sebelumnya */}
+                {/* Tunggakan / Kekurangan Bulan Sebelumnya */}
                 {showTunggakan && formCabang.cabang && (
                   <div className="bg-amber-50 border-2 border-amber-200 rounded-[24px] p-4 space-y-3">
+                    {/* Header */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <FaInfoCircle className="text-amber-500 text-sm" />
@@ -1039,6 +1040,18 @@ const TagihanForm = () => {
                         <FaTimes size={12} />
                       </button>
                     </div>
+
+                    {/* TOTAL KEKURANGAN - prominent aggregate */}
+                    <div className="bg-rose-500 rounded-2xl p-4 -mx-1">
+                      <div className="text-[10px] font-black text-rose-100 uppercase tracking-widest mb-1">
+                        Total Kekurangan Bulan Sebelumnya
+                      </div>
+                      <div className="text-3xl font-black text-white">
+                        Rp {totalTunggakan.toLocaleString("id-ID")}
+                      </div>
+                    </div>
+
+                    {/* Per-bulan breakdown */}
                     <div className="space-y-2 max-h-48 overflow-y-auto">
                       {groupTunggakanByMonth(tunggakanList).map(group => (
                         <div key={`${group.tahun}-${group.bulan}`} className="bg-white rounded-xl p-3 border border-amber-100">
@@ -1059,10 +1072,12 @@ const TagihanForm = () => {
                         </div>
                       ))}
                     </div>
+
                     <div className="flex items-center justify-between border-t border-amber-200 pt-3">
                       <span className="text-xs font-black text-amber-700 uppercase">Total Tunggakan</span>
                       <span className="text-sm font-black text-rose-600">Rp {totalTunggakan.toLocaleString("id-ID")}</span>
                     </div>
+
                     <button
                       type="button"
                       onClick={addTunggakanToForm}
