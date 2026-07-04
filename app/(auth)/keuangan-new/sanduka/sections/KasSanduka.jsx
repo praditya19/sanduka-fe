@@ -30,6 +30,18 @@ import GlobalApi from "@/app/_utils/GlobalApi";
 import * as XLSX from "xlsx";
 import toast, { Toaster } from "react-hot-toast";
 
+// Ekstrak nama cabang dari keterangan transaksi
+// Contoh: "Pemasukan Sanduka Sumbangan Anggota Cabang PAKIS AJI (Transfer) untuk Maret 2026"
+// Output: "PAKIS AJI"
+const extractCabangFromKeterangan = (keterangan) => {
+  if (!keterangan || typeof keterangan !== "string") return null;
+  const match = keterangan.match(/Cabang\s+([^(]+)/i);
+  if (match && match[1]) return match[1].trim().toUpperCase();
+  const match2 = keterangan.match(/Cabang\s+([^(]+)\s*\(/);
+  if (match2 && match2[1]) return match2[1].trim().toUpperCase();
+  return null;
+};
+
 const KasSanduka = () => {
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState([]);
@@ -797,6 +809,7 @@ const KasSanduka = () => {
               <tr className="bg-white text-[9px] uppercase font-bold text-slate-400 tracking-[0.15em] border-b border-slate-50">
                 <th className="px-4 py-4 text-center w-24">Tgl Transaksi</th>
                 <th className="px-4 py-4">Nomor Bukti / Keterangan</th>
+                <th className="px-4 py-4">Cabang</th>
                 <th className="px-4 py-4 text-right">Debet</th>
                 <th className="px-4 py-4 text-right">Kredit</th>
                 <th className="px-4 py-4 text-right">Running Saldo</th>
@@ -811,7 +824,7 @@ const KasSanduka = () => {
                   .fill(0)
                   .map((_, i) => (
                     <tr key={i} className="animate-pulse">
-                      <td colSpan="6" className="px-4 py-3">
+                      <td colSpan="7" className="px-4 py-3">
                         <div className="h-2.5 bg-slate-50 rounded-full w-full"></div>
                       </td>
                     </tr>
@@ -833,6 +846,11 @@ const KasSanduka = () => {
                       </div>
                       <div className="text-[9px] text-slate-400 font-medium italic">
                         {t.keterangan}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="text-[11px] text-slate-600 font-medium">
+                        {t.cabang || extractCabangFromKeterangan(t.keterangan) || "-"}
                       </div>
                     </td>
                     <td className="px-4 py-3 text-right text-[11px] font-bold text-emerald-600">
@@ -874,7 +892,7 @@ const KasSanduka = () => {
               ) : (
                 <tr>
                   <td
-                    colSpan="6"
+                    colSpan="7"
                     className="px-6 py-24 text-center bg-slate-50/10"
                   >
                     <div className="w-16 h-16 bg-white rounded-2xl border border-slate-100 flex items-center justify-center mx-auto mb-4 shadow-xl shadow-slate-200/50">
@@ -892,7 +910,7 @@ const KasSanduka = () => {
               <tfoot className="bg-slate-900 text-white">
                 <tr className="font-bold text-[10px] sm:text-xs">
                   <td
-                    colSpan="2"
+                    colSpan="3"
                     className="px-4 py-4 uppercase tracking-[0.1em] text-slate-400"
                   >
                     Ringkasan Periode
