@@ -300,7 +300,7 @@ const KasSanduka = () => {
       }
 
       toast.success("Data berhasil dihapus!");
-      fetchPenerimaan(); // refresh data
+      fetchData(); 
     } catch (error) {
       console.error("Gagal menghapus:", error);
       toast.error("Gagal hapus data.");
