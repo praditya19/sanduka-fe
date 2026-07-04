@@ -119,7 +119,7 @@ const PengeluaranSection = () => {
               <FaArrowTrendDown className="text-2xl" />
             </div>
             <div>
-              <h2 className="text-xl font-black">Laporan Pengeluaran</h2>
+              <h2 className="text-xl font-bold">Laporan Pengeluaran</h2>
               <p className="text-rose-100 text-xs font-medium uppercase tracking-wider">
                 Detail seluruh biaya & dana keluar Sanduka
               </p>
@@ -148,7 +148,7 @@ const PengeluaranSection = () => {
         {/* Filters */}
         <div className="bg-slate-50 p-4 rounded-[24px] border border-slate-100 flex flex-wrap gap-4 items-end">
           <div className="flex-1 min-w-[200px]">
-            <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block px-1">
+            <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block px-1">
               Pilih Bulan
             </label>
             <select
@@ -164,7 +164,7 @@ const PengeluaranSection = () => {
             </select>
           </div>
           <div className="flex-1 min-w-[150px]">
-            <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block px-1">
+            <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block px-1">
               Pilih Tahun
             </label>
             <select
@@ -180,7 +180,7 @@ const PengeluaranSection = () => {
             </select>
           </div>
           <div className="flex-1 min-w-[200px] relative">
-            <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block px-1">
+            <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block px-1">
               Cari Keterangan
             </label>
             <FaSearch className="absolute left-4 bottom-4 text-slate-300" />
@@ -201,7 +201,7 @@ const PengeluaranSection = () => {
               <FaArrowTrendDown />
             </div>
             <div>
-              <h4 className="text-xs font-black text-rose-800 uppercase tracking-widest">
+              <h4 className="text-xs font-bold text-rose-800 uppercase tracking-widest">
                 Total Pengeluaran
               </h4>
               <p className="text-[10px] text-rose-600 font-bold">
@@ -211,7 +211,7 @@ const PengeluaranSection = () => {
               </p>
             </div>
           </div>
-          <span className="text-3xl font-black text-rose-600">
+          <span className="text-3xl font-bold text-rose-600">
             {formatCurrency(
               filteredData.reduce((acc, curr) => acc + (curr.nominal || 0), 0),
             )}
@@ -223,7 +223,7 @@ const PengeluaranSection = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-slate-900 text-white text-[10px] uppercase font-black tracking-widest">
+                <tr className="bg-slate-900 text-white text-[10px] uppercase font-bold tracking-widest">
                   <th className="px-6 py-5 text-center w-20">No</th>
                   <th className="px-6 py-5">Tanggal Transaksi</th>
                   <th className="px-6 py-5">Uraian / Keterangan</th>
@@ -254,11 +254,11 @@ const PengeluaranSection = () => {
                         {row.tanggalTransaksi}
                       </td>
                       <td className="px-6 py-4">
-                        <span className="font-black text-slate-700 text-sm block">
+                        <span className="font-bold text-slate-700 text-sm block">
                           {row.uraian}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right font-black text-rose-600 bg-rose-50/10">
+                      <td className="px-6 py-4 text-right font-bold text-rose-600 bg-rose-50/10">
                         {row.nominal}
                       </td>
                     </tr>

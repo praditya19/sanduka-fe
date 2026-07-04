@@ -213,15 +213,15 @@ export default function RekapitulasiSection() {
           ))}
         </select>
         <button onClick={fetchAll} disabled={loading}
-          className="px-5 py-2.5 bg-slate-800 text-white rounded-xl text-xs font-black flex items-center gap-2 hover:bg-black transition-all active:scale-95 disabled:opacity-50">
+          className="px-5 py-2.5 bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-black transition-all active:scale-95 disabled:opacity-50">
           <FaSyncAlt className={`text-xs ${loading ? "animate-spin" : ""}`} /> Muat
         </button>
         <button onClick={handlePrint}
-          className="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-black flex items-center gap-2 hover:bg-slate-50 transition-all active:scale-95">
+          className="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-slate-50 transition-all active:scale-95">
           <FaPrint /> PDF
         </button>
         <button onClick={handleExport}
-          className="px-5 py-2.5 bg-emerald-500 text-white rounded-xl text-xs font-black flex items-center gap-2 hover:bg-emerald-600 transition-all active:scale-95">
+          className="px-5 py-2.5 bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-emerald-600 transition-all active:scale-95">
           <FaFileExcel /> Excel
         </button>
       </div>
@@ -230,45 +230,45 @@ export default function RekapitulasiSection() {
       <div className="grid grid-cols-2 md:grid-cols-7 gap-4">
         <div className="bg-emerald-50 rounded-2xl p-5 border border-emerald-100 shadow-sm">
           <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center mb-3 text-sm"><FaCoins /></div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Total Iuran PGRI</p>
-          <p className="text-xl font-black text-emerald-600">{formatRp(grandTotal.iuranTotal)}</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Total Iuran PGRI</p>
+          <p className="text-xl font-bold text-emerald-600">{formatRp(grandTotal.iuranTotal)}</p>
         </div>
         <div className="bg-rose-50 rounded-2xl p-5 border border-rose-100 shadow-sm">
           <div className="w-10 h-10 rounded-xl bg-rose-500 text-white flex items-center justify-center mb-3 text-sm"><FaHandHoldingHeart /></div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Total Daspen</p>
-          <p className="text-xl font-black text-rose-600">{formatRp(grandTotal.daspenTotal)}</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Total Daspen</p>
+          <p className="text-xl font-bold text-rose-600">{formatRp(grandTotal.daspenTotal)}</p>
         </div>
         <div className="bg-indigo-50 rounded-2xl p-5 border border-indigo-100 shadow-sm">
           <div className="w-10 h-10 rounded-xl bg-indigo-500 text-white flex items-center justify-center mb-3 text-sm"><FaNewspaper /></div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Total Derap</p>
-          <p className="text-xl font-black text-indigo-600">{formatRp(grandTotal.derapTotal)}</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Total Derap</p>
+          <p className="text-xl font-bold text-indigo-600">{formatRp(grandTotal.derapTotal)}</p>
         </div>
         <div className="bg-amber-50 rounded-2xl p-5 border border-amber-100 shadow-sm">
           <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center mb-3 text-sm"><FaCalendarAlt /></div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Total Kalender</p>
-          <p className="text-xl font-black text-amber-600">{formatRp(grandTotal.kalenderTotal)}</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Total Kalender</p>
+          <p className="text-xl font-bold text-amber-600">{formatRp(grandTotal.kalenderTotal)}</p>
         </div>
         <div className="bg-cyan-50 rounded-2xl p-5 border border-cyan-100 shadow-sm">
           <div className="w-10 h-10 rounded-xl bg-cyan-500 text-white flex items-center justify-center mb-3 text-sm"><FaStar /></div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">HUT PGRI</p>
-          <p className="text-xl font-black text-cyan-600">{formatRp(grandTotal.hutDefault)}</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">HUT PGRI</p>
+          <p className="text-xl font-bold text-cyan-600">{formatRp(grandTotal.hutDefault)}</p>
         </div>
         <div className="bg-orange-50 rounded-2xl p-5 border border-orange-100 shadow-sm">
           <div className="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center mb-3 text-sm"><FaGift /></div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">LAIN-LAIN</p>
-          <p className="text-xl font-black text-orange-600">{formatRp(grandTotal.lainDefault)}</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">LAIN-LAIN</p>
+          <p className="text-xl font-bold text-orange-600">{formatRp(grandTotal.lainDefault)}</p>
         </div>
         <div className="bg-purple-50 rounded-2xl p-5 border border-purple-100 shadow-sm">
           <div className="w-10 h-10 rounded-xl bg-purple-500 text-white flex items-center justify-center mb-3 text-sm"><FaChartBar /></div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">TOTAL KESELURUHAN</p>
-          <p className="text-xl font-black text-purple-600">{formatRp(totalKeseluruhan)}</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">TOTAL KESELURUHAN</p>
+          <p className="text-xl font-bold text-purple-600">{formatRp(totalKeseluruhan)}</p>
         </div>
       </div>
 
       {/* Table */}
       <motion.div className="bg-white rounded-[40px] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden">
         <div className="p-6 border-b border-slate-50 bg-slate-50/30">
-          <h2 className="text-xl font-black text-slate-800 tracking-tight">
+          <h2 className="text-xl font-bold text-slate-800 tracking-tight">
             Rekapitulasi Peruntukan Cabang <span className="text-emerald-500">{bulanLabel} {selectedYear}</span>
           </h2>
         </div>
@@ -276,15 +276,15 @@ export default function RekapitulasiSection() {
           <table className="w-full text-left border-collapse text-[10px]">
             <thead>
               <tr className="bg-slate-50/50 border-b border-slate-100">
-                <th rowSpan={2} className="px-2 py-3 text-center font-black text-slate-400 uppercase tracking-widest border-r border-slate-100">NO</th>
-                <th rowSpan={2} className="px-3 py-3 text-left font-black text-slate-400 uppercase tracking-widest border-r border-slate-100">CABANG</th>
-                <th colSpan={3} className="px-2 py-3 text-center font-black text-emerald-600 uppercase tracking-widest border-r border-slate-100">IURAN</th>
-                <th colSpan={3} className="px-2 py-3 text-center font-black text-rose-600 uppercase tracking-widest border-r border-slate-100">DASPEN</th>
-                <th colSpan={3} className="px-2 py-3 text-center font-black text-indigo-600 uppercase tracking-widest border-r border-slate-100">DERAP</th>
-                <th colSpan={3} className="px-2 py-3 text-center font-black text-amber-600 uppercase tracking-widest border-r border-slate-100">KALENDER</th>
-                <th colSpan={3} className="px-2 py-3 text-center font-black text-cyan-600 uppercase tracking-widest border-r border-slate-100">HUT</th>
-                <th colSpan={3} className="px-2 py-3 text-center font-black text-orange-600 uppercase tracking-widest border-r border-slate-100">LAIN-LAIN</th>
-                <th colSpan={3} className="px-2 py-3 text-center font-black text-slate-900 uppercase tracking-widest">TOTAL</th>
+                <th rowSpan={2} className="px-2 py-3 text-center font-bold text-slate-400 uppercase tracking-widest border-r border-slate-100">NO</th>
+                <th rowSpan={2} className="px-3 py-3 text-left font-bold text-slate-400 uppercase tracking-widest border-r border-slate-100">CABANG</th>
+                <th colSpan={3} className="px-2 py-3 text-center font-bold text-emerald-600 uppercase tracking-widest border-r border-slate-100">IURAN</th>
+                <th colSpan={3} className="px-2 py-3 text-center font-bold text-rose-600 uppercase tracking-widest border-r border-slate-100">DASPEN</th>
+                <th colSpan={3} className="px-2 py-3 text-center font-bold text-indigo-600 uppercase tracking-widest border-r border-slate-100">DERAP</th>
+                <th colSpan={3} className="px-2 py-3 text-center font-bold text-amber-600 uppercase tracking-widest border-r border-slate-100">KALENDER</th>
+                <th colSpan={3} className="px-2 py-3 text-center font-bold text-cyan-600 uppercase tracking-widest border-r border-slate-100">HUT</th>
+                <th colSpan={3} className="px-2 py-3 text-center font-bold text-orange-600 uppercase tracking-widest border-r border-slate-100">LAIN-LAIN</th>
+                <th colSpan={3} className="px-2 py-3 text-center font-bold text-slate-900 uppercase tracking-widest">TOTAL</th>
               </tr>
               <tr className="bg-slate-50/30 border-b border-slate-100">
                 <th className="px-2 py-2 text-center font-bold text-slate-500 text-[8px] uppercase border-r border-slate-50">DEFAULT</th>
@@ -322,34 +322,34 @@ export default function RekapitulasiSection() {
               ) : mergedData.length > 0 ? (
                 mergedData.map((r, i) => (
                   <tr key={i} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="px-2 py-3 text-center font-black text-slate-300">{r.no}</td>
-                    <td className="px-3 py-3 font-black text-slate-800 whitespace-nowrap">{r.cabang}</td>
+                    <td className="px-2 py-3 text-center font-bold text-slate-300">{r.no}</td>
+                    <td className="px-3 py-3 font-bold text-slate-800 whitespace-nowrap">{r.cabang}</td>
                     <td className="px-2 py-3 text-center font-bold text-slate-600">{formatRp(r.iuranDefault)}</td>
                     <td className="px-2 py-3 text-center font-bold text-slate-600">{formatRp(r.iuranTambahan)}</td>
-                    <td className="px-2 py-3 text-center font-black text-slate-900 bg-emerald-50/30">{formatRp(r.iuranTotal)}</td>
+                    <td className="px-2 py-3 text-center font-bold text-slate-900 bg-emerald-50/30">{formatRp(r.iuranTotal)}</td>
                     <td className="px-2 py-3 text-center font-bold text-slate-600">{formatRp(r.daspenDefault)}</td>
                     <td className="px-2 py-3 text-center font-bold text-slate-600">{formatRp(r.daspenTambahan)}</td>
-                    <td className="px-2 py-3 text-center font-black text-slate-900 bg-rose-50/30">{formatRp(r.daspenTotal)}</td>
+                    <td className="px-2 py-3 text-center font-bold text-slate-900 bg-rose-50/30">{formatRp(r.daspenTotal)}</td>
                     <td className="px-2 py-3 text-center font-bold text-slate-600">{formatRp(r.derapDefault)}</td>
                     <td className="px-2 py-3 text-center font-bold text-slate-600">{formatRp(r.derapTambahan)}</td>
-                    <td className="px-2 py-3 text-center font-black text-slate-900 bg-indigo-50/30">{formatRp(r.derapTotal)}</td>
+                    <td className="px-2 py-3 text-center font-bold text-slate-900 bg-indigo-50/30">{formatRp(r.derapTotal)}</td>
                     <td className="px-2 py-3 text-center font-bold text-slate-600">{formatRp(r.kalenderDefault)}</td>
                     <td className="px-2 py-3 text-center font-bold text-slate-600">{formatRp(r.kalenderTambahan)}</td>
-                    <td className="px-2 py-3 text-center font-black text-slate-900 bg-amber-50/30">{formatRp(r.kalenderTotal)}</td>
+                    <td className="px-2 py-3 text-center font-bold text-slate-900 bg-amber-50/30">{formatRp(r.kalenderTotal)}</td>
                     <td className="px-2 py-3 text-center font-bold text-slate-600">{formatRp(r.hutDefault)}</td>
                     <td className="px-2 py-3 text-center font-bold text-slate-600">{formatRp(r.hutTambahan)}</td>
-                    <td className="px-2 py-3 text-center font-black text-slate-900 bg-cyan-50/30">{formatRp(r.hutDefault + r.hutTambahan)}</td>
+                    <td className="px-2 py-3 text-center font-bold text-slate-900 bg-cyan-50/30">{formatRp(r.hutDefault + r.hutTambahan)}</td>
                     <td className="px-2 py-3 text-center font-bold text-slate-600">{formatRp(r.lainDefault)}</td>
                     <td className="px-2 py-3 text-center font-bold text-slate-600">{formatRp(r.lainTambahan)}</td>
-                    <td className="px-2 py-3 text-center font-black text-slate-900 bg-orange-50/30">{formatRp(r.lainDefault + r.lainTambahan)}</td>
-                    <td className="px-2 py-3 text-center font-black text-slate-900 bg-slate-100/50">{formatRp(r.totalDefault)}</td>
-                    <td className="px-2 py-3 text-center font-black text-slate-900 bg-slate-100/50">{formatRp(r.totalTambahan)}</td>
-                    <td className="px-2 py-3 text-center font-black text-slate-900 bg-slate-200/50">{formatRp(r.totalDefault + r.totalTambahan)}</td>
+                    <td className="px-2 py-3 text-center font-bold text-slate-900 bg-orange-50/30">{formatRp(r.lainDefault + r.lainTambahan)}</td>
+                    <td className="px-2 py-3 text-center font-bold text-slate-900 bg-slate-100/50">{formatRp(r.totalDefault)}</td>
+                    <td className="px-2 py-3 text-center font-bold text-slate-900 bg-slate-100/50">{formatRp(r.totalTambahan)}</td>
+                    <td className="px-2 py-3 text-center font-bold text-slate-900 bg-slate-200/50">{formatRp(r.totalDefault + r.totalTambahan)}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={23} className="py-16 text-center text-slate-300 font-black uppercase tracking-widest">
+                  <td colSpan={23} className="py-16 text-center text-slate-300 font-bold uppercase tracking-widest">
                     Data Kosong
                   </td>
                 </tr>
@@ -357,7 +357,7 @@ export default function RekapitulasiSection() {
             </tbody>
             {mergedData.length > 0 && (
               <tfoot>
-                <tr className="bg-slate-900 text-white font-black text-[10px]">
+                <tr className="bg-slate-900 text-white font-bold text-[10px]">
                   <td className="px-2 py-4 text-center border-r border-slate-800" colSpan={2}>TOTAL</td>
                   <td className="px-2 py-4 text-center">{formatRp(grandTotal.iuranDefault)}</td>
                   <td className="px-2 py-4 text-center">{formatRp(grandTotal.iuranTambahan)}</td>
@@ -379,7 +379,7 @@ export default function RekapitulasiSection() {
                   <td className="px-2 py-4 text-center bg-orange-500/20">{formatRp(grandTotal.lainDefault + grandTotal.lainTambahan)}</td>
                   <td className="px-2 py-4 text-center bg-amber-500/20">{formatRp(grandTotal.totalDefault)}</td>
                   <td className="px-2 py-4 text-center bg-amber-500/20">{formatRp(grandTotal.totalTambahan)}</td>
-                  <td className="px-2 py-4 text-center bg-amber-500/20 font-black">{formatRp(grandTotal.totalDefault + grandTotal.totalTambahan)}</td>
+                  <td className="px-2 py-4 text-center bg-amber-500/20 font-bold">{formatRp(grandTotal.totalDefault + grandTotal.totalTambahan)}</td>
                 </tr>
               </tfoot>
             )}

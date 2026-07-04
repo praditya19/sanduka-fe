@@ -143,7 +143,7 @@ const SaldoAkhirSection = () => {
               <FaWallet className="text-2xl" />
             </div>
             <div>
-              <h2 className="text-xl font-black">Saldo Akhir</h2>
+              <h2 className="text-xl font-bold">Saldo Akhir</h2>
               <p className="text-amber-100 text-xs font-medium uppercase tracking-wider">
                 Rekapitulasi saldo kas pada akhir periode
               </p>
@@ -172,7 +172,7 @@ const SaldoAkhirSection = () => {
         {/* Filters */}
         <div className="bg-slate-50 p-4 rounded-[24px] border border-slate-100 flex flex-wrap gap-4 items-end">
           <div className="flex-1 min-w-[200px]">
-            <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block px-1">
+            <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block px-1">
               Pilih Bulan
             </label>
             <select
@@ -188,7 +188,7 @@ const SaldoAkhirSection = () => {
             </select>
           </div>
           <div className="flex-1 min-w-[150px]">
-            <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block px-1">
+            <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block px-1">
               Pilih Tahun
             </label>
             <select
@@ -224,11 +224,11 @@ const SaldoAkhirSection = () => {
                   <div className="p-2 bg-amber-500 rounded-lg">
                     <FaVault />
                   </div>
-                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-amber-500">
+                  <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-amber-500">
                     Saldo Akhir Periode
                   </h3>
                 </div>
-                <h1 className="text-5xl font-black tracking-tight mb-2">
+                <h1 className="text-5xl font-bold tracking-tight mb-2">
                   {formatCurrency(data.saldoAkhir)}
                 </h1>
                 <p className="text-slate-400 text-sm font-medium">
@@ -275,11 +275,11 @@ const SaldoAkhirSection = () => {
                     <div className={`p-2 rounded-lg ${item.bg} ${item.color}`}>
                       {item.icon}
                     </div>
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                       {item.label}
                     </span>
                   </div>
-                  <p className={`text-xl font-black ${item.color}`}>
+                  <p className={`text-xl font-bold ${item.color}`}>
                     {formatCurrency(item.value)}
                   </p>
                 </div>
@@ -292,7 +292,7 @@ const SaldoAkhirSection = () => {
                 <FaCircleInfo className="text-xl" />
               </div>
               <div>
-                <h4 className="text-blue-900 font-black text-sm uppercase tracking-tight mb-1">
+                <h4 className="text-blue-900 font-bold text-sm uppercase tracking-tight mb-1">
                   Informasi Transparansi
                 </h4>
                 <p className="text-blue-700/70 text-xs font-medium leading-relaxed">

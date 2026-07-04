@@ -608,7 +608,7 @@ const KasSanduka = () => {
       <div className="flex items-center gap-3">
         <BackButton />
         <div>
-          <h1 className="text-2xl font-black text-slate-800 tracking-tight">
+          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
             Kas Sanduka
           </h1>
           <p className="text-slate-400 text-sm font-medium italic">
@@ -654,14 +654,14 @@ const KasSanduka = () => {
             className={`p-4 rounded-[24px] border border-slate-100 shadow-sm ${item.bg} transition-all hover:shadow-md`}
           >
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
                 {item.label}
               </span>
               <span className={`text-xs ${item.color} opacity-40`}>
                 {item.icon}
               </span>
             </div>
-            <p className={`text-lg font-black ${item.color} tracking-tight`}>
+            <p className={`text-lg font-bold ${item.color} tracking-tight`}>
               {loading ? "..." : formatCurrency(item.value)}
             </p>
           </div>
@@ -675,7 +675,7 @@ const KasSanduka = () => {
             <select
               value={monthFilter}
               onChange={(e) => setMonthFilter(e.target.value)}
-              className="bg-transparent text-[10px] font-black px-3 py-1.5 outline-none text-slate-600 appearance-none cursor-pointer hover:text-emerald-600 transition-all"
+              className="bg-transparent text-[10px] font-bold px-3 py-1.5 outline-none text-slate-600 appearance-none cursor-pointer hover:text-emerald-600 transition-all"
             >
               {months.map((m) => (
                 <option key={m.value} value={m.value}>
@@ -687,7 +687,7 @@ const KasSanduka = () => {
             <select
               value={yearFilter}
               onChange={(e) => setYearFilter(Number(e.target.value))}
-              className="bg-transparent text-[10px] font-black px-3 py-1.5 outline-none text-slate-600 appearance-none cursor-pointer hover:text-emerald-600 transition-all"
+              className="bg-transparent text-[10px] font-bold px-3 py-1.5 outline-none text-slate-600 appearance-none cursor-pointer hover:text-emerald-600 transition-all"
             >
               {Array.from(
                 { length: new Date().getFullYear() + 2 - 2020 + 1 },
@@ -706,14 +706,14 @@ const KasSanduka = () => {
               placeholder="Cari transaksi..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl outline-none text-[11px] font-black w-full lg:w-48 focus:ring-4 focus:ring-emerald-500/5 focus:bg-white transition-all shadow-inner placeholder:text-slate-300"
+              className="pl-8 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl outline-none text-[11px] font-bold w-full lg:w-48 focus:ring-4 focus:ring-emerald-500/5 focus:bg-white transition-all shadow-inner placeholder:text-slate-300"
             />
           </div>
         </div>
         <div className="flex items-center gap-2 w-full lg:w-auto">
           <button
             onClick={() => setShowModalPos(true)}
-            className="flex-1 lg:flex-none flex items-center justify-center space-x-2 px-4 py-2 bg-white border border-slate-200 text-slate-500 rounded-xl text-[10px] font-black hover:border-slate-800 hover:text-slate-800 transition-all shadow-sm"
+            className="flex-1 lg:flex-none flex items-center justify-center space-x-2 px-4 py-2 bg-white border border-slate-200 text-slate-500 rounded-xl text-[10px] font-bold hover:border-slate-800 hover:text-slate-800 transition-all shadow-sm"
           >
             <FaCog className="text-[10px]" />{" "}
             <span className="uppercase tracking-widest">Konfigurasi Pos</span>
@@ -731,7 +731,7 @@ const KasSanduka = () => {
             <FaPlus />
           </div>
           <div className="text-left">
-            <h4 className="text-[12px] font-black uppercase tracking-tight leading-none mb-1">
+            <h4 className="text-[12px] font-bold uppercase tracking-tight leading-none mb-1">
               Pemasukan Kas
             </h4>
             <p className="text-[9px] text-emerald-100 font-bold tracking-widest uppercase opacity-80">
@@ -747,7 +747,7 @@ const KasSanduka = () => {
             <FaMinus />
           </div>
           <div className="text-left">
-            <h4 className="text-[12px] font-black uppercase tracking-tight leading-none mb-1">
+            <h4 className="text-[12px] font-bold uppercase tracking-tight leading-none mb-1">
               Pengeluaran Kas
             </h4>
             <p className="text-[9px] text-rose-100 font-bold tracking-widest uppercase opacity-80">
@@ -764,7 +764,7 @@ const KasSanduka = () => {
             <div className="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-100 no-print">
               <FaFileExport className="text-xs" />
             </div>
-            <h3 className="text-[12px] font-black text-slate-800 uppercase tracking-tight">
+            <h3 className="text-[12px] font-bold text-slate-800 uppercase tracking-tight">
               Jurnal Transaksi{" "}
               <span className="text-emerald-500 ml-1">
                 {months.find((m) => m.value === monthFilter)?.label}{" "}
@@ -775,18 +775,18 @@ const KasSanduka = () => {
           <div className="flex flex-wrap items-center gap-2 print:hidden">
             <button
               onClick={exportToExcel}
-              className="flex items-center space-x-2 px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-[9px] font-black hover:border-emerald-500 hover:text-emerald-500 transition-all shadow-sm uppercase tracking-wider"
+              className="flex items-center space-x-2 px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-[9px] font-bold hover:border-emerald-500 hover:text-emerald-500 transition-all shadow-sm uppercase tracking-wider"
             >
               <FaFileExcel /> <span>Excel</span>
             </button>
             <button
               onClick={printLedger}
-              className="flex items-center space-x-2 px-3 py-1.5 bg-slate-900 text-white rounded-lg text-[9px] font-black hover:bg-black transition-all shadow-lg shadow-slate-200 uppercase tracking-wider"
+              className="flex items-center space-x-2 px-3 py-1.5 bg-slate-900 text-white rounded-lg text-[9px] font-bold hover:bg-black transition-all shadow-lg shadow-slate-200 uppercase tracking-wider"
             >
               <FaPrint /> <span>Cetak</span>
             </button>
             <div className="hidden sm:block w-[1px] h-3 bg-slate-200 mx-1"></div>
-            <span className="text-[9px] font-black px-3 py-1.5 bg-white border border-slate-100 rounded-lg text-slate-400 uppercase tracking-widest">
+            <span className="text-[9px] font-bold px-3 py-1.5 bg-white border border-slate-100 rounded-lg text-slate-400 uppercase tracking-widest">
               {filteredTransactions.length} Entries
             </span>
           </div>
@@ -794,7 +794,7 @@ const KasSanduka = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-white text-[9px] uppercase font-black text-slate-400 tracking-[0.15em] border-b border-slate-50">
+              <tr className="bg-white text-[9px] uppercase font-bold text-slate-400 tracking-[0.15em] border-b border-slate-50">
                 <th className="px-4 py-4 text-center w-24">Tgl Transaksi</th>
                 <th className="px-4 py-4">Nomor Bukti / Keterangan</th>
                 <th className="px-4 py-4 text-right">Debet</th>
@@ -827,7 +827,7 @@ const KasSanduka = () => {
                     </td>
                     <td className="px-4 py-3">
                       <div
-                        className={`text-[11px] font-black ${t.isVirtual ? "text-amber-600" : "text-slate-800"} leading-none mb-1`}
+                        className={`text-[11px] font-bold ${t.isVirtual ? "text-amber-600" : "text-slate-800"} leading-none mb-1`}
                       >
                         {t.nomorBukti || "-"}
                       </div>
@@ -835,13 +835,13 @@ const KasSanduka = () => {
                         {t.keterangan}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-right text-[11px] font-black text-emerald-600">
+                    <td className="px-4 py-3 text-right text-[11px] font-bold text-emerald-600">
                       {t.debet > 0 ? formatCurrency(t.debet) : "Rp 0"}
                     </td>
-                    <td className="px-4 py-3 text-right text-[11px] font-black text-rose-500">
+                    <td className="px-4 py-3 text-right text-[11px] font-bold text-rose-500">
                       {t.kredit > 0 ? formatCurrency(t.kredit) : "Rp 0"}
                     </td>
-                    <td className="px-4 py-3 text-right text-[11px] font-black text-slate-900 bg-slate-50/40">
+                    <td className="px-4 py-3 text-right text-[11px] font-bold text-slate-900 bg-slate-50/40">
                       {formatCurrency(t.runningBalance)}
                     </td>
                     <td className="px-4 py-3 text-center print:hidden">
@@ -864,7 +864,7 @@ const KasSanduka = () => {
                           </button>
                         </div>
                       ) : (
-                        <span className="text-[8px] font-black bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded uppercase tracking-tighter shadow-sm">
+                        <span className="text-[8px] font-bold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded uppercase tracking-tighter shadow-sm">
                           System
                         </span>
                       )}
@@ -880,7 +880,7 @@ const KasSanduka = () => {
                     <div className="w-16 h-16 bg-white rounded-2xl border border-slate-100 flex items-center justify-center mx-auto mb-4 shadow-xl shadow-slate-200/50">
                       <FaInfoCircle className="text-slate-200 text-3xl" />
                     </div>
-                    <p className="text-slate-400 text-[11px] font-black uppercase tracking-widest">
+                    <p className="text-slate-400 text-[11px] font-bold uppercase tracking-widest">
                       Transaksi Tidak Ditemukan
                     </p>
                   </td>
@@ -890,7 +890,7 @@ const KasSanduka = () => {
             {/* Table Footer - Compact Total */}
             {!loading && filteredTransactions.length > 0 && (
               <tfoot className="bg-slate-900 text-white">
-                <tr className="font-black text-[10px] sm:text-xs">
+                <tr className="font-bold text-[10px] sm:text-xs">
                   <td
                     colSpan="2"
                     className="px-4 py-4 uppercase tracking-[0.1em] text-slate-400"
@@ -938,7 +938,7 @@ const KasSanduka = () => {
                     <FaPlus />
                   </div>
                   <div>
-                    <h3 className="text-lg sm:text-xl font-black uppercase tracking-tight">
+                    <h3 className="text-lg sm:text-xl font-bold uppercase tracking-tight">
                       Input Pemasukan
                     </h3>
                     <p className="text-emerald-100 text-[10px] sm:text-xs font-bold">
@@ -966,7 +966,7 @@ const KasSanduka = () => {
                       <FaCheckDouble />
                     </div>
                     <div>
-                      <h4 className="text-xs font-black text-blue-800 uppercase tracking-tight">
+                      <h4 className="text-xs font-bold text-blue-800 uppercase tracking-tight">
                         Generate Sesuai Target
                       </h4>
                       <p className="text-[10px] text-blue-600 font-bold opacity-75">
@@ -977,7 +977,7 @@ const KasSanduka = () => {
                   <button
                     type="button"
                     onClick={handleSesuaiTarget}
-                    className="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-[10px] font-black hover:bg-blue-700 transition-all shadow-md shadow-blue-100 uppercase tracking-widest"
+                    className="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-[10px] font-bold hover:bg-blue-700 transition-all shadow-md shadow-blue-100 uppercase tracking-widest"
                   >
                     Eksekusi
                   </button>
@@ -985,7 +985,7 @@ const KasSanduka = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">
                       Tanggal Transaksi
                     </label>
                     <div className="relative">
@@ -1005,7 +1005,7 @@ const KasSanduka = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">
                       Jenis Penerimaan
                     </label>
                     <div className="relative">
@@ -1030,7 +1030,7 @@ const KasSanduka = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">
                       Pos Penerimaan
                     </label>
                     <div className="relative">
@@ -1056,7 +1056,7 @@ const KasSanduka = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">
                       Cabang
                     </label>
                     <div className="relative">
@@ -1082,7 +1082,7 @@ const KasSanduka = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">
                       Setoran Untuk Bulan
                     </label>
                     <select
@@ -1101,7 +1101,7 @@ const KasSanduka = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">
                       Setoran Untuk Tahun
                     </label>
                     <select
@@ -1128,11 +1128,11 @@ const KasSanduka = () => {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">
                     Nominal (Rp)
                   </label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">
                       Rp
                     </span>
                     <input
@@ -1146,7 +1146,7 @@ const KasSanduka = () => {
                           nominal: Number(e.target.value),
                         })
                       }
-                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none font-black text-xl text-emerald-600 transition-all"
+                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none font-bold text-xl text-emerald-600 transition-all"
                     />
                   </div>
                   <p className="mt-2 text-[10px] font-bold text-slate-400 italic">
@@ -1159,7 +1159,7 @@ const KasSanduka = () => {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">
                     Keterangan
                   </label>
                   <div className="relative">
@@ -1179,14 +1179,14 @@ const KasSanduka = () => {
                   <button
                     type="button"
                     onClick={() => setShowModalIn(false)}
-                    className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-200 transition-all flex items-center justify-center space-x-2"
+                    className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-slate-200 transition-all flex items-center justify-center space-x-2"
                   >
                     <FaUndo /> <span>Batal</span>
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="flex-[2] py-4 bg-emerald-500 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-emerald-600 shadow-xl shadow-emerald-200 transition-all flex items-center justify-center space-x-2 disabled:bg-slate-300"
+                    className="flex-[2] py-4 bg-emerald-500 text-white rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-emerald-600 shadow-xl shadow-emerald-200 transition-all flex items-center justify-center space-x-2 disabled:bg-slate-300"
                   >
                     {submitting ? (
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -1227,7 +1227,7 @@ const KasSanduka = () => {
                     <FaMinus />
                   </div>
                   <div>
-                    <h3 className="text-lg sm:text-xl font-black uppercase tracking-tight">
+                    <h3 className="text-lg sm:text-xl font-bold uppercase tracking-tight">
                       Input Pengeluaran
                     </h3>
                     <p className="text-rose-100 text-[10px] sm:text-xs font-bold">
@@ -1250,7 +1250,7 @@ const KasSanduka = () => {
               >
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">
                       Tanggal Transaksi
                     </label>
                     <div className="relative">
@@ -1270,7 +1270,7 @@ const KasSanduka = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">
                       Jenis Pengeluaran
                     </label>
                     <div className="relative">
@@ -1295,7 +1295,7 @@ const KasSanduka = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">
                       Pos Pengeluaran
                     </label>
                     <div className="relative">
@@ -1321,7 +1321,7 @@ const KasSanduka = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">
                       Cabang
                     </label>
                     <div className="relative">
@@ -1347,7 +1347,7 @@ const KasSanduka = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">
                       Pengeluaran Untuk Bulan
                     </label>
                     <select
@@ -1369,7 +1369,7 @@ const KasSanduka = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">
                       Pengeluaran Untuk Tahun
                     </label>
                     <select
@@ -1396,11 +1396,11 @@ const KasSanduka = () => {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">
                     Nominal (Rp)
                   </label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">
                       Rp
                     </span>
                     <input
@@ -1414,7 +1414,7 @@ const KasSanduka = () => {
                           nominal: Number(e.target.value),
                         })
                       }
-                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 outline-none font-black text-xl text-rose-600 transition-all"
+                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 outline-none font-bold text-xl text-rose-600 transition-all"
                     />
                   </div>
                   <p className="mt-2 text-[10px] font-bold text-slate-400 italic">
@@ -1427,7 +1427,7 @@ const KasSanduka = () => {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">
                     Keterangan
                   </label>
                   <div className="relative">
@@ -1447,14 +1447,14 @@ const KasSanduka = () => {
                   <button
                     type="button"
                     onClick={() => setShowModalOut(false)}
-                    className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-200 transition-all flex items-center justify-center space-x-2"
+                    className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-slate-200 transition-all flex items-center justify-center space-x-2"
                   >
                     <FaUndo /> <span>Batal</span>
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="flex-[2] py-4 bg-rose-500 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-rose-600 shadow-xl shadow-rose-200 transition-all flex items-center justify-center space-x-2 disabled:bg-slate-300"
+                    className="flex-[2] py-4 bg-rose-500 text-white rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-rose-600 shadow-xl shadow-rose-200 transition-all flex items-center justify-center space-x-2 disabled:bg-slate-300"
                   >
                     {submitting ? (
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -1490,10 +1490,10 @@ const KasSanduka = () => {
             >
               {/* Header */}
               <div className="p-6 sm:p-10 bg-slate-800 text-white relative">
-                <h2 className="text-2xl sm:text-4xl font-black mb-1 sm:mb-2 tracking-tighter uppercase">
+                <h2 className="text-2xl sm:text-4xl font-bold mb-1 sm:mb-2 tracking-tighter uppercase">
                   Kelola Pos Sanduka
                 </h2>
-                <p className="text-[10px] sm:text-xs text-slate-400 font-black uppercase tracking-widest opacity-80">
+                <p className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-widest opacity-80">
                   Konfigurasi Kategori Transaksi
                 </p>
                 <button
@@ -1509,13 +1509,13 @@ const KasSanduka = () => {
                 <div className="p-1 sm:p-2 bg-slate-900/50 rounded-[24px] sm:rounded-[28px] flex items-center border border-white/10">
                   <button
                     onClick={() => setPosTab("penerimaan")}
-                    className={`flex-1 flex items-center justify-center space-x-1 sm:space-x-2 py-2.5 sm:py-3 rounded-[20px] sm:rounded-[22px] text-[10px] sm:text-xs font-black transition-all ${posTab === "penerimaan" ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "text-slate-400 hover:text-white"}`}
+                    className={`flex-1 flex items-center justify-center space-x-1 sm:space-x-2 py-2.5 sm:py-3 rounded-[20px] sm:rounded-[22px] text-[10px] sm:text-xs font-bold transition-all ${posTab === "penerimaan" ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "text-slate-400 hover:text-white"}`}
                   >
                     <FaArrowUp /> <span>POS PENERIMAAN</span>
                   </button>
                   <button
                     onClick={() => setPosTab("pengeluaran")}
-                    className={`flex-1 flex items-center justify-center space-x-1 sm:space-x-2 py-2.5 sm:py-3 rounded-[20px] sm:rounded-[22px] text-[10px] sm:text-xs font-black transition-all ${posTab === "pengeluaran" ? "bg-slate-700 text-white shadow-lg" : "text-slate-400 hover:text-white"}`}
+                    className={`flex-1 flex items-center justify-center space-x-1 sm:space-x-2 py-2.5 sm:py-3 rounded-[20px] sm:rounded-[22px] text-[10px] sm:text-xs font-bold transition-all ${posTab === "pengeluaran" ? "bg-slate-700 text-white shadow-lg" : "text-slate-400 hover:text-white"}`}
                   >
                     <FaArrowDown /> <span>POS PENGELUARAN</span>
                   </button>
@@ -1524,7 +1524,7 @@ const KasSanduka = () => {
 
               {/* Form Section */}
               <div className="p-8 border-b border-slate-100 bg-slate-50/50">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5 block px-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2.5 block px-1">
                   Nama Pos{" "}
                   {posTab === "penerimaan" ? "Penerimaan" : "Pengeluaran"} Baru
                 </label>
@@ -1544,7 +1544,7 @@ const KasSanduka = () => {
                   <button
                     onClick={handleAddPos}
                     disabled={submitting || !newPosName}
-                    className={`px-8 rounded-2xl font-black text-xs text-white transition-all shadow-lg disabled:opacity-50 disabled:shadow-none ${posTab === "penerimaan" ? "bg-emerald-500 hover:bg-emerald-600 shadow-emerald-200" : "bg-rose-500 hover:bg-rose-600 shadow-rose-200"}`}
+                    className={`px-8 rounded-2xl font-bold text-xs text-white transition-all shadow-lg disabled:opacity-50 disabled:shadow-none ${posTab === "penerimaan" ? "bg-emerald-500 hover:bg-emerald-600 shadow-emerald-200" : "bg-rose-500 hover:bg-rose-600 shadow-rose-200"}`}
                   >
                     {submitting ? "..." : "TAMBAH"}
                   </button>
@@ -1553,7 +1553,7 @@ const KasSanduka = () => {
 
               {/* List Section */}
               <div className="p-8 overflow-y-auto flex-1 space-y-3 bg-white">
-                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center justify-between">
+                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center justify-between">
                   <span>
                     Daftar Pos{" "}
                     {posTab === "penerimaan" ? "Penerimaan" : "Pengeluaran"}{" "}
@@ -1620,7 +1620,7 @@ const KasSanduka = () => {
                 </div>
                 <button
                   onClick={() => setShowModalPos(false)}
-                  className="px-6 py-3 bg-slate-200 text-slate-600 rounded-2xl text-[10px] font-black hover:bg-slate-300 transition-all uppercase tracking-widest"
+                  className="px-6 py-3 bg-slate-200 text-slate-600 rounded-2xl text-[10px] font-bold hover:bg-slate-300 transition-all uppercase tracking-widest"
                 >
                   Tutup
                 </button>
@@ -1659,7 +1659,7 @@ const KasSanduka = () => {
                   <FaCheckDouble />
                 )}
               </div>
-              <h3 className="text-xl font-black text-slate-800 mb-2 uppercase tracking-tight">
+              <h3 className="text-xl font-bold text-slate-800 mb-2 uppercase tracking-tight">
                 {confirmModal.title}
               </h3>
               <p className="text-sm text-slate-400 font-bold leading-relaxed mb-8">
@@ -1670,7 +1670,7 @@ const KasSanduka = () => {
                 <button
                   onClick={confirmModal.onConfirm}
                   disabled={confirmModal.isLoading}
-                  className={`w-full py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center space-x-2 ${confirmModal.type === "danger" ? "bg-rose-500 text-white hover:bg-rose-600 shadow-lg shadow-rose-200" : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-200"}`}
+                  className={`w-full py-4 rounded-2xl font-bold uppercase tracking-widest text-xs transition-all flex items-center justify-center space-x-2 ${confirmModal.type === "danger" ? "bg-rose-500 text-white hover:bg-rose-600 shadow-lg shadow-rose-200" : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-200"}`}
                 >
                   {confirmModal.isLoading ? (
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -1683,7 +1683,7 @@ const KasSanduka = () => {
                     setConfirmModal((prev) => ({ ...prev, isOpen: false }))
                   }
                   disabled={confirmModal.isLoading}
-                  className="w-full py-4 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-200 transition-all"
+                  className="w-full py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-slate-200 transition-all"
                 >
                   Batal
                 </button>
@@ -1699,7 +1699,7 @@ const KasSanduka = () => {
           <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl p-6 animate-fadeIn">
             {/* HEADER */}
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-black text-slate-800">
+              <h2 className="text-lg font-bold text-slate-800">
                 Edit Transaksi
               </h2>
               <button
