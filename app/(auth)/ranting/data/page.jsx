@@ -399,31 +399,30 @@ const Page = () => {
             </thead>
             <tbody>
               ${filteredData
-                .map((item, index) => {
-                  let cabangText =
-                    item.cabang !== lastCabang ? item.cabang || "-" : "-";
-                  lastCabang = item.cabang;
+        .map((item, index) => {
+          let cabangText =
+            item.cabang !== lastCabang ? item.cabang || "-" : "-";
+          lastCabang = item.cabang;
 
-                  let namaRanting =
-                    item.namaRanting !== lastNamaRanting
-                      ? item.namaRanting || "-"
-                      : "-";
-                  lastNamaRanting = item.namaRanting;
-                  return `
+          let namaRanting =
+            item.namaRanting !== lastNamaRanting
+              ? item.namaRanting || "-"
+              : "-";
+          lastNamaRanting = item.namaRanting;
+          return `
                     <tr>
                       <td>${index + 1}</td>
                       <td>${cabangText}</td>
                       <td>${namaRanting}</td>
                       <td>${item.unitKerja || "-"}</td>
                       <td>
-                        ${
-                          item.namaAnggota
-                            ? item.namaAnggota
-                                .split("\n")
-                                .map((nama, i) => `${i + 1}. ${nama}`)
-                                .join("<br>")
-                            : "-"
-                        }
+                        ${item.namaAnggota
+              ? item.namaAnggota
+                .split("\n")
+                .map((nama, i) => `${i + 1}. ${nama}`)
+                .join("<br>")
+              : "-"
+            }
                       </td>
                       <td>${item.anggotaUnitKerja || 0}</td>
                       <td>${item.jumlahRanting || 0}</td>
@@ -431,8 +430,8 @@ const Page = () => {
                       <td>${item.totalUnitKerja || 0}</td>
                     </tr>
                   `;
-                })
-                .join("")}
+        })
+        .join("")}
               <!-- Baris Total -->
               <tr style="font-weight: bold; background-color: #f2f2f2;">
                 <td>Total</td>
@@ -476,9 +475,9 @@ const Page = () => {
       "Unit Kerja": item.unitKerja || "-",
       "Nama Anggota": item.namaAnggota
         ? item.namaAnggota
-            .split("\n")
-            .map((nama, i) => `${i + 1}. ${nama}`)
-            .join("\n")
+          .split("\n")
+          .map((nama, i) => `${i + 1}. ${nama}`)
+          .join("\n")
         : "-",
       "Anggota Unit Kerja": item.anggotaUnitKerja || 0,
       "Jumlah Ranting": item.jumlahRanting,
@@ -606,30 +605,27 @@ const Page = () => {
             </thead>
             <tbody>
             ${Object.keys(groupedData)
-              .map((cabang, cabangIndex) => {
-                let lastNamaRanting = null;
-                const rantingRows = groupedData[cabang]
-                  .map((item, index) => {
-                    let namaRanting =
-                      item.namaRanting !== lastNamaRanting
-                        ? item.namaRanting || "-"
-                        : "-";
-                    lastNamaRanting = item.namaRanting;
+        .map((cabang, cabangIndex) => {
+          let lastNamaRanting = null;
+          const rantingRows = groupedData[cabang]
+            .map((item, index) => {
+              let namaRanting =
+                item.namaRanting !== lastNamaRanting
+                  ? item.namaRanting || "-"
+                  : "-";
+              lastNamaRanting = item.namaRanting;
 
-                    return `
+              return `
             <tr>
-              ${
-                index === 0
-                  ? `<td rowspan="${groupedData[cabang].length}">${
-                      cabangIndex + 1
-                    }</td>`
+              ${index === 0
+                  ? `<td rowspan="${groupedData[cabang].length}">${cabangIndex + 1
+                  }</td>`
                   : ""
-              }
-              ${
-                index === 0
+                }
+              ${index === 0
                   ? `<td rowspan="${groupedData[cabang].length}">${cabang}</td>`
                   : ""
-              }
+                }
               <td>${namaRanting}</td>
               <td>${item.unitKerja || "-"}</td>
               <td>${item.anggotaUnitKerja || 0}</td>
@@ -638,11 +634,11 @@ const Page = () => {
               <td>${item.totalUnitKerja || 0}</td>
             </tr>
           `;
-                  })
-                  .join("");
-                return rantingRows;
-              })
-              .join("")}
+            })
+            .join("");
+          return rantingRows;
+        })
+        .join("")}
           </tbody>
           </table>
         </body>
@@ -721,27 +717,26 @@ const Page = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="min-h-screen bg-gray-50 p-4 md:p-6">
             <nav className="ml-6 mt-12">
               <ul className="flex flex-wrap space-x-4 md:space-x-6">
                 <li>
                   <Link
-                    href="/ranting"
-                    className="text-gray-700 hover:text-teal-600"
-                  >
-                    Tambah Ranting
-                  </Link>
-                </li>
-                <li>
-                  <Link
                     href="/ranting/data"
                     className="text-gray-700 hover:text-teal-600"
                   >
                     Data Ranting
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/ranting"
+                    className="text-gray-700 hover:text-teal-600"
+                  >
+                    Tambah Ranting
                   </Link>
                 </li>
               </ul>
@@ -798,7 +793,7 @@ const Page = () => {
                               </li>
                               {[
                                 ...(sessionStorage.getItem("role") ===
-                                "SUPERADMIN"
+                                  "SUPERADMIN"
                                   ? [{ id: "All", kecamatan: "All" }]
                                   : []),
                                 ...[...filteredCabangList].sort((a, b) => a.kecamatan.localeCompare(b.kecamatan, "id")),
@@ -828,11 +823,10 @@ const Page = () => {
                           value={selectedRanting}
                           readOnly
                           onClick={() => setShowRantingDropdown(true)}
-                          className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${
-                            !selectedCabang
+                          className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${!selectedCabang
                               ? "cursor-not-allowed opacity-50"
                               : ""
-                          }`}
+                            }`}
                           placeholder="Pilih Nama Ranting"
                         />
                         {showRantingDropdown && selectedCabang && (
@@ -864,14 +858,14 @@ const Page = () => {
                               {[...allRantingList]
                                 .sort((a, b) => a.namaRanting.localeCompare(b.namaRanting, "id"))
                                 .map((ranting) => (
-                                <li
-                                  key={ranting.id}
-                                  onClick={() => handleSelectRanting(ranting)}
-                                  className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                                >
-                                  {ranting.namaRanting}
-                                </li>
-                              ))}
+                                  <li
+                                    key={ranting.id}
+                                    onClick={() => handleSelectRanting(ranting)}
+                                    className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                                  >
+                                    {ranting.namaRanting}
+                                  </li>
+                                ))}
                             </ul>
                           </div>
                         )}
@@ -899,17 +893,16 @@ const Page = () => {
                                 selectedCabang === "Pilih Cabang"
                                   ? allUnitKerja
                                   : allUnitKerja.filter(
-                                      (uk) => uk.cabang === selectedCabang
-                                    )
+                                    (uk) => uk.cabang === selectedCabang
+                                  )
                               );
                             }
                             setShowDropdownUnitKerja(true);
                           }}
-                          className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${
-                            !selectedRanting
+                          className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${!selectedRanting
                               ? "cursor-not-allowed opacity-50"
                               : ""
-                          }`}
+                            }`}
                           disabled={!selectedRanting}
                         />
 
@@ -937,14 +930,14 @@ const Page = () => {
                               {[...filteredUnitKerjaOptions]
                                 .sort((a, b) => a.unitKerja.localeCompare(b.unitKerja, "id"))
                                 .map((item) => (
-                                <li
-                                  key={item.id}
-                                  className="p-2 cursor-pointer hover:bg-gray-100"
-                                  onClick={() => handleUnitKerjaSelect(item)}
-                                >
-                                  {item.unitKerja}
-                                </li>
-                              ))}
+                                  <li
+                                    key={item.id}
+                                    className="p-2 cursor-pointer hover:bg-gray-100"
+                                    onClick={() => handleUnitKerjaSelect(item)}
+                                  >
+                                    {item.unitKerja}
+                                  </li>
+                                ))}
                             </ul>
                           </div>
                         )}
@@ -1040,13 +1033,13 @@ const Page = () => {
                               </td>
                               <td className="p-2 md:p-3 border text-left align-top">
                                 {index === 0 ||
-                                filteredData[index - 1].cabang !== item.cabang
+                                  filteredData[index - 1].cabang !== item.cabang
                                   ? item.cabang
                                   : "-"}
                               </td>
                               <td className="p-2 md:p-3 border md:table-cell text-left align-top">
                                 {index === 0 ||
-                                filteredData[index - 1].namaRanting !==
+                                  filteredData[index - 1].namaRanting !==
                                   item.namaRanting
                                   ? item.namaRanting
                                   : "-"}
@@ -1060,9 +1053,9 @@ const Page = () => {
                               >
                                 {item.namaAnggota
                                   ? item.namaAnggota
-                                      .split("\n")
-                                      .map((nama, i) => `${i + 1}. ${nama}`)
-                                      .join("\n")
+                                    .split("\n")
+                                    .map((nama, i) => `${i + 1}. ${nama}`)
+                                    .join("\n")
                                   : "-"}
                               </td>
                               <td className="p-2 md:p-3 border md:table-cell text-center align-top">
@@ -1098,11 +1091,11 @@ const Page = () => {
                                         </p>
                                         {item.namaAnggota
                                           ? item.namaAnggota
-                                              .split("\n")
-                                              .map(
-                                                (nama, i) => `${i + 1}. ${nama}`
-                                              )
-                                              .join("\n")
+                                            .split("\n")
+                                            .map(
+                                              (nama, i) => `${i + 1}. ${nama}`
+                                            )
+                                            .join("\n")
                                           : "-"}
                                       </div>
                                     </div>

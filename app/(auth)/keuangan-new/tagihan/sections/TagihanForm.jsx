@@ -174,6 +174,10 @@ const TagihanForm = () => {
   }, [fetchData]);
 
   const filteredTransactions = transactions.filter(t => {
+    if (t.setoranBulan && t.setoranTahun) {
+      if (Number(t.setoranBulan) !== Number(monthFilter)) return false;
+      if (Number(t.setoranTahun) !== Number(yearFilter)) return false;
+    }
     if (cabangFilter && (t.cabang || "").toUpperCase() !== cabangFilter.toUpperCase()) return false;
     if (!searchQuery) return true;
     return (

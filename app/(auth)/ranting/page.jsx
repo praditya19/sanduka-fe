@@ -614,18 +614,18 @@ const Page = () => {
               <ul className="flex flex-wrap space-x-4 md:space-x-6">
                 <li>
                   <Link
-                    href="/ranting"
-                    className="text-gray-700 hover:text-teal-600"
-                  >
-                    Tambah Ranting
-                  </Link>
-                </li>
-                <li>
-                  <Link
                     href="/ranting/data"
                     className="text-gray-700 hover:text-teal-600"
                   >
                     Data Ranting
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/ranting"
+                    className="text-gray-700 hover:text-teal-600"
+                  >
+                    Tambah Ranting
                   </Link>
                 </li>
               </ul>
@@ -742,14 +742,14 @@ const Page = () => {
                               {[...allRantingList]
                                 .sort((a, b) => a.namaRanting.localeCompare(b.namaRanting, "id"))
                                 .map((ranting) => (
-                                <li
-                                  key={ranting.id}
-                                  onClick={() => handleSelectRanting(ranting)}
-                                  className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                                >
-                                  {ranting.namaRanting}
-                                </li>
-                              ))}
+                                  <li
+                                    key={ranting.id}
+                                    onClick={() => handleSelectRanting(ranting)}
+                                    className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                                  >
+                                    {ranting.namaRanting}
+                                  </li>
+                                ))}
                             </ul>
                           </div>
                         )}
@@ -825,14 +825,14 @@ const Page = () => {
                               {[...filteredUnitKerjaOptions]
                                 .sort((a, b) => a.unitKerja.localeCompare(b.unitKerja, "id"))
                                 .map((item) => (
-                                <li
-                                  key={item.id}
-                                  onClick={() => handleUnitKerjaSelect(item)}
-                                  className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                                >
-                                  {item.unitKerja}
-                                </li>
-                              ))}
+                                  <li
+                                    key={item.id}
+                                    onClick={() => handleUnitKerjaSelect(item)}
+                                    className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                                  >
+                                    {item.unitKerja}
+                                  </li>
+                                ))}
                             </ul>
                           </div>
                         )}
@@ -992,16 +992,16 @@ const Page = () => {
                             {[...allFilteredRantingList]
                               .sort((a, b) => a.namaRanting.localeCompare(b.namaRanting, "id"))
                               .map((ranting) => (
-                              <li
-                                key={ranting.id}
-                                onClick={() =>
-                                  handleSelectFilteredRanting(ranting)
-                                }
-                                className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                              >
-                                {ranting.namaRanting}
-                              </li>
-                            ))}
+                                <li
+                                  key={ranting.id}
+                                  onClick={() =>
+                                    handleSelectFilteredRanting(ranting)
+                                  }
+                                  className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                                >
+                                  {ranting.namaRanting}
+                                </li>
+                              ))}
                           </ul>
                         </div>
                       )}
