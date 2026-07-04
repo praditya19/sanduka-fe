@@ -67,6 +67,7 @@ const TagihanForm = () => {
   const [tunggakanList, setTunggakanList] = useState([]);
   const [totalTunggakan, setTotalTunggakan] = useState(0);
   const [totalKekuranganBulanSebelumnya, setTotalKekuranganBulanSebelumnya] = useState(0);
+  const [piutangCabangBulanLalu, setPiutangCabangBulanLalu] = useState(0);
   const [showTunggakan, setShowTunggakan] = useState(false);
   const [bankTargetMap, setBankTargetMap] = useState({});
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -462,22 +463,6 @@ const TagihanForm = () => {
       const total = list.reduce((sum, t) => sum + (Number(t.tagihan) - Number(t.pembayaran || 0)), 0);
       setTotalTunggakan(total);
 
-      if (autoAdd && list.length > 0) {
-        const newItems = list.map(t => {
-          const sisa = Number(t.tagihan) - Number(t.pembayaran || 0);
-          return {
-            pos: t.pos,
-            tagihan: sisa > 0 ? sisa : "",
-            pembayaran: "",
-            keterangan: `Tunggakan ${monthNumToLabel(t.setoranBulan)} ${t.setoranTahun}${t.keterangan ? " - " + t.keterangan : ""}`
-          };
-        });
-        setFormCabang(prev => ({
-          ...prev,
-          items: [...prev.items, ...newItems]
-        }));
-      }
-
       // Calculate previous month's shortage (kekurangan)
       let prevMonthNum = Number(bulanVal) - 1;
       let prevYear = tahun;
@@ -519,7 +504,46 @@ const TagihanForm = () => {
       const shortage = selisih < 0 ? Math.abs(selisih) : 0;
 
       const finalKekurangan = Math.max(0, shortage - total);
-      setTotalKekuranganBulanSebelumnya(finalKekurangan);
+      setTotalKekuranganBulanSebelumnya(shortage + total);
+      setPiutangCabangBulanLalu(shortage);
+
+      if (autoAdd) {
+        const autoAddedItems = [];
+        // 1. Add tunggakan items
+        list.forEach(t => {
+          const sisa = Number(t.tagihan) - Number(t.pembayaran || 0);
+          if (sisa > 0) {
+            autoAddedItems.push({
+              pos: t.pos,
+              tagihan: sisa,
+              pembayaran: "",
+              keterangan: `Tunggakan ${monthNumToLabel(t.setoranBulan)} ${t.setoranTahun}${t.keterangan ? " - " + t.keterangan : ""}`
+            });
+          }
+        });
+
+        // 2. Add finalKekurangan if > 0
+        if (finalKekurangan > 0) {
+          autoAddedItems.push({
+            pos: "Piutang Cabang",
+            tagihan: finalKekurangan,
+            pembayaran: "",
+            keterangan: `Tunggakan ${monthNumToLabel(prevMonthNum)} ${prevYear}`
+          });
+        }
+
+        if (autoAddedItems.length > 0) {
+          setFormCabang(prev => ({
+            ...prev,
+            items: autoAddedItems
+          }));
+        } else {
+          setFormCabang(prev => ({
+            ...prev,
+            items: [{ pos: "", tagihan: "", pembayaran: "", keterangan: "" }]
+          }));
+        }
+      }
 
       return list;
     } catch (error) {
@@ -580,6 +604,27 @@ const TagihanForm = () => {
       groups[key].items.push({ ...t, sisa });
       groups[key].totalSisa += sisa;
     });
+
+    if (piutangCabangBulanLalu > 0 && formCabang.setoranBulan && formCabang.setoranTahun) {
+      let prevMonthNum = Number(formCabang.setoranBulan) - 1;
+      let prevYear = Number(formCabang.setoranTahun);
+      if (prevMonthNum === 0) {
+        prevMonthNum = 12;
+        prevYear = prevYear - 1;
+      }
+      const key = `${prevYear}-${String(prevMonthNum).padStart(2, "0")}`;
+      if (!groups[key]) {
+        groups[key] = { tahun: prevYear, bulan: prevMonthNum, items: [], totalSisa: 0 };
+      }
+      if (!groups[key].items.some(item => item.pos === "Total Selisih Bulan Sebelumnya")) {
+        groups[key].items.push({
+          pos: "Total Selisih Bulan Sebelumnya",
+          sisa: piutangCabangBulanLalu
+        });
+        groups[key].totalSisa += piutangCabangBulanLalu;
+      }
+    }
+
     return Object.values(groups).sort((a, b) => b.tahun - a.tahun || b.bulan - a.bulan);
   };
 
@@ -689,6 +734,7 @@ const TagihanForm = () => {
     setTunggakanList([]);
     setTotalTunggakan(0);
     setTotalKekuranganBulanSebelumnya(0);
+    setPiutangCabangBulanLalu(0);
     setShowTunggakan(false);
   };
 
@@ -1128,7 +1174,7 @@ const TagihanForm = () => {
                       setFormCabang(prev => ({ ...prev, setoranBulan: bulanVal }));
                       formCabang.items.forEach((_, idx) => fetchPeruntukanCabang(formCabang.cabang, bulanVal, formCabang.setoranTahun, idx));
                       fetchAllBankValues(formCabang.cabang, bulanVal, formCabang.setoranTahun);
-                      fetchTunggakan(formCabang.cabang, bulanVal, formCabang.setoranTahun);
+                      fetchTunggakan(formCabang.cabang, bulanVal, formCabang.setoranTahun, true);
                     }} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
                       {months.map((month) => (<option key={month.value} value={month.value}>{month.label}</option>))}
                     </select>
@@ -1140,7 +1186,7 @@ const TagihanForm = () => {
                       setFormCabang(prev => ({ ...prev, setoranTahun: tahunVal }));
                       formCabang.items.forEach((_, idx) => fetchPeruntukanCabang(formCabang.cabang, formCabang.setoranBulan, tahunVal, idx));
                       fetchAllBankValues(formCabang.cabang, formCabang.setoranBulan, tahunVal);
-                      fetchTunggakan(formCabang.cabang, formCabang.setoranBulan, tahunVal);
+                      fetchTunggakan(formCabang.cabang, formCabang.setoranBulan, tahunVal, true);
                     }} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
                       {yearOptions.map((year) => (<option key={year} value={year}>{year}</option>))}
                     </select>
@@ -1210,7 +1256,7 @@ const TagihanForm = () => {
 
                     <div className="flex items-center justify-between border-t border-amber-200 pt-3">
                       <span className="text-xs font-bold text-amber-700 uppercase">Total Tunggakan</span>
-                      <span className="text-sm font-bold text-rose-600">Rp {totalTunggakan.toLocaleString("id-ID")}</span>
+                      <span className="text-sm font-bold text-rose-600">Rp {(totalTunggakan + piutangCabangBulanLalu).toLocaleString("id-ID")}</span>
                     </div>
                   </div>
                 )}
