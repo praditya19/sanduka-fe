@@ -220,7 +220,7 @@ export default function IconGrid() {
     {
       icon: faSitemap,
       label: "Data Ranting",
-      href: "/ranting",
+      href: "/ranting/data",
       color: "text-blue-500",
     },
     // Menu Keuangan - Prioritas Utama
@@ -805,112 +805,112 @@ export default function IconGrid() {
   const filteredIcons =
     role === "USER"
       ? icons
-          .filter((item) =>
-            [
-              "Lapor",
-              "Teman Unit",
-              "Ketentuan",
-              "Bantuan",
-              "Pengaduan",
-              "Kontributor",
-            ].includes(item.label),
-          )
-          .concat({
-            icon: faUser,
-            label: "Detail Anggota",
-            href: "/anggota/detail-anggota",
-            color: "text-blue-500",
-            bgHover: "hover:bg-blue-100",
-            iconColor: "text-blue-600",
-          })
-          .concat({
-            icon: faUserPen,
-            label: "Edit Anggota",
-            href: "/anggota/edit-anggota",
-            color: "text-orange-500",
-            bgHover: "hover:bg-blue-100",
-            iconColor: "text-blue-600",
-          })
-          .concat({
-            icon: faRightLeft,
-            label: "Mutasi",
-            href: "/anggota/data-anggota/mutasiCabangUnit",
-            color: "text-cyan-500",
-          })
-          .concat({
-            icon: faFileAlt,
-            label: "Daspen",
-            href: "/daspen",
-            color: "text-teal-700",
-          })
-          .concat({
-            icon: faFileInvoiceDollar,
-            label: "Tagihan",
-            href: "/tagihan",
-            color: "text-blue-700",
-          })
-          .sort((a, b) => {
-            const order = [
-              "Lapor",
-              "Tagihan",
-              "Detail Anggota",
-              "Edit Anggota",
-              "Mutasi",
-              "Daspen",
-              "Ketentuan",
-              "Bantuan",
-              "Teman Unit",
-              "Pengaduan",
-            ];
-            return order.indexOf(a.label) - order.indexOf(b.label);
-          })
+        .filter((item) =>
+          [
+            "Lapor",
+            "Teman Unit",
+            "Ketentuan",
+            "Bantuan",
+            "Pengaduan",
+            "Kontributor",
+          ].includes(item.label),
+        )
+        .concat({
+          icon: faUser,
+          label: "Detail Anggota",
+          href: "/anggota/detail-anggota",
+          color: "text-blue-500",
+          bgHover: "hover:bg-blue-100",
+          iconColor: "text-blue-600",
+        })
+        .concat({
+          icon: faUserPen,
+          label: "Edit Anggota",
+          href: "/anggota/edit-anggota",
+          color: "text-orange-500",
+          bgHover: "hover:bg-blue-100",
+          iconColor: "text-blue-600",
+        })
+        .concat({
+          icon: faRightLeft,
+          label: "Mutasi",
+          href: "/anggota/data-anggota/mutasiCabangUnit",
+          color: "text-cyan-500",
+        })
+        .concat({
+          icon: faFileAlt,
+          label: "Daspen",
+          href: "/daspen",
+          color: "text-teal-700",
+        })
+        .concat({
+          icon: faFileInvoiceDollar,
+          label: "Tagihan",
+          href: "/tagihan",
+          color: "text-blue-700",
+        })
+        .sort((a, b) => {
+          const order = [
+            "Lapor",
+            "Tagihan",
+            "Detail Anggota",
+            "Edit Anggota",
+            "Mutasi",
+            "Daspen",
+            "Ketentuan",
+            "Bantuan",
+            "Teman Unit",
+            "Pengaduan",
+          ];
+          return order.indexOf(a.label) - order.indexOf(b.label);
+        })
       : role === "SUPERADMIN"
         ? icons
-            .concat({
+          .concat({
+            icon: faNewspaper,
+            label: "Berita",
+            href: "/berita/view-berita",
+            color: "text-purple-600",
+            bgHover: "hover:bg-purple-100",
+            iconColor: "text-purple-700",
+          })
+          .concat({
+            icon: faYoutube,
+            label: "LIVE",
+            href: "/live-link",
+            color: "text-red-600",
+            bgHover: "hover:bg-red-100",
+            iconColor: "text-red-700",
+          })
+          .concat({
+            icon: faScroll,
+            label: "Running Text",
+            href: "/running-text",
+            color: "text-indigo-600",
+            bgHover: "hover:bg-indigo-100",
+            iconColor: "text-indigo-700",
+          })
+        : role === "EDITOR"
+          ? [
+            ...icons.filter((item) => item.label === "Kontributor"),
+            {
               icon: faNewspaper,
               label: "Berita",
               href: "/berita/view-berita",
               color: "text-purple-600",
               bgHover: "hover:bg-purple-100",
               iconColor: "text-purple-700",
-            })
-            .concat({
-              icon: faYoutube,
-              label: "LIVE",
-              href: "/live-link",
-              color: "text-red-600",
-              bgHover: "hover:bg-red-100",
-              iconColor: "text-red-700",
-            })
-            .concat({
-              icon: faScroll,
-              label: "Running Text",
-              href: "/running-text",
-              color: "text-indigo-600",
-              bgHover: "hover:bg-indigo-100",
-              iconColor: "text-indigo-700",
-            })
-        : role === "EDITOR"
-          ? [
-              ...icons.filter((item) => item.label === "Kontributor"),
-              {
-                icon: faNewspaper,
-                label: "Berita",
-                href: "/berita/view-berita",
-                color: "text-purple-600",
-                bgHover: "hover:bg-purple-100",
-                iconColor: "text-purple-700",
-              },
-            ]
+            },
+          ]
           : role === "ADMIN"
             ? icons.filter(
-                (item) =>
-                  item.label !== "Tour & Travel" &&
-                  item.label !== "Pengaturan" &&
-                  item.label !== "Galeri" &&
-                  item.label !== "Eksport Foto" &&
-                  item.label !== "Keuangan",
-              )
+              (item) =>
+                item.label !== "Tour & Travel" &&
+                item.label !== "Pengaturan" &&
+                item.label !== "Galeri" &&
+                item.label !== "Eksport Foto" &&
+                item.label !== "Keuangan",
+            )
             : icons.filter((item) => item.label !== "Tour & Travel");
 
   return (
@@ -921,9 +921,8 @@ export default function IconGrid() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <main
-          className={`transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           {notification && (
             <NotificationPopup
@@ -1139,11 +1138,10 @@ export default function IconGrid() {
                       className="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-50 transition-all duration-300 cursor-pointer hover:shadow-2xl hover:shadow-indigo-200 hover:-translate-y-1"
                     >
                       <div
-                        className={`w-14 h-14 ${
-                          item.color.includes("text-")
+                        className={`w-14 h-14 ${item.color.includes("text-")
                             ? item.color.replace("text-", "bg-") + "/10"
                             : "bg-gray-100"
-                        } rounded-full flex items-center justify-center mb-3 shadow-sm transition-all duration-300 group-hover:shadow-md`}
+                          } rounded-full flex items-center justify-center mb-3 shadow-sm transition-all duration-300 group-hover:shadow-md`}
                       >
                         <FontAwesomeIcon
                           icon={item.icon}

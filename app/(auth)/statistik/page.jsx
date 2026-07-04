@@ -298,59 +298,57 @@ const Page = () => {
         <head>
           <title>Cetak Data Mutasi Anggota</title>
           <style>
+            @page { size: landscape; margin: 10mm; }
             body { 
               font-family: 'Segoe UI', Arial, sans-serif; 
               color: #333; 
-              margin: 20px; 
+              margin: 10px; 
             }
             .header { 
               text-align: center; 
-              margin-bottom: 25px; 
+              margin-bottom: 10px; 
             }
             .header h2 { 
-              color: #0f766e; /* Teal-700 */
-              margin: 0 0 5px 0; 
-              font-size: 24px;
+              color: #0f766e;
+              margin: 0 0 3px 0; 
+              font-size: 16px;
             }
             .header p { 
               color: #666; 
               margin: 0; 
-              font-size: 14px; 
+              font-size: 11px; 
             }
             table { 
               width: 100%; 
               border-collapse: collapse; 
-              font-size: 12px; 
+              font-size: 9px; 
             }
             th, td { 
-              border: 1px solid #d1d5db; /* Gray-300 */
-              padding: 10px 6px; 
+              border: 1px solid #d1d5db;
+              padding: 4px 3px; 
               text-align: center; 
             }
-            /* Style Header Tabel Bertingkat */
             thead th { 
-              background-color: #0f766e; /* Teal-700 */
+              background-color: #0f766e;
               color: white; 
-              border-color: #115e59; /* Teal-800 */
+              border-color: #115e59;
+              font-size: 9px;
+              padding: 5px 3px;
             }
             .sub-header th {
-              background-color: #0d9488; /* Teal-600 */
-              font-size: 11px;
+              background-color: #0d9488;
+              font-size: 8px;
+              padding: 4px 2px;
             }
-            /* Efek Baris Zebra */
             tbody tr:nth-child(even) { 
-              background-color: #f9fafb; /* Gray-50 */
+              background-color: #f9fafb;
             }
-            tbody tr:hover {
-              background-color: #f3f4f6;
-            }
-            /* Style Badge Angka (Mirip di Web) */
             .badge { 
               display: inline-block; 
-              padding: 4px 10px; 
+              padding: 2px 6px; 
               border-radius: 9999px; 
               font-weight: 600; 
-              font-size: 11px; 
+              font-size: 8px; 
             }
             .bg-green { background-color: #dcfce7; color: #166534; }
             .bg-yellow { background-color: #fef9c3; color: #854d0e; }
@@ -358,19 +356,19 @@ const Page = () => {
             .bg-blue { background-color: #dbeafe; color: #1e40af; }
             .bg-purple { background-color: #f3e8ff; color: #6b21a8; }
             
-            /* Style Baris Total Bawah */
             .total-row { 
               font-weight: bold; 
-              background-color: #f0fdf4 !important; /* Green-50 */
-              color: #115e59; /* Teal-800 */
+              background-color: #f0fdf4 !important;
+              color: #115e59;
             }
             .total-row td { 
               border-top: 2px solid #0f766e; 
-              font-size: 13px;
+              font-size: 10px;
+              padding: 5px 3px;
             }
             
             @media print {
-              body { margin: 0; padding: 15px; }
+              body { margin: 0; padding: 8px; }
               * { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
             }
           </style>
