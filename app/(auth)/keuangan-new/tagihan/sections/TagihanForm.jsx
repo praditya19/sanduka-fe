@@ -174,9 +174,12 @@ const TagihanForm = () => {
   }, [fetchData]);
 
   const filteredTransactions = transactions.filter(t => {
-    if (t.setoranBulan && t.setoranTahun) {
-      if (Number(t.setoranBulan) !== Number(monthFilter)) return false;
-      if (Number(t.setoranTahun) !== Number(yearFilter)) return false;
+    // Filter ketat berdasarkan tanggal transaksi
+    if (t.tanggalTransaksi) {
+      const txMonth = Array.isArray(t.tanggalTransaksi)
+        ? t.tanggalTransaksi[1] // [year, month, day]
+        : new Date(t.tanggalTransaksi).getMonth() + 1;
+      if (Number(txMonth) !== Number(monthFilter)) return false;
     }
     if (cabangFilter && (t.cabang || "").toUpperCase() !== cabangFilter.toUpperCase()) return false;
     if (!searchQuery) return true;
@@ -186,6 +189,13 @@ const TagihanForm = () => {
       t.pos?.toLowerCase().includes(searchQuery.toLowerCase())
     );
   });
+
+  // Summary dari data yang tampil di tabel
+  const visibleSummary = useMemo(() => ({
+    totalTagihan: filteredTransactions.reduce((s, t) => s + Number(t.tagihan), 0),
+    totalPembayaran: filteredTransactions.reduce((s, t) => s + Number(t.pembayaran), 0),
+    sisa: filteredTransactions.reduce((s, t) => s + Number(t.sisa || t.tagihan - t.pembayaran), 0),
+  }), [filteredTransactions]);
 
   const cabangSummary = useMemo(() => {
     const grouped = {};
@@ -272,9 +282,9 @@ const TagihanForm = () => {
           cabangSummary.reduce((s, g) => s + g.kalender, 0),
           cabangSummary.reduce((s, g) => s + g.hut, 0),
           cabangSummary.reduce((s, g) => s + g.lainnya, 0),
-          summary.totalTagihan, summary.totalPembayaran,
+          visibleSummary.totalTagihan, visibleSummary.totalPembayaran,
           cabangSummary.reduce((s, g) => s + g.targetRealisasi, 0),
-          summary.sisa
+          visibleSummary.sisa
         ]);
         const ws = XLSX.utils.aoa_to_sheet(excelData);
         const wb = XLSX.utils.book_new();
@@ -297,7 +307,7 @@ const TagihanForm = () => {
           ]);
         });
         excelData.push([]);
-        excelData.push(["", "", "", "", "", "TOTAL", summary.totalTagihan, summary.totalPembayaran, summary.sisa]);
+        excelData.push(["", "", "", "", "", "TOTAL", visibleSummary.totalTagihan, visibleSummary.totalPembayaran, visibleSummary.sisa]);
         const ws = XLSX.utils.aoa_to_sheet(excelData);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Tagihan Cabang");
@@ -758,9 +768,9 @@ const TagihanForm = () => {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:hidden">
         {[
-          { label: "Total Tagihan", value: summary.totalTagihan, color: "text-violet-600", icon: <FaTag /> },
-          { label: "Total Pembayaran", value: summary.totalPembayaran, color: "text-emerald-600", icon: <FaArrowUp /> },
-          { label: "Sisa Tagihan", value: summary.sisa, color: "text-rose-600", icon: <FaCheckDouble /> },
+          { label: "Total Tagihan", value: visibleSummary.totalTagihan, color: "text-violet-600", icon: <FaTag /> },
+          { label: "Total Pembayaran", value: visibleSummary.totalPembayaran, color: "text-emerald-600", icon: <FaArrowUp /> },
+          { label: "Sisa Tagihan", value: visibleSummary.sisa, color: "text-rose-600", icon: <FaCheckDouble /> },
         ].map((item, i) => (
           <div key={i} className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">
             <div className="flex items-center justify-between mb-2">
@@ -946,11 +956,11 @@ const TagihanForm = () => {
                     <td className="px-1.5 sm:px-2 py-4 text-right font-mono">{formatCurrency(cabangSummary.reduce((s, g) => s + g.kalender, 0))}</td>
                     <td className="px-1.5 sm:px-2 py-4 text-right font-mono">{formatCurrency(cabangSummary.reduce((s, g) => s + g.hut, 0))}</td>
                     <td className="px-1.5 sm:px-2 py-4 text-right font-mono">{formatCurrency(cabangSummary.reduce((s, g) => s + g.lainnya, 0))}</td>
-                    <td className="px-1.5 sm:px-2 py-4 text-right font-mono text-violet-300">{formatCurrency(summary.totalTagihan)}</td>
-                    <td className="px-1.5 sm:px-2 py-4 text-right font-mono text-emerald-300">{formatCurrency(summary.totalPembayaran)}</td>
+                    <td className="px-1.5 sm:px-2 py-4 text-right font-mono text-violet-300">{formatCurrency(visibleSummary.totalTagihan)}</td>
+                    <td className="px-1.5 sm:px-2 py-4 text-right font-mono text-emerald-300">{formatCurrency(visibleSummary.totalPembayaran)}</td>
                     <td className="px-1.5 sm:px-2 py-4 text-right font-mono text-blue-300">{formatCurrency(cabangSummary.reduce((s, g) => s + g.targetRealisasi, 0))}</td>
-                    <td className={`px-1.5 sm:px-2 py-4 text-right font-mono ${(() => { const sel = cabangSummary.reduce((s, g) => s + g.targetRealisasi, 0) - summary.totalTagihan; return sel > 0 ? "text-emerald-300" : sel < 0 ? "text-rose-300" : "text-slate-300"; })()}`}>
-                      {(() => { const sel = cabangSummary.reduce((s, g) => s + g.targetRealisasi, 0) - summary.totalTagihan; return sel > 0 ? formatCurrency(sel) : sel < 0 ? `- ${formatCurrency(Math.abs(sel))}` : "Rp 0"; })()}
+                    <td className={`px-1.5 sm:px-2 py-4 text-right font-mono ${(() => { const sel = cabangSummary.reduce((s, g) => s + g.targetRealisasi, 0) - visibleSummary.totalTagihan; return sel > 0 ? "text-emerald-300" : sel < 0 ? "text-rose-300" : "text-slate-300"; })()}`}>
+                      {(() => { const sel = cabangSummary.reduce((s, g) => s + g.targetRealisasi, 0) - visibleSummary.totalTagihan; return sel > 0 ? formatCurrency(sel) : sel < 0 ? `- ${formatCurrency(Math.abs(sel))}` : "Rp 0"; })()}
                     </td>
                   </tr>
                 </tfoot>
