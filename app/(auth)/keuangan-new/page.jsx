@@ -31,6 +31,14 @@ export default function KeuanganNew() {
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
 
+  const [userRole, setUserRole] = useState(null);
+  const [userCabang, setUserCabang] = useState("");
+
+  useEffect(() => {
+    setUserRole(sessionStorage.getItem("role"));
+    setUserCabang((sessionStorage.getItem("cabang") || "").toUpperCase());
+  }, []);
+
   const formatCurrency = (val) =>
     new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(val || 0);
 
@@ -237,8 +245,13 @@ export default function KeuanganNew() {
     localStorage.setItem("isSidebarOpen", newState);
   };
 
-  const totalTarget = tableData.reduce((sum, row) => sum + row.target, 0);
-  const totalRealisasi = tableData.reduce((sum, row) => sum + row.realisasi, 0);
+  const isSuperAdmin = userRole === "SUPERADMIN";
+  const filteredCabangData = isSuperAdmin
+    ? tableData
+    : tableData.filter(r => r.cabang.toUpperCase() === userCabang);
+
+  const totalTarget = filteredCabangData.reduce((sum, row) => sum + row.target, 0);
+  const totalRealisasi = filteredCabangData.reduce((sum, row) => sum + row.realisasi, 0);
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row overflow-hidden">
@@ -372,8 +385,8 @@ export default function KeuanganNew() {
                             <td className="py-6 text-center"><div className="h-8 w-20 bg-slate-100 mx-auto rounded-xl" /></td>
                           </tr>
                         ))
-                      ) : tableData.length > 0 ? (
-                        tableData.map((row, i) => {
+                      ) : filteredCabangData.length > 0 ? (
+                        filteredCabangData.map((row, i) => {
                           const selisih = row.target - row.realisasi;
                           const isLunas = selisih <= 0;
                           return (
@@ -426,7 +439,7 @@ export default function KeuanganNew() {
                         </tr>
                       )}
                     </tbody>
-                    {tableData.length > 0 && (
+                    {filteredCabangData.length > 0 && (
                       <tfoot>
                         <tr className="bg-slate-900 text-white font-bold">
                           <td colSpan="2" className="px-4 py-5 text-[10px] uppercase tracking-widest">Total</td>
