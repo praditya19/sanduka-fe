@@ -312,7 +312,7 @@ const KasSanduka = () => {
       }
 
       toast.success("Data berhasil dihapus!");
-      fetchPenerimaan(); // refresh data
+      fetchData();
     } catch (error) {
       console.error("Gagal menghapus:", error);
       toast.error("Gagal hapus data.");
@@ -809,7 +809,7 @@ const KasSanduka = () => {
               <tr className="bg-white text-[9px] uppercase font-bold text-slate-400 tracking-[0.15em] border-b border-slate-50">
                 <th className="px-4 py-4 text-center w-24">Tgl Transaksi</th>
                 <th className="px-4 py-4">Nomor Bukti / Keterangan</th>
-                <th className="px-4 py-4">Cabang</th>
+
                 <th className="px-4 py-4 text-right">Debet</th>
                 <th className="px-4 py-4 text-right">Kredit</th>
                 <th className="px-4 py-4 text-right">Running Saldo</th>
@@ -845,12 +845,10 @@ const KasSanduka = () => {
                         {t.nomorBukti || "-"}
                       </div>
                       <div className="text-[9px] text-slate-400 font-medium italic">
-                        {t.keterangan}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-[11px] text-slate-600 font-medium">
-                        {t.cabang || extractCabangFromKeterangan(t.keterangan) || "-"}
+                        {t.keterangan}{" "}
+                        {t.cabang ||
+                          extractCabangFromKeterangan(t.keterangan) ||
+                          "-"}
                       </div>
                     </td>
                     <td className="px-4 py-3 text-right text-[11px] font-bold text-emerald-600">
