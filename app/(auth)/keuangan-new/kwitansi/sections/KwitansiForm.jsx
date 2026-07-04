@@ -339,34 +339,34 @@ export default function KwitansiForm() {
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm p-6">
-        <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-5">Kwitansi</h2>
+        <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-5">Kwitansi</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* LEFT COLUMN */}
           <div className="space-y-4">
             <div>
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Tanggal Transaksi</label>
+              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Tanggal Transaksi</label>
               <input type="date" name="tanggal" value={form.tanggal} onChange={handleChange} className="w-full px-3 py-2.5 bg-white border border-violet-100 rounded-xl outline-none font-medium text-sm text-slate-700" />
             </div>
             <div>
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Pos Pengeluaran</label>
+              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Pos Pengeluaran</label>
               <select name="posPengeluaran" value={form.posPengeluaran} onChange={handleChange} className="w-full px-3 py-2.5 bg-white border border-violet-100 rounded-xl outline-none font-bold text-sm text-slate-700">
                 <option value="">Pilih</option>
                 {posPengeluaranList.map((p) => <option key={p.id} value={p.namaPosPengeluaran}>{p.namaPosPengeluaran}</option>)}
               </select>
             </div>
             <div className="border-t border-slate-100 pt-4">
-              <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Data Sanduka</h3>
+              <h3 className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-3 px-1">Data Sanduka</h3>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Tahun Lapor</label>
+                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Tahun Lapor</label>
                   <select name="tahun" value={form.tahun} onChange={handleChange} className="w-full px-3 py-2.5 bg-white border border-violet-100 rounded-xl outline-none font-bold text-sm text-slate-700">
                     <option value="">Pilih</option>
                     {years.map((y) => <option key={y} value={y}>{y}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Bulan Lapor</label>
+                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Bulan Lapor</label>
                   <select name="bulan" value={form.bulan} onChange={handleChange} className="w-full px-3 py-2.5 bg-white border border-violet-100 rounded-xl outline-none font-bold text-sm text-slate-700">
                     <option value="">Pilih</option>
                     {bulanList.map((b) => <option key={b.id} value={b.id}>{b.namaBulan}</option>)}
@@ -374,7 +374,7 @@ export default function KwitansiForm() {
                 </div>
               </div>
               <div className="mt-3">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Cari nama yang meninggal</label>
+                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Cari nama yang meninggal</label>
                 <div className="relative" ref={dropdownRef}>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><FaSearch size={12} /></span>
@@ -391,7 +391,7 @@ export default function KwitansiForm() {
                   )}
                 </div>
               </div>
-              <button type="button" onClick={addName} disabled={!form.yangMeninggal} className="mt-2 flex items-center space-x-1.5 px-4 py-2.5 bg-violet-100 text-violet-600 rounded-xl text-[10px] font-black hover:bg-violet-200 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+              <button type="button" onClick={addName} disabled={!form.yangMeninggal} className="mt-2 flex items-center space-x-1.5 px-4 py-2.5 bg-violet-100 text-violet-600 rounded-xl text-[10px] font-bold hover:bg-violet-200 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
                 <FaPlus size={10} /> <span>Tambah Nama</span>
               </button>
               {selectedNames.length > 0 && (
@@ -410,27 +410,27 @@ export default function KwitansiForm() {
           {/* RIGHT COLUMN */}
           <div className="space-y-4">
             <div>
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Nama Penerima</label>
+              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Nama Penerima</label>
               <input type="text" name="namaPenerima" value={form.namaPenerima} onChange={handleChange} placeholder="Nama penerima" className="w-full px-3 py-2.5 bg-white border border-violet-100 rounded-xl outline-none font-medium text-sm text-slate-700" />
             </div>
             <div className="pt-2">
-              <button type="button" onClick={handleKwitansi} disabled={generating || selectedNames.length === 0 || !form.posPengeluaran} className="w-full flex items-center justify-center space-x-2 px-5 py-3 bg-violet-600 text-white rounded-xl text-sm font-black hover:bg-violet-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+              <button type="button" onClick={handleKwitansi} disabled={generating || selectedNames.length === 0 || !form.posPengeluaran} className="w-full flex items-center justify-center space-x-2 px-5 py-3 bg-violet-600 text-white rounded-xl text-sm font-bold hover:bg-violet-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
                 <span>{generating ? "Memproses..." : "Kwitansi"}</span>
               </button>
             </div>
             <div>
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Nominal</label>
+              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Nominal</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400">Rp</span>
-                <input type="text" name="nominal" value={form.nominal ? Number(form.nominal).toLocaleString("id-ID") : ""} onChange={handleChange} placeholder="0" className="w-full pl-9 pr-3 py-2.5 bg-white border border-violet-100 rounded-xl outline-none font-black text-sm text-violet-600" />
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">Rp</span>
+                <input type="text" name="nominal" value={form.nominal ? Number(form.nominal).toLocaleString("id-ID") : ""} onChange={handleChange} placeholder="0" className="w-full pl-9 pr-3 py-2.5 bg-white border border-violet-100 rounded-xl outline-none font-bold text-sm text-violet-600" />
               </div>
             </div>
             <div>
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Terbilang</label>
+              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Terbilang</label>
               <textarea name="terbilang" value={form.terbilang} onChange={handleChange} placeholder="Terbilang" className="w-full px-3 py-2.5 bg-white border border-violet-100 rounded-xl outline-none font-medium text-sm text-slate-700" style={{ height: "5.6em" }} />
             </div>
             <div>
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Keterangan</label>
+              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Keterangan</label>
               <textarea name="keterangan" value={form.keterangan} onChange={handleChange} placeholder="Keterangan..." className="w-full px-3 py-2.5 bg-white border border-violet-100 rounded-xl outline-none font-medium text-sm text-slate-700" rows={3} />
             </div>
           </div>
@@ -440,15 +440,15 @@ export default function KwitansiForm() {
       {showPreview && kwitansiUrl && (
         <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pratinjau Kwitansi</h3>
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pratinjau Kwitansi</h3>
             <div className="flex items-center gap-2">
-              <button onClick={downloadPDF} className="flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-100 text-emerald-600 rounded-xl text-[10px] font-black hover:bg-emerald-200 transition-all">
+              <button onClick={downloadPDF} className="flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-100 text-emerald-600 rounded-xl text-[10px] font-bold hover:bg-emerald-200 transition-all">
                 <FaFilePdf size={10} /> <span>PDF</span>
               </button>
-              <button onClick={downloadPNG} className="flex items-center space-x-1.5 px-3 py-1.5 bg-blue-100 text-blue-600 rounded-xl text-[10px] font-black hover:bg-blue-200 transition-all">
+              <button onClick={downloadPNG} className="flex items-center space-x-1.5 px-3 py-1.5 bg-blue-100 text-blue-600 rounded-xl text-[10px] font-bold hover:bg-blue-200 transition-all">
                 <FaFileImage size={10} /> <span>PNG</span>
               </button>
-              <button onClick={closePreview} className="flex items-center space-x-1.5 px-3 py-1.5 bg-rose-100 text-rose-600 rounded-xl text-[10px] font-black hover:bg-rose-200 transition-all">
+              <button onClick={closePreview} className="flex items-center space-x-1.5 px-3 py-1.5 bg-rose-100 text-rose-600 rounded-xl text-[10px] font-bold hover:bg-rose-200 transition-all">
                 <FaTimes size={10} /> <span>Tutup</span>
               </button>
             </div>

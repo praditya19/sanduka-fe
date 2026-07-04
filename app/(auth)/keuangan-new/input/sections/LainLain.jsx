@@ -533,9 +533,9 @@ const LainLainSection = () => {
             <FaEllipsisH className="text-2xl" />
           </div>
           <div>
-            <h2 className="text-xl font-black">Lain-Lain</h2>
+            <h2 className="text-xl font-bold">Lain-Lain</h2>
             <div className="flex items-center gap-2 mt-1">
-              <span className="px-2 py-0.5 bg-white/20 rounded-md text-[10px] font-black uppercase tracking-widest">
+              <span className="px-2 py-0.5 bg-white/20 rounded-md text-[10px] font-bold uppercase tracking-widest">
                 Periode: {selectedMonth} {selectedYear}
               </span>
               <span className="w-1 h-1 bg-white/40 rounded-full" />
@@ -576,10 +576,10 @@ const LainLainSection = () => {
                 <FaPlusCircle className={`text-sm transition-transform duration-300 ${showTambahPos ? "rotate-45" : ""}`} />
               </div>
               <div>
-                <h3 className="text-sm font-black text-slate-800 tracking-tight">
+                <h3 className="text-sm font-bold text-slate-800 tracking-tight">
                   {isEditingPos ? "Edit Pos" : "Tambah Pos"}
                 </h3>
-                <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest">
+                <p className="text-slate-400 text-[9px] font-bold uppercase tracking-widest">
                   Lain-Lain
                 </p>
               </div>
@@ -599,14 +599,14 @@ const LainLainSection = () => {
               >
                 <div className="p-4 sm:p-6 space-y-4">
                   <div>
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">
                       Pilih Periode Bulan dan Tahun
                     </p>
                     <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-100">
                       <select
                         value={tambahPosBulan}
                         onChange={(e) => setTambahPosBulan(e.target.value)}
-                        className="bg-transparent px-3 py-1.5 outline-none font-black text-slate-600 text-[10px] uppercase tracking-widest cursor-pointer w-full"
+                        className="bg-transparent px-3 py-1.5 outline-none font-bold text-slate-600 text-[10px] uppercase tracking-widest cursor-pointer w-full"
                       >
                         <option value="" className="font-sans normal-case">-- Pilih Bulan --</option>
                         {(bulanList.length > 0 ? bulanList : [
@@ -630,7 +630,7 @@ const LainLainSection = () => {
                       <select
                         value={tambahPosTahun}
                         onChange={(e) => setTambahPosTahun(e.target.value)}
-                        className="bg-transparent px-3 py-1.5 outline-none font-black text-slate-600 text-[10px] uppercase tracking-widest cursor-pointer w-full"
+                        className="bg-transparent px-3 py-1.5 outline-none font-bold text-slate-600 text-[10px] uppercase tracking-widest cursor-pointer w-full"
                       >
                         <option value="" className="font-sans normal-case">-- Pilih Tahun --</option>
                         {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 + i).map((t) => (
@@ -641,7 +641,7 @@ const LainLainSection = () => {
                   </div>
 
                   <div>
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">
+                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block px-1">
                       Nama
                     </label>
                     <input
@@ -655,54 +655,54 @@ const LainLainSection = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">
+                      <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block px-1">
                         Peruntukan Provinsi <span className="text-slate-300 normal-case tracking-normal">(opsional)</span>
                       </label>
                       <div className="relative group">
                         <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
-                          <span className="text-slate-300 font-black text-sm">Rp</span>
+                          <span className="text-slate-300 font-bold text-sm">Rp</span>
                         </div>
                         <input
                           type="number"
                           value={tambahPosForm.peruntukanProvinsi || ""}
                           onChange={(e) => setTambahPosForm({ ...tambahPosForm, peruntukanProvinsi: parseInt(e.target.value, 10) || 0 })}
-                          className="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-slate-500 outline-none font-black text-slate-700 transition-all text-base group-hover:bg-slate-100/50 shadow-inner"
+                          className="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-slate-500 outline-none font-bold text-slate-700 transition-all text-base group-hover:bg-slate-100/50 shadow-inner"
                           placeholder="0"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">
+                      <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block px-1">
                         Peruntukan Kabupaten <span className="text-slate-300 normal-case tracking-normal">(opsional)</span>
                       </label>
                       <div className="relative group">
                         <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
-                          <span className="text-slate-300 font-black text-sm">Rp</span>
+                          <span className="text-slate-300 font-bold text-sm">Rp</span>
                         </div>
                         <input
                           type="number"
                           value={tambahPosForm.peruntukanKabupaten || ""}
                           onChange={(e) => setTambahPosForm({ ...tambahPosForm, peruntukanKabupaten: parseInt(e.target.value, 10) || 0 })}
-                          className="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-slate-500 outline-none font-black text-slate-700 transition-all text-base group-hover:bg-slate-100/50 shadow-inner"
+                          className="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-slate-500 outline-none font-bold text-slate-700 transition-all text-base group-hover:bg-slate-100/50 shadow-inner"
                           placeholder="0"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">
+                      <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block px-1">
                         Peruntukan Cabang <span className="text-slate-300 normal-case tracking-normal">(opsional)</span>
                       </label>
                       <div className="relative group">
                         <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
-                          <span className="text-slate-300 font-black text-sm">Rp</span>
+                          <span className="text-slate-300 font-bold text-sm">Rp</span>
                         </div>
                         <input
                           type="number"
                           value={tambahPosForm.peruntukanCabang || ""}
                           onChange={(e) => setTambahPosForm({ ...tambahPosForm, peruntukanCabang: parseInt(e.target.value, 10) || 0 })}
-                          className="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-slate-500 outline-none font-black text-slate-700 transition-all text-base group-hover:bg-slate-100/50 shadow-inner"
+                          className="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-slate-500 outline-none font-bold text-slate-700 transition-all text-base group-hover:bg-slate-100/50 shadow-inner"
                           placeholder="0"
                         />
                       </div>
@@ -720,7 +720,7 @@ const LainLainSection = () => {
                       ) : (
                         <FaSave className="text-xs" />
                       )}
-                      <span className="text-xs font-black uppercase tracking-widest">
+                      <span className="text-xs font-bold uppercase tracking-widest">
                         Simpan
                       </span>
                     </button>
@@ -738,10 +738,10 @@ const LainLainSection = () => {
                 <FaHistory className="text-xl" />
               </div>
               <div>
-                <h4 className="text-lg font-black text-slate-800 tracking-tight">
+                <h4 className="text-lg font-bold text-slate-800 tracking-tight">
                   Default Pos
                 </h4>
-                <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
                   Lain-Lain - {selectedMonth} {selectedYear}
                 </p>
               </div>
@@ -788,7 +788,7 @@ const LainLainSection = () => {
                     <ul className="overflow-y-auto py-2 custom-scrollbar">
                       <li
                         onClick={() => handleSelectCabang("")}
-                        className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${
+                        className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${
                           !searchQuery
                             ? "bg-slate-50 text-slate-600 border-slate-500"
                             : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
@@ -806,7 +806,7 @@ const LainLainSection = () => {
                           <li
                             key={idx}
                             onClick={() => handleSelectCabang(cab.kecamatan)}
-                            className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${
+                            className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${
                               searchQuery === cab.kecamatan
                                 ? "bg-slate-50 text-slate-600 border-slate-500"
                                 : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
@@ -824,7 +824,7 @@ const LainLainSection = () => {
                 <select
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="bg-transparent px-4 py-2.5 outline-none font-black text-slate-600 text-xs uppercase tracking-widest cursor-pointer"
+                  className="bg-transparent px-4 py-2.5 outline-none font-bold text-slate-600 text-xs uppercase tracking-widest cursor-pointer"
                 >
                   {bulanList.map((b) => (
                     <option key={b.id} value={b.namaBulan}>
@@ -836,7 +836,7 @@ const LainLainSection = () => {
                 <select
                   value={selectedYear}
                   onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
-                  className="bg-transparent px-4 py-2.5 outline-none font-black text-slate-600 text-xs uppercase tracking-widest cursor-pointer"
+                  className="bg-transparent px-4 py-2.5 outline-none font-bold text-slate-600 text-xs uppercase tracking-widest cursor-pointer"
                 >
                   {Array.from({ length: new Date().getFullYear() + 2 - 2020 + 1 }, (_, i) => 2020 + i).map((y) => (
                     <option key={y} value={y}>
@@ -855,7 +855,7 @@ const LainLainSection = () => {
                   {["No", "Nama", "Peruntukan Provinsi", "Peruntukan Kabupaten", "Peruntukan Cabang", "Total", "Bulan/Tahun", "Action"].map((heading, index) => (
                     <th
                       key={index}
-                      className="px-4 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-center whitespace-nowrap"
+                      className="px-4 py-4 text-[9px] font-bold uppercase tracking-widest text-slate-400 text-center whitespace-nowrap"
                     >
                       {heading}
                     </th>
@@ -872,20 +872,20 @@ const LainLainSection = () => {
                         key={item.id || index}
                         className="hover:bg-slate-50/80 transition-colors text-center text-[11px] font-bold text-slate-600"
                       >
-                        <td className="px-4 py-4 text-slate-400 font-black">{index + 1}</td>
-                        <td className="px-4 py-4 font-black text-slate-800 text-left whitespace-nowrap">
+                        <td className="px-4 py-4 text-slate-400 font-bold">{index + 1}</td>
+                        <td className="px-4 py-4 font-bold text-slate-800 text-left whitespace-nowrap">
                           {item.nama}
                         </td>
-                        <td className="px-4 py-4 text-right font-black text-indigo-600 whitespace-nowrap">
+                        <td className="px-4 py-4 text-right font-bold text-indigo-600 whitespace-nowrap">
                           {formatCurrency(item.peruntukanProvinsi)}
                         </td>
-                        <td className="px-4 py-4 text-right font-black text-amber-600 whitespace-nowrap">
+                        <td className="px-4 py-4 text-right font-bold text-amber-600 whitespace-nowrap">
                           {formatCurrency(item.peruntukanKabupaten)}
                         </td>
-                        <td className="px-4 py-4 text-right font-black text-emerald-600 whitespace-nowrap">
+                        <td className="px-4 py-4 text-right font-bold text-emerald-600 whitespace-nowrap">
                           {formatCurrency(item.peruntukanCabang)}
                         </td>
-                        <td className="px-4 py-4 text-right font-black text-slate-900 bg-slate-50/50 whitespace-nowrap">
+                        <td className="px-4 py-4 text-right font-bold text-slate-900 bg-slate-50/50 whitespace-nowrap">
                           {formatCurrency(totalItem)}
                         </td>
                         <td className="px-4 py-4 text-slate-400">
@@ -917,18 +917,18 @@ const LainLainSection = () => {
                     <td colSpan={8} className="py-16 text-center">
                       <div className="flex flex-col items-center justify-center space-y-3 text-slate-300">
                         <FaFileInvoiceDollar className="text-4xl" />
-                        <p className="text-xs font-black uppercase tracking-widest">Data Kosong</p>
+                        <p className="text-xs font-bold uppercase tracking-widest">Data Kosong</p>
                       </div>
                     </td>
                   </tr>
                 )}
 
                 {filteredPosData.length > 0 && (
-                  <tr className="bg-slate-50 border-t-2 border-slate-200 font-black text-center text-[11px]">
-                    <td colSpan={5} className="px-4 py-4 text-slate-700 font-black text-right uppercase tracking-widest">
+                  <tr className="bg-slate-50 border-t-2 border-slate-200 font-bold text-center text-[11px]">
+                    <td colSpan={5} className="px-4 py-4 text-slate-700 font-bold text-right uppercase tracking-widest">
                       TOTAL REKAP
                     </td>
-                    <td className="px-4 py-4 text-slate-900 font-black text-right bg-slate-100 whitespace-nowrap">
+                    <td className="px-4 py-4 text-slate-900 font-bold text-right bg-slate-100 whitespace-nowrap">
                       {formatCurrency(totalNominal)}
                     </td>
                     <td className="px-4 py-4 text-slate-400 text-center">-</td>
@@ -951,7 +951,7 @@ const LainLainSection = () => {
           <div className="relative z-10 flex flex-col xl:flex-row items-end gap-4 xl:gap-6">
 
             <div className="w-full xl:w-1/4 space-y-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block px-1">
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block px-1">
                 Pilih Cabang
               </label>
               <select
@@ -975,7 +975,7 @@ const LainLainSection = () => {
             </div>
 
             <div className="w-full xl:w-1/4 space-y-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block px-1">
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block px-1">
                 Pos Lain-lain
               </label>
               <select
@@ -995,7 +995,7 @@ const LainLainSection = () => {
             </div>
 
             <div className="w-full xl:w-1/4 space-y-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block px-1">
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block px-1">
                 Jumlah Lain-Lain
               </label>
               <div className="relative">
@@ -1010,16 +1010,16 @@ const LainLainSection = () => {
                     if (jumlahPesanan === "") setJumlahPesanan("0");
                   }}
                   onChange={(e) => setJumlahPesanan(e.target.value)}
-                  className="w-full pl-11 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-black text-white text-base focus:bg-white/10 focus:border-slate-500 transition-all"
+                  className="w-full pl-11 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-bold text-white text-base focus:bg-white/10 focus:border-slate-500 transition-all"
                 />
               </div>
             </div>
 
             <div className="w-full xl:flex-1 flex xl:flex-col items-center xl:items-end justify-between xl:justify-center gap-1 px-2 mb-2 xl:mb-0">
-              <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
                 Grand Total
               </span>
-              <span className="text-xl font-black text-slate-200 tracking-tight whitespace-nowrap">
+              <span className="text-xl font-bold text-slate-200 tracking-tight whitespace-nowrap">
                 {formatCurrency(totalAkhir)}
               </span>
             </div>
@@ -1028,7 +1028,7 @@ const LainLainSection = () => {
               <button
                 type="submit"
                 disabled={loadingTarget}
-                className="w-full px-6 py-5 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl font-black shadow-xl shadow-slate-950/40 transition-all active:scale-[0.98] text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 whitespace-nowrap"
+                className="w-full px-6 py-5 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl font-bold shadow-xl shadow-slate-950/40 transition-all active:scale-[0.98] text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 whitespace-nowrap"
               >
                 {loadingTarget ? (
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -1054,10 +1054,10 @@ const LainLainSection = () => {
                 className={`${stat.color} p-5 rounded-[28px] text-white shadow-lg flex items-center justify-between group overflow-hidden relative`}
               >
                 <div className="relative z-10">
-                  <p className="text-[9px] font-black opacity-60 uppercase tracking-widest mb-0.5">
+                  <p className="text-[9px] font-bold opacity-60 uppercase tracking-widest mb-0.5">
                     {stat.label}
                   </p>
-                  <h4 className="text-lg font-black">{formatCurrency(stat.val)}</h4>
+                  <h4 className="text-lg font-bold">{formatCurrency(stat.val)}</h4>
                 </div>
                 <div className="text-3xl opacity-10 group-hover:scale-125 transition-transform duration-500">
                   {stat.icon}
@@ -1074,10 +1074,10 @@ const LainLainSection = () => {
                   <FaChartLine className="text-xl" />
                 </div>
                 <div>
-                  <h4 className="text-lg font-black text-slate-800 tracking-tight">
+                  <h4 className="text-lg font-bold text-slate-800 tracking-tight">
                     Target Lain-Lain
                   </h4>
-                  <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
                     Per Cabang — {selectedMonth} {selectedYear}
                   </p>
                 </div>
@@ -1089,7 +1089,7 @@ const LainLainSection = () => {
                   <select
                     value={selectedTargetKeterangan}
                     onChange={(e) => setSelectedTargetKeterangan(e.target.value)}
-                    className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none font-black text-slate-600 text-[10px] uppercase tracking-widest cursor-pointer shadow-sm transition-all focus:border-slate-400"
+                    className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-slate-600 text-[10px] uppercase tracking-widest cursor-pointer shadow-sm transition-all focus:border-slate-400"
                   >
                     <option value="" className="normal-case font-sans">-- Semua Pos Lain-lain --</option>
                     {keteranganOptions.map((ket, idx) => (
@@ -1102,20 +1102,20 @@ const LainLainSection = () => {
 
                 <button
                   onClick={handleExportExcelTarget}
-                  className="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-sm"
+                  className="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2 shadow-sm"
                 >
                   <FaFileExcel className="text-sm" /> Excel
                 </button>
                 <button
                   onClick={handleDownloadPDFTarget}
-                  className="px-5 py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-sm"
+                  className="px-5 py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2 shadow-sm"
                 >
                   <FaFilePdf className="text-sm" /> PDF
                 </button>
                 <button
                   onClick={fetchTargetTable}
                   disabled={loadingTargetTable}
-                  className="px-4 py-2 bg-slate-700 hover:bg-slate-800 disabled:opacity-50 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-sm"
+                  className="px-4 py-2 bg-slate-700 hover:bg-slate-800 disabled:opacity-50 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-2 shadow-sm"
                 >
                   {loadingTargetTable ? (
                     <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -1135,7 +1135,7 @@ const LainLainSection = () => {
                       <th
                         key={i}
                         data-html2canvas-ignore={h === 'Action' ? "true" : undefined}
-                        className="px-4 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-center whitespace-nowrap"
+                        className="px-4 py-4 text-[9px] font-bold uppercase tracking-widest text-slate-400 text-center whitespace-nowrap"
                       >
                         {h}
                       </th>
@@ -1148,22 +1148,22 @@ const LainLainSection = () => {
                       <td colSpan={11} className="py-12 text-center">
                         <div className="flex items-center justify-center gap-2 text-slate-400">
                           <div className="w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
-                          <span className="text-xs font-black uppercase tracking-widest">Memuat...</span>
+                          <span className="text-xs font-bold uppercase tracking-widest">Memuat...</span>
                         </div>
                       </td>
                     </tr>
                   ) : filteredTargetData.length > 0 ? (
                     filteredTargetData.map((item, index) => (
                       <tr key={item.id || index} className="hover:bg-slate-50/80 transition-colors text-center text-[11px] font-bold text-slate-600">
-                        <td className="px-4 py-4 text-slate-400 font-black">{index + 1}</td>
-                        <td className="px-4 py-4 font-black text-slate-800 text-left whitespace-nowrap">{item.cabang}</td>
+                        <td className="px-4 py-4 text-slate-400 font-bold">{index + 1}</td>
+                        <td className="px-4 py-4 font-bold text-slate-800 text-left whitespace-nowrap">{item.cabang}</td>
                         <td className="px-4 py-4">{parseInt(item.jumlah, 10) || 0}</td>
-                        <td className="px-4 py-4 text-right font-black text-amber-600 whitespace-nowrap">{formatCurrency(item.perolehanKabupaten)}</td>
-                        <td className="px-4 py-4 text-right font-black text-emerald-600 whitespace-nowrap">{formatCurrency(item.perolehanCabang || 0)}</td>
-                        <td className="px-4 py-4 text-right font-black text-slate-900 bg-slate-50/50 whitespace-nowrap">{formatCurrency((item.perolehanKabupaten || 0) + (item.perolehanCabang || 0))}</td>
-                        <td className="px-4 py-4 text-right font-black text-blue-600 whitespace-nowrap">{formatCurrency(item.transfer || 0)}</td>
-                        <td className="px-4 py-4 text-right font-black text-slate-600 whitespace-nowrap">{formatCurrency(item.pembayaran || 0)}</td>
-                        <td className="px-4 py-4 text-right font-black text-rose-600 whitespace-nowrap">{formatCurrency(item.selisih || 0)}</td>
+                        <td className="px-4 py-4 text-right font-bold text-amber-600 whitespace-nowrap">{formatCurrency(item.perolehanKabupaten)}</td>
+                        <td className="px-4 py-4 text-right font-bold text-emerald-600 whitespace-nowrap">{formatCurrency(item.perolehanCabang || 0)}</td>
+                        <td className="px-4 py-4 text-right font-bold text-slate-900 bg-slate-50/50 whitespace-nowrap">{formatCurrency((item.perolehanKabupaten || 0) + (item.perolehanCabang || 0))}</td>
+                        <td className="px-4 py-4 text-right font-bold text-blue-600 whitespace-nowrap">{formatCurrency(item.transfer || 0)}</td>
+                        <td className="px-4 py-4 text-right font-bold text-slate-600 whitespace-nowrap">{formatCurrency(item.pembayaran || 0)}</td>
+                        <td className="px-4 py-4 text-right font-bold text-rose-600 whitespace-nowrap">{formatCurrency(item.selisih || 0)}</td>
 
                         <td data-html2canvas-ignore="true" className="px-4 py-4">
                           <div className="flex items-center justify-center gap-2">
@@ -1192,36 +1192,36 @@ const LainLainSection = () => {
                       <td colSpan={11} className="py-16 text-center">
                         <div className="flex flex-col items-center justify-center space-y-3 text-slate-300">
                           <FaChartLine className="text-4xl" />
-                          <p className="text-xs font-black uppercase tracking-widest">Belum ada target</p>
+                          <p className="text-xs font-bold uppercase tracking-widest">Belum ada target</p>
                         </div>
                       </td>
                     </tr>
                   )}
                   {filteredTargetData.length > 0 && (
-                    <tr className="bg-slate-50 border-t-2 border-slate-200 font-black text-center text-[11px]">
-                      <td colSpan={2} className="px-4 py-4 text-slate-700 font-black text-right uppercase tracking-widest">TOTAL</td>
-                      <td className="px-4 py-4 text-slate-700 font-black">
+                    <tr className="bg-slate-50 border-t-2 border-slate-200 font-bold text-center text-[11px]">
+                      <td colSpan={2} className="px-4 py-4 text-slate-700 font-bold text-right uppercase tracking-widest">TOTAL</td>
+                      <td className="px-4 py-4 text-slate-700 font-bold">
                         {filteredTargetData.reduce((s, i) => s + (parseInt(i.totalAnggota, 10) || 0), 0)}
                       </td>
-                      <td className="px-4 py-4 text-slate-700 font-black">
+                      <td className="px-4 py-4 text-slate-700 font-bold">
                         {filteredTargetData.reduce((s, i) => s + (parseInt(i.jumlah, 10) || 0), 0)}
                       </td>
-                      <td className="px-4 py-4 text-amber-600 font-black text-right whitespace-nowrap">
+                      <td className="px-4 py-4 text-amber-600 font-bold text-right whitespace-nowrap">
                         {formatCurrency(filteredTargetData.reduce((s, i) => s + (i.perolehanKabupaten || 0), 0))}
                       </td>
-                      <td className="px-4 py-4 text-emerald-600 font-black text-right whitespace-nowrap">
+                      <td className="px-4 py-4 text-emerald-600 font-bold text-right whitespace-nowrap">
                         {formatCurrency(filteredTargetData.reduce((s, i) => s + (i.perolehanCabang || 0), 0))}
                       </td>
-                      <td className="px-4 py-4 text-slate-900 font-black text-right bg-slate-100 whitespace-nowrap">
+                      <td className="px-4 py-4 text-slate-900 font-bold text-right bg-slate-100 whitespace-nowrap">
                         {formatCurrency(filteredTargetData.reduce((s, i) => s + (i.perolehanKabupaten || 0) + (i.perolehanCabang || 0), 0))}
                       </td>
-                      <td className="px-4 py-4 text-blue-600 font-black text-right whitespace-nowrap">
+                      <td className="px-4 py-4 text-blue-600 font-bold text-right whitespace-nowrap">
                         {formatCurrency(filteredTargetData.reduce((s, i) => s + (i.transfer || 0), 0))}
                       </td>
-                      <td className="px-4 py-4 text-slate-600 font-black text-right whitespace-nowrap">
+                      <td className="px-4 py-4 text-slate-600 font-bold text-right whitespace-nowrap">
                         {formatCurrency(filteredTargetData.reduce((s, i) => s + (i.pembayaran || 0), 0))}
                       </td>
-                      <td className="px-4 py-4 text-rose-600 font-black text-right whitespace-nowrap">
+                      <td className="px-4 py-4 text-rose-600 font-bold text-right whitespace-nowrap">
                         {formatCurrency(filteredTargetData.reduce((s, i) => s + (i.selisih || 0), 0))}
                       </td>
                       <td data-html2canvas-ignore="true" className="px-4 py-4 text-slate-400 text-center">-</td>
@@ -1236,10 +1236,10 @@ const LainLainSection = () => {
           {showEditTargetModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
               <div className="bg-white rounded-[32px] shadow-2xl p-8 w-full max-w-md mx-4">
-                <h3 className="text-lg font-black text-slate-800 mb-6">Edit Target Lain-Lain</h3>
+                <h3 className="text-lg font-bold text-slate-800 mb-6">Edit Target Lain-Lain</h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Cabang</label>
+                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Cabang</label>
                     <input
                       type="text"
                       value={editTargetData.cabang}
@@ -1248,7 +1248,7 @@ const LainLainSection = () => {
                     />
                   </div>
                   <div>
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Jumlah</label>
+                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Jumlah</label>
                     <input
                       type="number"
                       value={editTargetData.jumlah}
@@ -1258,7 +1258,7 @@ const LainLainSection = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Bulan</label>
+                      <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Bulan</label>
                       <select
                         value={editTargetData.bulan}
                         onChange={(e) => setEditTargetData({ ...editTargetData, bulan: e.target.value })}
@@ -1270,7 +1270,7 @@ const LainLainSection = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Tahun</label>
+                      <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Tahun</label>
                       <select
                         value={editTargetData.tahun}
                         onChange={(e) => setEditTargetData({ ...editTargetData, tahun: parseInt(e.target.value, 10) })}
@@ -1286,13 +1286,13 @@ const LainLainSection = () => {
                 <div className="flex gap-3 mt-6">
                   <button
                     onClick={() => setShowEditTargetModal(false)}
-                    className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-black text-xs uppercase tracking-widest transition-all"
+                    className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold text-xs uppercase tracking-widest transition-all"
                   >
                     Batal
                   </button>
                   <button
                     onClick={handleUpdateTarget}
-                    className="flex-1 py-3 bg-slate-700 hover:bg-slate-800 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all"
+                    className="flex-1 py-3 bg-slate-700 hover:bg-slate-800 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-all"
                   >
                     Simpan
                   </button>

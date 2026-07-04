@@ -139,7 +139,7 @@ const TahunanSection = () => {
               <FaCalendarDays className="text-2xl" />
             </div>
             <div>
-              <h2 className="text-xl font-black">Rekap Tahunan</h2>
+              <h2 className="text-xl font-bold">Rekap Tahunan</h2>
               <p className="text-purple-100 text-xs font-medium uppercase tracking-wider">
                 Ikhtisar keuangan dalam satu tahun kalender
               </p>
@@ -170,20 +170,20 @@ const TahunanSection = () => {
           <div className="bg-slate-100 p-1 rounded-xl flex w-full sm:w-auto">
             <button
               onClick={() => setActiveSubTab("pemasukan")}
-              className={`flex-1 sm:flex-none px-6 py-2.5 rounded-lg text-xs font-black transition-all ${activeSubTab === "pemasukan" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+              className={`flex-1 sm:flex-none px-6 py-2.5 rounded-lg text-xs font-bold transition-all ${activeSubTab === "pemasukan" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
             >
               <FaArrowTrendUp className="inline mr-2" /> Pemasukan
             </button>
             <button
               onClick={() => setActiveSubTab("pengeluaran")}
-              className={`flex-1 sm:flex-none px-6 py-2.5 rounded-lg text-xs font-black transition-all ${activeSubTab === "pengeluaran" ? "bg-white text-rose-600 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+              className={`flex-1 sm:flex-none px-6 py-2.5 rounded-lg text-xs font-bold transition-all ${activeSubTab === "pengeluaran" ? "bg-white text-rose-600 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
             >
               <FaArrowTrendDown className="inline mr-2" /> Pengeluaran
             </button>
           </div>
 
           <div className="w-full sm:w-48">
-            <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block px-1">
+            <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block px-1">
               Tahun Laporan
             </label>
             <select
@@ -216,7 +216,7 @@ const TahunanSection = () => {
             </div>
             <div>
               <h4
-                className={`text-xs font-black uppercase tracking-widest ${activeSubTab === "pemasukan" ? "text-emerald-800" : "text-rose-800"}`}
+                className={`text-xs font-bold uppercase tracking-widest ${activeSubTab === "pemasukan" ? "text-emerald-800" : "text-rose-800"}`}
               >
                 Total {activeSubTab} Tahunan
               </h4>
@@ -228,7 +228,7 @@ const TahunanSection = () => {
             </div>
           </div>
           <span
-            className={`text-3xl font-black ${activeSubTab === "pemasukan" ? "text-emerald-600" : "text-rose-600"}`}
+            className={`text-3xl font-bold ${activeSubTab === "pemasukan" ? "text-emerald-600" : "text-rose-600"}`}
           >
             {formatCurrency(
               currentData.reduce((acc, curr) => {
@@ -247,7 +247,7 @@ const TahunanSection = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-slate-900 text-white text-[10px] uppercase font-black tracking-widest">
+                <tr className="bg-slate-900 text-white text-[10px] uppercase font-bold tracking-widest">
                   <th className="px-6 py-5 text-center w-20">No</th>
                   <th className="px-6 py-5">Bulan</th>
                   <th className="px-6 py-5 text-right">Total Nominal (Rp)</th>
@@ -274,12 +274,12 @@ const TahunanSection = () => {
                         {i + 1}
                       </td>
                       <td className="px-6 py-4">
-                        <span className="font-black text-slate-700 text-sm block uppercase">
+                        <span className="font-bold text-slate-700 text-sm block uppercase">
                           {namaBulan[row.bulan - 1]}
                         </span>
                       </td>
                       <td
-                        className={`px-6 py-4 text-right font-black ${activeSubTab === "pemasukan" ? "text-emerald-600" : "text-rose-600"}`}
+                        className={`px-6 py-4 text-right font-bold ${activeSubTab === "pemasukan" ? "text-emerald-600" : "text-rose-600"}`}
                       >
                         {formatCurrency(row.nominal || row.totalPengeluaran)}
                       </td>

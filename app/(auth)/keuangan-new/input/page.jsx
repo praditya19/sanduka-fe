@@ -76,7 +76,7 @@ function KeuanganInputContent() {
             <div className="flex items-center space-x-5 mb-8 px-2">
               <BackButton />
               <div>
-                <h1 className="text-3xl font-black text-slate-800 tracking-tight">Manajemen Input Keuangan</h1>
+                <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Manajemen Input Keuangan</h1>
                 <p className="text-slate-400 text-sm font-medium uppercase tracking-widest text-[10px]">Administrasi Iuran & Pendapatan Organisasi</p>
               </div>
             </div>
@@ -95,7 +95,7 @@ function KeuanganInputContent() {
                           isActive ? "scale-105" : "opacity-50 hover:opacity-80"
                         }`}
                       >
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black transition-all ${
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all ${
                           isActive
                             ? "bg-slate-900 text-white shadow-lg shadow-slate-900/30"
                             : isComplete
@@ -104,7 +104,7 @@ function KeuanganInputContent() {
                         }`}>
                           {isComplete ? "✓" : tab.icon}
                         </div>
-                        <span className={`text-[9px] font-black uppercase tracking-widest whitespace-nowrap ${
+                        <span className={`text-[9px] font-bold uppercase tracking-widest whitespace-nowrap ${
                           isActive ? "text-slate-800" : "text-slate-400"
                         }`}>
                           {tab.label}

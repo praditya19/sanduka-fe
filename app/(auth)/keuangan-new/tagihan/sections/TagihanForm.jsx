@@ -653,7 +653,7 @@ const TagihanForm = () => {
       <div className="flex items-center gap-3 mb-2">
         <BackButton />
         <div>
-          <h1 className="text-2xl font-black text-slate-800 tracking-tight">Tagihan Cabang</h1>
+          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Tagihan Cabang</h1>
           <p className="text-slate-400 text-sm font-medium italic">Kelola tagihan dan pembayaran cabang</p>
         </div>
       </div>
@@ -667,10 +667,10 @@ const TagihanForm = () => {
         ].map((item, i) => (
           <div key={i} className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{item.label}</span>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{item.label}</span>
               <span className={`text-base ${item.color} opacity-50`}>{item.icon}</span>
             </div>
-            <p className={`text-xl font-black ${item.color}`}>
+            <p className={`text-xl font-bold ${item.color}`}>
               {loading ? "..." : formatCurrency(item.value)}
             </p>
           </div>
@@ -685,7 +685,7 @@ const TagihanForm = () => {
               <select
                 value={monthFilter}
                 onChange={(e) => setMonthFilter(e.target.value)}
-                className="bg-transparent text-sm font-black px-3 py-2 outline-none text-slate-600"
+                className="bg-transparent text-sm font-bold px-3 py-2 outline-none text-slate-600"
               >
                 {months.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
               </select>
@@ -693,7 +693,7 @@ const TagihanForm = () => {
               <select
                 value={yearFilter}
                 onChange={(e) => setYearFilter(Number(e.target.value))}
-                className="bg-transparent text-sm font-black px-3 py-2 outline-none text-slate-600"
+                className="bg-transparent text-sm font-bold px-3 py-2 outline-none text-slate-600"
               >
                 {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
               </select>
@@ -705,13 +705,13 @@ const TagihanForm = () => {
                 placeholder="Cari transaksi..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm font-black w-48 focus:ring-2 focus:ring-violet-500/20"
+                className="pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm font-bold w-48 focus:ring-2 focus:ring-violet-500/20"
               />
             </div>
             <select
               value={cabangFilter}
               onChange={(e) => setCabangFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-black text-slate-600 outline-none focus:ring-2 focus:ring-violet-500/20"
+              className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-600 outline-none focus:ring-2 focus:ring-violet-500/20"
             >
               <option value="">Semua Cabang</option>
               {cabangList.map(c => <option key={c.id} value={c.kecamatan}>{c.kecamatan}</option>)}
@@ -719,18 +719,18 @@ const TagihanForm = () => {
             <div className="flex bg-slate-50 rounded-xl p-0.5 border border-slate-100">
               <button
                 onClick={() => setViewMode("rekap")}
-                className={`px-3 py-2 rounded-lg text-[10px] font-black transition-all uppercase tracking-wider ${viewMode === "rekap" ? "bg-violet-500 text-white shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+                className={`px-3 py-2 rounded-lg text-[10px] font-bold transition-all uppercase tracking-wider ${viewMode === "rekap" ? "bg-violet-500 text-white shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
               >Rekap</button>
               <button
                 onClick={() => setViewMode("detail")}
-                className={`px-3 py-2 rounded-lg text-[10px] font-black transition-all uppercase tracking-wider ${viewMode === "detail" ? "bg-violet-500 text-white shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+                className={`px-3 py-2 rounded-lg text-[10px] font-bold transition-all uppercase tracking-wider ${viewMode === "detail" ? "bg-violet-500 text-white shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
               >Detail</button>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => setShowModalPos(true)}
-              className="flex items-center space-x-2 px-4 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-xs font-black hover:bg-slate-200 transition-all"
+              className="flex items-center space-x-2 px-4 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-200 transition-all"
             >
               <FaCog /> <span>Kelola Pos</span>
             </button>
@@ -748,7 +748,7 @@ const TagihanForm = () => {
             <FaPlus />
           </div>
           <div className="text-left">
-            <h4 className="text-base font-black text-slate-800 uppercase">Input Keuangan Cabang</h4>
+            <h4 className="text-base font-bold text-slate-800 uppercase">Input Keuangan Cabang</h4>
             <p className="text-xs text-slate-400 font-bold tracking-tight">Catat tagihan dan pembayaran cabang</p>
           </div>
         </button>
@@ -757,20 +757,20 @@ const TagihanForm = () => {
       {/* Table */}
       <div className="bg-white rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden print:border-none print:shadow-none print:rounded-none print:m-0">
         <div className="p-4 sm:p-6 border-b border-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/30 print:pb-2">
-          <h3 className="text-sm sm:text-base font-black text-slate-800 flex items-center space-x-2">
+          <h3 className="text-sm sm:text-base font-bold text-slate-800 flex items-center space-x-2">
             <FaBuilding className="text-violet-500 no-print" />
             <span>Data Tagihan Cabang - {months.find(m => m.value === monthFilter)?.label} {yearFilter}</span>
           </h3>
           <div className="flex flex-wrap items-center gap-2 print:hidden">
             <button
               onClick={exportToExcel}
-              className="flex items-center space-x-2 px-3 sm:px-4 py-2 bg-emerald-500 text-white rounded-xl text-[9px] sm:text-[10px] font-black hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-100 uppercase tracking-wider"
+              className="flex items-center space-x-2 px-3 sm:px-4 py-2 bg-emerald-500 text-white rounded-xl text-[9px] sm:text-[10px] font-bold hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-100 uppercase tracking-wider"
             >
               <FaFileExcel /> <span>Excel</span>
             </button>
             <button
               onClick={() => window.print()}
-              className="flex items-center space-x-2 px-3 sm:px-4 py-2 bg-slate-800 text-white rounded-xl text-[9px] sm:text-[10px] font-black hover:bg-slate-900 transition-all shadow-lg shadow-slate-100 uppercase tracking-wider"
+              className="flex items-center space-x-2 px-3 sm:px-4 py-2 bg-slate-800 text-white rounded-xl text-[9px] sm:text-[10px] font-bold hover:bg-slate-900 transition-all shadow-lg shadow-slate-100 uppercase tracking-wider"
             >
               <FaPrint /> <span>Cetak</span>
             </button>
@@ -781,7 +781,7 @@ const TagihanForm = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-900 text-[9px] uppercase font-black text-white tracking-wider">
+                <tr className="bg-slate-900 text-[9px] uppercase font-bold text-white tracking-wider">
                   <th className="px-1.5 sm:px-2 py-3 text-center w-6">No</th>
                   <th className="px-1.5 sm:px-2 py-3 text-left whitespace-nowrap">Cabang</th>
                   <th className="px-1.5 sm:px-2 py-3 text-right whitespace-nowrap">Daspen</th>
@@ -839,7 +839,7 @@ const TagihanForm = () => {
               </tbody>
               {!loading && cabangSummary.length > 0 && (
                 <tfoot>
-                  <tr className="bg-slate-800 text-white font-black text-xs">
+                  <tr className="bg-slate-800 text-white font-bold text-xs">
                     <td colSpan="2" className="px-1.5 sm:px-2 py-4 uppercase tracking-wider">Jumlah</td>
                     <td className="px-1.5 sm:px-2 py-4 text-right font-mono">{formatCurrency(cabangSummary.reduce((s, g) => s + g.daspen, 0))}</td>
                     <td className="px-1.5 sm:px-2 py-4 text-right font-mono">{formatCurrency(cabangSummary.reduce((s, g) => s + g.iuran, 0))}</td>
@@ -864,7 +864,7 @@ const TagihanForm = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50/50 text-[10px] sm:text-xs uppercase font-black text-slate-500 tracking-wider border-b border-slate-100">
+                <tr className="bg-slate-50/50 text-[10px] sm:text-xs uppercase font-bold text-slate-500 tracking-wider border-b border-slate-100">
                   <th className="px-3 sm:px-6 py-4 text-center">No</th>
                   <th className="px-3 sm:px-6 py-4">Tgl Transaksi</th>
                   <th className="px-3 sm:px-6 py-4">Cabang</th>
@@ -890,18 +890,18 @@ const TagihanForm = () => {
                       <td className="px-3 sm:px-6 py-4 text-[10px] sm:text-sm font-bold text-slate-500">{t.formattedDate}</td>
                       <td className="px-3 sm:px-6 py-4 text-[10px] sm:text-sm font-bold text-slate-600">{t.cabang}</td>
                       <td className="px-3 sm:px-6 py-4">
-                        <span className="inline-block px-2 py-0.5 bg-violet-50 text-violet-600 rounded-lg text-[9px] sm:text-[10px] font-black">{t.pos}</span>
+                        <span className="inline-block px-2 py-0.5 bg-violet-50 text-violet-600 rounded-lg text-[9px] sm:text-[10px] font-bold">{t.pos}</span>
                       </td>
                       <td className="px-3 sm:px-6 py-4 text-[10px] sm:text-sm text-slate-500 max-w-[160px] truncate" title={t.keterangan || ""}>
                         {t.keterangan || "-"}
                       </td>
-                      <td className="px-3 sm:px-6 py-4 text-right text-[10px] sm:text-sm font-black text-violet-600">
+                      <td className="px-3 sm:px-6 py-4 text-right text-[10px] sm:text-sm font-bold text-violet-600">
                         {formatCurrency(t.tagihan)}
                       </td>
-                      <td className="px-3 sm:px-6 py-4 text-right text-[10px] sm:text-sm font-black text-emerald-600">
+                      <td className="px-3 sm:px-6 py-4 text-right text-[10px] sm:text-sm font-bold text-emerald-600">
                         {t.pembayaran > 0 ? formatCurrency(t.pembayaran) : "0"}
                       </td>
-                      <td className="px-3 sm:px-6 py-4 text-right text-[10px] sm:text-sm font-black text-rose-600">
+                      <td className="px-3 sm:px-6 py-4 text-right text-[10px] sm:text-sm font-bold text-rose-600">
                         {t.sisa > 0 ? formatCurrency(t.sisa) : "0"}
                       </td>
                       <td className="px-3 sm:px-6 py-4 text-center">
@@ -925,7 +925,7 @@ const TagihanForm = () => {
               </tbody>
               {!loading && filteredTransactions.length > 0 && (
                 <tfoot className="bg-slate-800 text-white">
-                  <tr className="font-black text-[10px] sm:text-sm">
+                  <tr className="font-bold text-[10px] sm:text-sm">
                     <td colSpan="5" className="px-3 sm:px-6 py-5 uppercase tracking-wider">Total Tagihan Cabang</td>
                     <td className="px-3 sm:px-6 py-5 text-right">{formatCurrency(summary.totalTagihan)}</td>
                     <td className="px-3 sm:px-6 py-5 text-right">{formatCurrency(summary.totalPembayaran)}</td>
@@ -949,7 +949,7 @@ const TagihanForm = () => {
                 <div className="flex items-center space-x-3">
                   <FaBuilding className="text-violet-300 text-lg" />
                   <div>
-                    <h3 className="text-lg font-black uppercase tracking-tight">Detail Transaksi</h3>
+                    <h3 className="text-lg font-bold uppercase tracking-tight">Detail Transaksi</h3>
                     <p className="text-slate-300 text-xs font-bold">{detailCabang}</p>
                   </div>
                 </div>
@@ -958,7 +958,7 @@ const TagihanForm = () => {
               <div className="overflow-y-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-slate-50 text-[10px] uppercase font-black text-slate-500 tracking-wider sticky top-0 border-b border-slate-100">
+                    <tr className="bg-slate-50 text-[10px] uppercase font-bold text-slate-500 tracking-wider sticky top-0 border-b border-slate-100">
                       <th className="px-4 py-4 text-center">No</th>
                       <th className="px-4 py-4">Tgl</th>
                       <th className="px-4 py-4">Pos</th>
@@ -976,12 +976,12 @@ const TagihanForm = () => {
                           <td className="px-4 py-3.5 text-xs font-bold text-slate-500 text-center">{i + 1}</td>
                           <td className="px-4 py-3.5 text-xs font-bold text-slate-500">{t.formattedDate}</td>
                           <td className="px-4 py-3.5">
-                            <span className="inline-block px-2 py-0.5 bg-violet-50 text-violet-600 rounded-lg text-[10px] font-black">{t.pos}</span>
+                            <span className="inline-block px-2 py-0.5 bg-violet-50 text-violet-600 rounded-lg text-[10px] font-bold">{t.pos}</span>
                           </td>
                           <td className="px-4 py-3.5 text-xs text-slate-500 max-w-[200px] truncate" title={t.keterangan || ""}>{t.keterangan || "-"}</td>
-                          <td className="px-4 py-3.5 text-right text-xs font-black text-violet-600">{formatCurrency(t.tagihan)}</td>
-                          <td className="px-4 py-3.5 text-right text-xs font-black text-emerald-600">{t.pembayaran > 0 ? formatCurrency(t.pembayaran) : "0"}</td>
-                          <td className="px-4 py-3.5 text-right text-xs font-black text-rose-600">{t.sisa > 0 ? formatCurrency(t.sisa) : "0"}</td>
+                          <td className="px-4 py-3.5 text-right text-xs font-bold text-violet-600">{formatCurrency(t.tagihan)}</td>
+                          <td className="px-4 py-3.5 text-right text-xs font-bold text-emerald-600">{t.pembayaran > 0 ? formatCurrency(t.pembayaran) : "0"}</td>
+                          <td className="px-4 py-3.5 text-right text-xs font-bold text-rose-600">{t.sisa > 0 ? formatCurrency(t.sisa) : "0"}</td>
                           <td className="px-4 py-3.5 text-center">
                             <button onClick={() => { setShowDetailModal(false); handleEditClick(t); }} className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-1.5 rounded-lg transition-all text-xs" title="Edit">
                               <FaEdit />
@@ -1003,7 +1003,7 @@ const TagihanForm = () => {
                   </tbody>
                   {transactions.filter(t => (t.cabang || "").toUpperCase() === (detailCabang || "").toUpperCase()).length > 0 && (
                     <tfoot className="bg-slate-800 text-white">
-                      <tr className="font-black text-xs">
+                      <tr className="font-bold text-xs">
                         <td colSpan="4" className="px-4 py-4 uppercase tracking-wider">Total</td>
                         <td className="px-4 py-4 text-right">
                           {formatCurrency(transactions.filter(t => (t.cabang || "").toUpperCase() === (detailCabang || "").toUpperCase()).reduce((s, t) => s + t.tagihan, 0))}
@@ -1035,7 +1035,7 @@ const TagihanForm = () => {
                 <div className="flex items-center space-x-4">
                   <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-2xl backdrop-blur-md"><FaBuilding /></div>
                   <div>
-                    <h3 className="text-xl font-black uppercase tracking-tight">Keuangan Cabang</h3>
+                    <h3 className="text-xl font-bold uppercase tracking-tight">Keuangan Cabang</h3>
                     <p className="text-violet-100 text-xs font-bold">Catat transaksi keuangan cabang</p>
                   </div>
                 </div>
@@ -1044,7 +1044,7 @@ const TagihanForm = () => {
               <form onSubmit={handleSubmit} className="p-8 overflow-y-auto space-y-6">
                 {/* Cabang */}
                 <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Cabang</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">Cabang</label>
                   <select required value={formCabang.cabang} onChange={(e) => {
                     const cabangVal = e.target.value;
                     setFormCabang(prev => ({ ...prev, cabang: cabangVal, items: [{ pos: "", tagihan: "", pembayaran: "", keterangan: "" }] }));
@@ -1060,11 +1060,11 @@ const TagihanForm = () => {
                 {/* Tanggal & Metode */}
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tanggal</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">Tanggal</label>
                     <input type="date" required value={formCabang.tanggalTransaksi} onChange={(e) => setFormCabang({ ...formCabang, tanggalTransaksi: e.target.value })} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700" />
                   </div>
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Metode</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">Metode</label>
                     <select required value={formCabang.jenisPenerimaan} onChange={(e) => setFormCabang({ ...formCabang, jenisPenerimaan: e.target.value })} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
                       <option value="Transfer">Transfer</option>
                       <option value="Tunai">Tunai</option>
@@ -1075,7 +1075,7 @@ const TagihanForm = () => {
                 {/* Bulan & Tahun */}
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Bulan Pembayaran</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">Bulan Pembayaran</label>
                     <select required value={formCabang.setoranBulan} onChange={(e) => {
                       const bulanVal = e.target.value;
                       setFormCabang(prev => ({ ...prev, setoranBulan: bulanVal }));
@@ -1087,7 +1087,7 @@ const TagihanForm = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tahun Pembayaran</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">Tahun Pembayaran</label>
                     <select required value={formCabang.setoranTahun} onChange={(e) => {
                       const tahunVal = Number(e.target.value);
                       setFormCabang(prev => ({ ...prev, setoranTahun: tahunVal }));
@@ -1102,10 +1102,10 @@ const TagihanForm = () => {
 
                 {/* Transaksi Sukses Total */}
                 <div>
-                  <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2 block px-1">Transaksi Sukses</label>
+                  <label className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-2 block px-1">Transaksi Sukses</label>
                   <div className="relative">
-                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-lg font-black text-blue-400">Rp</span>
-                    <input type="text" readOnly value={transaksiSuksesTotal.toLocaleString("id-ID")} placeholder="0" className="w-full pl-14 pr-5 py-5 bg-blue-50 border-2 border-blue-100 rounded-2xl outline-none font-black text-2xl text-blue-600" />
+                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-lg font-bold text-blue-400">Rp</span>
+                    <input type="text" readOnly value={transaksiSuksesTotal.toLocaleString("id-ID")} placeholder="0" className="w-full pl-14 pr-5 py-5 bg-blue-50 border-2 border-blue-100 rounded-2xl outline-none font-bold text-2xl text-blue-600" />
                   </div>
                 </div>
 
@@ -1116,7 +1116,7 @@ const TagihanForm = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <FaInfoCircle className="text-amber-500 text-sm" />
-                        <span className="text-xs font-black text-amber-700 uppercase tracking-widest">
+                        <span className="text-xs font-bold text-amber-700 uppercase tracking-widest">
                           Tunggakan {tunggakanList.length} transaksi dari {groupTunggakanByMonth(tunggakanList).length} bulan sebelumnya
                         </span>
                       </div>
@@ -1131,10 +1131,10 @@ const TagihanForm = () => {
 
                     {/* TOTAL KEKURANGAN - prominent aggregate */}
                     <div className="bg-rose-500 rounded-2xl p-4 -mx-1">
-                      <div className="text-[10px] font-black text-rose-100 uppercase tracking-widest mb-1">
+                      <div className="text-[10px] font-bold text-rose-100 uppercase tracking-widest mb-1">
                         Total Kekurangan Bulan Sebelumnya
                       </div>
-                      <div className="text-3xl font-black text-white">
+                      <div className="text-3xl font-bold text-white">
                         Rp {totalTunggakan.toLocaleString("id-ID")}
                       </div>
                     </div>
@@ -1144,10 +1144,10 @@ const TagihanForm = () => {
                       {groupTunggakanByMonth(tunggakanList).map(group => (
                         <div key={`${group.tahun}-${group.bulan}`} className="bg-white rounded-xl p-3 border border-amber-100">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-[10px] font-black text-amber-700 uppercase">
+                            <span className="text-[10px] font-bold text-amber-700 uppercase">
                               {monthNumToLabel(group.bulan)} {group.tahun}
                             </span>
-                            <span className="text-xs font-black text-rose-600">
+                            <span className="text-xs font-bold text-rose-600">
                               Rp {group.totalSisa.toLocaleString("id-ID")}
                             </span>
                           </div>
@@ -1162,8 +1162,8 @@ const TagihanForm = () => {
                     </div>
 
                     <div className="flex items-center justify-between border-t border-amber-200 pt-3">
-                      <span className="text-xs font-black text-amber-700 uppercase">Total Tunggakan</span>
-                      <span className="text-sm font-black text-rose-600">Rp {totalTunggakan.toLocaleString("id-ID")}</span>
+                      <span className="text-xs font-bold text-amber-700 uppercase">Total Tunggakan</span>
+                      <span className="text-sm font-bold text-rose-600">Rp {totalTunggakan.toLocaleString("id-ID")}</span>
                     </div>
                   </div>
                 )}
@@ -1171,8 +1171,8 @@ const TagihanForm = () => {
                 {/* Dynamic Items */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Pos & Keterangan</label>
-                    <button type="button" onClick={addCabangItem} disabled={!formCabang.cabang} className="flex items-center space-x-1 px-3 py-1.5 bg-violet-100 text-violet-600 rounded-xl text-[10px] font-black hover:bg-violet-200 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Pos & Keterangan</label>
+                    <button type="button" onClick={addCabangItem} disabled={!formCabang.cabang} className="flex items-center space-x-1 px-3 py-1.5 bg-violet-100 text-violet-600 rounded-xl text-[10px] font-bold hover:bg-violet-200 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
                       <FaPlus size={10} /> <span>Tambah</span>
                     </button>
                   </div>
@@ -1182,7 +1182,7 @@ const TagihanForm = () => {
                         <div className="flex-1 space-y-3">
                           <div className="grid grid-cols-2 gap-3">
                             <div>
-                              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Pos</label>
+                              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Pos</label>
                               <select disabled={!formCabang.cabang} required={idx === 0} value={item.pos} onChange={(e) => {
                                 handleItemPosChange(idx, e.target.value);
                               }} className="w-full px-3 py-2.5 bg-white border border-violet-100 rounded-xl outline-none font-bold text-sm text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
@@ -1193,17 +1193,17 @@ const TagihanForm = () => {
                             {item.pos && (
                               <div className="grid grid-cols-2 gap-2">
                                 <div>
-                                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Tagihan</label>
+                                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Tagihan</label>
                                   <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400">Rp</span>
-                                    <input type="text" value={item.tagihan ? Number(item.tagihan).toLocaleString("id-ID") : ""} onChange={(e) => updateCabangItem(idx, "tagihan", e.target.value.replace(/[^0-9]/g, ''))} placeholder="0" className="w-full pl-9 pr-3 py-2.5 bg-white border border-violet-100 rounded-xl outline-none font-black text-sm text-violet-600" />
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">Rp</span>
+                                    <input type="text" value={item.tagihan ? Number(item.tagihan).toLocaleString("id-ID") : ""} onChange={(e) => updateCabangItem(idx, "tagihan", e.target.value.replace(/[^0-9]/g, ''))} placeholder="0" className="w-full pl-9 pr-3 py-2.5 bg-white border border-violet-100 rounded-xl outline-none font-bold text-sm text-violet-600" />
                                   </div>
                                 </div>
                                 <div>
-                                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Pembayaran</label>
+                                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Pembayaran</label>
                                   <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400">Rp</span>
-                                    <input type="text" value={item.pembayaran ? Number(item.pembayaran).toLocaleString("id-ID") : ""} onChange={(e) => updateCabangItem(idx, "pembayaran", e.target.value.replace(/[^0-9]/g, ''))} placeholder="0" className="w-full pl-9 pr-3 py-2.5 bg-white border border-violet-100 rounded-xl outline-none font-black text-sm text-violet-600" />
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">Rp</span>
+                                    <input type="text" value={item.pembayaran ? Number(item.pembayaran).toLocaleString("id-ID") : ""} onChange={(e) => updateCabangItem(idx, "pembayaran", e.target.value.replace(/[^0-9]/g, ''))} placeholder="0" className="w-full pl-9 pr-3 py-2.5 bg-white border border-violet-100 rounded-xl outline-none font-bold text-sm text-violet-600" />
                                   </div>
                                 </div>
                               </div>
@@ -1215,7 +1215,7 @@ const TagihanForm = () => {
                             </p>
                           )}
                           <div>
-                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Keterangan</label>
+                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Keterangan</label>
                             <input type="text" value={item.keterangan} onChange={(e) => updateCabangItem(idx, "keterangan", e.target.value)} placeholder="Keterangan..." className="w-full px-3 py-2.5 bg-white border border-violet-100 rounded-xl outline-none font-medium text-sm text-slate-700" />
                           </div>
                         </div>
@@ -1233,24 +1233,24 @@ const TagihanForm = () => {
                 {formCabang.items.some(i => i.pos) && (
                   <div className="p-5 bg-slate-50 border border-slate-200 rounded-[32px] space-y-3">
                     <div className="flex items-center justify-between py-1">
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Tagihan</span>
-                      <span className="text-lg font-black text-violet-600">Rp {formCabang.items.reduce((s, i) => s + (Number(i.tagihan) || 0), 0).toLocaleString("id-ID")}</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Tagihan</span>
+                      <span className="text-lg font-bold text-violet-600">Rp {formCabang.items.reduce((s, i) => s + (Number(i.tagihan) || 0), 0).toLocaleString("id-ID")}</span>
                     </div>
                     <div className="flex items-center justify-between py-1">
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Pembayaran</span>
-                      <span className="text-lg font-black text-emerald-600">Rp {formCabang.items.reduce((s, i) => s + (Number(i.pembayaran) || 0), 0).toLocaleString("id-ID")}</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Pembayaran</span>
+                      <span className="text-lg font-bold text-emerald-600">Rp {formCabang.items.reduce((s, i) => s + (Number(i.pembayaran) || 0), 0).toLocaleString("id-ID")}</span>
                     </div>
                     <div className="border-t border-slate-200 pt-3 flex items-center justify-between">
-                      <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Total Akhir</span>
-                      <span className="text-xl font-black text-blue-600">Rp {(transaksiSuksesTotal - formCabang.items.reduce((s, i) => s + (Number(i.pembayaran) || 0), 0)).toLocaleString("id-ID")}</span>
+                      <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Total Akhir</span>
+                      <span className="text-xl font-bold text-blue-600">Rp {(transaksiSuksesTotal - formCabang.items.reduce((s, i) => s + (Number(i.pembayaran) || 0), 0)).toLocaleString("id-ID")}</span>
                     </div>
                   </div>
                 )}
 
                 {/* Actions */}
                 <div className="flex gap-4 pt-2">
-                  <button type="button" onClick={() => setShowModalCabang(false)} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase text-xs">Batal</button>
-                  <button type="submit" disabled={submitting} className="flex-1 py-4 bg-violet-500 text-white rounded-2xl font-black uppercase text-xs shadow-lg shadow-violet-100">
+                  <button type="button" onClick={() => setShowModalCabang(false)} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold uppercase text-xs">Batal</button>
+                  <button type="submit" disabled={submitting} className="flex-1 py-4 bg-violet-500 text-white rounded-2xl font-bold uppercase text-xs shadow-lg shadow-violet-100">
                     {submitting ? "Menyimpan..." : `Simpan (${formCabang.items.filter(i => i.pos).length || 0})`}
                   </button>
                 </div>
@@ -1267,7 +1267,7 @@ const TagihanForm = () => {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowModalPos(false)} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
             <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="relative bg-white w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
               <div className="p-6 bg-slate-800 text-white flex justify-between items-center">
-                <h3 className="text-lg font-black uppercase tracking-tight">Daftar Pos Penerimaan</h3>
+                <h3 className="text-lg font-bold uppercase tracking-tight">Daftar Pos Penerimaan</h3>
                 <button onClick={() => setShowModalPos(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-all"><FaTimes /></button>
               </div>
               <div className="p-6 overflow-y-auto">
@@ -1292,11 +1292,11 @@ const TagihanForm = () => {
           <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
             <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-white w-full max-w-md rounded-[32px] p-8 shadow-2xl">
-              <h3 className="text-lg font-black text-slate-800 mb-2">{confirmModal.title}</h3>
+              <h3 className="text-lg font-bold text-slate-800 mb-2">{confirmModal.title}</h3>
               <p className="text-sm text-slate-500 mb-6">{confirmModal.message}</p>
               <div className="flex gap-3">
-                <button onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))} className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-2xl font-black text-xs uppercase">Batal</button>
-                <button onClick={confirmModal.onConfirm} disabled={confirmModal.isLoading} className="flex-1 py-3 bg-rose-500 text-white rounded-2xl font-black text-xs uppercase">
+                <button onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))} className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-2xl font-bold text-xs uppercase">Batal</button>
+                <button onClick={confirmModal.onConfirm} disabled={confirmModal.isLoading} className="flex-1 py-3 bg-rose-500 text-white rounded-2xl font-bold text-xs uppercase">
                   {confirmModal.isLoading ? "Memproses..." : "Hapus"}
                 </button>
               </div>
@@ -1315,7 +1315,7 @@ const TagihanForm = () => {
                 <div className="flex items-center space-x-4">
                   <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-2xl backdrop-blur-md"><FaEdit /></div>
                   <div>
-                    <h3 className="text-xl font-black uppercase tracking-tight">Edit Transaksi Cabang</h3>
+                    <h3 className="text-xl font-bold uppercase tracking-tight">Edit Transaksi Cabang</h3>
                     <p className="text-blue-100 text-xs font-bold">{editForm.cabang} - {editForm.pos}</p>
                   </div>
                 </div>
@@ -1324,11 +1324,11 @@ const TagihanForm = () => {
               <form onSubmit={handleSaveEdit} className="p-8 overflow-y-auto space-y-6">
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tanggal</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">Tanggal</label>
                     <input type="date" required value={editForm.tanggalTransaksi} onChange={(e) => setEditForm({ ...editForm, tanggalTransaksi: e.target.value })} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700" />
                   </div>
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Metode</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">Metode</label>
                     <select required value={editForm.jenisPenerimaan} onChange={(e) => setEditForm({ ...editForm, jenisPenerimaan: e.target.value })} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
                       <option value="Transfer">Transfer</option>
                       <option value="Tunai">Tunai</option>
@@ -1336,35 +1336,35 @@ const TagihanForm = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2 block px-1">Transaksi Sukses</label>
+                  <label className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-2 block px-1">Transaksi Sukses</label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-blue-400">Rp</span>
-                    <input type="text" readOnly value={Number(editForm.transaksiSukses).toLocaleString("id-ID")} className="w-full pl-10 pr-4 py-3.5 bg-blue-50 border border-blue-100 rounded-2xl outline-none font-black text-lg text-blue-600" />
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-blue-400">Rp</span>
+                    <input type="text" readOnly value={Number(editForm.transaksiSukses).toLocaleString("id-ID")} className="w-full pl-10 pr-4 py-3.5 bg-blue-50 border border-blue-100 rounded-2xl outline-none font-bold text-lg text-blue-600" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tagihan</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">Tagihan</label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-slate-400">Rp</span>
-                      <input type="text" required value={Number(editForm.tagihan).toLocaleString("id-ID")} onChange={(e) => setEditForm({ ...editForm, tagihan: e.target.value.replace(/[^0-9]/g, '') })} className="w-full pl-10 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-black text-lg text-violet-600" />
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">Rp</span>
+                      <input type="text" required value={Number(editForm.tagihan).toLocaleString("id-ID")} onChange={(e) => setEditForm({ ...editForm, tagihan: e.target.value.replace(/[^0-9]/g, '') })} className="w-full pl-10 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-lg text-violet-600" />
                     </div>
                   </div>
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Pembayaran</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">Pembayaran</label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-slate-400">Rp</span>
-                      <input type="text" value={Number(editForm.pembayaran).toLocaleString("id-ID")} onChange={(e) => setEditForm({ ...editForm, pembayaran: e.target.value.replace(/[^0-9]/g, '') })} className="w-full pl-10 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-black text-lg text-emerald-600" />
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">Rp</span>
+                      <input type="text" value={Number(editForm.pembayaran).toLocaleString("id-ID")} onChange={(e) => setEditForm({ ...editForm, pembayaran: e.target.value.replace(/[^0-9]/g, '') })} className="w-full pl-10 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-lg text-emerald-600" />
                     </div>
                   </div>
                 </div>
                 <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Keterangan</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">Keterangan</label>
                   <textarea value={editForm.keterangan} onChange={(e) => setEditForm({ ...editForm, keterangan: e.target.value })} placeholder="Keterangan..." className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl font-medium text-slate-700 h-24 resize-none" />
                 </div>
                 <div className="flex gap-4">
-                  <button type="button" onClick={() => setShowEditModal(false)} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase text-xs">Batal</button>
-                  <button type="submit" disabled={submitting} className="flex-1 py-4 bg-blue-500 text-white rounded-2xl font-black uppercase text-xs shadow-lg shadow-blue-100">
+                  <button type="button" onClick={() => setShowEditModal(false)} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold uppercase text-xs">Batal</button>
+                  <button type="submit" disabled={submitting} className="flex-1 py-4 bg-blue-500 text-white rounded-2xl font-bold uppercase text-xs shadow-lg shadow-blue-100">
                     {submitting ? "Menyimpan..." : "Simpan Perubahan"}
                   </button>
                 </div>

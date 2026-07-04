@@ -674,11 +674,11 @@ const IuranPgriSection = () => {
             <FaDollarSign className="text-xl sm:text-2xl" />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-lg sm:text-xl font-black">
+            <h2 className="text-lg sm:text-xl font-bold">
               Manajemen Iuran PGRI
             </h2>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1">
-              <span className="px-2 py-0.5 bg-white/20 rounded-md text-[9px] sm:text-[10px] font-black uppercase tracking-widest">
+              <span className="px-2 py-0.5 bg-white/20 rounded-md text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">
                 Periode: {selectedMonth} {selectedYear}
               </span>
               <span className="hidden sm:inline-block w-1 h-1 bg-white/40 rounded-full" />
@@ -703,7 +703,7 @@ const IuranPgriSection = () => {
                 <FaCoins className="text-sm sm:text-base" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-sm sm:text-base font-black text-slate-800 tracking-tight">
+                <h3 className="text-sm sm:text-base font-bold text-slate-800 tracking-tight">
                   Besaran Iuran Standar
                 </h3>
                 <p className="text-slate-400 text-[8px] sm:text-[9px] font-medium uppercase tracking-widest">
@@ -713,7 +713,7 @@ const IuranPgriSection = () => {
             </div>
             <button
               onClick={() => fetchInitialData()}
-              className="px-2.5 sm:px-3 py-1.5 sm:py-1 bg-white border border-slate-200 rounded-lg text-[8px] sm:text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-emerald-500 hover:border-emerald-200 transition-all shadow-sm whitespace-nowrap flex-shrink-0"
+              className="px-2.5 sm:px-3 py-1.5 sm:py-1 bg-white border border-slate-200 rounded-lg text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-widest hover:text-emerald-500 hover:border-emerald-200 transition-all shadow-sm whitespace-nowrap flex-shrink-0"
             >
               Reset Default
             </button>
@@ -737,13 +737,13 @@ const IuranPgriSection = () => {
                   key={field.key}
                   className={field.full ? "sm:col-span-2 lg:col-span-4" : ""}
                 >
-                  <label className="text-[8px] sm:text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 sm:mb-1.5 block px-1 flex items-center gap-1.5">
+                  <label className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1 sm:mb-1.5 block px-1 flex items-center gap-1.5">
                     <span className="text-base sm:text-lg">{field.icon}</span>
                     <span>{field.label}</span>
                   </label>
                   <div className="relative group">
                     <div className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
-                      <span className="text-slate-300 font-black text-xs sm:text-sm">
+                      <span className="text-slate-300 font-bold text-xs sm:text-sm">
                         Rp
                       </span>
                     </div>
@@ -756,7 +756,7 @@ const IuranPgriSection = () => {
                           [field.key]: parseInt(e.target.value) || 0,
                         })
                       }
-                      className="w-full pl-9 sm:pl-11 pr-3 sm:pr-4 py-2.5 sm:py-3 bg-slate-50 border-2 border-transparent rounded-[12px] sm:rounded-[16px] focus:bg-white focus:border-emerald-500 outline-none font-black text-slate-700 transition-all text-sm sm:text-base group-hover:bg-slate-100/50 shadow-inner"
+                      className="w-full pl-9 sm:pl-11 pr-3 sm:pr-4 py-2.5 sm:py-3 bg-slate-50 border-2 border-transparent rounded-[12px] sm:rounded-[16px] focus:bg-white focus:border-emerald-500 outline-none font-bold text-slate-700 transition-all text-sm sm:text-base group-hover:bg-slate-100/50 shadow-inner"
                     />
                   </div>
                 </div>
@@ -766,18 +766,18 @@ const IuranPgriSection = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 items-end">
               <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                 <div className="p-3 sm:p-4 bg-slate-900 rounded-[16px] sm:rounded-[24px] text-white flex flex-col justify-between border-b-4 border-slate-700">
-                  <p className="text-[7px] sm:text-[8px] font-black text-slate-500 uppercase tracking-widest mb-0.5">
+                  <p className="text-[7px] sm:text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">
                     Total Iuran PGRI
                   </p>
-                  <h5 className="text-sm sm:text-base font-black line-clamp-2">
+                  <h5 className="text-sm sm:text-base font-bold line-clamp-2">
                     {formatCurrency(totalIuran)}
                   </h5>
                 </div>
                 <div className="p-3 sm:p-4 bg-emerald-500 rounded-[16px] sm:rounded-[24px] text-white flex flex-col justify-between shadow-lg shadow-emerald-100 border-b-4 border-emerald-600">
-                  <p className="text-[7px] sm:text-[8px] font-black text-emerald-100 uppercase tracking-widest mb-0.5">
+                  <p className="text-[7px] sm:text-[8px] font-bold text-emerald-100 uppercase tracking-widest mb-0.5">
                     Grand Total Akhir
                   </p>
-                  <h5 className="text-base sm:text-lg font-black line-clamp-2">
+                  <h5 className="text-base sm:text-lg font-bold line-clamp-2">
                     {formatCurrency(grandTotal)}
                   </h5>
                 </div>
@@ -785,7 +785,7 @@ const IuranPgriSection = () => {
               <button
                 onClick={handleUpdateBesaran}
                 disabled={loadingBesaran}
-                className="w-full py-3 sm:py-5 bg-slate-800 hover:bg-slate-900 disabled:bg-slate-200 text-white rounded-[16px] sm:rounded-[24px] font-black shadow-xl shadow-slate-200 transition-all flex items-center justify-center space-x-2 active:scale-[0.98] text-sm sm:text-base"
+                className="w-full py-3 sm:py-5 bg-slate-800 hover:bg-slate-900 disabled:bg-slate-200 text-white rounded-[16px] sm:rounded-[24px] font-bold shadow-xl shadow-slate-200 transition-all flex items-center justify-center space-x-2 active:scale-[0.98] text-sm sm:text-base"
               >
                 {loadingBesaran ? (
                   <div className="w-3.5 sm:w-4 h-3.5 sm:h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -806,7 +806,7 @@ const IuranPgriSection = () => {
                 <FaNewspaper className="text-xl" />
               </div>
               <div>
-                <h3 className="text-xl font-black text-slate-800 tracking-tight">
+                <h3 className="text-xl font-bold text-slate-800 tracking-tight">
                   Laporan & Rekapitulasi
                 </h3>
                 <p className="text-slate-400 text-xs font-medium">
@@ -821,7 +821,7 @@ const IuranPgriSection = () => {
                   setActiveSubTab("data-iuran");
                   setCurrentPage(1);
                 }}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-[15px] font-black text-[9px] uppercase tracking-wider transition-all duration-300 ${
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-[15px] font-bold text-[9px] uppercase tracking-wider transition-all duration-300 ${
                   activeSubTab === "data-iuran"
                     ? "bg-white text-indigo-600 shadow-lg"
                     : "text-slate-400 hover:text-slate-600"
@@ -839,7 +839,7 @@ const IuranPgriSection = () => {
                   setActiveSubTab("peruntukan");
                   setCurrentPage(1);
                 }}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-[15px] font-black text-[9px] uppercase tracking-wider transition-all duration-300 ${
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-[15px] font-bold text-[9px] uppercase tracking-wider transition-all duration-300 ${
                   activeSubTab === "peruntukan"
                     ? "bg-white text-indigo-600 shadow-lg"
                     : "text-slate-400 hover:text-slate-600"
@@ -905,10 +905,10 @@ const IuranPgriSection = () => {
                             className={`${stat.color} p-5 rounded-[28px] text-white shadow-lg shadow-${stat.color.split("-")[1]}-100 flex items-center justify-between group overflow-hidden relative`}
                           >
                             <div className="relative z-10">
-                              <p className="text-[9px] font-black opacity-60 uppercase tracking-widest mb-0.5">
+                              <p className="text-[9px] font-bold opacity-60 uppercase tracking-widest mb-0.5">
                                 {stat.label}
                               </p>
-                              <h4 className="text-xl font-black">
+                              <h4 className="text-xl font-bold">
                                 {stat.isCurrency
                                   ? formatCurrency(stat.val)
                                   : stat.val.toLocaleString("id-ID")}
@@ -925,7 +925,7 @@ const IuranPgriSection = () => {
                       <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-xl shadow-slate-100/50">
                         <div className="flex items-center gap-2 mb-6">
                           <div className="w-1 h-5 bg-indigo-500 rounded-full" />
-                          <h4 className="text-base font-black text-slate-800">
+                          <h4 className="text-base font-bold text-slate-800">
                             Rincian Pembayaran Akumulatif -{" "}
                             <span className="text-indigo-600">
                               {selectedMonth} {selectedYear}
@@ -951,11 +951,11 @@ const IuranPgriSection = () => {
                             },
                           ].map((item, i) => (
                             <div key={i} className="relative">
-                              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 italic">
+                              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1 italic">
                                 {item.label}
                               </p>
                               <p
-                                className={`text-base font-black ${item.color}`}
+                                className={`text-base font-bold ${item.color}`}
                               >
                                 {formatCurrency(item.val)}
                               </p>
@@ -973,7 +973,7 @@ const IuranPgriSection = () => {
                           <div className="flex items-center gap-4 flex-1">
                             <div className="flex items-center gap-2 min-w-fit">
                               <FaTable className="text-indigo-500 text-sm" />
-                              <h4 className="text-sm font-black text-slate-800 tracking-tight uppercase tracking-widest text-[10px]">
+                              <h4 className="text-sm font-bold text-slate-800 tracking-tight uppercase tracking-widest text-[10px]">
                                 Tabel Rekapitulasi Iuran
                               </h4>
                             </div>
@@ -1027,7 +1027,7 @@ const IuranPgriSection = () => {
                                     <ul className="overflow-y-auto py-2 custom-scrollbar">
                                       <li
                                         onClick={() => handleSelectCabang("")}
-                                        className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${
+                                        className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${
                                           !searchQuery
                                             ? "bg-indigo-50 text-indigo-600 border-indigo-500"
                                             : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
@@ -1047,7 +1047,7 @@ const IuranPgriSection = () => {
                                             onClick={() =>
                                               handleSelectCabang(cab.kecamatan)
                                             }
-                                            className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${
+                                            className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${
                                               searchQuery === cab.kecamatan
                                                 ? "bg-indigo-50 text-indigo-600 border-indigo-500"
                                                 : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
@@ -1066,7 +1066,7 @@ const IuranPgriSection = () => {
                                   onChange={(e) =>
                                     setSelectedMonth(e.target.value)
                                   }
-                                  className="bg-transparent px-4 py-2.5 outline-none font-black text-slate-600 text-xs uppercase tracking-widest cursor-pointer"
+                                  className="bg-transparent px-4 py-2.5 outline-none font-bold text-slate-600 text-xs uppercase tracking-widest cursor-pointer"
                                 >
                                   {bulanList.map((b) => (
                                     <option key={b.id} value={b.namaBulan}>
@@ -1080,7 +1080,7 @@ const IuranPgriSection = () => {
                                   onChange={(e) =>
                                     setSelectedYear(parseInt(e.target.value))
                                   }
-                                  className="bg-transparent px-4 py-2.5 outline-none font-black text-slate-600 text-xs uppercase tracking-widest cursor-pointer"
+                                  className="bg-transparent px-4 py-2.5 outline-none font-bold text-slate-600 text-xs uppercase tracking-widest cursor-pointer"
                                 >
                                   {Array.from({ length: new Date().getFullYear() + 2 - 2020 + 1 }, (_, i) => 2020 + i).map((y) => (
                                     <option key={y} value={y}>
@@ -1094,26 +1094,26 @@ const IuranPgriSection = () => {
 
                           <div className="flex items-center gap-2">
                             {isSaved ? (
-                              <span className="flex items-center gap-1.5 px-4 py-2.5 bg-emerald-50 text-emerald-700 rounded-xl font-black text-xs uppercase tracking-widest border border-emerald-200">
+                              <span className="flex items-center gap-1.5 px-4 py-2.5 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-xs uppercase tracking-widest border border-emerald-200">
                                 <FaCheckCircle className="text-sm" />
                                 TERSIMPAN ({savedDataCount})
                               </span>
                             ) : (
-                              <span className="flex items-center gap-1.5 px-4 py-2.5 bg-amber-50 text-amber-700 rounded-xl font-black text-xs uppercase tracking-widest border border-amber-200">
+                              <span className="flex items-center gap-1.5 px-4 py-2.5 bg-amber-50 text-amber-700 rounded-xl font-bold text-xs uppercase tracking-widest border border-amber-200">
                                 <FaExclamationCircle className="text-sm" />
                                 BELUM DISIMPAN
                               </span>
                             )}
                             <button
                               onClick={handleSaveTable}
-                              className="flex items-center gap-2 px-5 py-3 bg-emerald-500 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 shadow-md"
+                              className="flex items-center gap-2 px-5 py-3 bg-emerald-500 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 shadow-md"
                             >
                               <FaSave />
                               <span>Simpan</span>
                             </button>
                             <button
                               onClick={() => window.print()}
-                              className="flex items-center gap-2 px-5 py-3 bg-slate-900 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-black transition-all active:scale-95 shadow-md"
+                              className="flex items-center gap-2 px-5 py-3 bg-slate-900 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-black transition-all active:scale-95 shadow-md"
                             >
                               <FaPrint />
                               <span>PDF</span>
@@ -1145,7 +1145,7 @@ const IuranPgriSection = () => {
                                 ].map((h, i) => (
                                   <th
                                     key={i}
-                                    className="px-3 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-center whitespace-nowrap"
+                                    className="px-3 py-4 text-[9px] font-bold uppercase tracking-widest text-slate-400 text-center whitespace-nowrap"
                                   >
                                     {h}
                                   </th>
@@ -1180,13 +1180,13 @@ const IuranPgriSection = () => {
                                         key={i}
                                         className="hover:bg-slate-50/80 transition-colors text-center text-[11px] font-bold text-slate-600"
                                       >
-                                        <td className="px-3 py-4 text-slate-400 font-black">
+                                        <td className="px-3 py-4 text-slate-400 font-bold">
                                           {i + 1}
                                         </td>
-                                        <td className="px-3 py-4 font-black text-slate-800 text-left whitespace-nowrap">
+                                        <td className="px-3 py-4 font-bold text-slate-800 text-left whitespace-nowrap">
                                           {row[0]}
                                         </td>
-                                        <td className="px-3 py-4 text-indigo-600 font-black">
+                                        <td className="px-3 py-4 text-indigo-600 font-bold">
                                           <span className="px-2 py-0.5 bg-indigo-50 rounded-md">
                                             {row[1]}
                                           </span>
@@ -1221,7 +1221,7 @@ const IuranPgriSection = () => {
                                             parseInt(row[4] || 0),
                                           )}
                                         </td>
-                                        <td className="px-3 py-4 text-slate-900 bg-slate-50/50 font-black">
+                                        <td className="px-3 py-4 text-slate-900 bg-slate-50/50 font-bold">
                                           {formatCurrency(
                                             row[9] || totalTagihanRow,
                                           )}
@@ -1264,7 +1264,7 @@ const IuranPgriSection = () => {
                                     );
                                   })}
                                   {/* Total Row */}
-                                  <tr className="bg-slate-900 text-white font-black text-[11px] text-center sticky bottom-0">
+                                  <tr className="bg-slate-900 text-white font-bold text-[11px] text-center sticky bottom-0">
                                     <td
                                       className="px-3 py-5 border-r border-slate-800"
                                       colSpan={2}
@@ -1300,7 +1300,7 @@ const IuranPgriSection = () => {
                                         columnTotals[2] + columnTotals[3] + columnTotals[4],
                                       )}
                                     </td>
-                                    <td className="px-3 py-5 bg-slate-800 font-black text-amber-400">
+                                    <td className="px-3 py-5 bg-slate-800 font-bold text-amber-400">
                                       {formatCurrency(columnTotals[9])}
                                     </td>
                                     <td className="px-3 py-5 text-rose-400">
@@ -1322,7 +1322,7 @@ const IuranPgriSection = () => {
                                 <tr>
                                   <td
                                     colSpan={15}
-                                    className="py-16 text-center text-slate-300 font-black uppercase tracking-widest text-xs"
+                                    className="py-16 text-center text-slate-300 font-bold uppercase tracking-widest text-xs"
                                   >
                                     Data Kosong
                                   </td>
@@ -1340,7 +1340,7 @@ const IuranPgriSection = () => {
                       <div className="p-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
                         <div className="flex items-center gap-2">
                           <FaTable className="text-indigo-500 text-sm" />
-                          <h4 className="text-sm font-black text-slate-800 tracking-tight uppercase tracking-widest text-[10px]">
+                          <h4 className="text-sm font-bold text-slate-800 tracking-tight uppercase tracking-widest text-[10px]">
                             Peruntukan Cabang -{" "}
                             <span className="text-indigo-600">
                               {selectedMonth} {selectedYear}
@@ -1362,7 +1362,7 @@ const IuranPgriSection = () => {
                               ].map((h, i) => (
                                 <th
                                   key={i}
-                                  className="px-6 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-center whitespace-nowrap"
+                                  className="px-6 py-4 text-[9px] font-bold uppercase tracking-widest text-slate-400 text-center whitespace-nowrap"
                                 >
                                   {h}
                                 </th>
@@ -1389,14 +1389,14 @@ const IuranPgriSection = () => {
                                     key={i}
                                     className="hover:bg-slate-50/80 transition-colors text-center text-[12px] font-bold text-slate-600"
                                   >
-                                    <td className="px-6 py-5 text-slate-400 font-black">
+                                    <td className="px-6 py-5 text-slate-400 font-bold">
                                       {i + 1}
                                     </td>
-                                    <td className="px-6 py-5 font-black text-slate-800 text-left whitespace-nowrap">
+                                    <td className="px-6 py-5 font-bold text-slate-800 text-left whitespace-nowrap">
                                       {row[0]}
                                     </td>
                                     <td className="px-6 py-5">
-                                      <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg font-black">
+                                      <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg font-bold">
                                         {row[1]}
                                       </span>
                                     </td>
@@ -1406,7 +1406,7 @@ const IuranPgriSection = () => {
                                     <td className="px-6 py-5">
                                       {formatCurrency(row[6])}
                                     </td>
-                                    <td className="px-6 py-5 text-emerald-600 font-black">
+                                    <td className="px-6 py-5 text-emerald-600 font-bold">
                                       {formatCurrency(
                                         row[7] || totalPeruntukan,
                                       )}
@@ -1418,7 +1418,7 @@ const IuranPgriSection = () => {
                               <tr>
                                 <td
                                   colSpan={6}
-                                  className="py-16 text-center text-slate-300 font-black uppercase tracking-widest text-xs"
+                                  className="py-16 text-center text-slate-300 font-bold uppercase tracking-widest text-xs"
                                 >
                                   Data Kosong
                                 </td>
@@ -1453,7 +1453,7 @@ const IuranPgriSection = () => {
                     <FaEdit />
                   </div>
                   <div>
-                    <h3 className="text-base font-black text-slate-800 tracking-tight">
+                    <h3 className="text-base font-bold text-slate-800 tracking-tight">
                       Koreksi Data: {editingRow?.[0]}
                     </h3>
                     <p className="text-[9px] font-medium text-slate-400 uppercase tracking-widest">
@@ -1473,7 +1473,7 @@ const IuranPgriSection = () => {
               <div className="p-8 space-y-5">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">
+                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-1">
                       Total Anggota
                     </label>
                     <input
@@ -1485,11 +1485,11 @@ const IuranPgriSection = () => {
                           totalAnggota: parseInt(e.target.value) || 0,
                         })
                       }
-                      className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-blue-500 outline-none font-black text-slate-700 transition-all shadow-inner"
+                      className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-blue-500 outline-none font-bold text-slate-700 transition-all shadow-inner"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">
+                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-1">
                       Tambahan Cabang
                     </label>
                     <input
@@ -1501,11 +1501,11 @@ const IuranPgriSection = () => {
                           tambahanCabang: parseInt(e.target.value) || 0,
                         })
                       }
-                      className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-blue-500 outline-none font-black text-slate-700 transition-all shadow-inner"
+                      className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-blue-500 outline-none font-bold text-slate-700 transition-all shadow-inner"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">
+                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-1">
                       Potongan Bank
                     </label>
                     <input
@@ -1517,11 +1517,11 @@ const IuranPgriSection = () => {
                           potonganBank: parseInt(e.target.value) || 0,
                         })
                       }
-                      className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-blue-500 outline-none font-black text-slate-700 transition-all shadow-inner"
+                      className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-blue-500 outline-none font-bold text-slate-700 transition-all shadow-inner"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">
+                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-1">
                       Setoran Tunai
                     </label>
                     <input
@@ -1533,13 +1533,13 @@ const IuranPgriSection = () => {
                           setoranTunai: parseInt(e.target.value) || 0,
                         })
                       }
-                      className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-blue-500 outline-none font-black text-slate-700 transition-all shadow-inner"
+                      className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-blue-500 outline-none font-bold text-slate-700 transition-all shadow-inner"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">
+                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-1">
                     Keterangan / Alasan Koreksi
                   </label>
                   <textarea
@@ -1556,13 +1556,13 @@ const IuranPgriSection = () => {
                 <div className="flex gap-3 pt-4">
                   <button
                     onClick={() => setIsEditModalOpen(false)}
-                    className="flex-1 py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95"
+                    className="flex-1 py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all active:scale-95"
                   >
                     Batal
                   </button>
                   <button
                     onClick={handleSaveEdit}
-                    className="flex-1 py-4 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-100 transition-all active:scale-95"
+                    className="flex-1 py-4 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-blue-100 transition-all active:scale-95"
                   >
                     Simpan Koreksi
                   </button>

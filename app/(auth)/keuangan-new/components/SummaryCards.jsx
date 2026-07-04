@@ -57,10 +57,10 @@ const SummaryCards = ({ saldo, pemasukan, pengeluaran, loading, type }) => {
           
           <div className="flex justify-between items-start h-full min-h-[80px]">
             <div>
-              <p className="text-white/80 text-[10px] font-black mb-1 uppercase tracking-widest">
+              <p className="text-white/80 text-[10px] font-bold mb-1 uppercase tracking-widest">
                 {card.title}
               </p>
-              <h3 className="text-white text-2xl font-black">
+              <h3 className="text-white text-2xl font-bold">
                 {loading ? (
                   <div className="h-8 w-32 bg-white/20 animate-pulse rounded-lg" />
                 ) : (
