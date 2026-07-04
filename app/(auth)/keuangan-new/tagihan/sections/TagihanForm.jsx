@@ -473,7 +473,6 @@ const TagihanForm = () => {
       const data = await GlobalApi.getTunggakanTransaksiCabang(cabang, Number(bulanVal), tahun);
       const list = Array.isArray(data) ? data : [];
       setTunggakanList(list);
-      setShowTunggakan(list.length > 0);
       const total = list.reduce((sum, t) => sum + (Number(t.tagihan) - Number(t.pembayaran || 0)), 0);
       setTotalTunggakan(total);
 
@@ -520,6 +519,7 @@ const TagihanForm = () => {
       const finalKekurangan = Math.max(0, shortage - total);
       setTotalKekuranganBulanSebelumnya(shortage);
       setPiutangCabangBulanLalu(finalKekurangan);
+      setShowTunggakan(list.length > 0 || shortage > 0);
 
       if (autoAdd) {
         const autoAddedItems = [];
@@ -565,6 +565,7 @@ const TagihanForm = () => {
       setTunggakanList([]);
       setTotalTunggakan(0);
       setTotalKekuranganBulanSebelumnya(0);
+      setShowTunggakan(false);
     }
   };
 
