@@ -2869,10 +2869,10 @@ const exportTidakTerdaftarToExcel = async (cabang = "", unitKerja = "") => {
 };
 
 // KAS Sanduka
-const getTableKasSanduka = async (bulan, tahun) => {
+const getTableKasSanduka = async (bulan, tahun, cabang = "") => {
   try {
     const response = await axiosClient.get(
-      `/api/rekap-transaksi-sanduka?bulan=${bulan}&tahun=${tahun}`,
+      `/api/rekap-transaksi-sanduka?bulan=${bulan}&tahun=${tahun}${cabang ? `&cabang=${encodeURIComponent(cabang)}` : ""}`,
     );
 
     return response.data;
