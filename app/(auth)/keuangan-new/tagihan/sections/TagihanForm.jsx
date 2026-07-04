@@ -927,9 +927,9 @@ const TagihanForm = () => {
                 <tfoot className="bg-slate-800 text-white">
                   <tr className="font-bold text-[10px] sm:text-sm">
                     <td colSpan="5" className="px-3 sm:px-6 py-5 uppercase tracking-wider">Total Tagihan Cabang</td>
-                    <td className="px-3 sm:px-6 py-5 text-right">{formatCurrency(summary.totalTagihan)}</td>
-                    <td className="px-3 sm:px-6 py-5 text-right">{formatCurrency(summary.totalPembayaran)}</td>
-                    <td className="px-3 sm:px-6 py-5 text-right bg-blue-600">{formatCurrency(summary.sisa)}</td>
+                    <td className="px-3 sm:px-6 py-5 text-right">{formatCurrency(filteredTransactions.reduce((s, t) => s + Number(t.tagihan), 0))}</td>
+                    <td className="px-3 sm:px-6 py-5 text-right">{formatCurrency(filteredTransactions.reduce((s, t) => s + Number(t.pembayaran), 0))}</td>
+                    <td className="px-3 sm:px-6 py-5 text-right bg-blue-600">{formatCurrency(filteredTransactions.reduce((s, t) => s + Number(t.sisa || t.tagihan - t.pembayaran), 0))}</td>
                     <td></td>
                   </tr>
                 </tfoot>
