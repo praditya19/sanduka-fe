@@ -504,7 +504,7 @@ const TagihanForm = () => {
       const shortage = selisih < 0 ? Math.abs(selisih) : 0;
 
       const finalKekurangan = Math.max(0, shortage - total);
-      setTotalKekuranganBulanSebelumnya(shortage + total);
+      setTotalKekuranganBulanSebelumnya(shortage);
       setPiutangCabangBulanLalu(finalKekurangan);
 
       if (autoAdd) {
