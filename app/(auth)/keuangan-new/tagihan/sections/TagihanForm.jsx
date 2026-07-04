@@ -505,7 +505,7 @@ const TagihanForm = () => {
 
       const finalKekurangan = Math.max(0, shortage - total);
       setTotalKekuranganBulanSebelumnya(shortage + total);
-      setPiutangCabangBulanLalu(shortage);
+      setPiutangCabangBulanLalu(finalKekurangan);
 
       if (autoAdd) {
         const autoAddedItems = [];
@@ -616,9 +616,9 @@ const TagihanForm = () => {
       if (!groups[key]) {
         groups[key] = { tahun: prevYear, bulan: prevMonthNum, items: [], totalSisa: 0 };
       }
-      if (!groups[key].items.some(item => item.pos === "Total Selisih Bulan Sebelumnya")) {
+      if (!groups[key].items.some(item => item.pos === "Piutang Cabang")) {
         groups[key].items.push({
-          pos: "Total Selisih Bulan Sebelumnya",
+          pos: "Piutang Cabang",
           sisa: piutangCabangBulanLalu
         });
         groups[key].totalSisa += piutangCabangBulanLalu;
