@@ -55,9 +55,8 @@ function KeuanganDetailContent() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [balancingRes, orgRes, iuranRes, rekapIuran, rekapDerap, rekapDaspen, rekapKalender, transaksiCabangRes] = await Promise.all([
+      const [balancingRes, iuranRes, rekapIuran, rekapDerap, rekapDaspen, rekapKalender, transaksiCabangRes] = await Promise.all([
         GlobalApi.getTransaksiBankBalancing("", null, selectedYear, selectedMonth, null, null),
-        GlobalApi.getPemasukanUmum(),
         GlobalApi.getDefaultIuranById(2),
         GlobalApi.getRekapByPeriode(MONTHS_FULL[selectedMonth], selectedYear),
         GlobalApi.getRekapDerapByPeriode(MONTHS_FULL[selectedMonth], selectedYear),
@@ -68,14 +67,8 @@ function KeuanganDetailContent() {
 
       const safeData = Array.isArray(balancingRes) ? balancingRes : [];
 
-      // Filter unique per NPA for this cabang
-      const npaMap = {};
-      safeData.forEach((item) => {
-        if (item.cabang !== cabang) return;
-        const key = `${item.cabang}-${item.unitKerja}-${item.npa}`;
-        if (!npaMap[key] || item.id > npaMap[key].id) npaMap[key] = item;
-      });
-      const cabangData = Object.values(npaMap);
+      // Filter by cabang (tidak deduplikasi — jumlahkan semua entry, sama seperti di IuranPgri)
+      const cabangData = safeData.filter((item) => item.cabang === cabang);
 
       // Rekapitulasi Iuran — pb + provinsi + kabupaten
       const rekapData = Array.isArray(rekapIuran) ? rekapIuran : [];
@@ -250,7 +243,7 @@ function KeuanganDetailContent() {
       // --- REALISASI ---
       let totalPotBank = 0;
       cabangData.forEach((item) => {
-        if (item.keterangan === "Sukses") {
+        if ((item.keterangan || "").toLowerCase() === "sukses") {
           totalPotBank += parseFloat(item.potongan) || 0;
         }
       });
@@ -281,28 +274,7 @@ function KeuanganDetailContent() {
         }
       });
 
-      // Add pemasukan organisasi for this cabang, filtered by month/year
-      if (orgRes && Array.isArray(orgRes)) {
-        orgRes.forEach((item) => {
-          const cabangValue = typeof item.cabang === "object"
-            ? item.cabang?.kecamatan || item.cabang?.cabang || item.cabang?.namaCabang
-            : item.cabang;
-          const cabangName = cabangValue || item.namaCabang || item.nama_cabang || "";
-          if (cabangName.toUpperCase().trim() !== cabang.toUpperCase().trim()) return;
 
-          const setoranBulan = Number(item.setoranBulan || item.setoran_bulan || 0);
-          const setoranTahun = Number(item.setoranTahun || item.setoran_tahun || 0);
-          if (setoranBulan !== selectedMonth || setoranTahun !== selectedYear) return;
-
-          const nominal = parseCurrency(item.nominal || item.debet || item.debit);
-          if (nominal > 0) {
-            const ref = item.kodeBayar || item.nomorReferensi || item.idTransaksi || "";
-            const refStr = ref ? ref.toString().slice(0, 8) : "";
-            const label = refStr ? `${refStr} Transfer` : "Transfer";
-            trans.push({ date: "", desc: label, amount: nominal });
-          }
-        });
-      }
 
       const totalRealisasi = trans.reduce((s, t) => s + t.amount, 0);
       const kekurangan = totalTagihan - totalRealisasi;

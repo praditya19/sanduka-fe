@@ -55,7 +55,7 @@ const IuranPgriSection = () => {
 
   // Table State
   const [rawBalancingData, setRawBalancingData] = useState([]);
-  const [organisasiTransaksiData, setOrganisasiTransaksiData] = useState({}); // Map pembayaran per cabang
+  const [pembayaranPerCabang, setPembayaranPerCabang] = useState({}); // Map total pembayaran per cabang dari iuran_anggota
   const [loadingTable, setLoadingTable] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -180,8 +180,8 @@ const IuranPgriSection = () => {
       const monthObj = bulanList.find((b) => b.namaBulan === selectedMonth);
       const monthNumber = monthObj ? monthObj.id : new Date().getMonth() + 1;
 
-      // Fetch bank balancing data dan pemasukan organisasi untuk pembayaran.
-      const [bankData, orgData] = await Promise.all([
+      // Fetch bank balancing data dan transaksi cabang (per pos) untuk pembayaran.
+      const [bankData, transaksiData] = await Promise.all([
         GlobalApi.getTransaksiBankBalancing(
           "",
           null,
@@ -190,77 +190,33 @@ const IuranPgriSection = () => {
           null,
           null,
         ),
-        GlobalApi.getPemasukanUmum(),
+        // Pembayaran dari transaksi_cabang per pos (input keuangan cabang)
+        GlobalApi.getTransaksiCabangByBulanTahun(monthNumber, selectedYear),
       ]);
 
       setRawBalancingData(bankData || []);
 
-      const normalizeText = (value) =>
-        (value || "").toString().trim().toLowerCase();
       const normalizeCabangKey = (value) =>
         (value || "").toString().trim().replace(/\s+/g, " ").toUpperCase();
-      const parseCurrency = (value) => {
-        if (!value) return 0;
-        if (typeof value === "number") return value;
-        const cleaned = value
-          .toString()
-          .replace(/[^0-9,-]/g, "")
-          .replace(",", ".");
-        return parseFloat(cleaned) || 0;
-      };
 
-      // Parse pemasukan_organisasi untuk mapping pembayaran per cabang.
-      // Format: { "CABANG_NAME": pembayaran_amount }
-      const orgMap = {};
-      if (orgData && Array.isArray(orgData)) {
-        orgData.forEach((item) => {
-          const posPenerimaan = normalizeText(
-            item.posPenerimaan ||
-              item.pos_penerimaan ||
-              item.namaPosPenerimaan ||
-              item.nama_pos_penerimaan,
-          );
-
-          if (posPenerimaan !== "sumbangan anggota") return;
-
-          const setoranBulan = Number(
-            item.setoranBulan || item.setoran_bulan || 0,
-          );
-          const setoranTahun = Number(
-            item.setoranTahun || item.setoran_tahun || 0,
-          );
-          if (
-            setoranBulan !== Number(monthNumber) ||
-            setoranTahun !== Number(selectedYear)
-          )
-            return;
-
-          const keterangan = item.keterangan || "";
-          const cabangMatch = keterangan.match(
-            /Cabang\s+(.+?)(?:\s*\(|\s+untuk|\s+periode|$)/i,
-          );
-          const cabangValue =
-            typeof item.cabang === "object"
-              ? item.cabang?.kecamatan ||
-                item.cabang?.cabang ||
-                item.cabang?.namaCabang
-              : item.cabang;
-          const cabangName =
-            cabangValue ||
-            item.namaCabang ||
-            item.nama_cabang ||
-            cabangMatch?.[1] ||
-            "";
-          const cabangKey = normalizeCabangKey(cabangName);
+      // Parse transaksi_cabang untuk mapping pembayaran per cabang.
+      // Filter khusus pos Iuran PGRI & Sanduka (karena ini tab Iuran PGRI)
+      // Format: { "CABANG_NAME": totalPembayaran }
+      const posIuran = new Set(["iuran pgri", "iuran", "sanduka"]);
+      const pembayaranPerCabang = {};
+      if (transaksiData && Array.isArray(transaksiData)) {
+        transaksiData.forEach((item) => {
+          const cabangKey = normalizeCabangKey(item.cabang);
           if (!cabangKey) return;
 
-          const nominal = parseCurrency(
-            item.nominal || item.debet || item.debit,
-          );
-          orgMap[cabangKey] = (orgMap[cabangKey] || 0) + nominal;
+          const pos = (item.pos || "").toLowerCase().trim();
+          if (!posIuran.has(pos)) return;
+
+          pembayaranPerCabang[cabangKey] =
+            (pembayaranPerCabang[cabangKey] || 0) + Number(item.pembayaran || 0);
         });
       }
-      setOrganisasiTransaksiData(orgMap);
+      setPembayaranPerCabang(pembayaranPerCabang);
       setCurrentPage(1);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -378,9 +334,9 @@ const IuranPgriSection = () => {
         const totalTagihan = pb + prov + kab + totalCabang + sanduka;
         const potBank = group.potBank;
         const tunai = group.tunai;
-        // Ambil pembayaran dari pemasukan_organisasi.
+        // Ambil pembayaran dari iuran_anggota per cabang.
         const pembayaran =
-          organisasiTransaksiData[
+          pembayaranPerCabang[
             (cabName || "").toString().trim().replace(/\s+/g, " ").toUpperCase()
           ] || 0;
         const selisih = totalTagihan - pembayaran;
@@ -406,7 +362,7 @@ const IuranPgriSection = () => {
         if (!searchQuery) return true;
         return row[0].toLowerCase().includes(searchQuery.toLowerCase());
       });
-  }, [rawBalancingData, besaran, searchQuery, organisasiTransaksiData]);
+  }, [rawBalancingData, besaran, searchQuery, pembayaranPerCabang]);
 
   useEffect(() => {
     fetchTransactions();
