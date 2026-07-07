@@ -27,35 +27,36 @@ const useBalancing = ({
   const [deleteProgress, setDeleteProgress] = useState(0);
 
   const getBalancingdata = async () => {
-    setLoadingBalancing(true);
+  if (!selectedCabang) return; // ⛔ stop kalau belum ada cabang
 
-    try {
-      const parsedYear = year !== "all" ? Number(year) : null;
-      const parsedMonth = month !== "all" ? Number(month) : null;
+  setLoadingBalancing(true);
+  try {
+    const parsedYear = year !== "all" ? Number(year) : null;
+    const parsedMonth = month !== "all" ? Number(month) : null;
 
-      const result = await GlobalApi.getTransaksiBankBalancing(
-        selectedCabang || null,
-        selectedUnitKerja || null,
-        parsedYear,
-        parsedMonth,
-        paymentNote || null,
-        searchBalancing || null,
-      );
+    const result = await GlobalApi.getTransaksiBankBalancing(
+      selectedCabang,
+      selectedUnitKerja || null,
+      parsedYear,
+      parsedMonth,
+      paymentNote || null,
+      searchBalancing || null
+    );
 
-      // API may return an array or an object with a `content` array and summary fields.
-      const safeResult = Array.isArray(result)
-        ? result
-        : result && Array.isArray(result.content)
-          ? result.content
-          : [];
-      setDataBalancing(safeResult);
-    } catch (err) {
-      console.error("❌ Gagal memuat data:", err);
-      setDataBalancing([]);
-    } finally {
-      setLoadingBalancing(false);
-    }
-  };
+    const safeResult = Array.isArray(result)
+      ? result
+      : result && Array.isArray(result.content)
+      ? result.content
+      : [];
+
+    setDataBalancing(safeResult);
+  } catch (err) {
+    console.error("❌ Gagal memuat data:", err);
+    setDataBalancing([]);
+  } finally {
+    setLoadingBalancing(false);
+  }
+};
 
   const handleDeleteClick = async (id) => {
     try {
