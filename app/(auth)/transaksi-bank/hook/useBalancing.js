@@ -27,36 +27,40 @@ const useBalancing = ({
   const [deleteProgress, setDeleteProgress] = useState(0);
 
   const getBalancingdata = async () => {
-  if (!selectedCabang) return; // ⛔ stop kalau belum ada cabang
+    setLoadingBalancing(true);
 
-  setLoadingBalancing(true);
-  try {
-    const parsedYear = year !== "all" ? Number(year) : null;
-    const parsedMonth = month !== "all" ? Number(month) : null;
+    try {
+      const parsedYear = year !== "all" ? Number(year) : null;
+      const parsedMonth = month !== "all" ? Number(month) : null;
 
-    const result = await GlobalApi.getTransaksiBankBalancing(
-      selectedCabang,
-      selectedUnitKerja || null,
-      parsedYear,
-      parsedMonth,
-      paymentNote || null,
-      searchBalancing || null
-    );
+      const parsedCabang =
+        !selectedCabang || selectedCabang === "KABUPATEN"
+          ? null
+          : selectedCabang;
 
-    const safeResult = Array.isArray(result)
-      ? result
-      : result && Array.isArray(result.content)
-      ? result.content
-      : [];
+      const result = await GlobalApi.getTransaksiBankBalancing(
+        parsedCabang,
+        selectedUnitKerja || null,
+        parsedYear,
+        parsedMonth,
+        paymentNote || null,
+        searchBalancing || null,
+      );
 
-    setDataBalancing(safeResult);
-  } catch (err) {
-    console.error("❌ Gagal memuat data:", err);
-    setDataBalancing([]);
-  } finally {
-    setLoadingBalancing(false);
-  }
-};
+      const safeResult = Array.isArray(result)
+        ? result
+        : result && Array.isArray(result.content)
+          ? result.content
+          : [];
+
+      setDataBalancing(safeResult);
+    } catch (err) {
+      console.error("❌ Gagal memuat data:", err);
+      setDataBalancing([]);
+    } finally {
+      setLoadingBalancing(false);
+    }
+  };
 
   const handleDeleteClick = async (id) => {
     try {
