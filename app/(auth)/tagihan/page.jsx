@@ -65,9 +65,9 @@ export default function Tagihan() {
 
       const list = Array.isArray(res) ? res : res?.data || [];
       const balancing = list[0];
-      console.log(balancing);
       if (balancing) {
-        setDataIuran({
+        setDataIuran((prev) => ({
+          ...(prev || {}),
           pgri: balancing.totalIuranAnggota || 0,
           sanduka: balancing.totalIuranSanduka || 0,
           daspen: balancing.totalIuranDaspen || 0,
@@ -83,7 +83,7 @@ export default function Tagihan() {
           selisih: balancing.selisih,
           bulan,
           tahun,
-        });
+        }));
       }
     } catch (error) {
       console.error("Error fetching iuran:", error);
@@ -434,11 +434,11 @@ export default function Tagihan() {
   };
 
   const keteranganText =
-    dataIuran.keterangan === "Sukses"
+    dataIuran?.keterangan === "Sukses"
       ? "Pembayaran Anda Melalui Bank Jateng"
-      : dataIuran.keterangan === "Tunai"
+      : dataIuran?.keterangan === "Tunai"
         ? "Pembayaran Anda Tunai"
-        : dataIuran.keterangan || "Tidak ada keterangan";
+        : dataIuran?.keterangan || "Tidak ada keterangan";
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
@@ -496,7 +496,7 @@ export default function Tagihan() {
                           Bulan
                         </p>
                         <p className="text-white text-lg font-semibold">
-                          {getNamaBulan(dataIuran.bulan)}
+                          {getNamaBulan(dataIuran?.bulan)}
                         </p>
                       </div>
 
@@ -506,7 +506,7 @@ export default function Tagihan() {
                           Tahun
                         </p>
                         <p className="text-white text-lg font-semibold">
-                          {dataIuran.tahun}
+                          {dataIuran?.tahun}
                         </p>
                       </div>
                     </div>
@@ -515,9 +515,9 @@ export default function Tagihan() {
                     <div className="bg-white rounded-xl p-3 shadow-lg">
                       <div className="flex items-center gap-3">
                         <div className="flex-shrink-0">
-                          {dataIuran.keterangan === "Sukses" ? (
+                          {dataIuran?.keterangan === "Sukses" ? (
                             <span className="text-2xl">✅</span>
-                          ) : dataIuran.keterangan === "Tunai" ? (
+                          ) : dataIuran?.keterangan === "Tunai" ? (
                             <span className="text-2xl">💰</span>
                           ) : (
                             <span className="text-2xl">📋</span>
@@ -529,9 +529,9 @@ export default function Tagihan() {
                           </p>
                           <p
                             className={`text-sm font-semibold truncate ${
-                              dataIuran.keterangan === "Sukses"
+                              dataIuran?.keterangan === "Sukses"
                                 ? "text-green-600"
-                                : dataIuran.keterangan === "Tunai"
+                                : dataIuran?.keterangan === "Tunai"
                                   ? "text-blue-600"
                                   : "text-gray-600"
                             }`}
