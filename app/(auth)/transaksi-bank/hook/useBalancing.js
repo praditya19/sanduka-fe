@@ -38,8 +38,7 @@ const useBalancing = ({
       const parsedYear = year !== "all" ? Number(year) : null;
       const parsedMonth = month !== "all" ? Number(month) : null;
 
-      const parsedCabang = role === "SUPERADMIN" ? null : selectedCabang;
-
+      const parsedCabang = !selectedCabang ? null : selectedCabang;
       const result = await GlobalApi.getTransaksiBankBalancing(
         parsedCabang,
         selectedUnitKerja || null,
