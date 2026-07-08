@@ -249,6 +249,7 @@ export default function BankTransactionPage() {
     deleteLoader,
     deleteProgress,
   } = useBalancing({
+    role: cekRole,
     selectedCabang: dropdownFilters.selectedCabang,
     selectedUnitKerja: dropdownFilters.selectedUnitKerja,
     month,

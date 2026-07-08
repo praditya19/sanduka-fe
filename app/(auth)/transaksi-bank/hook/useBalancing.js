@@ -12,6 +12,7 @@ const useBalancing = ({
   setShowImportBalancing,
   setShowDeleteBalancing,
   setNotification,
+  role,
 }) => {
   const [dataBalancing, setDataBalancing] = useState([]);
   const [loadingBalancing, setLoadingBalancing] = useState(false);
@@ -27,16 +28,17 @@ const useBalancing = ({
   const [deleteProgress, setDeleteProgress] = useState(0);
 
   const getBalancingdata = async () => {
+    // ⛔ hanya ADMIN yang wajib punya cabang
+    if (role !== "SUPERADMIN" && (!selectedCabang || selectedCabang === "")) {
+      return;
+    }
     setLoadingBalancing(true);
 
     try {
       const parsedYear = year !== "all" ? Number(year) : null;
       const parsedMonth = month !== "all" ? Number(month) : null;
 
-      const parsedCabang =
-        !selectedCabang || selectedCabang === "KABUPATEN"
-          ? null
-          : selectedCabang;
+      const parsedCabang = role === "SUPERADMIN" ? null : selectedCabang;
 
       const result = await GlobalApi.getTransaksiBankBalancing(
         parsedCabang,
@@ -47,11 +49,7 @@ const useBalancing = ({
         searchBalancing || null,
       );
 
-      const safeResult = Array.isArray(result)
-        ? result
-        : result && Array.isArray(result.content)
-          ? result.content
-          : [];
+      const safeResult = Array.isArray(result) ? result : result?.content || [];
 
       setDataBalancing(safeResult);
     } catch (err) {
@@ -250,6 +248,7 @@ const useBalancing = ({
       setDeleteProgress(0);
     }
   };
+
   const handleSort = (key) => {
     let direction = "asc";
     if (sortConfig.key === key && sortConfig.direction === "asc") {
@@ -257,7 +256,6 @@ const useBalancing = ({
     }
     setSortConfig({ key, direction });
   };
-
   const sortedData = useMemo(() => {
     if (!dataBalancing || dataBalancing.length === 0) return [];
 
@@ -282,6 +280,7 @@ const useBalancing = ({
   }, [
     selectedCabang,
     selectedUnitKerja,
+    role,
     month,
     year,
     paymentNote,
