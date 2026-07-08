@@ -41,6 +41,8 @@ const useTagihan = (npa, bulan, tahun, token) => {
           cabang: balancing.cabang,
           jabatan: balancing.statusPegawai,
           keterangan: balancing.keterangan,
+          potongan: balancing.potongan,
+          selisih: balancing.selisih,
           bulan,
           tahun,
         });

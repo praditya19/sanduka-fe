@@ -311,40 +311,109 @@ const TagihanView = ({ dataIuran, dataAnggota, loading }) => {
     return bulanIndo[bulan - 1] || "-";
   };
 
+   const keteranganText =
+    dataIuran?.keterangan === "Sukses"
+      ? "Pembayaran Anda Melalui Bank Jateng"
+      : dataIuran?.keterangan === "Tunai"
+        ? "Pembayaran Anda Tunai"
+        : dataIuran?.keterangan || "Tidak ada keterangan";
+
   return (
     <div className="max-h-[80vh] overflow-y-auto pr-2">
       <div className="flex flex-grow">
         <div className={`flex-1 transition-all duration-300 ease-in-out`}>
           <main className="container mx-auto py-6 md:py-10 px-4 flex-grow bg-gray-50 min-h-screen">
             <div className="max-w-4xl mx-auto">
-              <div className="relative bg-gradient-to-r from-blue-700 to-blue-900 rounded-t-2xl shadow-xl overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-10">
-                  <div className="absolute w-56 h-56 rounded-full bg-white -top-20 -left-20"></div>
-                  <div className="absolute w-72 h-72 rounded-full bg-blue-400 -bottom-36 -right-36"></div>
-                </div>
+              <div className="bg-gradient-to-r from-blue-700 to-blue-900 rounded-2xl shadow-xl overflow-hidden mt-4">
+                {/* Decorative Elements */}
+                <div className="relative">
+                  <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-10">
+                    <div className="absolute w-56 h-56 rounded-full bg-white -top-20 -left-20"></div>
+                    <div className="absolute w-72 h-72 rounded-full bg-blue-400 -bottom-36 -right-36"></div>
+                  </div>
 
-                <div className="relative px-6 py-8 text-white text-center">
-                  <div className="flex justify-center mb-4">
-                    <div className="bg-white/20 rounded-full p-3 backdrop-blur-sm">
-                      <svg
-                        className="w-8 h-8 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
-                        ></path>
-                      </svg>
+                  <div className="relative px-6 py-6">
+                    {/* Header with Icon */}
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="bg-white/20 rounded-xl p-2.5 backdrop-blur-sm">
+                        <svg
+                          className="w-6 h-6 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                          ></path>
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-blue-200 text-xs font-medium tracking-wider uppercase">
+                          Informasi Tagihan
+                        </p>
+                        <h1 className="text-xl md:text-2xl font-bold text-white tracking-wide">
+                          TAGIHAN ANGGOTA
+                        </h1>
+                      </div>
+                    </div>
+
+                    {/* Info Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                      {/* Bulan */}
+                      <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3">
+                        <p className="text-blue-200 text-xs font-medium uppercase tracking-wider mb-1">
+                          Bulan
+                        </p>
+                        <p className="text-white text-lg font-semibold">
+                          {getNamaBulan(dataIuran?.bulan)}
+                        </p>
+                      </div>
+
+                      {/* Tahun */}
+                      <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3">
+                        <p className="text-blue-200 text-xs font-medium uppercase tracking-wider mb-1">
+                          Tahun
+                        </p>
+                        <p className="text-white text-lg font-semibold">
+                          {dataIuran?.tahun}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Status Keterangan */}
+                    <div className="bg-white rounded-xl p-3 shadow-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0">
+                          {dataIuran?.keterangan === "Sukses" ? (
+                            <span className="text-2xl">✅</span>
+                          ) : dataIuran?.keterangan === "Tunai" ? (
+                            <span className="text-2xl">💰</span>
+                          ) : (
+                            <span className="text-2xl">📋</span>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
+                            Status Pembayaran
+                          </p>
+                          <p
+                            className={`text-sm font-semibold truncate ${
+                              dataIuran?.keterangan === "Sukses"
+                                ? "text-green-600"
+                                : dataIuran?.keterangan === "Tunai"
+                                  ? "text-blue-600"
+                                  : "text-gray-600"
+                            }`}
+                          >
+                            {keteranganText}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <h1 className="text-2xl md:text-3xl font-bold tracking-wide mb-1">
-                    TAGIHAN ANGGOTA
-                  </h1>
                 </div>
               </div>
 
@@ -551,108 +620,6 @@ const TagihanView = ({ dataIuran, dataAnggota, loading }) => {
                         </div>
                       </div>
 
-                      {/* KATA KATA TAGIHAN */}
-                      {/* <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-xl border-2 border-blue-200 overflow-hidden shadow-md">
-                        <div className="p-5 md:p-6">
-                          <div className="flex items-start">
-                            <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full p-3 mr-4 shadow-lg flex-shrink-0">
-                              <svg
-                                className="w-6 h-6 text-white"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                ></path>
-                              </svg>
-                            </div>
-                            <div className="flex-1">
-                              <h3 className="text-lg md:text-xl font-bold text-blue-900 mb-2">
-                                Informasi Pembayaran
-                              </h3>
-                              <p className="text-gray-700 text-sm md:text-base leading-relaxed">
-                                Tagihan Anda <span className="font-semibold text-blue-800">sudah dipotong secara otomatis oleh Bank Jateng</span> setiap bulannya.
-                                Pastikan saldo rekening Anda mencukupi untuk pembayaran iuran.
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div> */}
-
-                      <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-4 rounded-xl shadow-lg">
-                        {/* Header */}
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="bg-white/20 rounded-full p-2 backdrop-blur-sm flex-shrink-0">
-                            <svg
-                              className="w-5 h-5 text-white"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-                              ></path>
-                            </svg>
-                          </div>
-                          <h3 className="text-lg md:text-xl text-white font-normal">
-                            RINCIAN TAGIHAN ANGGOTA
-                          </h3>
-                        </div>
-
-                        {/* Informasi Bulan & Tahun */}
-                        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 mb-3">
-                          <div className="flex flex-wrap items-baseline gap-2">
-                            <span className="text-sm text-blue-200">Bulan</span>
-                            <span className="text-lg text-yellow-300">
-                              {getNamaBulan(dataIuran.bulan)}
-                            </span>
-                            <span className="text-sm text-blue-200 ml-2">
-                              Tahun
-                            </span>
-                            <span className="text-lg text-yellow-300">
-                              {dataIuran.tahun}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Keterangan */}
-                        <div className="bg-white rounded-lg p-3 shadow-inner">
-                          <div className="flex items-start gap-3">
-                            <div className="flex-1">
-                              <p className="text-sm md:text-base text-gray-800 leading-relaxed">
-                                {dataIuran.keterangan === "Sukses" ? (
-                                  <span className="text-green-600">
-                                    ✅ Pembayaran Anda Melalui Bank Jateng
-                                    Sukses
-                                  </span>
-                                ) : dataIuran.keterangan === "Tunai" ? (
-                                  <span className="text-blue-600">
-                                    💰 Pembayaran Anda Tunai
-                                  </span>
-                                ) : (
-                                  <span className="text-gray-600">
-                                    {dataIuran.keterangan || (
-                                      <span className="text-gray-400 italic">
-                                        Tidak ada keterangan
-                                      </span>
-                                    )}
-                                  </span>
-                                )}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
                         <div className="bg-white p-4 md:p-6">
                           <div className="space-y-3">
                             {dataIuran.pgri > 0 && (
@@ -779,6 +746,35 @@ const TagihanView = ({ dataIuran, dataAnggota, loading }) => {
                               </div>
                             </div>
                           </div>
+                           {/* Potongan */}
+                        {dataIuran.potongan > 0 && (
+                          <div className="flex justify-between items-center p-3 bg-red-50 border-l-4 border-red-500 rounded-lg transition-colors mt-4">
+                            <div className="flex items-center">
+                              <div className="w-3 h-3 bg-red-500 rounded-full mr-3"></div>
+                              <span className="text-gray-700 font-medium">
+                                Potongan
+                              </span>
+                            </div>
+                            <span className="font-bold text-red-600 text-lg">
+                              Rp. {dataIuran.potongan?.toLocaleString("id-ID")}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Selisih */}
+                        {dataIuran.selisih > 0 && (
+                          <div className="flex justify-between items-center p-3 bg-indigo-50 border-l-4 border-indigo-500 rounded-lg transition-colors mt-4">
+                            <div className="flex items-center">
+                              <div className="w-3 h-3 bg-indigo-500 rounded-full mr-3"></div>
+                              <span className="text-gray-700 font-medium">
+                                Selisih
+                              </span>
+                            </div>
+                            <span className="font-bold text-indigo-700 text-lg">
+                              Rp. {dataIuran.selisih?.toLocaleString("id-ID")}
+                            </span>
+                          </div>
+                        )}
                           </div>
                      
                         
