@@ -22,13 +22,19 @@ function KeuanganDetailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const branchParam = searchParams.get("cabang");
+  const bulanParam = searchParams.get("bulan");
+  const tahunParam = searchParams.get("tahun");
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const now = new Date();
-  const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(
+    bulanParam ? parseInt(bulanParam) : now.getMonth() + 1
+  );
+  const [selectedYear, setSelectedYear] = useState(
+    tahunParam ? parseInt(tahunParam) : now.getFullYear()
+  );
   const cabang = branchParam || "-";
 
   const [tagihanData, setTagihanData] = useState([]);
@@ -202,7 +208,7 @@ function KeuanganDetailContent() {
           if (tcData && tcData.tagihan > 0) {
             usedPosLabels.add(tcPos.toUpperCase());
             subtotal += tcData.tagihan - row.total;
-            return { label: row.label, count: row.count, total: tcData.tagihan, keterangan: posKeterangan[tcPos] || "" };
+            return { label: row.label, count: row.count, total: tcData.tagihan, bayar: tcData.pembayaran || 0, keterangan: posKeterangan[tcPos] || "" };
           }
         }
         return row;
@@ -213,7 +219,7 @@ function KeuanganDetailContent() {
       Object.entries(posGroup).forEach(([pos, vals]) => {
         if (!usedPosLabels.has(pos.toUpperCase())) {
           if (pos.toUpperCase() === "PEMASUKAN DARI BANK") return;
-          extraTagihanRows.push({ label: pos.toUpperCase(), count: vals.count, total: vals.tagihan, keterangan: posKeterangan[pos] || "" });
+          extraTagihanRows.push({ label: pos.toUpperCase(), count: vals.count, total: vals.tagihan, bayar: vals.pembayaran || 0, keterangan: posKeterangan[pos] || "" });
           subtotal += vals.tagihan;
         }
       });
@@ -414,20 +420,52 @@ function KeuanganDetailContent() {
                         </div>
                         <span className="font-semibold text-slate-700 text-right tabular-nums">{formatCurrency(row.total)}</span>
                       </div>
+                      {/* Bayar sub-row */}
+                      <div className="flex items-center justify-between text-xs ml-1 mt-0.5">
+                        <span className="text-slate-400 font-medium">Bayar</span>
+                        <span className="font-semibold text-emerald-600 tabular-nums">{formatCurrency(row.bayar || 0)}</span>
+                      </div>
                       {row.keterangan ? (
                         <div className="text-[10px] text-slate-400 font-medium mt-px ml-1">{row.keterangan}</div>
-                      ) : (
-                        <div className="text-[10px] text-slate-300 font-medium mt-px ml-1">-</div>
-                      )}
+                      ) : null}
                     </div>
                   ))}
                 </div>
 
                 {/* Total Tagihan */}
                 <div className="mt-2.5 flex items-center justify-between bg-gradient-to-r from-violet-500 to-violet-600 rounded-xl px-4 py-3 shadow-md shadow-violet-200">
-                  <span className="font-bold text-white text-xs uppercase tracking-wider">Total Tagihan</span>
+                  <span className="font-bold text-white text-xs uppercase tracking-wider">Tagihan</span>
                   <span className="font-bold text-white text-sm tabular-nums">{formatCurrency(rekap.totalTagihan)}</span>
                 </div>
+
+                {/* Total Pembayaran */}
+                {(() => {
+                  const totalBayar = tagihanData.reduce((s, r) => s + (r.bayar || 0), 0);
+                  return (
+                    <div className="mt-2 flex items-center justify-between bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl px-4 py-3 shadow-md shadow-emerald-200">
+                      <span className="font-bold text-white text-xs uppercase tracking-wider">Pembayaran</span>
+                      <span className="font-bold text-white text-sm tabular-nums">{formatCurrency(totalBayar)}</span>
+                    </div>
+                  );
+                })()}
+
+                {/* Tagihan - Pembayaran */}
+                {(() => {
+                  const totalBayar = tagihanData.reduce((s, r) => s + (r.bayar || 0), 0);
+                  const sisa = rekap.totalTagihan - totalBayar;
+                  return (
+                    <div className={`mt-2 rounded-xl px-4 py-3 ${sisa > 0 ? "bg-gradient-to-r from-rose-500 to-rose-600 shadow shadow-rose-200" : "bg-gradient-to-r from-slate-600 to-slate-700 shadow shadow-slate-200"}`}>
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-white text-xs uppercase tracking-wider">
+                          Tagihan - Pembayaran
+                        </span>
+                        <span className="font-bold text-white text-sm tabular-nums">
+                          {sisa > 0 ? "-" + formatCurrency(sisa) : formatCurrency(Math.abs(sisa))}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Previous Month */}
                 {cabangTrans.filter(t => {
@@ -491,34 +529,44 @@ function KeuanganDetailContent() {
 
                 {/* Total Realisasi */}
                 <div className="mt-2.5 flex items-center justify-between bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl px-4 py-3 shadow-md shadow-emerald-200">
-                  <span className="font-bold text-white text-xs uppercase tracking-wider">Total Realisasi</span>
+                  <span className="font-bold text-white text-xs uppercase tracking-wider">Jumlah Realisasi</span>
                   <span className="font-bold text-white text-sm tabular-nums">{formatCurrency(rekap.totalRealisasi)}</span>
                 </div>
               </div>
 
               {/* Bottom Summary */}
-              <div className="px-5 pb-5 pt-2">
-                <div className="bg-slate-50 rounded-xl px-4 py-3 border border-slate-100">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Target - Realisasi</span>
-                    <span className="font-bold text-slate-600 text-xs tabular-nums">
-                      {formatCurrency(rekap.totalTagihan)} - {formatCurrency(rekap.totalRealisasi)}
-                    </span>
+              {(() => {
+                const totalBayar = tagihanData.reduce((s, r) => s + (r.bayar || 0), 0);
+                const sisa = rekap.totalRealisasi - totalBayar;
+                const pengembalianKekurangan = (rekap.totalTagihan - totalBayar) - (rekap.totalRealisasi - totalBayar);
+                return (
+                  <div className="px-5 pb-5 pt-2 space-y-2">
+                    <div className={`rounded-xl px-4 py-3 ${sisa < 0 ? "bg-gradient-to-r from-rose-500 to-rose-600 shadow shadow-rose-200" : "bg-gradient-to-r from-slate-600 to-slate-700 shadow shadow-slate-200"}`}>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-bold text-white text-[12px] uppercase tracking-wider shrink-0">Realisasi - Pembayaran</span>
+                        <span className="font-bold text-white text-[12px] tabular-nums ml-2 text-right shrink-0">
+                          {formatCurrency(rekap.totalRealisasi)} - {formatCurrency(totalBayar)} = {sisa < 0 ? "-" + formatCurrency(Math.abs(sisa)) : formatCurrency(sisa)}
+                        </span>
+                      </div>
+                      {sisa >= 0 && (
+                        <div className="mt-1.5 text-[10px] font-medium text-white/80 italic">
+                          bila nilai lebih bukan minus maka uang dikurangkan, bila minus tidak perlu dikurangkan
+                        </div>
+                      )}
+                    </div>
+                    {sisa >= 0 && (
+                      <div className={`rounded-xl px-4 py-3 ${pengembalianKekurangan < 0 ? "bg-gradient-to-r from-rose-500 to-rose-600 shadow shadow-rose-200" : "bg-gradient-to-r from-emerald-500 to-emerald-600 shadow shadow-emerald-200"}`}>
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-white text-xs uppercase tracking-wider">Pengembalian / Kekurangan</span>
+                          <span className="font-bold text-white text-sm tabular-nums">
+                            {pengembalianKekurangan < 0 ? "-" + formatCurrency(Math.abs(pengembalianKekurangan)) : formatCurrency(pengembalianKekurangan)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-
-                {/* Kurang / Sisa */}
-                <div className={`mt-2 rounded-xl px-4 py-3 ${rekap.kekurangan > 0 ? "bg-gradient-to-r from-rose-500 to-rose-600 shadow shadow-rose-200" : "bg-gradient-to-r from-emerald-500 to-emerald-600 shadow shadow-emerald-200"}`}>
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-white text-xs uppercase tracking-wider">
-                      {rekap.kekurangan > 0 ? "Kurang" : "Sisa"}
-                    </span>
-                    <span className="font-bold text-white text-base tabular-nums">
-                      {rekap.kekurangan > 0 ? "-" + formatCurrency(rekap.kekurangan) : formatCurrency(Math.abs(rekap.kekurangan))}
-                    </span>
-                  </div>
-                </div>
-              </div>
+                );
+              })()}
             </div>
           )}
         </main>
