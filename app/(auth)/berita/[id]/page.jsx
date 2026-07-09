@@ -85,7 +85,25 @@ export default function BeritaDetail() {
       }
     };
 
-    if (id) fetchData();
+    const incrementViews = async () => {
+      try {
+        // Panggil getById untuk increment views di backend
+        const updatedBerita = await GlobalApi.getBeritaById(id);
+        if (updatedBerita) {
+          // Update views count di currentNews agar tampilan terbaru
+          setCurrentNews((prev) =>
+            prev ? { ...prev, views: updatedBerita.views } : prev,
+          );
+        }
+      } catch (error) {
+        console.error("Gagal increment views:", error);
+      }
+    };
+
+    if (id) {
+      fetchData();
+      incrementViews();
+    }
   }, [id]);
 
   const formatDate = (arr) => {
