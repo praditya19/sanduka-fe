@@ -554,16 +554,24 @@ function KeuanganDetailContent() {
                         </div>
                       )}
                     </div>
-                    {sisa >= 0 && (
-                      <div className={`rounded-xl px-4 py-3 ${pengembalianKekurangan < 0 ? "bg-gradient-to-r from-rose-500 to-rose-600 shadow shadow-rose-200" : "bg-gradient-to-r from-emerald-500 to-emerald-600 shadow shadow-emerald-200"}`}>
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-white text-xs uppercase tracking-wider">Pengembalian / Kekurangan</span>
-                          <span className="font-bold text-white text-sm tabular-nums">
-                            {pengembalianKekurangan < 0 ? "-" + formatCurrency(Math.abs(pengembalianKekurangan)) : formatCurrency(pengembalianKekurangan)}
-                          </span>
+                    {(() => {
+                      // If Realisasi - Pembayaran is negative, use Tagihan - Pembayaran
+                      // If Realisasi - Pembayaran is positive, use (Tagihan - Pembayaran) - (Realisasi - Pembayaran) = Tagihan - Realisasi
+                      const pengembalian = sisa < 0
+                        ? (rekap.totalTagihan - totalBayar)
+                        : (rekap.totalTagihan - rekap.totalRealisasi);
+                      const isKekurangan = pengembalian > 0;
+                      return (
+                        <div className={`rounded-xl px-4 py-3 ${isKekurangan ? "bg-gradient-to-r from-rose-500 to-rose-600 shadow shadow-rose-200" : "bg-gradient-to-r from-emerald-500 to-emerald-600 shadow shadow-emerald-200"}`}>
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-white text-xs uppercase tracking-wider">Pengembalian / Kekurangan</span>
+                            <span className="font-bold text-white text-sm tabular-nums">
+                              {isKekurangan ? "-" + formatCurrency(pengembalian) : formatCurrency(Math.abs(pengembalian))}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
                   </div>
                 );
               })()}
