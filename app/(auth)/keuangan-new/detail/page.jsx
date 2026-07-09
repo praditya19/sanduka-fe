@@ -528,7 +528,7 @@ function KeuanganDetailContent() {
                 </div>
 
                 {/* Total Realisasi */}
-                <div className="mt-2.5 flex items-center justify-between bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl px-4 py-3 shadow-md shadow-emerald-200">
+                <div className="mt-2.5 flex items-center justify-between bg-gradient-to-r from-amber-500 to-yellow-500 rounded-xl px-4 py-3 shadow-md shadow-amber-200">
                   <span className="font-bold text-white text-xs uppercase tracking-wider">Jumlah Realisasi</span>
                   <span className="font-bold text-white text-sm tabular-nums">{formatCurrency(rekap.totalRealisasi)}</span>
                 </div>
