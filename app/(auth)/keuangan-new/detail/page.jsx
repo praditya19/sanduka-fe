@@ -542,9 +542,9 @@ function KeuanganDetailContent() {
                 return (
                   <div className="px-5 pb-5 pt-2 space-y-2">
                     <div className={`rounded-xl px-4 py-3 ${sisa < 0 ? "bg-gradient-to-r from-rose-500 to-rose-600 shadow shadow-rose-200" : "bg-gradient-to-r from-slate-600 to-slate-700 shadow shadow-slate-200"}`}>
-                      <div className="flex items-center justify-between gap-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
                         <span className="font-bold text-white text-[12px] uppercase tracking-wider shrink-0">Realisasi - Pembayaran</span>
-                        <span className="font-bold text-white text-[12px] tabular-nums ml-2 text-right shrink-0">
+                        <span className="font-bold text-white text-[12px] tabular-nums sm:ml-2 text-left sm:text-right shrink-0 break-all">
                           {formatCurrency(rekap.totalRealisasi)} - {formatCurrency(totalBayar)} = {sisa < 0 ? "-" + formatCurrency(Math.abs(sisa)) : formatCurrency(sisa)}
                         </span>
                       </div>
@@ -555,11 +555,8 @@ function KeuanganDetailContent() {
                       )}
                     </div>
                     {(() => {
-                      // If Realisasi - Pembayaran is negative, use Tagihan - Pembayaran
-                      // If Realisasi - Pembayaran is positive, use (Tagihan - Pembayaran) - (Realisasi - Pembayaran) = Tagihan - Realisasi
-                      const pengembalian = sisa < 0
-                        ? (rekap.totalTagihan - totalBayar)
-                        : (rekap.totalTagihan - rekap.totalRealisasi);
+                      // Pengembalian / Kekurangan = Tagihan - Realisasi
+                      const pengembalian = rekap.totalTagihan - rekap.totalRealisasi;
                       const isKekurangan = pengembalian > 0;
                       return (
                         <div className={`rounded-xl px-4 py-3 ${isKekurangan ? "bg-gradient-to-r from-rose-500 to-rose-600 shadow shadow-rose-200" : "bg-gradient-to-r from-emerald-500 to-emerald-600 shadow shadow-emerald-200"}`}>
