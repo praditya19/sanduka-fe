@@ -3473,7 +3473,7 @@ const getTableUmum = async (bulan, tahun) => {
     console.error("Error fetching table kas umum:", error);
     throw error;
   }
-}; 
+};
 // KAS Organisasi
 const getTableKasOrganisasi = async (bulan, tahun) => {
   try {
@@ -4403,6 +4403,40 @@ const getRekapKalenderByPeriode = async (bulan, tahun) => {
 };
 // END Rekapitulasi Kalender
 
+// Site Visit (Pengunjung Harian)
+const recordSiteVisit = async (pageUrl) => {
+  try {
+    const response = await axiosClient.post(
+      `/api/site-visit/record?pageUrl=${encodeURIComponent(pageUrl || window.location.pathname)}`,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error recording site visit:", error);
+    // Tidak throw error agar tidak mengganggu user experience
+  }
+};
+
+const getSiteVisitStats = async () => {
+  try {
+    const response = await axiosClient.get("/api/site-visit/stats");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching site visit stats:", error);
+    throw error;
+  }
+};
+
+const getWeeklySiteVisitors = async () => {
+  try {
+    const response = await axiosClient.get("/api/site-visit/weekly");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching weekly visitors:", error);
+    throw error;
+  }
+};
+// END Site Visit
+
 // Export all functions
 export default {
   registerUser,
@@ -4709,4 +4743,7 @@ export default {
   getRekapDaspenByPeriode,
   getTableKasOrganisasi,
   getRealisasiFromKasOrganisasi,
+  recordSiteVisit,
+  getSiteVisitStats,
+  getWeeklySiteVisitors,
 };

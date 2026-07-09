@@ -55,6 +55,7 @@ import BiroTravel from "@/app/_components/BiroTravel";
 import Live from "@/app/_components/Live";
 import LembagaDisplay from "@/app/_components/Lembaga";
 import Metsos from "@/app/_components/Metsos";
+import VisitorCounter from "@/app/_components/VisitorCounter";
 import Image from "next/image";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
@@ -236,12 +237,12 @@ export default function IconGrid() {
       href: "/transaksi-bank",
       color: "text-green-600",
     },
-    {
-      icon: faWallet,
-      label: "Keuangan",
-      href: "/keuangan/home",
-      color: "text-lime-500",
-    },
+    // {
+    //   icon: faWallet,
+    //   label: "Keuangan",
+    //   href: "/keuangan/home",
+    //   color: "text-lime-500",
+    // },
     {
       icon: faMoneyBillTransfer,
       label: "Keuangan New",
@@ -1039,7 +1040,7 @@ export default function IconGrid() {
 
             {!isMobile && (
               <div className="px-4 mx-auto max-w-6xl -mt-10 mb-12">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
                     <div className="flex justify-between items-center">
                       <div>
@@ -1123,6 +1124,8 @@ export default function IconGrid() {
                       </div>
                     </div>
                   </div>
+
+                  <VisitorCounter />
                 </div>
               </div>
             )}
@@ -1139,8 +1142,8 @@ export default function IconGrid() {
                     >
                       <div
                         className={`w-14 h-14 ${item.color.includes("text-")
-                            ? item.color.replace("text-", "bg-") + "/10"
-                            : "bg-gray-100"
+                          ? item.color.replace("text-", "bg-") + "/10"
+                          : "bg-gray-100"
                           } rounded-full flex items-center justify-center mb-3 shadow-sm transition-all duration-300 group-hover:shadow-md`}
                       >
                         <FontAwesomeIcon
