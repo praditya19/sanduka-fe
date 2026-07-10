@@ -183,6 +183,96 @@ export const handlePrintLogic = async (
   }
 };
 
+export const handlePrintSingle = async (
+  member,
+  selectedBulan,
+  selectedTahun
+) => {
+  try {
+    if (!member) {
+      console.error("Data member kosong.");
+      return;
+    }
+
+    const bulan = selectedBulan || new Date().getMonth() + 1;
+    const tahun = selectedTahun || new Date().getFullYear();
+
+    const htmlContent = `
+      <html>
+        <head>
+          <title>Kartu Iuran Anggota</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            .card {
+              border: 1px solid #000;
+              padding: 20px;
+              max-width: 500px;
+              margin: auto;
+            }
+            h2 { text-align: center; }
+            .row { margin-bottom: 8px; }
+            .label { font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <h2>KARTU IURAN ANGGOTA</h2>
+            <p style="text-align:center;">Bulan: ${bulan} Tahun: ${tahun}</p>
+
+            <div class="row"><span class="label">Nama:</span> ${member.namaAnggota}</div>
+            <div class="row"><span class="label">NIP:</span> ${member.nip || "-"}</div>
+            <div class="row"><span class="label">NPA:</span> ${member.npaPgri || "-"}</div>
+            <div class="row"><span class="label">Cabang:</span> ${member.cabang}</div>
+            <div class="row"><span class="label">Unit Kerja:</span> ${member.unitKerja}</div>
+
+            <hr/>
+
+            <div class="row">PGRI: Rp ${parseInt(member.pgri || 0).toLocaleString("id-ID")}</div>
+            <div class="row">Sanduka: Rp ${parseInt(member.sanduka || 0).toLocaleString("id-ID")}</div>
+            <div class="row">Daspen: Rp ${parseInt(member.daspen || 0).toLocaleString("id-ID")}</div>
+            <div class="row">Derap: Rp ${parseInt(member.derap || 0).toLocaleString("id-ID")}</div>
+            <div class="row">Kalender: Rp ${parseInt(member.kalender || 0).toLocaleString("id-ID")}</div>
+
+            <div class="row">
+              Sumbangan:
+              ${
+                member.detailSumbangan && member.detailSumbangan.length > 0
+                  ? member.detailSumbangan
+                      .map(
+                        (d) =>
+                          `<div>${d.namaSumbangan}: Rp ${parseInt(
+                            d.jumlah || 0
+                          ).toLocaleString("id-ID")}</div>`
+                      )
+                      .join("")
+                  : `Rp ${parseInt(member.sumbangan || 0).toLocaleString("id-ID")}`
+              }
+            </div>
+
+            <hr/>
+
+            <div class="row"><strong>Total: Rp ${parseInt(
+              member.totalIuran || 0
+            ).toLocaleString("id-ID")}</strong></div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const printFrame = document.createElement("iframe");
+    printFrame.style.display = "none";
+    printFrame.srcdoc = htmlContent;
+    document.body.appendChild(printFrame);
+
+    printFrame.onload = () => {
+      printFrame.contentWindow.print();
+      setTimeout(() => document.body.removeChild(printFrame), 1000);
+    };
+  } catch (error) {
+    console.error("Error print single:", error);
+  }
+};
+
 export const exportToExcelLogic = async (
   data,
   selectedCabang,

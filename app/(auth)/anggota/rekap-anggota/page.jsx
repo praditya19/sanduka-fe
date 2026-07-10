@@ -33,6 +33,7 @@ import {
   getTotalSumbangan,
 } from "./utils/rekapUtils";
 import {
+  handlePrintSingle,
   handlePrintLogic,
   exportToExcelLogic,
   exportPotonganBankLogic,
@@ -1107,9 +1108,11 @@ function RekapAnggota() {
   };
 
   const handlePrint = useCallback(
-    () => handlePrintLogic(groupedData, selectedMonth, selectedYear),
-    [groupedData, selectedMonth, selectedYear],
+  (member) =>
+    handlePrintSingle(member, selectedMonth, selectedYear),
+  [selectedMonth, selectedYear],
   );
+  
   const exportToExcel = useCallback(
     () =>
       exportToExcelLogic(
