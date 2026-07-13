@@ -22,11 +22,23 @@ const formatRp = (v) => {
 const toNumber = (v) => Number(v || 0);
 
 export default function RekapitulasiSection() {
+  const [userRole, setUserRole] = useState(null);
+  const [userCabang, setUserCabang] = useState("");
+  const isSuperAdmin = userRole === "SUPERADMIN";
+
   const [loading, setLoading] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [mergedData, setMergedData] = useState([]);
   const [cabangList, setCabangList] = useState([]);
+
+  // Read role from session
+  useEffect(() => {
+    const role = sessionStorage.getItem("role");
+    const cabang = (sessionStorage.getItem("cabang") || "").toUpperCase();
+    setUserRole(role);
+    setUserCabang(cabang);
+  }, []);
 
   const bulanLabel = MONTHS.find(m => m.value === selectedMonth)?.label || "";
 
@@ -152,6 +164,39 @@ export default function RekapitulasiSection() {
   }, [mergedData]);
 
   const totalKeseluruhan = grandTotal.totalDefault + grandTotal.totalTambahan;
+
+  // Filter data for non-superadmin to only show their cabang
+  const filteredMergedData = useMemo(() => {
+    if (isSuperAdmin) return mergedData;
+    if (!userCabang) return mergedData;
+    return mergedData.filter(r => r.cabang.toUpperCase() === userCabang);
+  }, [mergedData, isSuperAdmin, userCabang]);
+
+  const filteredGrandTotal = useMemo(() => {
+    const zero = () => ({ iuranDefault: 0, iuranTambahan: 0, iuranTotal: 0, daspenDefault: 0, daspenTambahan: 0, daspenTotal: 0, derapDefault: 0, derapTambahan: 0, derapTotal: 0, kalenderDefault: 0, kalenderTambahan: 0, kalenderTotal: 0, hutDefault: 0, hutTambahan: 0, lainDefault: 0, lainTambahan: 0, totalDefault: 0, totalTambahan: 0 });
+    return filteredMergedData.reduce((acc, r) => ({
+      iuranDefault: acc.iuranDefault + r.iuranDefault,
+      iuranTambahan: acc.iuranTambahan + r.iuranTambahan,
+      iuranTotal: acc.iuranTotal + r.iuranTotal,
+      daspenDefault: acc.daspenDefault + r.daspenDefault,
+      daspenTambahan: acc.daspenTambahan + r.daspenTambahan,
+      daspenTotal: acc.daspenTotal + r.daspenTotal,
+      derapDefault: acc.derapDefault + r.derapDefault,
+      derapTambahan: acc.derapTambahan + r.derapTambahan,
+      derapTotal: acc.derapTotal + r.derapTotal,
+      kalenderDefault: acc.kalenderDefault + r.kalenderDefault,
+      kalenderTambahan: acc.kalenderTambahan + r.kalenderTambahan,
+      kalenderTotal: acc.kalenderTotal + r.kalenderTotal,
+      hutDefault: acc.hutDefault + r.hutDefault,
+      hutTambahan: acc.hutTambahan + r.hutTambahan,
+      lainDefault: acc.lainDefault + r.lainDefault,
+      lainTambahan: acc.lainTambahan + r.lainTambahan,
+      totalDefault: acc.totalDefault + r.totalDefault,
+      totalTambahan: acc.totalTambahan + r.totalTambahan,
+    }), zero());
+  }, [filteredMergedData]);
+
+  const filteredTotalKeseluruhan = filteredGrandTotal.totalDefault + filteredGrandTotal.totalTambahan;
 
   const handlePrint = () => window.print();
 
@@ -319,8 +364,8 @@ export default function RekapitulasiSection() {
                     ))}
                   </tr>
                 ))
-              ) : mergedData.length > 0 ? (
-                mergedData.map((r, i) => (
+              ) : filteredMergedData.length > 0 ? (
+                filteredMergedData.map((r, i) => (
                   <tr key={i} className="hover:bg-slate-50/80 transition-colors">
                     <td className="px-2 py-3 text-center font-bold text-slate-300">{r.no}</td>
                     <td className="px-3 py-3 font-bold text-slate-800 whitespace-nowrap">{r.cabang}</td>
@@ -355,31 +400,31 @@ export default function RekapitulasiSection() {
                 </tr>
               )}
             </tbody>
-            {mergedData.length > 0 && (
+            {filteredMergedData.length > 0 && (
               <tfoot>
                 <tr className="bg-slate-900 text-white font-bold text-[10px]">
                   <td className="px-2 py-4 text-center border-r border-slate-800" colSpan={2}>TOTAL</td>
-                  <td className="px-2 py-4 text-center">{formatRp(grandTotal.iuranDefault)}</td>
-                  <td className="px-2 py-4 text-center">{formatRp(grandTotal.iuranTambahan)}</td>
-                  <td className="px-2 py-4 text-center bg-emerald-500/20">{formatRp(grandTotal.iuranTotal)}</td>
-                  <td className="px-2 py-4 text-center">{formatRp(grandTotal.daspenDefault)}</td>
-                  <td className="px-2 py-4 text-center">{formatRp(grandTotal.daspenTambahan)}</td>
-                  <td className="px-2 py-4 text-center bg-rose-500/20">{formatRp(grandTotal.daspenTotal)}</td>
-                  <td className="px-2 py-4 text-center">{formatRp(grandTotal.derapDefault)}</td>
-                  <td className="px-2 py-4 text-center">{formatRp(grandTotal.derapTambahan)}</td>
-                  <td className="px-2 py-4 text-center bg-indigo-500/20">{formatRp(grandTotal.derapTotal)}</td>
-                  <td className="px-2 py-4 text-center">{formatRp(grandTotal.kalenderDefault)}</td>
-                  <td className="px-2 py-4 text-center">{formatRp(grandTotal.kalenderTambahan)}</td>
-                  <td className="px-2 py-4 text-center bg-amber-500/20">{formatRp(grandTotal.kalenderTotal)}</td>
-                  <td className="px-2 py-4 text-center">{formatRp(grandTotal.hutDefault)}</td>
-                  <td className="px-2 py-4 text-center">{formatRp(grandTotal.hutTambahan)}</td>
-                  <td className="px-2 py-4 text-center bg-cyan-500/20">{formatRp(grandTotal.hutDefault + grandTotal.hutTambahan)}</td>
-                  <td className="px-2 py-4 text-center">{formatRp(grandTotal.lainDefault)}</td>
-                  <td className="px-2 py-4 text-center">{formatRp(grandTotal.lainTambahan)}</td>
-                  <td className="px-2 py-4 text-center bg-orange-500/20">{formatRp(grandTotal.lainDefault + grandTotal.lainTambahan)}</td>
-                  <td className="px-2 py-4 text-center bg-amber-500/20">{formatRp(grandTotal.totalDefault)}</td>
-                  <td className="px-2 py-4 text-center bg-amber-500/20">{formatRp(grandTotal.totalTambahan)}</td>
-                  <td className="px-2 py-4 text-center bg-amber-500/20 font-bold">{formatRp(grandTotal.totalDefault + grandTotal.totalTambahan)}</td>
+                  <td className="px-2 py-4 text-center">{formatRp(filteredGrandTotal.iuranDefault)}</td>
+                  <td className="px-2 py-4 text-center">{formatRp(filteredGrandTotal.iuranTambahan)}</td>
+                  <td className="px-2 py-4 text-center bg-emerald-500/20">{formatRp(filteredGrandTotal.iuranTotal)}</td>
+                  <td className="px-2 py-4 text-center">{formatRp(filteredGrandTotal.daspenDefault)}</td>
+                  <td className="px-2 py-4 text-center">{formatRp(filteredGrandTotal.daspenTambahan)}</td>
+                  <td className="px-2 py-4 text-center bg-rose-500/20">{formatRp(filteredGrandTotal.daspenTotal)}</td>
+                  <td className="px-2 py-4 text-center">{formatRp(filteredGrandTotal.derapDefault)}</td>
+                  <td className="px-2 py-4 text-center">{formatRp(filteredGrandTotal.derapTambahan)}</td>
+                  <td className="px-2 py-4 text-center bg-indigo-500/20">{formatRp(filteredGrandTotal.derapTotal)}</td>
+                  <td className="px-2 py-4 text-center">{formatRp(filteredGrandTotal.kalenderDefault)}</td>
+                  <td className="px-2 py-4 text-center">{formatRp(filteredGrandTotal.kalenderTambahan)}</td>
+                  <td className="px-2 py-4 text-center bg-amber-500/20">{formatRp(filteredGrandTotal.kalenderTotal)}</td>
+                  <td className="px-2 py-4 text-center">{formatRp(filteredGrandTotal.hutDefault)}</td>
+                  <td className="px-2 py-4 text-center">{formatRp(filteredGrandTotal.hutTambahan)}</td>
+                  <td className="px-2 py-4 text-center bg-cyan-500/20">{formatRp(filteredGrandTotal.hutDefault + filteredGrandTotal.hutTambahan)}</td>
+                  <td className="px-2 py-4 text-center">{formatRp(filteredGrandTotal.lainDefault)}</td>
+                  <td className="px-2 py-4 text-center">{formatRp(filteredGrandTotal.lainTambahan)}</td>
+                  <td className="px-2 py-4 text-center bg-orange-500/20">{formatRp(filteredGrandTotal.lainDefault + filteredGrandTotal.lainTambahan)}</td>
+                  <td className="px-2 py-4 text-center bg-amber-500/20">{formatRp(filteredGrandTotal.totalDefault)}</td>
+                  <td className="px-2 py-4 text-center bg-amber-500/20">{formatRp(filteredGrandTotal.totalTambahan)}</td>
+                  <td className="px-2 py-4 text-center bg-amber-500/20 font-bold">{formatRp(filteredGrandTotal.totalDefault + filteredGrandTotal.totalTambahan)}</td>
                 </tr>
               </tfoot>
             )}

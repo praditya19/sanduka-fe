@@ -20,6 +20,10 @@ import {
 } from "react-icons/fa";
 
 const DerapSection = () => {
+  const [userRole, setUserRole] = useState(null);
+  const [userCabang, setUserCabang] = useState("");
+  const isSuperAdmin = userRole === "SUPERADMIN";
+
   const [besaran, setBesaran] = useState({
     provinsi: 0,
     kabupaten: 0,
@@ -50,6 +54,17 @@ const DerapSection = () => {
   const [isSaved, setIsSaved] = useState(false);
   const [savedDataCount, setSavedDataCount] = useState(0);
   const [saving, setSaving] = useState(false);
+
+  // Read role from session
+  useEffect(() => {
+    const role = sessionStorage.getItem("role");
+    const cabang = (sessionStorage.getItem("cabang") || "").toUpperCase();
+    setUserRole(role);
+    setUserCabang(cabang);
+    if (role === "ADMIN" && cabang) {
+      setSearchQuery(cabang);
+    }
+  }, []);
 
   // Dropdown Cabang Standard State
   const [showCabangDropdown, setShowCabangDropdown] = useState(false);
@@ -902,7 +917,7 @@ const DerapSection = () => {
                   </div>
                   <div>
                     <h4 className="text-lg font-bold text-slate-800 tracking-tight">
-                    REKAPITULASI DERAP
+                      REKAPITULASI DERAP
                     </h4>
                     <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
                       Derap - {selectedMonth} {selectedYear}
@@ -918,15 +933,17 @@ const DerapSection = () => {
                         value={searchQuery || "Semua Cabang"}
                         readOnly
                         onClick={() => {
-                          setShowCabangDropdown(!showCabangDropdown);
-                          setFilteredCabangList(cabangList);
+                          if (isSuperAdmin) {
+                            setShowCabangDropdown(!showCabangDropdown);
+                            setFilteredCabangList(cabangList);
+                          }
                         }}
-                        className="w-full pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-lg outline-none font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500/20 transition-all text-xs cursor-pointer hover:border-indigo-300 shadow-sm"
+                        className={`w-full pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-lg outline-none font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500/20 transition-all text-xs shadow-sm ${isSuperAdmin ? "cursor-pointer hover:border-indigo-300" : "cursor-default opacity-70"}`}
                         placeholder="Pilih Cabang"
                       />
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-[8px] transition-transform duration-300 group-hover:text-indigo-500">
+                      {isSuperAdmin && <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-[8px] transition-transform duration-300 group-hover:text-indigo-500">
                         {showCabangDropdown ? "▲" : "▼"}
-                      </div>
+                      </div>}
                     </div>
                     {showCabangDropdown && (
                       <motion.div
@@ -951,11 +968,10 @@ const DerapSection = () => {
                         <ul className="overflow-y-auto py-2 custom-scrollbar">
                           <li
                             onClick={() => handleSelectCabang("")}
-                            className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${
-                              !searchQuery
-                                ? "bg-indigo-50 text-indigo-600 border-indigo-500"
-                                : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
-                            }`}
+                            className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${!searchQuery
+                              ? "bg-indigo-50 text-indigo-600 border-indigo-500"
+                              : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
+                              }`}
                           >
                             Semua Cabang
                           </li>
@@ -969,11 +985,10 @@ const DerapSection = () => {
                               <li
                                 key={idx}
                                 onClick={() => handleSelectCabang(cab.kecamatan)}
-                                className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${
-                                  searchQuery === cab.kecamatan
-                                    ? "bg-indigo-50 text-indigo-600 border-indigo-500"
-                                    : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
-                                }`}
+                                className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${searchQuery === cab.kecamatan
+                                  ? "bg-indigo-50 text-indigo-600 border-indigo-500"
+                                  : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
+                                  }`}
                               >
                                 {cab.kecamatan}
                               </li>
@@ -1073,7 +1088,7 @@ const DerapSection = () => {
                         "Kurang",
                         "Setoran Tunai",
                         "Selisih",
-                        "Action",
+                        ...(isSuperAdmin ? ["Action"] : []),
                       ].map((h, i) => (
                         <th
                           key={i}
@@ -1096,10 +1111,10 @@ const DerapSection = () => {
                           </tr>
                         ))
                     ) : tableData.filter((r) =>
-                        r.cabang
-                          ?.toLowerCase()
-                          .includes(searchQuery.toLowerCase()),
-                      ).length > 0 ? (
+                      r.cabang
+                        ?.toLowerCase()
+                        .includes(searchQuery.toLowerCase()),
+                    ).length > 0 ? (
                       tableData
                         .filter((r) =>
                           r.cabang
@@ -1151,25 +1166,27 @@ const DerapSection = () => {
                             </td>
                             <td className="px-4 py-4 text-slate-400">-</td>
                             <td className="px-4 py-4 text-slate-400">-</td>
-                            <td className="px-4 py-4">
-                              <div className="flex items-center justify-center gap-2">
-                                <button
-                                  onClick={() => handleEditClick(row)}
-                                  className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
-                                  title="Edit"
-                                >
-                                  <FaEdit className="text-lg" />
-                                </button>
-                                <button
-                                  onClick={() => handleDelete(row.id)}
-                                  disabled={loadingAction}
-                                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50"
-                                  title="Hapus"
-                                >
-                                  <FaTrash className="text-lg" />
-                                </button>
-                              </div>
-                            </td>
+                            {isSuperAdmin && (
+                              <td className="px-4 py-4">
+                                <div className="flex items-center justify-center gap-2">
+                                  <button
+                                    onClick={() => handleEditClick(row)}
+                                    className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                                    title="Edit"
+                                  >
+                                    <FaEdit className="text-lg" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDelete(row.id)}
+                                    disabled={loadingAction}
+                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50"
+                                    title="Hapus"
+                                  >
+                                    <FaTrash className="text-lg" />
+                                  </button>
+                                </div>
+                              </td>
+                            )}
                           </tr>
                         ))
                     ) : (
@@ -1188,158 +1205,156 @@ const DerapSection = () => {
                         ?.toLowerCase()
                         .includes(searchQuery.toLowerCase()),
                     ).length > 0 && (
-                      <tr className="bg-indigo-50 border-t-2 border-indigo-200 font-bold text-center text-[11px]">
-                        <td
-                          colSpan={2}
-                          className="px-4 py-4 text-indigo-700 font-bold text-right"
-                        >
-                          TOTAL REKAP
-                        </td>
-                        <td className="px-4 py-4 text-indigo-600">
-                          {tableData
-                            .filter((r) =>
-                              r.cabang
-                                ?.toLowerCase()
-                                .includes(searchQuery.toLowerCase()),
-                            )
-                            .reduce(
-                              (sum, row) => sum + (parseInt(row.jumlah) || 0),
-                              0,
+                        <tr className="bg-indigo-50 border-t-2 border-indigo-200 font-bold text-center text-[11px]">
+                          <td
+                            colSpan={2}
+                            className="px-4 py-4 text-indigo-700 font-bold text-right"
+                          >
+                            TOTAL REKAP
+                          </td>
+                          <td className="px-4 py-4 text-indigo-600">
+                            {tableData
+                              .filter((r) =>
+                                r.cabang
+                                  ?.toLowerCase()
+                                  .includes(searchQuery.toLowerCase()),
+                              )
+                              .reduce(
+                                (sum, row) => sum + (parseInt(row.jumlah) || 0),
+                                0,
+                              )}
+                          </td>
+                          <td className="px-4 py-4 text-indigo-600">
+                            {formatCurrency(
+                              tableData
+                                .filter((r) =>
+                                  r.cabang
+                                    ?.toLowerCase()
+                                    .includes(searchQuery.toLowerCase()),
+                                )
+                                .reduce(
+                                  (sum, row) =>
+                                    sum + (parseInt(row.peruntukanProvinsi) || 0),
+                                  0,
+                                ),
                             )}
-                        </td>
-                        <td className="px-4 py-4 text-indigo-600">
-                          {formatCurrency(
-                            tableData
-                              .filter((r) =>
-                                r.cabang
-                                  ?.toLowerCase()
-                                  .includes(searchQuery.toLowerCase()),
-                              )
-                              .reduce(
-                                (sum, row) =>
-                                  sum + (parseInt(row.peruntukanProvinsi) || 0),
-                                0,
-                              ),
-                          )}
-                        </td>
-                        <td className="px-4 py-4 text-indigo-600">
-                          {formatCurrency(
-                            tableData
-                              .filter((r) =>
-                                r.cabang
-                                  ?.toLowerCase()
-                                  .includes(searchQuery.toLowerCase()),
-                              )
-                              .reduce(
-                                (sum, row) =>
-                                  sum +
-                                  (parseInt(row.peruntukanKabupaten) || 0),
-                                0,
-                              ),
-                          )}
-                        </td>
-                        <td className="px-4 py-4 text-indigo-600">
-                          {formatCurrency(
-                            tableData
-                              .filter((r) =>
-                                r.cabang
-                                  ?.toLowerCase()
-                                  .includes(searchQuery.toLowerCase()),
-                              )
-                              .reduce(
-                                (sum, row) =>
-                                  sum + (parseInt(row.peruntukanCabang) || 0),
-                                0,
-                              ),
-                          )}
-                        </td>
-                        <td className="px-4 py-4 text-emerald-600 font-bold">
-                          {formatCurrency(
-                            tableData
-                              .filter((r) =>
-                                r.cabang
-                                  ?.toLowerCase()
-                                  .includes(searchQuery.toLowerCase()),
-                              )
-                              .reduce(
-                                (sum, row) =>
-                                  sum + (parseInt(row.tambahanCabang) || 0),
-                                0,
-                              ),
-                          )}
-                        </td>
-                        <td className="px-4 py-4 text-indigo-600 font-bold">
-                          {formatCurrency(
-                            tableData
-                              .filter((r) =>
-                                r.cabang
-                                  ?.toLowerCase()
-                                  .includes(searchQuery.toLowerCase()),
-                              )
-                              .reduce(
-                                (sum, row) =>
-                                  sum + (parseInt(row.totalCabang) || 0),
-                                0,
-                              ),
-                          )}
-                        </td>
-                        <td className="px-4 py-4 text-amber-600 bg-amber-50/30 font-bold">
-                          {formatCurrency(
-                            tableData
-                              .filter((r) =>
-                                r.cabang
-                                  ?.toLowerCase()
-                                  .includes(searchQuery.toLowerCase()),
-                              )
-                              .reduce(
-                                (sum, row) =>
-                                  sum +
-                                  (parseInt(row.peruntukanProvinsi) || 0) +
-                                  (parseInt(row.peruntukanKabupaten) || 0),
-                                0,
-                              ),
-                          )}
-                        </td>
-                        <td className="px-4 py-4 text-emerald-600 font-bold">
-                          {formatCurrency(
-                            tableData
-                              .filter((r) =>
-                                r.cabang
-                                  ?.toLowerCase()
-                                  .includes(searchQuery.toLowerCase()),
-                              )
-                              .reduce(
-                                (sum, row) =>
-                                  sum + (parseInt(row.transfer) || 0),
-                                0,
-                              ),
-                          )}
-                        </td>
-                        <td className="px-4 py-4 text-orange-600 font-bold">
-                          {formatCurrency(
-                            tableData
-                              .filter((r) =>
-                                r.cabang
-                                  ?.toLowerCase()
-                                  .includes(searchQuery.toLowerCase()),
-                              )
-                              .reduce(
-                                (sum, row) => sum + (parseInt(row.kurang) || 0),
-                                0,
-                              ),
-                          )}
-                        </td>
-                        <td className="px-4 py-4 text-slate-400 text-center">
-                          -
-                        </td>
-                        <td className="px-4 py-4 text-slate-400 text-center">
-                          -
-                        </td>
-                        <td className="px-4 py-4 text-slate-400 text-center">
-                          -
-                        </td>
-                      </tr>
-                    )}
+                          </td>
+                          <td className="px-4 py-4 text-indigo-600">
+                            {formatCurrency(
+                              tableData
+                                .filter((r) =>
+                                  r.cabang
+                                    ?.toLowerCase()
+                                    .includes(searchQuery.toLowerCase()),
+                                )
+                                .reduce(
+                                  (sum, row) =>
+                                    sum +
+                                    (parseInt(row.peruntukanKabupaten) || 0),
+                                  0,
+                                ),
+                            )}
+                          </td>
+                          <td className="px-4 py-4 text-indigo-600">
+                            {formatCurrency(
+                              tableData
+                                .filter((r) =>
+                                  r.cabang
+                                    ?.toLowerCase()
+                                    .includes(searchQuery.toLowerCase()),
+                                )
+                                .reduce(
+                                  (sum, row) =>
+                                    sum + (parseInt(row.peruntukanCabang) || 0),
+                                  0,
+                                ),
+                            )}
+                          </td>
+                          <td className="px-4 py-4 text-emerald-600 font-bold">
+                            {formatCurrency(
+                              tableData
+                                .filter((r) =>
+                                  r.cabang
+                                    ?.toLowerCase()
+                                    .includes(searchQuery.toLowerCase()),
+                                )
+                                .reduce(
+                                  (sum, row) =>
+                                    sum + (parseInt(row.tambahanCabang) || 0),
+                                  0,
+                                ),
+                            )}
+                          </td>
+                          <td className="px-4 py-4 text-indigo-600 font-bold">
+                            {formatCurrency(
+                              tableData
+                                .filter((r) =>
+                                  r.cabang
+                                    ?.toLowerCase()
+                                    .includes(searchQuery.toLowerCase()),
+                                )
+                                .reduce(
+                                  (sum, row) =>
+                                    sum + (parseInt(row.totalCabang) || 0),
+                                  0,
+                                ),
+                            )}
+                          </td>
+                          <td className="px-4 py-4 text-amber-600 bg-amber-50/30 font-bold">
+                            {formatCurrency(
+                              tableData
+                                .filter((r) =>
+                                  r.cabang
+                                    ?.toLowerCase()
+                                    .includes(searchQuery.toLowerCase()),
+                                )
+                                .reduce(
+                                  (sum, row) =>
+                                    sum +
+                                    (parseInt(row.peruntukanProvinsi) || 0) +
+                                    (parseInt(row.peruntukanKabupaten) || 0),
+                                  0,
+                                ),
+                            )}
+                          </td>
+                          <td className="px-4 py-4 text-emerald-600 font-bold">
+                            {formatCurrency(
+                              tableData
+                                .filter((r) =>
+                                  r.cabang
+                                    ?.toLowerCase()
+                                    .includes(searchQuery.toLowerCase()),
+                                )
+                                .reduce(
+                                  (sum, row) =>
+                                    sum + (parseInt(row.transfer) || 0),
+                                  0,
+                                ),
+                            )}
+                          </td>
+                          <td className="px-4 py-4 text-orange-600 font-bold">
+                            {formatCurrency(
+                              tableData
+                                .filter((r) =>
+                                  r.cabang
+                                    ?.toLowerCase()
+                                    .includes(searchQuery.toLowerCase()),
+                                )
+                                .reduce(
+                                  (sum, row) => sum + (parseInt(row.kurang) || 0),
+                                  0,
+                                ),
+                            )}
+                          </td>
+                          <td className="px-4 py-4 text-slate-400 text-center">
+                            -
+                          </td>
+                          <td className="px-4 py-4 text-slate-400 text-center">
+                            -
+                          </td>
+                          {isSuperAdmin && <td className="px-4 py-4 text-slate-400 text-center">-</td>}
+                        </tr>
+                      )}
                   </tbody>
                 </table>
               </div>

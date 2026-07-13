@@ -20,6 +20,10 @@ import {
 } from "react-icons/fa";
 
 const KalenderSection = () => {
+  const [userRole, setUserRole] = useState(null);
+  const [userCabang, setUserCabang] = useState("");
+  const isSuperAdmin = userRole === "SUPERADMIN";
+
   const [besaran, setBesaran] = useState({
     provinsi: 0,
     kabupaten: 0,
@@ -47,6 +51,17 @@ const KalenderSection = () => {
   });
   const [loadingAction, setLoadingAction] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+
+  // Read role from session
+  useEffect(() => {
+    const role = sessionStorage.getItem("role");
+    const cabang = (sessionStorage.getItem("cabang") || "").toUpperCase();
+    setUserRole(role);
+    setUserCabang(cabang);
+    if (role === "ADMIN" && cabang) {
+      setSearchQuery(cabang);
+    }
+  }, []);
 
   // Dropdown Cabang Standard State
   const [showCabangDropdown, setShowCabangDropdown] = useState(false);
@@ -888,15 +903,17 @@ const KalenderSection = () => {
                         value={searchQuery || "Semua Cabang"}
                         readOnly
                         onClick={() => {
-                          setShowCabangDropdown(!showCabangDropdown);
-                          setFilteredCabangList(cabangList);
+                          if (isSuperAdmin) {
+                            setShowCabangDropdown(!showCabangDropdown);
+                            setFilteredCabangList(cabangList);
+                          }
                         }}
-                        className="w-full pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-lg outline-none font-bold text-slate-700 focus:ring-2 focus:ring-amber-500/20 transition-all text-xs cursor-pointer hover:border-amber-300 shadow-sm"
+                        className={`w-full pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-lg outline-none font-bold text-slate-700 focus:ring-2 focus:ring-amber-500/20 transition-all text-xs shadow-sm ${isSuperAdmin ? "cursor-pointer hover:border-amber-300" : "cursor-default opacity-70"}`}
                         placeholder="Pilih Cabang"
                       />
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-[8px] transition-transform duration-300 group-hover:text-amber-500">
+                      {isSuperAdmin && <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-[8px] transition-transform duration-300 group-hover:text-amber-500">
                         {showCabangDropdown ? "▲" : "▼"}
-                      </div>
+                      </div>}
                     </div>
                     {showCabangDropdown && (
                       <motion.div
@@ -921,11 +938,10 @@ const KalenderSection = () => {
                         <ul className="overflow-y-auto py-2 custom-scrollbar">
                           <li
                             onClick={() => handleSelectCabang("")}
-                            className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${
-                              !searchQuery
-                                ? "bg-amber-50 text-amber-600 border-amber-500"
-                                : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
-                            }`}
+                            className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${!searchQuery
+                              ? "bg-amber-50 text-amber-600 border-amber-500"
+                              : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
+                              }`}
                           >
                             Semua Cabang
                           </li>
@@ -939,11 +955,10 @@ const KalenderSection = () => {
                               <li
                                 key={idx}
                                 onClick={() => handleSelectCabang(cab.kecamatan)}
-                                className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${
-                                  searchQuery === cab.kecamatan
-                                    ? "bg-amber-50 text-amber-600 border-amber-500"
-                                    : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
-                                }`}
+                                className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${searchQuery === cab.kecamatan
+                                  ? "bg-amber-50 text-amber-600 border-amber-500"
+                                  : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
+                                  }`}
                               >
                                 {cab.kecamatan}
                               </li>
@@ -1043,7 +1058,7 @@ const KalenderSection = () => {
                         "Kurang",
                         "Setoran Tunai",
                         "Selisih",
-                        "Action",
+                        ...(isSuperAdmin ? ["Action"] : []),
                       ].map((h, i) => (
                         <th
                           key={i}
@@ -1121,25 +1136,27 @@ const KalenderSection = () => {
                             </td>
                             <td className="px-4 py-4 text-slate-400">-</td>
                             <td className="px-4 py-4 text-slate-400">-</td>
-                            <td className="px-4 py-4">
-                              <div className="flex items-center justify-center gap-2">
-                                <button
-                                  onClick={() => handleEditClick(row)}
-                                  className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
-                                  title="Edit"
-                                >
-                                  <FaEdit className="text-lg" />
-                                </button>
-                                <button
-                                  onClick={() => handleDelete(row.id)}
-                                  disabled={loadingAction}
-                                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50"
-                                  title="Hapus"
-                                >
-                                  <FaTrash className="text-lg" />
-                                </button>
-                              </div>
-                            </td>
+                            {isSuperAdmin && (
+                              <td className="px-4 py-4">
+                                <div className="flex items-center justify-center gap-2">
+                                  <button
+                                    onClick={() => handleEditClick(row)}
+                                    className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                                    title="Edit"
+                                  >
+                                    <FaEdit className="text-lg" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDelete(row.id)}
+                                    disabled={loadingAction}
+                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50"
+                                    title="Hapus"
+                                  >
+                                    <FaTrash className="text-lg" />
+                                  </button>
+                                </div>
+                              </td>
+                            )}
                           </tr>
                         ))
                     ) : (
@@ -1301,7 +1318,7 @@ const KalenderSection = () => {
                           </td>
                           <td className="px-4 py-4 text-slate-400">-</td>
                           <td className="px-4 py-4 text-slate-400">-</td>
-                          <td className="px-4 py-4 text-slate-400">-</td>
+                          {isSuperAdmin && <td className="px-4 py-4 text-slate-400">-</td>}
                         </tr>
                       )}
                   </tbody>

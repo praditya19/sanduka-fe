@@ -20,9 +20,17 @@ const QuickActions = () => {
     setRole(sessionStorage.getItem("role"));
   }, []);
 
-  if (role !== "SUPERADMIN") return null;
+  const baseActions = [
+    {
+      title: "Input Iuran",
+      subtitle: "Update besaran & target",
+      icon: <FaPlus />,
+      color: "bg-emerald-500",
+      href: "/keuangan-new/input",
+    },
+  ];
 
-  const actions = [
+  const superAdminActions = [
     {
       title: "Input Iuran",
       subtitle: "Update besaran & target",
@@ -81,10 +89,15 @@ const QuickActions = () => {
     },
   ];
 
+  const isAdminOrSuperAdmin = role === "SUPERADMIN" || role === "ADMIN";
+  const actions = role === "SUPERADMIN" ? superAdminActions : isAdminOrSuperAdmin ? baseActions : [];
+
+  if (!isAdminOrSuperAdmin) return null;
+
   return (
     <div className="mb-8">
       <h2 className="text-xl font-bold text-gray-800 mb-4 tracking-tight uppercase text-xs">Akses Cepat</h2>
-      <div className="grid grid-cols-2 md:grid-cols-7 gap-4">
+      <div className={`grid grid-cols-2 gap-4 ${role === "SUPERADMIN" ? "md:grid-cols-7" : "md:grid-cols-1 max-w-xs"}`}>
         {actions.map((action, index) => (
           <Link href={action.href} key={index}>
             <motion.div

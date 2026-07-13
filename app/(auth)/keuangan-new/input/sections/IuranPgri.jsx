@@ -28,6 +28,11 @@ import {
 
 const IuranPgriSection = () => {
   const router = useRouter();
+  // Role & Cabang from session
+  const [userRole, setUserRole] = useState(null);
+  const [userCabang, setUserCabang] = useState("");
+  const isSuperAdmin = userRole === "SUPERADMIN";
+
   // Besaran Iuran State
   const [besaran, setBesaran] = useState({
     pb: 0,
@@ -84,6 +89,17 @@ const IuranPgriSection = () => {
   const [filteredCabangList, setFilteredCabangList] = useState([]);
   const [searchDropCabang, setSearchDropCabang] = useState("");
   const cabangRef = React.useRef(null);
+
+  // Read role from session
+  useEffect(() => {
+    const role = sessionStorage.getItem("role");
+    const cabang = (sessionStorage.getItem("cabang") || "").toUpperCase();
+    setUserRole(role);
+    setUserCabang(cabang);
+    if (role === "ADMIN" && cabang) {
+      setSearchQuery(cabang);
+    }
+  }, []);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -337,7 +353,7 @@ const IuranPgriSection = () => {
         // Ambil pembayaran dari iuran_anggota per cabang.
         const pembayaran =
           pembayaranPerCabang[
-            (cabName || "").toString().trim().replace(/\s+/g, " ").toUpperCase()
+          (cabName || "").toString().trim().replace(/\s+/g, " ").toUpperCase()
           ] || 0;
         const selisih = totalTagihan - pembayaran;
 
@@ -647,8 +663,8 @@ const IuranPgriSection = () => {
       </div>
 
       <div className="p-3 sm:p-6 space-y-6 sm:space-y-8 overflow-y-auto">
-        {/* Top Section: Form Besaran (Full Width) */}
-        <motion.div
+        {/* Top Section: Form Besaran (Full Width) - Only SUPERADMIN */}
+        {isSuperAdmin && <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-[20px] sm:rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden"
@@ -752,7 +768,7 @@ const IuranPgriSection = () => {
               </button>
             </div>
           </div>
-        </motion.div>
+        </motion.div>}
 
         {/* Bottom Section: Laporan */}
         <div className="space-y-6">
@@ -777,11 +793,10 @@ const IuranPgriSection = () => {
                   setActiveSubTab("data-iuran");
                   setCurrentPage(1);
                 }}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-[15px] font-bold text-[9px] uppercase tracking-wider transition-all duration-300 ${
-                  activeSubTab === "data-iuran"
-                    ? "bg-white text-indigo-600 shadow-lg"
-                    : "text-slate-400 hover:text-slate-600"
-                }`}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-[15px] font-bold text-[9px] uppercase tracking-wider transition-all duration-300 ${activeSubTab === "data-iuran"
+                  ? "bg-white text-indigo-600 shadow-lg"
+                  : "text-slate-400 hover:text-slate-600"
+                  }`}
               >
                 <FaChartBar
                   className={
@@ -795,11 +810,10 @@ const IuranPgriSection = () => {
                   setActiveSubTab("peruntukan");
                   setCurrentPage(1);
                 }}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-[15px] font-bold text-[9px] uppercase tracking-wider transition-all duration-300 ${
-                  activeSubTab === "peruntukan"
-                    ? "bg-white text-indigo-600 shadow-lg"
-                    : "text-slate-400 hover:text-slate-600"
-                }`}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-[15px] font-bold text-[9px] uppercase tracking-wider transition-all duration-300 ${activeSubTab === "peruntukan"
+                  ? "bg-white text-indigo-600 shadow-lg"
+                  : "text-slate-400 hover:text-slate-600"
+                  }`}
               >
                 <FaTable
                   className={
@@ -946,17 +960,19 @@ const IuranPgriSection = () => {
                                     value={searchQuery || "Semua Cabang"}
                                     readOnly
                                     onClick={() => {
-                                      setShowCabangDropdown(
-                                        !showCabangDropdown,
-                                      );
-                                      setFilteredCabangList(cabangList);
+                                      if (isSuperAdmin) {
+                                        setShowCabangDropdown(
+                                          !showCabangDropdown,
+                                        );
+                                        setFilteredCabangList(cabangList);
+                                      }
                                     }}
-                                    className="w-full pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-lg outline-none font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500/20 transition-all text-xs cursor-pointer hover:border-indigo-300 shadow-sm"
+                                    className={`w-full pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-lg outline-none font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500/20 transition-all text-xs shadow-sm ${isSuperAdmin ? "cursor-pointer hover:border-indigo-300" : "cursor-default opacity-70"}`}
                                     placeholder="Pilih Cabang"
                                   />
-                                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-[8px] transition-transform duration-300 group-hover:text-indigo-500">
+                                  {isSuperAdmin && <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-[8px] transition-transform duration-300 group-hover:text-indigo-500">
                                     {showCabangDropdown ? "▲" : "▼"}
-                                  </div>
+                                  </div>}
                                 </div>
                                 {showCabangDropdown && (
                                   <motion.div
@@ -983,11 +999,10 @@ const IuranPgriSection = () => {
                                     <ul className="overflow-y-auto py-2 custom-scrollbar">
                                       <li
                                         onClick={() => handleSelectCabang("")}
-                                        className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${
-                                          !searchQuery
-                                            ? "bg-indigo-50 text-indigo-600 border-indigo-500"
-                                            : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
-                                        }`}
+                                        className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${!searchQuery
+                                          ? "bg-indigo-50 text-indigo-600 border-indigo-500"
+                                          : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
+                                          }`}
                                       >
                                         Semua Cabang
                                       </li>
@@ -1003,11 +1018,10 @@ const IuranPgriSection = () => {
                                             onClick={() =>
                                               handleSelectCabang(cab.kecamatan)
                                             }
-                                            className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${
-                                              searchQuery === cab.kecamatan
-                                                ? "bg-indigo-50 text-indigo-600 border-indigo-500"
-                                                : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
-                                            }`}
+                                            className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${searchQuery === cab.kecamatan
+                                              ? "bg-indigo-50 text-indigo-600 border-indigo-500"
+                                              : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
+                                              }`}
                                           >
                                             {cab.kecamatan}
                                           </li>
@@ -1097,7 +1111,7 @@ const IuranPgriSection = () => {
                                   "Dana Tunai",
                                   "Pembayaran",
                                   "Selisih",
-                                  "Action",
+                                  ...(isSuperAdmin ? ["Action"] : []),
                                 ].map((h, i) => (
                                   <th
                                     key={i}
@@ -1198,24 +1212,26 @@ const IuranPgriSection = () => {
                                             )}
                                           </span>
                                         </td>
-                                        <td className="px-3 py-4">
-                                          <div className="flex items-center justify-center gap-2">
-                                            <button
-                                              onClick={() => handleEdit(row)}
-                                              className="w-8 h-8 flex items-center justify-center bg-blue-50 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition-all shadow-sm"
-                                              title="Edit"
-                                            >
-                                              <FaEdit size={12} />
-                                            </button>
-                                            <button
-                                              onClick={() => handleDelete(row)}
-                                              className="w-8 h-8 flex items-center justify-center bg-rose-50 text-rose-500 rounded-lg hover:bg-rose-500 hover:text-white transition-all shadow-sm"
-                                              title="Delete"
-                                            >
-                                              <FaTrash size={12} />
-                                            </button>
-                                          </div>
-                                        </td>
+                                        {isSuperAdmin && (
+                                          <td className="px-3 py-4">
+                                            <div className="flex items-center justify-center gap-2">
+                                              <button
+                                                onClick={() => handleEdit(row)}
+                                                className="w-8 h-8 flex items-center justify-center bg-blue-50 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition-all shadow-sm"
+                                                title="Edit"
+                                              >
+                                                <FaEdit size={12} />
+                                              </button>
+                                              <button
+                                                onClick={() => handleDelete(row)}
+                                                className="w-8 h-8 flex items-center justify-center bg-rose-50 text-rose-500 rounded-lg hover:bg-rose-500 hover:text-white transition-all shadow-sm"
+                                                title="Delete"
+                                              >
+                                                <FaTrash size={12} />
+                                              </button>
+                                            </div>
+                                          </td>
+                                        )}
                                       </tr>
                                     );
                                   })}
@@ -1271,7 +1287,7 @@ const IuranPgriSection = () => {
                                     <td className="px-3 py-5 bg-rose-500/20 text-white">
                                       {formatCurrency(columnTotals[13])}
                                     </td>
-                                    <td className="px-3 py-5">-</td>
+                                    {isSuperAdmin && <td className="px-3 py-5">-</td>}
                                   </tr>
                                 </>
                               ) : (

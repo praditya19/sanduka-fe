@@ -6,11 +6,11 @@ import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  FaCoins, 
-  FaHandHoldingHeart, 
-  FaNewspaper, 
-  FaCalendarAlt, 
+import {
+  FaCoins,
+  FaHandHoldingHeart,
+  FaNewspaper,
+  FaCalendarAlt,
   FaEllipsisH,
   FaChevronRight,
   FaChartBar
@@ -37,14 +37,16 @@ function KeuanganInputContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab") || "iuran-pgri";
-  
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(tabParam);
   const [loading, setLoading] = useState(false);
+  const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
     const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
     setIsSidebarOpen(sidebarState);
+    setUserRole(sessionStorage.getItem("role"));
   }, []);
 
   const toggleSidebar = () => {
@@ -52,6 +54,25 @@ function KeuanganInputContent() {
     setIsSidebarOpen(newState);
     localStorage.setItem("isSidebarOpen", newState);
   };
+
+  const isAdminOrSuperAdmin = userRole === "SUPERADMIN" || userRole === "ADMIN";
+
+  if (userRole !== null && !isAdminOrSuperAdmin) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row overflow-hidden">
+        <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+        <div className={`flex-1 transition-all duration-300 ${isSidebarOpen ? "md:ml-64" : "ml-0"}`}>
+          <HeaderMenu toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
+          <HeaderMobile toggleSidebar={toggleSidebar} />
+          <main className="p-4 md:p-8 mt-24 md:mt-20 max-w-[95%] mx-auto">
+            <div className="flex flex-col items-center justify-center py-20">
+              <p className="text-slate-400 font-bold text-lg">Anda tidak memiliki akses ke halaman ini.</p>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   const tabs = [
     { id: "iuran-pgri", label: "Iuran PGRI", icon: <FaCoins />, color: "text-emerald-500", bg: "bg-emerald-50" },
@@ -65,7 +86,7 @@ function KeuanganInputContent() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row overflow-hidden">
       <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-      
+
       <div className={`flex-1 transition-all duration-300 ${isSidebarOpen ? "md:ml-64" : "ml-0"}`}>
         <HeaderMenu toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
         <HeaderMobile toggleSidebar={toggleSidebar} />
@@ -91,29 +112,25 @@ function KeuanganInputContent() {
                     <div key={tab.id} className="flex items-center flex-1 md:flex-none">
                       <button
                         onClick={() => setActiveTab(tab.id)}
-                        className={`flex flex-col items-center gap-1.5 group transition-all ${
-                          isActive ? "scale-105" : "opacity-50 hover:opacity-80"
-                        }`}
+                        className={`flex flex-col items-center gap-1.5 group transition-all ${isActive ? "scale-105" : "opacity-50 hover:opacity-80"
+                          }`}
                       >
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all ${
-                          isActive
-                            ? "bg-slate-900 text-white shadow-lg shadow-slate-900/30"
-                            : isComplete
-                              ? "bg-emerald-500 text-white"
-                              : "bg-slate-100 text-slate-400"
-                        }`}>
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all ${isActive
+                          ? "bg-slate-900 text-white shadow-lg shadow-slate-900/30"
+                          : isComplete
+                            ? "bg-emerald-500 text-white"
+                            : "bg-slate-100 text-slate-400"
+                          }`}>
                           {isComplete ? "✓" : tab.icon}
                         </div>
-                        <span className={`text-[9px] font-bold uppercase tracking-widest whitespace-nowrap ${
-                          isActive ? "text-slate-800" : "text-slate-400"
-                        }`}>
+                        <span className={`text-[9px] font-bold uppercase tracking-widest whitespace-nowrap ${isActive ? "text-slate-800" : "text-slate-400"
+                          }`}>
                           {tab.label}
                         </span>
                       </button>
                       {idx < tabs.length - 1 && (
-                        <div className={`hidden md:block h-px w-16 mx-4 mt-[-1.5rem] ${
-                          isComplete ? "bg-emerald-400" : "bg-slate-200"
-                        }`} />
+                        <div className={`hidden md:block h-px w-16 mx-4 mt-[-1.5rem] ${isComplete ? "bg-emerald-400" : "bg-slate-200"
+                          }`} />
                       )}
                     </div>
                   );

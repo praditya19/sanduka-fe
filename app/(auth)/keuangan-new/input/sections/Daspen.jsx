@@ -24,6 +24,10 @@ import {
 const PROVINSI_PERCENTAGE = 0.895;
 
 const DaspenSection = () => {
+  const [userRole, setUserRole] = useState(null);
+  const [userCabang, setUserCabang] = useState("");
+  const isSuperAdmin = userRole === "SUPERADMIN";
+
   const [kuota, setKuota] = useState(700);
   const [katagori1, setKatagori1] = useState(0);
   const [katagori2, setKatagori2] = useState(0);
@@ -54,6 +58,17 @@ const DaspenSection = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSaved, setIsSaved] = useState(false);
   const [savedDataCount, setSavedDataCount] = useState(0);
+
+  // Read role from session
+  useEffect(() => {
+    const role = sessionStorage.getItem("role");
+    const cabang = (sessionStorage.getItem("cabang") || "").toUpperCase();
+    setUserRole(role);
+    setUserCabang(cabang);
+    if (role === "ADMIN" && cabang) {
+      setSearchQuery(cabang);
+    }
+  }, []);
 
   // Dropdown Cabang Standard State
   const [showCabangDropdown, setShowCabangDropdown] = useState(false);
@@ -1266,15 +1281,17 @@ const DaspenSection = () => {
                         value={searchQuery || "Semua Cabang"}
                         readOnly
                         onClick={() => {
-                          setShowCabangDropdown(!showCabangDropdown);
-                          setFilteredCabangList(cabangList);
+                          if (isSuperAdmin) {
+                            setShowCabangDropdown(!showCabangDropdown);
+                            setFilteredCabangList(cabangList);
+                          }
                         }}
-                        className="w-full pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-lg outline-none font-bold text-slate-700 focus:ring-2 focus:ring-rose-500/20 transition-all text-xs cursor-pointer hover:border-rose-300 shadow-sm"
+                        className={`w-full pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-lg outline-none font-bold text-slate-700 focus:ring-2 focus:ring-rose-500/20 transition-all text-xs shadow-sm ${isSuperAdmin ? "cursor-pointer hover:border-rose-300" : "cursor-default opacity-70"}`}
                         placeholder="Pilih Cabang"
                       />
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-[8px] transition-transform duration-300 group-hover:text-rose-500">
+                      {isSuperAdmin && <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-[8px] transition-transform duration-300 group-hover:text-rose-500">
                         {showCabangDropdown ? "▲" : "▼"}
-                      </div>
+                      </div>}
                     </div>
                     {showCabangDropdown && (
                       <motion.div
@@ -1300,8 +1317,8 @@ const DaspenSection = () => {
                           <li
                             onClick={() => handleSelectCabang("")}
                             className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${!searchQuery
-                                ? "bg-rose-50 text-rose-600 border-rose-500"
-                                : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
+                              ? "bg-rose-50 text-rose-600 border-rose-500"
+                              : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
                               }`}
                           >
                             Semua Cabang
@@ -1317,8 +1334,8 @@ const DaspenSection = () => {
                                 key={idx}
                                 onClick={() => handleSelectCabang(cab.kecamatan)}
                                 className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${searchQuery === cab.kecamatan
-                                    ? "bg-rose-50 text-rose-600 border-rose-500"
-                                    : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
+                                  ? "bg-rose-50 text-rose-600 border-rose-500"
+                                  : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
                                   }`}
                               >
                                 {cab.kecamatan}
@@ -1551,33 +1568,35 @@ const DaspenSection = () => {
                           </td>
 
                           {/* ABAIKAN KOLOM AKSI INI SAAT JADI PDF */}
-                          <td data-html2canvas-ignore="true" className="px-3 py-2 text-center w-24">
-                            <div className="flex flex-col gap-1.5 items-center justify-center py-1">
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() => setEditModal({ show: true, data: { isAuto: true, cabang: cabangName, jenisData: 'SANDUKA', kategori1: autoK1, kategori2: autoK2, kategori3: autoK3, transfer: autoTransfer, pembayaran1: 0, pembayaran2: 0 } })}
-                                  className="text-slate-400 hover:text-slate-700 transition-colors"
-                                  title="Gunakan & Simpan Data Auto"
-                                >
-                                  <FaEdit size={14} />
-                                </button>
+                          {isSuperAdmin && (
+                            <td data-html2canvas-ignore="true" className="px-3 py-2 text-center w-24">
+                              <div className="flex flex-col gap-1.5 items-center justify-center py-1">
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => setEditModal({ show: true, data: { isAuto: true, cabang: cabangName, jenisData: 'SANDUKA', kategori1: autoK1, kategori2: autoK2, kategori3: autoK3, transfer: autoTransfer, pembayaran1: 0, pembayaran2: 0 } })}
+                                    className="text-slate-400 hover:text-slate-700 transition-colors"
+                                    title="Gunakan & Simpan Data Auto"
+                                  >
+                                    <FaEdit size={14} />
+                                  </button>
+                                </div>
+
+                                {daspen && (
+                                  <div className="flex gap-2">
+                                    <button onClick={() => setEditModal({ show: true, data: daspen })} className="text-teal-400 hover:text-teal-600 transition-colors" title="Edit Daspen/Prov"><FaEdit size={14} /></button>
+                                    <button onClick={(e) => handleDelete(daspen.id, "Upload Provinsi", cabangName, e)} className="text-teal-400 hover:text-red-500 transition-colors" title="Hapus Daspen/Prov"><FaTrash size={14} /></button>
+                                  </div>
+                                )}
+
+                                {sandukaDB && (
+                                  <div className="flex gap-2">
+                                    <button onClick={() => setEditModal({ show: true, data: sandukaDB })} className="text-red-500 hover:text-red-700 transition-colors" title="Edit Simpan Realisasi"><FaEdit size={14} /></button>
+                                    <button onClick={(e) => handleDelete(sandukaDB.id, "Realisasi / Manual", cabangName, e)} className="text-red-400 hover:text-red-600 transition-colors" title="Hapus Data Simpan Realisasi"><FaTrash size={14} /></button>
+                                  </div>
+                                )}
                               </div>
-
-                              {daspen && (
-                                <div className="flex gap-2">
-                                  <button onClick={() => setEditModal({ show: true, data: daspen })} className="text-teal-400 hover:text-teal-600 transition-colors" title="Edit Daspen/Prov"><FaEdit size={14} /></button>
-                                  <button onClick={(e) => handleDelete(daspen.id, "Upload Provinsi", cabangName, e)} className="text-teal-400 hover:text-red-500 transition-colors" title="Hapus Daspen/Prov"><FaTrash size={14} /></button>
-                                </div>
-                              )}
-
-                              {sandukaDB && (
-                                <div className="flex gap-2">
-                                  <button onClick={() => setEditModal({ show: true, data: sandukaDB })} className="text-red-500 hover:text-red-700 transition-colors" title="Edit Simpan Realisasi"><FaEdit size={14} /></button>
-                                  <button onClick={(e) => handleDelete(sandukaDB.id, "Realisasi / Manual", cabangName, e)} className="text-red-400 hover:text-red-600 transition-colors" title="Hapus Data Simpan Realisasi"><FaTrash size={14} /></button>
-                                </div>
-                              )}
-                            </div>
-                          </td>
+                            </td>
+                          )}
                         </tr>
                       );
                     })
@@ -1590,7 +1609,7 @@ const DaspenSection = () => {
                       <thead>
                         <tr className="bg-slate-50 border-b border-slate-200">
                           {/* MAPPING HEADER, JIKA H === 'Aksi', TAMBAHKAN data-html2canvas-ignore */}
-                          {["No", "Cabang/Khusus", "Total Anggota", "Kat I", "Nominal", "Kat II", "Nominal", "Kat III", "Nominal", "Total Nominal", "Transfer", "Tunai", "selisih kurang", "Peruntukan cabang", "Peruntukan Kabupaten", "TAGIHAN", "Status", "Aksi"].map((h, i) => (
+                          {["No", "Cabang/Khusus", "Total Anggota", "Kat I", "Nominal", "Kat II", "Nominal", "Kat III", "Nominal", "Total Nominal", "Transfer", "Tunai", "selisih kurang", "Peruntukan cabang", "Peruntukan Kabupaten", "TAGIHAN", "Status", ...(isSuperAdmin ? ["Aksi"] : [])].map((h, i) => (
                             <th
                               key={i}
                               data-html2canvas-ignore={h === 'Aksi' ? "true" : undefined}
@@ -1642,7 +1661,7 @@ const DaspenSection = () => {
                               <CellTriple top={formatCurrency(tAutoTagihan)} middle={formatCurrency(tProvTagihan)} />
                             </td>
                             {/* ABAIKAN JUGA DI FOOTER */}
-                            <td data-html2canvas-ignore="true" colSpan={2} className="px-3 py-2 border-r border-slate-300 bg-slate-200/30"></td>
+                            {isSuperAdmin && <td data-html2canvas-ignore="true" className="px-3 py-2 border-r border-slate-300 bg-slate-200/30"></td>}
                           </tr>
                         </tfoot>
                       )}

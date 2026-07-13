@@ -246,12 +246,30 @@ export default function KeuanganNew() {
   };
 
   const isSuperAdmin = userRole === "SUPERADMIN";
+  const isAdminOrSuperAdmin = userRole === "SUPERADMIN" || userRole === "ADMIN";
   const filteredCabangData = isSuperAdmin
     ? tableData
     : tableData.filter(r => r.cabang.toUpperCase() === userCabang);
 
   const totalTarget = filteredCabangData.reduce((sum, row) => sum + row.target, 0);
   const totalRealisasi = filteredCabangData.reduce((sum, row) => sum + row.realisasi, 0);
+
+  if (userRole !== null && !isAdminOrSuperAdmin) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row overflow-hidden">
+        <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+        <div className={`flex-1 transition-all duration-300 ${isSidebarOpen ? "md:ml-64" : "ml-0"}`}>
+          <HeaderMenu toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
+          <HeaderMobile toggleSidebar={toggleSidebar} />
+          <main className="p-4 md:p-8 mt-24 md:mt-20 max-w-[95%] mx-auto">
+            <div className="flex flex-col items-center justify-center py-20">
+              <p className="text-slate-400 font-bold text-lg">Anda tidak memiliki akses ke halaman ini.</p>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row overflow-hidden">
@@ -308,30 +326,32 @@ export default function KeuanganNew() {
             </div>
           </div>
 
-          {/* Module & View Switcher */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-            <div className="flex bg-slate-100 p-1.5 rounded-2xl w-fit shadow-inner">
-              <button
-                onClick={() => setActiveModule("sanduka")}
-                className={`px-8 py-2.5 rounded-xl font-bold transition-all duration-300 ${activeModule === "sanduka"
+          {/* Module & View Switcher - only for super admin */}
+          {isSuperAdmin && (
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+              <div className="flex bg-slate-100 p-1.5 rounded-2xl w-fit shadow-inner">
+                <button
+                  onClick={() => setActiveModule("sanduka")}
+                  className={`px-8 py-2.5 rounded-xl font-bold transition-all duration-300 ${activeModule === "sanduka"
                     ? "bg-white text-emerald-600 shadow-md scale-100"
                     : "text-slate-400 hover:text-slate-600 scale-95"
-                  }`}
-              >
-                Sanduka
-              </button>
-              <button
-                onClick={() => setActiveModule("organisasi")}
-                className={`px-8 py-2.5 rounded-xl font-bold transition-all duration-300 ${activeModule === "organisasi"
+                    }`}
+                >
+                  Sanduka
+                </button>
+                <button
+                  onClick={() => setActiveModule("organisasi")}
+                  className={`px-8 py-2.5 rounded-xl font-bold transition-all duration-300 ${activeModule === "organisasi"
                     ? "bg-white text-blue-600 shadow-md scale-100"
                     : "text-slate-400 hover:text-slate-600 scale-95"
-                  }`}
-              >
-                Organisasi
-              </button>
+                    }`}
+                >
+                  Organisasi
+                </button>
+              </div>
+              <div></div>
             </div>
-            <div></div>
-          </div>
+          )}
 
           <AnimatePresence mode="wait">
             <motion.div
@@ -340,15 +360,17 @@ export default function KeuanganNew() {
               exit={{ opacity: 0, y: -20 }}
               key={activeModule}
             >
-              <SummaryCards
-                saldo={data[activeModule].saldo}
-                pemasukan={data[activeModule].pemasukan}
-                pengeluaran={data[activeModule].pengeluaran}
-                loading={loading}
-                type={activeModule}
-              />
+              {isSuperAdmin && (
+                <SummaryCards
+                  saldo={data[activeModule].saldo}
+                  pemasukan={data[activeModule].pemasukan}
+                  pengeluaran={data[activeModule].pengeluaran}
+                  loading={loading}
+                  type={activeModule}
+                />
+              )}
 
-              <AIInsight insights={insights} loading={loading} />
+              {isSuperAdmin && <AIInsight insights={insights} loading={loading} />}
 
               <QuickActions />
 
@@ -402,11 +424,10 @@ export default function KeuanganNew() {
                                 <span className="font-bold text-emerald-600 text-sm">{formatCurrency(row.realisasi)}</span>
                               </td>
                               <td className="py-6 text-center">
-                                <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-bold border shadow-sm ${
-                                  isLunas
-                                    ? "bg-emerald-50 text-emerald-700 border-emerald-100"
-                                    : "bg-rose-50 text-rose-700 border-rose-100"
-                                }`}>
+                                <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-bold border shadow-sm ${isLunas
+                                  ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+                                  : "bg-rose-50 text-rose-700 border-rose-100"
+                                  }`}>
                                   {isLunas ? (
                                     <><FaCheckCircle className="text-[10px]" /> LUNAS</>
                                   ) : (
@@ -446,11 +467,10 @@ export default function KeuanganNew() {
                           <td className="px-4 py-5 text-right text-sm">{formatCurrency(totalTarget)}</td>
                           <td className="px-4 py-5 text-right text-sm text-emerald-300">{formatCurrency(totalRealisasi)}</td>
                           <td className="px-4 py-5 text-center">
-                            <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-bold border ${
-                              totalTarget - totalRealisasi <= 0
-                                ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
-                                : "bg-rose-500/20 text-rose-300 border-rose-500/30"
-                            }`}>
+                            <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-bold border ${totalTarget - totalRealisasi <= 0
+                              ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                              : "bg-rose-500/20 text-rose-300 border-rose-500/30"
+                              }`}>
                               {totalTarget - totalRealisasi <= 0 ? "LUNAS" : "KEKURANGAN"}
                             </span>
                           </td>
@@ -464,7 +484,7 @@ export default function KeuanganNew() {
             </motion.div>
           </AnimatePresence>
         </main>
-        <AIChat data={data[activeModule]} />
+        {isSuperAdmin && <AIChat data={data[activeModule]} />}
       </div>
     </div>
   );
