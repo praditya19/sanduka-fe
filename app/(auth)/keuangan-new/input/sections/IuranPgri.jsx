@@ -71,6 +71,7 @@ const IuranPgriSection = () => {
     tambahanCabang: 0,
     setoranTunai: 0,
     potonganBank: 0,
+    pembayaran: 0,
     keterangan: "",
   });
   const itemsPerPage = 10;
@@ -505,6 +506,7 @@ const IuranPgriSection = () => {
       tambahanCabang: row[6] || 0,
       setoranTunai: row[11] || 0,
       potonganBank: row[10] || 0,
+      pembayaran: row[12] || 0,
       keterangan: "Koreksi Data",
     });
     setIsEditModalOpen(true);
@@ -523,8 +525,8 @@ const IuranPgriSection = () => {
       const sanduka = editForm.totalAnggota * besaran.sanduka;
       const totalCabang = cabPeruntukan + editForm.tambahanCabang;
       const totalTagihan = pb + prov + kab + totalCabang + sanduka;
-      const selisih =
-        totalTagihan - (editForm.potonganBank + editForm.setoranTunai);
+      const pembayaran = editForm.pembayaran || (editForm.potonganBank + editForm.setoranTunai);
+      const selisih = totalTagihan - pembayaran;
 
       const payload = {
         cabang: editingRow[0],
@@ -542,6 +544,7 @@ const IuranPgriSection = () => {
         totalTagihan: Math.round(totalTagihan),
         potonganBank: Math.round(editForm.potonganBank),
         setoranTunai: Math.round(editForm.setoranTunai),
+        pembayaran: Math.round(pembayaran),
         selisih: Math.round(selisih),
         keterangan: editForm.keterangan || "Koreksi via Dashboard",
       };
@@ -1507,6 +1510,34 @@ const IuranPgriSection = () => {
                       }
                       className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-blue-500 outline-none font-bold text-slate-700 transition-all shadow-inner"
                     />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-1">
+                      Pembayaran
+                    </label>
+                    <input
+                      type="number"
+                      value={editForm.pembayaran}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          pembayaran: parseInt(e.target.value) || 0,
+                        })
+                      }
+                      className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-blue-500 outline-none font-bold text-slate-700 transition-all shadow-inner"
+                    />
+                  </div>
+                </div>
+
+                {/* Preview Selisih */}
+                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                      Preview Pembayaran
+                    </span>
+                    <span className="text-sm font-bold text-emerald-600">
+                      {formatCurrency(editForm.pembayaran || (editForm.potonganBank + editForm.setoranTunai))}
+                    </span>
                   </div>
                 </div>
 
