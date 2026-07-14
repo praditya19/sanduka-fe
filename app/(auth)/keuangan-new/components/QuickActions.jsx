@@ -22,17 +22,24 @@ const QuickActions = () => {
 
   const baseActions = [
     {
-      title: "Input Iuran",
+      title: "Data Keuangan",
       subtitle: "Update besaran & target",
       icon: <FaPlus />,
       color: "bg-emerald-500",
       href: "/keuangan-new/input",
     },
+    {
+      title: "Tagihan",
+      subtitle: "Input Keuangan Cabang",
+      icon: <FaTags />,
+      color: "bg-violet-500",
+      href: "/keuangan-new/tagihan",
+    },
   ];
 
   const superAdminActions = [
     {
-      title: "Input Iuran",
+      title: "Data Keuangan",
       subtitle: "Update besaran & target",
       icon: <FaPlus />,
       color: "bg-emerald-500",
@@ -97,7 +104,7 @@ const QuickActions = () => {
   return (
     <div className="mb-8">
       <h2 className="text-xl font-bold text-gray-800 mb-4 tracking-tight uppercase text-xs">Akses Cepat</h2>
-      <div className={`grid grid-cols-2 gap-4 ${role === "SUPERADMIN" ? "md:grid-cols-7" : "md:grid-cols-1 max-w-xs"}`}>
+      <div className={`grid grid-cols-2 gap-4 ${role === "SUPERADMIN" ? "md:grid-cols-7" : "md:grid-cols-2 max-w-xs"}`}>
         {actions.map((action, index) => (
           <Link href={action.href} key={index}>
             <motion.div

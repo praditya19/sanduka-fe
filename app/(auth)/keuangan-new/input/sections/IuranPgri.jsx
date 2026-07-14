@@ -32,6 +32,7 @@ const IuranPgriSection = () => {
   const [userRole, setUserRole] = useState(null);
   const [userCabang, setUserCabang] = useState("");
   const isSuperAdmin = userRole === "SUPERADMIN";
+  const isAdminOrSuperAdmin = userRole === "SUPERADMIN" || userRole === "ADMIN";
 
   // Besaran Iuran State
   const [besaran, setBesaran] = useState({
@@ -356,7 +357,8 @@ const IuranPgriSection = () => {
           pembayaranPerCabang[
           (cabName || "").toString().trim().replace(/\s+/g, " ").toUpperCase()
           ] || 0;
-        const selisih = totalTagihan - pembayaran;
+        const totalTagihanCabang = pb + prov + kab + sanduka;
+        const selisih = totalTagihanCabang - pembayaran;
 
         return [
           cabName, // 0: Cabang
@@ -666,8 +668,8 @@ const IuranPgriSection = () => {
       </div>
 
       <div className="p-3 sm:p-6 space-y-6 sm:space-y-8 overflow-y-auto">
-        {/* Top Section: Form Besaran (Full Width) - Only SUPERADMIN */}
-        {isSuperAdmin && <motion.div
+        {/* Top Section: Form Besaran (Full Width) - SUPERADMIN & ADMIN */}
+        {isAdminOrSuperAdmin && <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-[20px] sm:rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden"
@@ -725,13 +727,14 @@ const IuranPgriSection = () => {
                     <input
                       type="number"
                       value={besaran[field.key]}
+                      disabled={!isSuperAdmin}
                       onChange={(e) =>
                         setBesaran({
                           ...besaran,
                           [field.key]: parseInt(e.target.value) || 0,
                         })
                       }
-                      className="w-full pl-9 sm:pl-11 pr-3 sm:pr-4 py-2.5 sm:py-3 bg-slate-50 border-2 border-transparent rounded-[12px] sm:rounded-[16px] focus:bg-white focus:border-emerald-500 outline-none font-bold text-slate-700 transition-all text-sm sm:text-base group-hover:bg-slate-100/50 shadow-inner"
+                      className={`w-full pl-9 sm:pl-11 pr-3 sm:pr-4 py-2.5 sm:py-3 bg-slate-50 border-2 border-transparent rounded-[12px] sm:rounded-[16px] focus:bg-white focus:border-emerald-500 outline-none font-bold text-slate-700 transition-all text-sm sm:text-base shadow-inner ${isSuperAdmin ? "group-hover:bg-slate-100/50" : "cursor-not-allowed opacity-60"}`}
                     />
                   </div>
                 </div>
@@ -757,7 +760,7 @@ const IuranPgriSection = () => {
                   </h5>
                 </div>
               </div>
-              <button
+              {isSuperAdmin && <button
                 onClick={handleUpdateBesaran}
                 disabled={loadingBesaran}
                 className="w-full py-3 sm:py-5 bg-slate-800 hover:bg-slate-900 disabled:bg-slate-200 text-white rounded-[16px] sm:rounded-[24px] font-bold shadow-xl shadow-slate-200 transition-all flex items-center justify-center space-x-2 active:scale-[0.98] text-sm sm:text-base"
@@ -768,7 +771,7 @@ const IuranPgriSection = () => {
                   <FaSave className="text-sm sm:text-base" />
                 )}
                 <span className="tracking-tight">Simpan Perubahan</span>
-              </button>
+              </button>}
             </div>
           </div>
         </motion.div>}
@@ -1077,13 +1080,15 @@ const IuranPgriSection = () => {
                                 BELUM DISIMPAN
                               </span>
                             )}
-                            <button
-                              onClick={handleSaveTable}
-                              className="flex items-center gap-2 px-5 py-3 bg-emerald-500 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 shadow-md"
-                            >
-                              <FaSave />
-                              <span>Simpan</span>
-                            </button>
+                            {isSuperAdmin && (
+                              <button
+                                onClick={handleSaveTable}
+                                className="flex items-center gap-2 px-5 py-3 bg-emerald-500 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 shadow-md"
+                              >
+                                <FaSave />
+                                <span>Simpan</span>
+                              </button>
+                            )}
                             <button
                               onClick={() => window.print()}
                               className="flex items-center gap-2 px-5 py-3 bg-slate-900 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-black transition-all active:scale-95 shadow-md"
@@ -1191,7 +1196,8 @@ const IuranPgriSection = () => {
                                           {formatCurrency(
                                             parseInt(row[2] || 0) +
                                             parseInt(row[3] || 0) +
-                                            parseInt(row[4] || 0),
+                                            parseInt(row[4] || 0) +
+                                            parseInt(row[8] || 0),
                                           )}
                                         </td>
                                         <td className="px-3 py-4 text-slate-900 bg-slate-50/50 font-bold">
@@ -1211,7 +1217,11 @@ const IuranPgriSection = () => {
                                         <td className="px-3 py-4">
                                           <span className="px-2 py-0.5 bg-rose-50 text-rose-600 rounded-md">
                                             {formatCurrency(
-                                              row[13] || totalTagihanRow,
+                                              (parseInt(row[2] || 0) +
+                                                parseInt(row[3] || 0) +
+                                                parseInt(row[4] || 0) +
+                                                parseInt(row[8] || 0)) -
+                                              parseInt(row[12] || 0),
                                             )}
                                           </span>
                                         </td>
@@ -1272,7 +1282,7 @@ const IuranPgriSection = () => {
                                     </td>
                                     <td className="px-3 py-5 bg-amber-500/20 text-amber-300 font-bold">
                                       {formatCurrency(
-                                        columnTotals[2] + columnTotals[3] + columnTotals[4],
+                                        columnTotals[2] + columnTotals[3] + columnTotals[4] + columnTotals[8],
                                       )}
                                     </td>
                                     <td className="px-3 py-5 bg-slate-800 font-bold text-amber-400">

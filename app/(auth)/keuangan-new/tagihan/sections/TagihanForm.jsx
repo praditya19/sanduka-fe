@@ -29,6 +29,9 @@ const TagihanForm = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [cabangFilter, setCabangFilter] = useState("");
   const [viewMode, setViewMode] = useState("rekap");
+  const [userRole, setUserRole] = useState(null);
+  const [userCabang, setUserCabang] = useState("");
+  const isReadOnly = userRole === "ADMIN";
 
   const [summary, setSummary] = useState({
     totalTagihan: 0,
@@ -172,6 +175,17 @@ const TagihanForm = () => {
     fetchData();
     fetchAuxData();
   }, [fetchData]);
+
+  // Read role and cabang from session for ADMIN restriction
+  useEffect(() => {
+    const storedRole = sessionStorage.getItem("role");
+    const storedCabang = sessionStorage.getItem("cabang") || "";
+    setUserRole(storedRole);
+    setUserCabang(storedCabang);
+    if (storedRole === "ADMIN" && storedCabang) {
+      setCabangFilter(storedCabang);
+    }
+  }, []);
 
   const filteredTransactions = transactions.filter(t => {
     // Filter ketat berdasarkan tanggal transaksi
@@ -816,14 +830,20 @@ const TagihanForm = () => {
                 className="pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm font-bold w-48 focus:ring-2 focus:ring-violet-500/20"
               />
             </div>
-            <select
-              value={cabangFilter}
-              onChange={(e) => setCabangFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-600 outline-none focus:ring-2 focus:ring-violet-500/20"
-            >
-              <option value="">Semua Cabang</option>
-              {cabangList.map(c => <option key={c.id} value={c.kecamatan}>{c.kecamatan}</option>)}
-            </select>
+            {!isReadOnly ? (
+              <select
+                value={cabangFilter}
+                onChange={(e) => setCabangFilter(e.target.value)}
+                className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-600 outline-none focus:ring-2 focus:ring-violet-500/20"
+              >
+                <option value="">Semua Cabang</option>
+                {cabangList.map(c => <option key={c.id} value={c.kecamatan}>{c.kecamatan}</option>)}
+              </select>
+            ) : (
+              <div className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-600">
+                {userCabang || "Cabang"}
+              </div>
+            )}
             <div className="flex bg-slate-50 rounded-xl p-0.5 border border-slate-100">
               <button
                 onClick={() => setViewMode("rekap")}
@@ -835,32 +855,36 @@ const TagihanForm = () => {
               >Detail</button>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => setShowModalPos(true)}
-              className="flex items-center space-x-2 px-4 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-200 transition-all"
-            >
-              <FaCog /> <span>Kelola Pos</span>
-            </button>
-          </div>
+          {!isReadOnly && (
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => setShowModalPos(true)}
+                className="flex items-center space-x-2 px-4 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-200 transition-all"
+              >
+                <FaCog /> <span>Kelola Pos</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Entry Button */}
-      <div className="print:hidden">
-        <button
-          onClick={() => setShowModalCabang(true)}
-          className="w-full flex items-center justify-center space-x-3 p-6 bg-white border-2 border-violet-100 rounded-[32px] hover:border-violet-500 hover:bg-violet-50 transition-all group"
-        >
-          <div className="w-12 h-12 bg-violet-500 text-white rounded-2xl flex items-center justify-center text-xl shadow-lg group-hover:scale-110 transition-all">
-            <FaPlus />
-          </div>
-          <div className="text-left">
-            <h4 className="text-base font-bold text-slate-800 uppercase">Input Keuangan Cabang</h4>
-            <p className="text-xs text-slate-400 font-bold tracking-tight">Catat tagihan dan pembayaran cabang</p>
-          </div>
-        </button>
-      </div>
+      {/* Entry Button - hidden for admin */}
+      {!isReadOnly && (
+        <div className="print:hidden">
+          <button
+            onClick={() => setShowModalCabang(true)}
+            className="w-full flex items-center justify-center space-x-3 p-6 bg-white border-2 border-violet-100 rounded-[32px] hover:border-violet-500 hover:bg-violet-50 transition-all group"
+          >
+            <div className="w-12 h-12 bg-violet-500 text-white rounded-2xl flex items-center justify-center text-xl shadow-lg group-hover:scale-110 transition-all">
+              <FaPlus />
+            </div>
+            <div className="text-left">
+              <h4 className="text-base font-bold text-slate-800 uppercase">Input Keuangan Cabang</h4>
+              <p className="text-xs text-slate-400 font-bold tracking-tight">Catat tagihan dan pembayaran cabang</p>
+            </div>
+          </button>
+        </div>
+      )}
 
       {/* Table */}
       <div className="bg-white rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden print:border-none print:shadow-none print:rounded-none print:m-0">
@@ -1013,12 +1037,16 @@ const TagihanForm = () => {
                         {t.sisa > 0 ? formatCurrency(t.sisa) : "0"}
                       </td>
                       <td className="px-3 sm:px-6 py-4 text-center">
-                        <button onClick={() => handleEditClick(t)} className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-1.5 rounded-lg transition-all text-xs" title="Edit">
-                          <FaEdit />
-                        </button>
-                        <button onClick={() => handleDeleteTransaksi(t.id)} className="text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1.5 rounded-lg transition-all text-xs" title="Hapus">
-                          <FaTrash />
-                        </button>
+                        {!isReadOnly && (
+                          <>
+                            <button onClick={() => handleEditClick(t)} className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-1.5 rounded-lg transition-all text-xs" title="Edit">
+                              <FaEdit />
+                            </button>
+                            <button onClick={() => handleDeleteTransaksi(t.id)} className="text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1.5 rounded-lg transition-all text-xs" title="Hapus">
+                              <FaTrash />
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))
@@ -1091,12 +1119,16 @@ const TagihanForm = () => {
                           <td className="px-4 py-3.5 text-right text-xs font-bold text-emerald-600">{t.pembayaran > 0 ? formatCurrency(t.pembayaran) : "0"}</td>
                           <td className="px-4 py-3.5 text-right text-xs font-bold text-rose-600">{t.sisa > 0 ? formatCurrency(t.sisa) : "0"}</td>
                           <td className="px-4 py-3.5 text-center">
-                            <button onClick={() => { setShowDetailModal(false); handleEditClick(t); }} className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-1.5 rounded-lg transition-all text-xs" title="Edit">
-                              <FaEdit />
-                            </button>
-                            <button onClick={() => { setShowDetailModal(false); handleDeleteTransaksi(t.id); }} className="text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1.5 rounded-lg transition-all text-xs" title="Hapus">
-                              <FaTrash />
-                            </button>
+                            {!isReadOnly && (
+                              <>
+                                <button onClick={() => { setShowDetailModal(false); handleEditClick(t); }} className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-1.5 rounded-lg transition-all text-xs" title="Edit">
+                                  <FaEdit />
+                                </button>
+                                <button onClick={() => { setShowDetailModal(false); handleDeleteTransaksi(t.id); }} className="text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1.5 rounded-lg transition-all text-xs" title="Hapus">
+                                  <FaTrash />
+                                </button>
+                              </>
+                            )}
                           </td>
                         </tr>
                       ))

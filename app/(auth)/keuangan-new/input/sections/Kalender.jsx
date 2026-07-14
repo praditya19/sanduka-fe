@@ -23,6 +23,7 @@ const KalenderSection = () => {
   const [userRole, setUserRole] = useState(null);
   const [userCabang, setUserCabang] = useState("");
   const isSuperAdmin = userRole === "SUPERADMIN";
+  const isAdminOrSuperAdmin = userRole === "SUPERADMIN" || userRole === "ADMIN";
 
   const [besaran, setBesaran] = useState({
     provinsi: 0,
@@ -648,7 +649,7 @@ const KalenderSection = () => {
 
       <div className="p-6 space-y-8 overflow-y-auto">
         {/* Top Section: Configuration (Integrated) */}
-        <motion.div
+        {isAdminOrSuperAdmin && <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden"
@@ -695,13 +696,14 @@ const KalenderSection = () => {
                     <input
                       type="number"
                       value={besaran[field.key]}
+                      disabled={!isSuperAdmin}
                       onChange={(e) =>
                         setBesaran({
                           ...besaran,
                           [field.key]: parseInt(e.target.value) || 0,
                         })
                       }
-                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-amber-500 outline-none font-bold text-slate-700 transition-all text-base group-hover:bg-slate-100/50 shadow-inner"
+                      className={`w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-amber-500 outline-none font-bold text-slate-700 transition-all text-base shadow-inner ${isSuperAdmin ? "group-hover:bg-slate-100/50" : "cursor-not-allowed opacity-60"}`}
                     />
                   </div>
                 </div>
@@ -721,7 +723,7 @@ const KalenderSection = () => {
                 </div>
 
                 {/* Tombol Simpan - kanan */}
-                <button
+                {isSuperAdmin && <button
                   onClick={handleSaveBesaran}
                   disabled={loadingBesaran}
                   className="w-full px-6 py-3 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl font-bold shadow-sm transition-all flex items-center justify-center gap-2 active:scale-[0.97]"
@@ -734,11 +736,11 @@ const KalenderSection = () => {
                   <span className="text-base font-semibold tracking-tight">
                     Simpan Konfigurasi
                   </span>
-                </button>
+                </button>}
               </div>
             </div>
           </div>
-        </motion.div>
+        </motion.div>}
 
         {/* Bottom Section: Laporan & Input */}
         <div className="space-y-6">
@@ -817,7 +819,8 @@ const KalenderSection = () => {
                   <select
                     value={selectedCabang}
                     onChange={(e) => setSelectedCabang(e.target.value)}
-                    className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-bold text-white text-sm focus:bg-white/10 focus:border-amber-500 transition-all appearance-none"
+                    disabled={!isSuperAdmin}
+                    className={`w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-bold text-white text-sm focus:bg-white/10 focus:border-amber-500 transition-all appearance-none ${!isSuperAdmin ? "cursor-not-allowed opacity-50" : ""}`}
                   >
                     <option value="" className="text-slate-800">
                       -- Pilih Cabang --
@@ -843,6 +846,7 @@ const KalenderSection = () => {
                     <input
                       type="number"
                       value={jumlahPesanan}
+                      disabled={!isSuperAdmin}
                       onFocus={() => {
                         if (jumlahPesanan === "0") setJumlahPesanan("");
                       }}
@@ -852,7 +856,7 @@ const KalenderSection = () => {
                       onChange={(e) => {
                         setJumlahPesanan(e.target.value);
                       }}
-                      className="w-full pl-11 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-bold text-white text-base focus:bg-white/10 focus:border-amber-500 transition-all"
+                      className={`w-full pl-11 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-bold text-white text-base focus:bg-white/10 focus:border-amber-500 transition-all ${!isSuperAdmin ? "cursor-not-allowed opacity-50" : ""}`}
                     />
                   </div>
                 </div>
@@ -867,13 +871,15 @@ const KalenderSection = () => {
                 </div>
 
                 <div className="w-full xl:w-auto">
-                  <button
-                    type="submit"
-                    className="w-full px-10 py-5 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-bold shadow-xl shadow-amber-900/40 transition-all active:scale-[0.98] text-xs uppercase tracking-widest flex items-center justify-center gap-2"
-                  >
-                    <FaSave />
-                    Kunci Pesanan
-                  </button>
+                  {isSuperAdmin && (
+                    <button
+                      type="submit"
+                      className="w-full px-10 py-5 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-bold shadow-xl shadow-amber-900/40 transition-all active:scale-[0.98] text-xs uppercase tracking-widest flex items-center justify-center gap-2"
+                    >
+                      <FaSave />
+                      Kunci Pesanan
+                    </button>
+                  )}
                 </div>
               </div>
             </form>
@@ -1008,19 +1014,21 @@ const KalenderSection = () => {
                         BELUM DISIMPAN
                       </span>
                     )}
-                    <button
-                      onClick={handleSaveTable}
-                      disabled={saving}
-                      className="px-5 py-3 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold shadow-sm transition-all active:scale-95 text-xs uppercase tracking-widest flex items-center gap-2"
-                      title="Simpan Rekapitulasi"
-                    >
-                      {saving ? (
-                        <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      ) : (
-                        <FaSave />
-                      )}
-                      Simpan
-                    </button>
+                    {isSuperAdmin && (
+                      <button
+                        onClick={handleSaveTable}
+                        disabled={saving}
+                        className="px-5 py-3 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold shadow-sm transition-all active:scale-95 text-xs uppercase tracking-widest flex items-center gap-2"
+                        title="Simpan Rekapitulasi"
+                      >
+                        {saving ? (
+                          <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                          <FaSave />
+                        )}
+                        Simpan
+                      </button>
+                    )}
                     <button
                       onClick={handleDownloadExcel}
                       className="px-5 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold shadow-sm transition-all active:scale-95 text-xs uppercase tracking-widest flex items-center gap-2"

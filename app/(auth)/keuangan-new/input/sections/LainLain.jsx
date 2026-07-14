@@ -25,6 +25,9 @@ import {
 } from "react-icons/fa";
 
 const LainLainSection = () => {
+  const [userRole, setUserRole] = useState(null);
+  const isSuperAdmin = userRole === "SUPERADMIN";
+  const isAdminOrSuperAdmin = userRole === "SUPERADMIN" || userRole === "ADMIN";
   const defaultConfigId = 5;
   const [besaran, setBesaran] = useState({
     provinsi: 0,
@@ -101,9 +104,15 @@ const LainLainSection = () => {
     fetchInitialData();
   }, []);
 
+  // Read role from session
   useEffect(() => {
-    fetchTargetTable();
-  }, [selectedMonth, selectedYear, selectedCabang]);
+    const role = sessionStorage.getItem("role");
+    setUserRole(role);
+  }, []);
+
+  useEffect(() => {
+    fetchInitialData();
+  }, []);
 
   const fetchInitialData = async () => {
     try {
@@ -647,8 +656,9 @@ const LainLainSection = () => {
                     <input
                       type="text"
                       value={tambahPosForm.nama}
+                      disabled={!isSuperAdmin}
                       onChange={(e) => setTambahPosForm({ ...tambahPosForm, nama: e.target.value })}
-                      className="w-full px-5 py-3 bg-slate-50 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-slate-500 outline-none font-bold text-slate-700 transition-all text-sm"
+                      className={`w-full px-5 py-3 bg-slate-50 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-slate-500 outline-none font-bold text-slate-700 transition-all text-sm ${!isSuperAdmin ? "cursor-not-allowed opacity-60" : ""}`}
                       placeholder="Nama pos..."
                     />
                   </div>
@@ -665,8 +675,9 @@ const LainLainSection = () => {
                         <input
                           type="number"
                           value={tambahPosForm.peruntukanProvinsi || ""}
+                          disabled={!isSuperAdmin}
                           onChange={(e) => setTambahPosForm({ ...tambahPosForm, peruntukanProvinsi: parseInt(e.target.value, 10) || 0 })}
-                          className="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-slate-500 outline-none font-bold text-slate-700 transition-all text-base group-hover:bg-slate-100/50 shadow-inner"
+                          className={`w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-slate-500 outline-none font-bold text-slate-700 transition-all text-base shadow-inner ${isSuperAdmin ? "group-hover:bg-slate-100/50" : "cursor-not-allowed opacity-60"}`}
                           placeholder="0"
                         />
                       </div>
@@ -683,8 +694,9 @@ const LainLainSection = () => {
                         <input
                           type="number"
                           value={tambahPosForm.peruntukanKabupaten || ""}
+                          disabled={!isSuperAdmin}
                           onChange={(e) => setTambahPosForm({ ...tambahPosForm, peruntukanKabupaten: parseInt(e.target.value, 10) || 0 })}
-                          className="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-slate-500 outline-none font-bold text-slate-700 transition-all text-base group-hover:bg-slate-100/50 shadow-inner"
+                          className={`w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-slate-500 outline-none font-bold text-slate-700 transition-all text-base shadow-inner ${isSuperAdmin ? "group-hover:bg-slate-100/50" : "cursor-not-allowed opacity-60"}`}
                           placeholder="0"
                         />
                       </div>
@@ -701,8 +713,9 @@ const LainLainSection = () => {
                         <input
                           type="number"
                           value={tambahPosForm.peruntukanCabang || ""}
+                          disabled={!isSuperAdmin}
                           onChange={(e) => setTambahPosForm({ ...tambahPosForm, peruntukanCabang: parseInt(e.target.value, 10) || 0 })}
-                          className="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-slate-500 outline-none font-bold text-slate-700 transition-all text-base group-hover:bg-slate-100/50 shadow-inner"
+                          className={`w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-slate-500 outline-none font-bold text-slate-700 transition-all text-base shadow-inner ${isSuperAdmin ? "group-hover:bg-slate-100/50" : "cursor-not-allowed opacity-60"}`}
                           placeholder="0"
                         />
                       </div>
@@ -710,7 +723,7 @@ const LainLainSection = () => {
                   </div>
 
                   <div className="flex justify-end pt-2">
-                    <button
+                    {isSuperAdmin && <button
                       type="submit"
                       disabled={loadingTambahPos}
                       className="px-8 py-3 bg-slate-700 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl font-bold shadow-sm transition-all flex items-center justify-center gap-2 active:scale-[0.97]"
@@ -723,7 +736,7 @@ const LainLainSection = () => {
                       <span className="text-xs font-bold uppercase tracking-widest">
                         Simpan
                       </span>
-                    </button>
+                    </button>}
                   </div>
                 </div>
               </motion.form>
@@ -788,11 +801,10 @@ const LainLainSection = () => {
                     <ul className="overflow-y-auto py-2 custom-scrollbar">
                       <li
                         onClick={() => handleSelectCabang("")}
-                        className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${
-                          !searchQuery
-                            ? "bg-slate-50 text-slate-600 border-slate-500"
-                            : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
-                        }`}
+                        className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${!searchQuery
+                          ? "bg-slate-50 text-slate-600 border-slate-500"
+                          : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
+                          }`}
                       >
                         Semua Cabang
                       </li>
@@ -806,11 +818,10 @@ const LainLainSection = () => {
                           <li
                             key={idx}
                             onClick={() => handleSelectCabang(cab.kecamatan)}
-                            className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${
-                              searchQuery === cab.kecamatan
-                                ? "bg-slate-50 text-slate-600 border-slate-500"
-                                : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
-                            }`}
+                            className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${searchQuery === cab.kecamatan
+                              ? "bg-slate-50 text-slate-600 border-slate-500"
+                              : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
+                              }`}
                           >
                             {cab.kecamatan}
                           </li>
@@ -892,22 +903,24 @@ const LainLainSection = () => {
                           {item.bulan} {item.tahun}
                         </td>
                         <td className="px-4 py-4">
-                          <div className="flex items-center justify-center gap-2">
-                            <button
-                              onClick={() => handleEditPos(item)}
-                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                              title="Edit"
-                            >
-                              <FaEdit className="text-lg" />
-                            </button>
-                            <button
-                              onClick={() => handleDeletePos(item.id)}
-                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                              title="Hapus"
-                            >
-                              <FaTrash className="text-lg" />
-                            </button>
-                          </div>
+                          {isSuperAdmin && (
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                onClick={() => handleEditPos(item)}
+                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                title="Edit"
+                              >
+                                <FaEdit className="text-lg" />
+                              </button>
+                              <button
+                                onClick={() => handleDeletePos(item.id)}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                title="Hapus"
+                              >
+                                <FaTrash className="text-lg" />
+                              </button>
+                            </div>
+                          )}
                         </td>
                       </tr>
                     );
@@ -957,7 +970,8 @@ const LainLainSection = () => {
               <select
                 value={selectedCabang}
                 onChange={(e) => setSelectedCabang(e.target.value)}
-                className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-bold text-white text-sm focus:bg-white/10 focus:border-slate-500 transition-all appearance-none"
+                disabled={!isSuperAdmin}
+                className={`w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-bold text-white text-sm focus:bg-white/10 focus:border-slate-500 transition-all appearance-none ${!isSuperAdmin ? "cursor-not-allowed opacity-50" : ""}`}
               >
                 <option value="" className="text-slate-800">
                   -- Pilih Cabang --
@@ -1003,6 +1017,7 @@ const LainLainSection = () => {
                 <input
                   type="number"
                   value={jumlahPesanan}
+                  disabled={!isSuperAdmin}
                   onFocus={() => {
                     if (jumlahPesanan === "0") setJumlahPesanan("");
                   }}
@@ -1010,7 +1025,7 @@ const LainLainSection = () => {
                     if (jumlahPesanan === "") setJumlahPesanan("0");
                   }}
                   onChange={(e) => setJumlahPesanan(e.target.value)}
-                  className="w-full pl-11 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-bold text-white text-base focus:bg-white/10 focus:border-slate-500 transition-all"
+                  className={`w-full pl-11 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-bold text-white text-base focus:bg-white/10 focus:border-slate-500 transition-all ${!isSuperAdmin ? "cursor-not-allowed opacity-50" : ""}`}
                 />
               </div>
             </div>
@@ -1025,18 +1040,20 @@ const LainLainSection = () => {
             </div>
 
             <div className="w-full xl:w-auto">
-              <button
-                type="submit"
-                disabled={loadingTarget}
-                className="w-full px-6 py-5 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl font-bold shadow-xl shadow-slate-950/40 transition-all active:scale-[0.98] text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 whitespace-nowrap"
-              >
-                {loadingTarget ? (
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <FaSave className="text-sm" />
-                )}
-                Kunci Pesanan
-              </button>
+              {isSuperAdmin && (
+                <button
+                  type="submit"
+                  disabled={loadingTarget}
+                  className="w-full px-6 py-5 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl font-bold shadow-xl shadow-slate-950/40 transition-all active:scale-[0.98] text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 whitespace-nowrap"
+                >
+                  {loadingTarget ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <FaSave className="text-sm" />
+                  )}
+                  Kunci Pesanan
+                </button>
+              )}
             </div>
           </div>
         </form>
@@ -1165,26 +1182,28 @@ const LainLainSection = () => {
                         <td className="px-4 py-4 text-right font-bold text-slate-600 whitespace-nowrap">{formatCurrency(item.pembayaran || 0)}</td>
                         <td className="px-4 py-4 text-right font-bold text-rose-600 whitespace-nowrap">{formatCurrency(item.selisih || 0)}</td>
 
-                        <td data-html2canvas-ignore="true" className="px-4 py-4">
-                          <div className="flex items-center justify-center gap-2">
-                            <button
-                              onClick={() => handleEditTarget(item)}
-                              disabled={!item.id || item.id === 0}
-                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                              title="Edit"
-                            >
-                              <FaEdit className="text-lg" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteTarget(item.id)}
-                              disabled={!item.id || item.id === 0}
-                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                              title="Hapus"
-                            >
-                              <FaTrash className="text-lg" />
-                            </button>
-                          </div>
-                        </td>
+                        {isSuperAdmin && (
+                          <td data-html2canvas-ignore="true" className="px-4 py-4">
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                onClick={() => handleEditTarget(item)}
+                                disabled={!item.id || item.id === 0}
+                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                                title="Edit"
+                              >
+                                <FaEdit className="text-lg" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteTarget(item.id)}
+                                disabled={!item.id || item.id === 0}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                                title="Hapus"
+                              >
+                                <FaTrash className="text-lg" />
+                              </button>
+                            </div>
+                          </td>
+                        )}
                       </tr>
                     ))
                   ) : (

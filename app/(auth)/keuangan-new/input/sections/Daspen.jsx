@@ -27,6 +27,7 @@ const DaspenSection = () => {
   const [userRole, setUserRole] = useState(null);
   const [userCabang, setUserCabang] = useState("");
   const isSuperAdmin = userRole === "SUPERADMIN";
+  const isAdminOrSuperAdmin = userRole === "SUPERADMIN" || userRole === "ADMIN";
 
   const [kuota, setKuota] = useState(700);
   const [katagori1, setKatagori1] = useState(0);
@@ -1052,7 +1053,7 @@ const DaspenSection = () => {
       </div>
 
       <div className="p-6 space-y-8 overflow-y-auto">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden">
+        {isAdminOrSuperAdmin && <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden">
           <div className="bg-slate-50/50 p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-rose-500 text-white flex items-center justify-center"><FaCalculator /></div>
@@ -1066,7 +1067,7 @@ const DaspenSection = () => {
                 <label className="text-[9px] font-bold text-slate-400 uppercase">Kuota Dasar</label>
                 <div className="relative group">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 font-bold">Rp</span>
-                  <input type="number" value={kuota} onChange={(e) => setKuota(parseInt(e.target.value) || 0)} className="w-full pl-11 pr-4 py-3 bg-slate-50 rounded-[16px] font-bold outline-none" />
+                  <input type="number" value={kuota} disabled={!isSuperAdmin} onChange={(e) => setKuota(parseInt(e.target.value) || 0)} className={`w-full pl-11 pr-4 py-3 bg-slate-50 rounded-[16px] font-bold outline-none ${!isSuperAdmin ? "cursor-not-allowed opacity-60" : ""}`} />
                 </div>
               </div>
               {[
@@ -1077,16 +1078,16 @@ const DaspenSection = () => {
                 <div key={cat.key}>
                   <label className="text-[9px] font-bold text-slate-400 uppercase">{cat.label}</label>
                   <div className="space-y-2">
-                    <input type="number" step="0.01" value={cat.key === "katagori1" ? katagori1 : cat.key === "katagori2" ? katagori2 : katagori3} onChange={(e) => { const v = parseFloat(e.target.value) || 0; if (cat.key === "katagori1") setKatagori1(v); if (cat.key === "katagori2") setKatagori2(v); if (cat.key === "katagori3") setKatagori3(v); }} className="w-full px-4 py-3 bg-slate-50 rounded-[16px] font-bold text-center outline-none" />
+                    <input type="number" step="0.01" disabled={!isSuperAdmin} value={cat.key === "katagori1" ? katagori1 : cat.key === "katagori2" ? katagori2 : katagori3} onChange={(e) => { const v = parseFloat(e.target.value) || 0; if (cat.key === "katagori1") setKatagori1(v); if (cat.key === "katagori2") setKatagori2(v); if (cat.key === "katagori3") setKatagori3(v); }} className={`w-full px-4 py-3 bg-slate-50 rounded-[16px] font-bold text-center outline-none ${!isSuperAdmin ? "cursor-not-allowed opacity-60" : ""}`} />
                     <div className="px-4 py-1.5 bg-rose-50 rounded-lg text-center"><p className="text-[10px] text-rose-600 font-bold">{formatCurrency(cat.val)}</p></div>
                   </div>
                 </div>
               ))}
             </div>
 
-            <button onClick={handleSaveBesaran} className="w-full py-4 bg-rose-500 hover:bg-rose-600 text-white rounded-[24px] font-bold flex items-center justify-center gap-2">
+            {isSuperAdmin && <button onClick={handleSaveBesaran} className="w-full py-4 bg-rose-500 hover:bg-rose-600 text-white rounded-[24px] font-bold flex items-center justify-center gap-2">
               <FaSave /> Simpan Konfigurasi
-            </button>
+            </button>}
 
             <div className="mt-6 p-5 bg-emerald-50 rounded-[24px]">
               <div className="flex items-center gap-3 mb-4">
@@ -1099,8 +1100,9 @@ const DaspenSection = () => {
                   <div className="relative group">
                     <input
                       type="number" step="0.01" value={cabangPersen * 100}
+                      disabled={!isSuperAdmin}
                       onChange={(e) => setCabangPersen((parseFloat(e.target.value) || 0) / 100)}
-                      className="w-full px-4 py-3 bg-white rounded-[16px] font-bold outline-none border border-slate-200"
+                      className={`w-full px-4 py-3 bg-white rounded-[16px] font-bold outline-none border border-slate-200 ${!isSuperAdmin ? "cursor-not-allowed opacity-60" : ""}`}
                     />
                   </div>
                 </div>
@@ -1109,15 +1111,16 @@ const DaspenSection = () => {
                   <div className="relative group">
                     <input
                       type="number" step="0.01" value={kabupatenPersen * 100}
+                      disabled={!isSuperAdmin}
                       onChange={(e) => setKabupatenPersen((parseFloat(e.target.value) || 0) / 100)}
-                      className="w-full px-4 py-3 bg-white rounded-[16px] font-bold outline-none border border-slate-200"
+                      className={`w-full px-4 py-3 bg-white rounded-[16px] font-bold outline-none border border-slate-200 ${!isSuperAdmin ? "cursor-not-allowed opacity-60" : ""}`}
                     />
                   </div>
                 </div>
               </div>
-              <button onClick={handleSavePersen} className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-[24px] font-bold flex items-center justify-center gap-2">
+              {isSuperAdmin && <button onClick={handleSavePersen} className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-[24px] font-bold flex items-center justify-center gap-2">
                 <FaSave /> Simpan Persentase
-              </button>
+              </button>}
             </div>
 
             <div className="mt-6 p-5 bg-blue-50 rounded-[24px]">
@@ -1125,16 +1128,16 @@ const DaspenSection = () => {
                 <div className="w-8 h-8 rounded-xl bg-blue-500 text-white flex items-center justify-center"><FaFileExcel /></div>
                 <div><h4 className="text-sm font-bold text-blue-800">Upload Data Provinsi (DASPEN)</h4></div>
               </div>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button type="button" onClick={() => handleDownloadTemplate("Template_Provinsi_Daspen")} className="flex items-center gap-2 px-4 py-2.5 bg-white text-blue-600 rounded-xl text-xs font-bold"><FaFileExcel /> Download Template</button>
-                <label className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-xs font-bold cursor-pointer ${isUploadingDaspen ? 'opacity-50' : ''}`}>
+              <div className={`flex flex-col sm:flex-row gap-3 ${!isSuperAdmin ? "opacity-50 pointer-events-none" : ""}`}>
+                <button type="button" onClick={() => handleDownloadTemplate("Template_Provinsi_Daspen")} disabled={!isSuperAdmin} className="flex items-center gap-2 px-4 py-2.5 bg-white text-blue-600 rounded-xl text-xs font-bold"><FaFileExcel /> Download Template</button>
+                <label className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-xs font-bold ${isSuperAdmin ? "cursor-pointer" : "cursor-not-allowed"} ${isUploadingDaspen ? 'opacity-50' : ''}`}>
                   {isUploadingDaspen ? "Menyimpan..." : <><FaUpload /> Upload & Simpan Excel Provinsi</>}
-                  <input type="file" accept=".xlsx,.xls" className="hidden" onChange={handleExcelUploadProvinsi} disabled={isUploadingDaspen} />
+                  {isSuperAdmin && <input type="file" accept=".xlsx,.xls" className="hidden" onChange={handleExcelUploadProvinsi} disabled={isUploadingDaspen} />}
                 </label>
               </div>
             </div>
           </div>
-        </motion.div>
+        </motion.div>}
 
         <div className="space-y-6">
           <div className="space-y-8">
@@ -1174,12 +1177,13 @@ const DaspenSection = () => {
                       <select
                         value={selectedCabang}
                         onChange={(e) => setSelectedCabang(e.target.value)}
-                        className="w-full pl-4 pr-8 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-bold text-sm focus:border-indigo-500 outline-none appearance-none cursor-pointer transition-all hover:bg-white/10"
+                        disabled={!isSuperAdmin}
+                        className={`w-full pl-4 pr-8 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-bold text-sm focus:border-indigo-500 outline-none appearance-none transition-all ${isSuperAdmin ? "cursor-pointer hover:bg-white/10" : "cursor-not-allowed opacity-50"}`}
                       >
                         <option value="" className="text-slate-800">-- Semua Cabang (Total) --</option>
                         {cabangList.map(c => <option key={c.id} value={c.kecamatan} className="text-slate-800">{c.kecamatan}</option>)}
                       </select>
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">▼</div>
+                      {isSuperAdmin && <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">▼</div>}
                     </div>
                   </div>
 
@@ -1372,12 +1376,14 @@ const DaspenSection = () => {
                     </span>
                   )}
                 </div>
-                <button
-                  onClick={handleSaveRekapToDB}
-                  className="flex items-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
-                >
-                  <FaSave className="text-sm" /> Simpan
-                </button>
+                {isSuperAdmin && (
+                  <button
+                    onClick={handleSaveRekapToDB}
+                    className="flex items-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
+                  >
+                    <FaSave className="text-sm" /> Simpan
+                  </button>
+                )}
                 <button
                   onClick={handleExportExcel}
                   className="flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-emerald-600/20 active:scale-95"
