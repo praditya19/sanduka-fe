@@ -62,6 +62,7 @@ const IuranPgriSection = () => {
   // Table State
   const [rawBalancingData, setRawBalancingData] = useState([]);
   const [pembayaranPerCabang, setPembayaranPerCabang] = useState({}); // Map total pembayaran per cabang dari iuran_anggota
+  const [rekapIuranOverride, setRekapIuranOverride] = useState({}); // Override data from rekapitulasi-iuran (korreksi)
   const [loadingTable, setLoadingTable] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -198,8 +199,8 @@ const IuranPgriSection = () => {
       const monthObj = bulanList.find((b) => b.namaBulan === selectedMonth);
       const monthNumber = monthObj ? monthObj.id : new Date().getMonth() + 1;
 
-      // Fetch bank balancing data dan transaksi cabang (per pos) untuk pembayaran.
-      const [bankData, transaksiData] = await Promise.all([
+      // Fetch bank balancing data, transaksi cabang, dan rekapitulasi iuran (korreksi)
+      const [bankData, transaksiData, rekapIuranData] = await Promise.all([
         GlobalApi.getTransaksiBankBalancing(
           "",
           null,
@@ -210,9 +211,20 @@ const IuranPgriSection = () => {
         ),
         // Pembayaran dari transaksi_cabang per pos (input keuangan cabang)
         GlobalApi.getTransaksiCabangByBulanTahun(monthNumber, selectedYear),
+        // Data korreksi dari rekapitulasi_iuran untuk override tampilan
+        GlobalApi.getRekapByPeriode(selectedMonth, selectedYear).catch(() => []),
       ]);
 
       setRawBalancingData(bankData || []);
+
+      // Build lookup map for rekapitulasi-iuran overrides
+      const rekapList = Array.isArray(rekapIuranData) ? rekapIuranData : rekapIuranData?.data || [];
+      const rekapMap = {};
+      rekapList.forEach(r => {
+        const key = (r.cabang || "").toString().trim().replace(/\s+/g, " ").toUpperCase();
+        rekapMap[key] = r;
+      });
+      setRekapIuranOverride(rekapMap);
 
       const normalizeCabangKey = (value) =>
         (value || "").toString().trim().replace(/\s+/g, " ").toUpperCase();
@@ -333,8 +345,9 @@ const IuranPgriSection = () => {
     return Object.keys(grouped)
       .sort()
       .map((cabName) => {
+        const cabangKey = (cabName || "").toString().trim().replace(/\s+/g, " ").toUpperCase();
         const group = grouped[cabName];
-        const totalAnggota = group.members.size;
+        let totalAnggota = group.members.size;
 
         const pb = totalAnggota * besaran.pb;
         const prov = totalAnggota * besaran.propinsi;
@@ -342,46 +355,52 @@ const IuranPgriSection = () => {
         const cabPeruntukan = totalAnggota * besaran.cabang;
         const sanduka = totalAnggota * besaran.sanduka;
 
-        // Hitung total manual dari Map unik NPA
         const manualTotal = Object.values(group.manualByNpa).reduce(
           (sum, val) => sum + val,
           0,
         );
-        const tambahan = manualTotal;
-        const totalCabang = cabPeruntukan + tambahan;
-        const totalTagihan = pb + prov + kab + totalCabang + sanduka;
-        const potBank = group.potBank;
-        const tunai = group.tunai;
-        // Ambil pembayaran dari iuran_anggota per cabang.
-        const pembayaran =
-          pembayaranPerCabang[
-          (cabName || "").toString().trim().replace(/\s+/g, " ").toUpperCase()
-          ] || 0;
+        let tambahan = manualTotal;
+        let totalCabang = cabPeruntukan + tambahan;
+        let totalTagihan = pb + prov + kab + totalCabang + sanduka;
+        let potBank = group.potBank;
+        let tunai = group.tunai;
+        let pembayaran =
+          pembayaranPerCabang[cabangKey] || 0;
         const totalTagihanCabang = pb + prov + kab + sanduka;
-        const selisih = totalTagihanCabang - pembayaran;
+        let selisih = totalTagihanCabang - pembayaran;
+
+        // Terapkan override dari rekapitulasi-iuran (data korreksi) jika ada
+        const override = rekapIuranOverride[cabangKey];
+        if (override) {
+          totalAnggota = override.totalAnggota ?? totalAnggota;
+          const opb = override.pb ?? (totalAnggota * besaran.pb);
+          const oprov = override.provinsi ?? (totalAnggota * besaran.propinsi);
+          const okab = override.kabupaten ?? (totalAnggota * besaran.kabupaten);
+          const ocab = override.cabangIuran ?? (totalAnggota * besaran.cabang);
+          const osanduka = override.sanduka ?? (totalAnggota * besaran.sanduka);
+          tambahan = override.tambahanCabang ?? tambahan;
+          totalCabang = ocab + tambahan;
+          potBank = override.potonganBank ?? potBank;
+          tunai = override.setoranTunai ?? tunai;
+          pembayaran = override.pembayaran ?? pembayaran;
+          totalTagihan = opb + oprov + okab + totalCabang + osanduka;
+          selisih = override.selisih ?? (opb + oprov + okab + osanduka - pembayaran);
+          return [
+            cabName, totalAnggota, opb, oprov, okab, ocab, tambahan, totalCabang,
+            osanduka, totalTagihan, potBank, tunai, pembayaran, selisih,
+          ];
+        }
 
         return [
-          cabName, // 0: Cabang
-          totalAnggota, // 1: Total Anggota
-          pb, // 2: Pusat (PB)
-          prov, // 3: Peruntukan Provinsi
-          kab, // 4: Peruntukan Kabupaten
-          cabPeruntukan, // 5: Peruntukan Cabang
-          tambahan, // 6: Tambahan Cabang
-          totalCabang, // 7: Total Cabang
-          sanduka, // 8: Sanduka
-          totalTagihan, // 9: Total Tagihan
-          potBank, // 10: Potongan Bank
-          tunai, // 11: Setoran Tunai
-          pembayaran, // 12: Pembayaran
-          selisih, // 13: Selisih
+          cabName, totalAnggota, pb, prov, kab, cabPeruntukan, tambahan, totalCabang,
+          sanduka, totalTagihan, potBank, tunai, pembayaran, selisih,
         ];
       })
       .filter((row) => {
         if (!searchQuery) return true;
         return row[0].toLowerCase().includes(searchQuery.toLowerCase());
       });
-  }, [rawBalancingData, besaran, searchQuery, pembayaranPerCabang]);
+  }, [rawBalancingData, besaran, searchQuery, pembayaranPerCabang, rekapIuranOverride]);
 
   useEffect(() => {
     fetchTransactions();
@@ -563,6 +582,38 @@ const IuranPgriSection = () => {
         keterangan: editForm.keterangan || "Koreksi via Dashboard",
       });
 
+      // Simpan pembayaran terkoreksi ke transaksi_cabang agar tampil di form tagihan
+      try {
+        const transaksiCabangList = await GlobalApi.getTransaksiCabangByBulanTahun(monthId, selectedYear);
+        const list = Array.isArray(transaksiCabangList) ? transaksiCabangList : transaksiCabangList?.data || [];
+        const existing = list.find(t =>
+          (t.cabang || "").trim().toUpperCase() === (editingRow[0] || "").trim().toUpperCase() &&
+          ["iuran pgri", "iuran"].includes((t.pos || "").toLowerCase().trim())
+        );
+        if (existing) {
+          await GlobalApi.updateTransaksiCabang(existing.id, {
+            ...existing,
+            pembayaran: Math.round(pembayaran),
+            keterangan: (editForm.keterangan || "Koreksi via Dashboard") + " (Override)",
+          });
+        } else {
+          await GlobalApi.createTransaksiCabangBatch([{
+            tanggalTransaksi: new Date().toISOString().split('T')[0],
+            jenisTransaksi: "PEMASUKAN",
+            pos: "IURAN PGRI",
+            cabang: editingRow[0],
+            setoranBulan: monthId,
+            setoranTahun: selectedYear,
+            jenisPenerimaan: "Transfer",
+            tagihan: Math.round(totalTagihan),
+            pembayaran: Math.round(pembayaran),
+            keterangan: editForm.keterangan || "Koreksi via Dashboard",
+          }]);
+        }
+      } catch (txError) {
+        console.error("Error saving correction to transaksi_cabang:", txError);
+      }
+
       toast.success(`Data ${editingRow[0]} berhasil dikoreksi dan disimpan!`);
       setIsEditModalOpen(false);
       fetchTransactions();
@@ -645,58 +696,58 @@ const IuranPgriSection = () => {
       <Toaster position="top-center" />
 
       {/* Top Banner */}
-      <div className="bg-emerald-500 p-4 sm:p-6 text-white">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
-          <div className="p-2.5 sm:p-3 bg-white/20 rounded-2xl backdrop-blur-md flex-shrink-0">
-            <FaDollarSign className="text-xl sm:text-2xl" />
+      <div className="bg-emerald-500 p-3 sm:p-6 text-white">
+        <div className="flex flex-row items-center space-x-3 sm:space-x-4">
+          <div className="p-1.5 sm:p-3 bg-white/20 rounded-xl sm:rounded-2xl backdrop-blur-md flex-shrink-0">
+            <FaDollarSign className="text-base sm:text-2xl" />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-lg sm:text-xl font-bold">
+            <h2 className="text-sm sm:text-xl font-bold leading-tight sm:leading-normal">
               Manajemen Iuran PGRI
             </h2>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1">
-              <span className="px-2 py-0.5 bg-white/20 rounded-md text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">
-                Periode: {selectedMonth} {selectedYear}
+            <div className="flex flex-row items-center flex-wrap gap-x-2 gap-y-0.5 mt-0.5 sm:mt-1">
+              <span className="px-1.5 sm:px-2 py-0.5 bg-white/20 rounded-md text-[8px] sm:text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">
+                {selectedMonth} {selectedYear}
               </span>
-              <span className="hidden sm:inline-block w-1 h-1 bg-white/40 rounded-full" />
-              <p className="text-emerald-100 text-[9px] sm:text-[10px] font-medium uppercase tracking-widest">
-                Kelola besaran iuran dan target setoran cabang
+              <span className="hidden sm:inline w-1 h-1 bg-white/40 rounded-full flex-shrink-0" />
+              <p className="text-emerald-100 text-[7px] sm:text-[10px] font-medium uppercase tracking-widest truncate">
+                Kelola besaran iuran & target setoran
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="p-3 sm:p-6 space-y-6 sm:space-y-8 overflow-y-auto">
+      <div className="p-2 sm:p-6 space-y-4 sm:space-y-8 overflow-y-auto">
         {/* Top Section: Form Besaran (Full Width) - SUPERADMIN & ADMIN */}
         {isAdminOrSuperAdmin && <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-[20px] sm:rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden"
+          className="bg-white rounded-xl sm:rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden"
         >
-          <div className="bg-slate-50/50 p-3 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="bg-slate-50/50 p-2.5 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-100 flex-shrink-0">
-                <FaCoins className="text-sm sm:text-base" />
+              <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-100 flex-shrink-0">
+                <FaCoins className="text-xs sm:text-base" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-sm sm:text-base font-bold text-slate-800 tracking-tight">
+                <h3 className="text-xs sm:text-base font-bold text-slate-800 tracking-tight">
                   Besaran Iuran Standar
                 </h3>
-                <p className="text-slate-400 text-[8px] sm:text-[9px] font-medium uppercase tracking-widest">
-                  Parameter Keuangan Utama
+                <p className="text-slate-400 text-[7px] sm:text-[9px] font-medium uppercase tracking-wider sm:tracking-widest">
+                  Parameter Keuangan
                 </p>
               </div>
             </div>
             <button
               onClick={() => fetchInitialData()}
-              className="px-2.5 sm:px-3 py-1.5 sm:py-1 bg-white border border-slate-200 rounded-lg text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-widest hover:text-emerald-500 hover:border-emerald-200 transition-all shadow-sm whitespace-nowrap flex-shrink-0"
+              className="px-2 sm:px-3 py-1 sm:py-1 bg-white border border-slate-200 rounded-lg text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-widest hover:text-emerald-500 hover:border-emerald-200 transition-all shadow-sm whitespace-nowrap flex-shrink-0"
             >
-              Reset Default
+              Reset
             </button>
           </div>
 
-          <div className="p-3 sm:p-8">
+          <div className="p-2 sm:p-8">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
               {[
                 { label: "Iuran Pusat (PB)", key: "pb", icon: "🇮🇩" },
@@ -741,21 +792,21 @@ const IuranPgriSection = () => {
               ))}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 items-end">
-              <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
-                <div className="p-3 sm:p-4 bg-slate-900 rounded-[16px] sm:rounded-[24px] text-white flex flex-col justify-between border-b-4 border-slate-700">
-                  <p className="text-[7px] sm:text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 sm:gap-4 items-end">
+              <div className="lg:col-span-2 grid grid-cols-2 gap-2 sm:gap-3">
+                <div className="p-2 sm:p-4 bg-slate-900 rounded-xl sm:rounded-[24px] text-white flex flex-col justify-between border-b-2 sm:border-b-4 border-slate-700">
+                  <p className="text-[6px] sm:text-[8px] font-bold text-slate-500 uppercase tracking-wider sm:tracking-widest mb-0.5">
                     Total Iuran PGRI
                   </p>
-                  <h5 className="text-sm sm:text-base font-bold line-clamp-2">
+                  <h5 className="text-[11px] sm:text-base font-bold truncate">
                     {formatCurrency(totalIuran)}
                   </h5>
                 </div>
-                <div className="p-3 sm:p-4 bg-emerald-500 rounded-[16px] sm:rounded-[24px] text-white flex flex-col justify-between shadow-lg shadow-emerald-100 border-b-4 border-emerald-600">
-                  <p className="text-[7px] sm:text-[8px] font-bold text-emerald-100 uppercase tracking-widest mb-0.5">
-                    Grand Total Akhir
+                <div className="p-2 sm:p-4 bg-emerald-500 rounded-xl sm:rounded-[24px] text-white flex flex-col justify-between shadow-lg shadow-emerald-100 border-b-2 sm:border-b-4 border-emerald-600">
+                  <p className="text-[6px] sm:text-[8px] font-bold text-emerald-100 uppercase tracking-wider sm:tracking-widest mb-0.5">
+                    Grand Total
                   </p>
-                  <h5 className="text-base sm:text-lg font-bold line-clamp-2">
+                  <h5 className="text-[11px] sm:text-lg font-bold truncate">
                     {formatCurrency(grandTotal)}
                   </h5>
                 </div>
@@ -763,14 +814,14 @@ const IuranPgriSection = () => {
               {isSuperAdmin && <button
                 onClick={handleUpdateBesaran}
                 disabled={loadingBesaran}
-                className="w-full py-3 sm:py-5 bg-slate-800 hover:bg-slate-900 disabled:bg-slate-200 text-white rounded-[16px] sm:rounded-[24px] font-bold shadow-xl shadow-slate-200 transition-all flex items-center justify-center space-x-2 active:scale-[0.98] text-sm sm:text-base"
+                className="w-full py-2 sm:py-5 bg-slate-800 hover:bg-slate-900 disabled:bg-slate-200 text-white rounded-xl sm:rounded-[24px] font-bold shadow-xl shadow-slate-200 transition-all flex items-center justify-center space-x-2 active:scale-[0.98] text-xs sm:text-base"
               >
                 {loadingBesaran ? (
-                  <div className="w-3.5 sm:w-4 h-3.5 sm:h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <div className="w-3 sm:w-4 h-3 sm:h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
-                  <FaSave className="text-sm sm:text-base" />
+                  <FaSave className="text-xs sm:text-base" />
                 )}
-                <span className="tracking-tight">Simpan Perubahan</span>
+                <span className="tracking-tight">Simpan</span>
               </button>}
             </div>
           </div>
@@ -778,55 +829,53 @@ const IuranPgriSection = () => {
 
         {/* Bottom Section: Laporan */}
         <div className="space-y-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-[18px] bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100 shadow-sm">
-                <FaNewspaper className="text-xl" />
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 border-b border-slate-100 pb-4 sm:pb-6">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-xl sm:rounded-[18px] bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100 shadow-sm flex-shrink-0">
+                <FaNewspaper className="text-sm sm:text-xl" />
               </div>
-              <div>
-                <h3 className="text-xl font-bold text-slate-800 tracking-tight">
+              <div className="min-w-0">
+                <h3 className="text-base sm:text-xl font-bold text-slate-800 tracking-tight">
                   Laporan & Rekapitulasi
                 </h3>
-                <p className="text-slate-400 text-xs font-medium">
-                  Monitoring peruntukan dan realisasi iuran
+                <p className="text-slate-400 text-[10px] sm:text-xs font-medium truncate">
+                  Monitoring peruntukan & realisasi iuran
                 </p>
               </div>
             </div>
 
-            <div className="flex bg-slate-100 p-1 rounded-[18px] shadow-inner border border-slate-200">
+            <div className="flex bg-slate-100 p-0.5 sm:p-1 rounded-[12px] sm:rounded-[18px] shadow-inner border border-slate-200 w-fit">
               <button
                 onClick={() => {
                   setActiveSubTab("data-iuran");
                   setCurrentPage(1);
                 }}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-[15px] font-bold text-[9px] uppercase tracking-wider transition-all duration-300 ${activeSubTab === "data-iuran"
+                className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-1.5 sm:py-2.5 rounded-[10px] sm:rounded-[15px] font-bold text-[8px] sm:text-[9px] uppercase tracking-wider transition-all duration-300 whitespace-nowrap ${activeSubTab === "data-iuran"
                   ? "bg-white text-indigo-600 shadow-lg"
                   : "text-slate-400 hover:text-slate-600"
                   }`}
               >
                 <FaChartBar
-                  className={
-                    activeSubTab === "data-iuran" ? "text-indigo-500" : ""
-                  }
+                  className={`text-xs sm:text-sm ${activeSubTab === "data-iuran" ? "text-indigo-500" : ""}`}
                 />
-                Data Iuran
+                <span className="hidden sm:inline">Data Iuran</span>
+                <span className="sm:hidden">Iuran</span>
               </button>
               <button
                 onClick={() => {
                   setActiveSubTab("peruntukan");
                   setCurrentPage(1);
                 }}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-[15px] font-bold text-[9px] uppercase tracking-wider transition-all duration-300 ${activeSubTab === "peruntukan"
+                className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-1.5 sm:py-2.5 rounded-[10px] sm:rounded-[15px] font-bold text-[8px] sm:text-[9px] uppercase tracking-wider transition-all duration-300 whitespace-nowrap ${activeSubTab === "peruntukan"
                   ? "bg-white text-indigo-600 shadow-lg"
                   : "text-slate-400 hover:text-slate-600"
                   }`}
               >
                 <FaTable
-                  className={
-                    activeSubTab === "peruntukan" ? "text-indigo-500" : ""
-                  }
+                  className={`text-xs sm:text-sm ${activeSubTab === "peruntukan" ? "text-indigo-500" : ""}`}
                 />
-                Peruntukan Cabang
+                <span className="hidden sm:inline">Peruntukan Cabang</span>
+                <span className="sm:hidden">Cabang</span>
               </button>
             </div>
           </div>
@@ -845,7 +894,7 @@ const IuranPgriSection = () => {
                   {activeSubTab === "data-iuran" && (
                     <>
                       {/* Summary Stats Grid */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
                         {[
                           {
                             label: "Total Anggota",
@@ -878,19 +927,19 @@ const IuranPgriSection = () => {
                         ].map((stat, i) => (
                           <div
                             key={i}
-                            className={`${stat.color} p-5 rounded-[28px] text-white shadow-lg shadow-${stat.color.split("-")[1]}-100 flex items-center justify-between group overflow-hidden relative`}
+                            className={`${stat.color} p-2.5 sm:p-5 rounded-xl sm:rounded-[28px] text-white shadow-lg flex items-center justify-between group overflow-hidden relative`}
                           >
-                            <div className="relative z-10">
-                              <p className="text-[9px] font-bold opacity-60 uppercase tracking-widest mb-0.5">
+                            <div className="relative z-10 min-w-0">
+                              <p className="text-[7px] sm:text-[9px] font-bold opacity-60 uppercase tracking-wider sm:tracking-widest mb-0.5 truncate">
                                 {stat.label}
                               </p>
-                              <h4 className="text-xl font-bold">
+                              <h4 className="text-xs sm:text-xl font-bold truncate">
                                 {stat.isCurrency
                                   ? formatCurrency(stat.val)
                                   : stat.val.toLocaleString("id-ID")}
                               </h4>
                             </div>
-                            <div className="text-3xl opacity-10 group-hover:scale-125 transition-transform duration-500">
+                            <div className="text-lg sm:text-3xl opacity-10 group-hover:scale-125 transition-transform duration-500 flex-shrink-0 ml-1">
                               {stat.icon}
                             </div>
                           </div>
@@ -898,40 +947,43 @@ const IuranPgriSection = () => {
                       </div>
 
                       {/* Payment Detail Section */}
-                      <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-xl shadow-slate-100/50">
-                        <div className="flex items-center gap-2 mb-6">
-                          <div className="w-1 h-5 bg-indigo-500 rounded-full" />
-                          <h4 className="text-base font-bold text-slate-800">
-                            Rincian Pembayaran Akumulatif -{" "}
-                            <span className="text-indigo-600">
-                              {selectedMonth} {selectedYear}
-                            </span>
+                      <div className="bg-white p-3 sm:p-6 rounded-2xl sm:rounded-[32px] border border-slate-100 shadow-xl shadow-slate-100/50">
+                        <div className="flex items-center gap-2 mb-3 sm:mb-6">
+                          <div className="w-1 h-4 sm:h-5 bg-indigo-500 rounded-full" />
+                          <h4 className="text-xs sm:text-base font-bold text-slate-800">
+                            Rincian Pembayaran{" "}
+                            <span className="text-indigo-600 hidden sm:inline">- {selectedMonth} {selectedYear}</span>
+                            <span className="text-indigo-600 sm:hidden">{selectedMonth.slice(0,3)} {selectedYear}</span>
                           </h4>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-3 gap-2 sm:gap-6">
                           {[
                             {
-                              label: "🏦 Potongan Bank",
+                              label: "Bank",
+                              labelSm: "🏦",
                               val: summaryStats.potonganBank,
                               color: "text-rose-500",
                             },
                             {
-                              label: "💵 Setoran Tunai",
+                              label: "Tunai",
+                              labelSm: "💵",
                               val: summaryStats.setoranTunai,
                               color: "text-blue-500",
                             },
                             {
-                              label: "∑ Total Dibayar",
+                              label: "Total",
+                              labelSm: "∑",
                               val: summaryStats.totalDibayar,
                               color: "text-emerald-600",
                             },
                           ].map((item, i) => (
-                            <div key={i} className="relative">
-                              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1 italic">
-                                {item.label}
+                            <div key={i} className="relative text-center sm:text-left">
+                              <p className="text-[8px] sm:text-[8px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 sm:mb-1 italic truncate">
+                                <span className="sm:hidden">{item.labelSm}</span>
+                                <span className="hidden sm:inline">{item.label}</span>
                               </p>
                               <p
-                                className={`text-base font-bold ${item.color}`}
+                                className={`text-[11px] sm:text-base font-bold ${item.color} truncate`}
                               >
                                 {formatCurrency(item.val)}
                               </p>
@@ -944,20 +996,20 @@ const IuranPgriSection = () => {
                       </div>
 
                       {/* Full Table */}
-                      <div className="bg-white rounded-[32px] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden">
-                        <div className="p-6 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between bg-slate-50/30 gap-4">
-                          <div className="flex items-center gap-4 flex-1">
+                      <div className="bg-white rounded-2xl sm:rounded-[32px] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden">
+                        <div className="p-3 sm:p-6 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between bg-slate-50/30 gap-3 sm:gap-4">
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 flex-1 w-full">
                             <div className="flex items-center gap-2 min-w-fit">
                               <FaTable className="text-indigo-500 text-sm" />
-                              <h4 className="text-sm font-bold text-slate-800 tracking-tight uppercase tracking-widest text-[10px]">
+                              <h4 className="text-[10px] font-bold text-slate-800 tracking-tight uppercase tracking-widest">
                                 Tabel Rekapitulasi Iuran
                               </h4>
                             </div>
 
                             {/* Search & Date Filter in Header */}
-                            <div className="flex flex-wrap items-center gap-3 flex-1">
+                            <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
                               <div
-                                className="relative min-w-[200px]"
+                                className="relative min-w-0 w-full sm:w-auto sm:min-w-[200px]"
                                 ref={cabangRef}
                               >
                                 <div className="relative group">
@@ -1036,13 +1088,13 @@ const IuranPgriSection = () => {
                                   </motion.div>
                                 )}
                               </div>
-                              <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-100">
+                              <div className="flex items-center gap-2 bg-slate-50 p-1 sm:p-2 rounded-lg sm:rounded-xl border border-slate-100">
                                 <select
                                   value={selectedMonth}
                                   onChange={(e) =>
                                     setSelectedMonth(e.target.value)
                                   }
-                                  className="bg-transparent px-4 py-2.5 outline-none font-bold text-slate-600 text-xs uppercase tracking-widest cursor-pointer"
+                                  className="bg-transparent px-2 sm:px-4 py-1.5 sm:py-2.5 outline-none font-bold text-slate-600 text-[10px] sm:text-xs uppercase tracking-wider sm:tracking-widest cursor-pointer"
                                 >
                                   {bulanList.map((b) => (
                                     <option key={b.id} value={b.namaBulan}>
@@ -1050,13 +1102,13 @@ const IuranPgriSection = () => {
                                     </option>
                                   ))}
                                 </select>
-                                <div className="w-[1px] h-5 bg-slate-200" />
+                                <div className="w-[1px] h-4 sm:h-5 bg-slate-200" />
                                 <select
                                   value={selectedYear}
                                   onChange={(e) =>
                                     setSelectedYear(parseInt(e.target.value))
                                   }
-                                  className="bg-transparent px-4 py-2.5 outline-none font-bold text-slate-600 text-xs uppercase tracking-widest cursor-pointer"
+                                  className="bg-transparent px-2 sm:px-4 py-1.5 sm:py-2.5 outline-none font-bold text-slate-600 text-[10px] sm:text-xs uppercase tracking-wider sm:tracking-widest cursor-pointer"
                                 >
                                   {Array.from({ length: new Date().getFullYear() + 2 - 2020 + 1 }, (_, i) => 2020 + i).map((y) => (
                                     <option key={y} value={y}>
@@ -1068,38 +1120,39 @@ const IuranPgriSection = () => {
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                             {isSaved ? (
-                              <span className="flex items-center gap-1.5 px-4 py-2.5 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-xs uppercase tracking-widest border border-emerald-200">
-                                <FaCheckCircle className="text-sm" />
-                                TERSIMPAN ({savedDataCount})
+                              <span className="hidden sm:flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2.5 bg-emerald-50 text-emerald-700 rounded-lg sm:rounded-xl font-bold text-[9px] sm:text-xs uppercase tracking-wider sm:tracking-widest border border-emerald-200">
+                                <FaCheckCircle className="text-xs sm:text-sm" />
+                                <span className="hidden sm:inline">TERSIMPAN ({savedDataCount})</span>
+                                <span className="sm:hidden">✓{savedDataCount}</span>
                               </span>
                             ) : (
-                              <span className="flex items-center gap-1.5 px-4 py-2.5 bg-amber-50 text-amber-700 rounded-xl font-bold text-xs uppercase tracking-widest border border-amber-200">
-                                <FaExclamationCircle className="text-sm" />
+                              <span className="hidden sm:flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2.5 bg-amber-50 text-amber-700 rounded-lg sm:rounded-xl font-bold text-[9px] sm:text-xs uppercase tracking-wider sm:tracking-widest border border-amber-200">
+                                <FaExclamationCircle className="text-xs sm:text-sm" />
                                 BELUM DISIMPAN
                               </span>
                             )}
                             {isSuperAdmin && (
                               <button
                                 onClick={handleSaveTable}
-                                className="flex items-center gap-2 px-5 py-3 bg-emerald-500 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 shadow-md"
+                                className="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-2 sm:py-3 bg-emerald-500 text-white rounded-lg sm:rounded-xl font-bold text-[9px] sm:text-xs uppercase tracking-wider sm:tracking-widest hover:bg-emerald-600 transition-all active:scale-95 shadow-md"
                               >
-                                <FaSave />
-                                <span>Simpan</span>
+                                <FaSave className="text-xs sm:text-sm" />
+                                <span className="hidden sm:inline">Simpan</span>
                               </button>
                             )}
                             <button
                               onClick={() => window.print()}
-                              className="flex items-center gap-2 px-5 py-3 bg-slate-900 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-black transition-all active:scale-95 shadow-md"
+                              className="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-2 sm:py-3 bg-slate-900 text-white rounded-lg sm:rounded-xl font-bold text-[9px] sm:text-xs uppercase tracking-wider sm:tracking-widest hover:bg-black transition-all active:scale-95 shadow-md"
                             >
-                              <FaPrint />
-                              <span>PDF</span>
+                              <FaPrint className="text-xs sm:text-sm" />
+                              <span className="hidden sm:inline">PDF</span>
                             </button>
                           </div>
                         </div>
                         <div className="overflow-x-auto">
-                          <table className="w-full text-left border-collapse">
+                          <table className="min-w-full text-left border-collapse">
                             <thead>
                               <tr className="bg-slate-50/50 border-b border-slate-100">
                                 {[
@@ -1123,7 +1176,7 @@ const IuranPgriSection = () => {
                                 ].map((h, i) => (
                                   <th
                                     key={i}
-                                    className="px-3 py-4 text-[9px] font-bold uppercase tracking-widest text-slate-400 text-center whitespace-nowrap"
+                                    className="px-2 sm:px-3 py-2 sm:py-4 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider sm:tracking-widest text-slate-400 text-center whitespace-nowrap"
                                   >
                                     {h}
                                   </th>
@@ -1136,7 +1189,7 @@ const IuranPgriSection = () => {
                                   .fill(0)
                                   .map((_, i) => (
                                     <tr key={i} className="animate-pulse">
-                                      <td colSpan={15} className="p-6">
+                                      <td colSpan={15} className="p-3 sm:p-6">
                                         <div className="h-3 bg-slate-100 rounded-full w-full" />
                                       </td>
                                     </tr>
@@ -1156,43 +1209,43 @@ const IuranPgriSection = () => {
                                     return (
                                       <tr
                                         key={i}
-                                        className="hover:bg-slate-50/80 transition-colors text-center text-[11px] font-bold text-slate-600"
+                                        className="hover:bg-slate-50/80 transition-colors text-center text-[10px] sm:text-[11px] font-bold text-slate-600"
                                       >
-                                        <td className="px-3 py-4 text-slate-400 font-bold">
+                                        <td className="px-1.5 sm:px-3 py-2 sm:py-4 text-slate-400 font-bold text-[9px] sm:text-[11px]">
                                           {i + 1}
                                         </td>
-                                        <td className="px-3 py-4 font-bold text-slate-800 text-left whitespace-nowrap">
+                                        <td className="px-1.5 sm:px-3 py-2 sm:py-4 font-bold text-slate-800 text-left whitespace-nowrap text-[9px] sm:text-[11px]">
                                           {row[0]}
                                         </td>
-                                        <td className="px-3 py-4 text-indigo-600 font-bold">
-                                          <span className="px-2 py-0.5 bg-indigo-50 rounded-md">
+                                        <td className="px-1.5 sm:px-3 py-2 sm:py-4 text-indigo-600 font-bold">
+                                          <span className="px-1 sm:px-2 py-0.5 bg-indigo-50 rounded-md text-[9px] sm:text-[11px]">
                                             {row[1]}
                                           </span>
                                         </td>
-                                        <td className="px-3 py-4">
+                                        <td className="px-1.5 sm:px-3 py-2 sm:py-4 text-[9px] sm:text-[11px]">
                                           {formatCurrency(row[2])}
                                         </td>
-                                        <td className="px-3 py-4">
+                                        <td className="px-1.5 sm:px-3 py-2 sm:py-4 text-[9px] sm:text-[11px]">
                                           {formatCurrency(row[3])}
                                         </td>
-                                        <td className="px-3 py-4">
+                                        <td className="px-1.5 sm:px-3 py-2 sm:py-4 text-[9px] sm:text-[11px]">
                                           {formatCurrency(row[4])}
                                         </td>
-                                        <td className="px-3 py-4">
+                                        <td className="px-1.5 sm:px-3 py-2 sm:py-4 text-[9px] sm:text-[11px]">
                                           {formatCurrency(row[5])}
                                         </td>
-                                        <td className="px-3 py-4">
+                                        <td className="px-1.5 sm:px-3 py-2 sm:py-4 text-[9px] sm:text-[11px]">
                                           {formatCurrency(row[6])}
                                         </td>
-                                        <td className="px-3 py-4 text-emerald-600">
+                                        <td className="px-1.5 sm:px-3 py-2 sm:py-4 text-emerald-600 text-[9px] sm:text-[11px]">
                                           {formatCurrency(
                                             row[7] || totalCabang,
                                           )}
                                         </td>
-                                        <td className="px-3 py-4">
+                                        <td className="px-1.5 sm:px-3 py-2 sm:py-4 text-[9px] sm:text-[11px]">
                                           {formatCurrency(row[8])}
                                         </td>
-                                        <td className="px-3 py-4 text-amber-700 bg-amber-50/50 font-bold">
+                                        <td className="px-1.5 sm:px-3 py-2 sm:py-4 text-amber-700 bg-amber-50/50 font-bold text-[9px] sm:text-[11px]">
                                           {formatCurrency(
                                             parseInt(row[2] || 0) +
                                             parseInt(row[3] || 0) +
@@ -1200,22 +1253,22 @@ const IuranPgriSection = () => {
                                             parseInt(row[8] || 0),
                                           )}
                                         </td>
-                                        <td className="px-3 py-4 text-slate-900 bg-slate-50/50 font-bold">
+                                        <td className="px-1.5 sm:px-3 py-2 sm:py-4 text-slate-900 bg-slate-50/50 font-bold text-[9px] sm:text-[11px]">
                                           {formatCurrency(
                                             row[9] || totalTagihanRow,
                                           )}
                                         </td>
-                                        <td className="px-3 py-4 text-rose-500">
+                                        <td className="px-1.5 sm:px-3 py-2 sm:py-4 text-rose-500 text-[9px] sm:text-[11px]">
                                           {formatCurrency(row[10] || 0)}
                                         </td>
-                                        <td className="px-3 py-4 text-blue-600">
+                                        <td className="px-1.5 sm:px-3 py-2 sm:py-4 text-blue-600 text-[9px] sm:text-[11px]">
                                           {formatCurrency(row[11] || 0)}
                                         </td>
-                                        <td className="px-3 py-4">
+                                        <td className="px-1.5 sm:px-3 py-2 sm:py-4 text-[9px] sm:text-[11px]">
                                           {formatCurrency(row[12] || 0)}
                                         </td>
-                                        <td className="px-3 py-4">
-                                          <span className="px-2 py-0.5 bg-rose-50 text-rose-600 rounded-md">
+                                        <td className="px-1.5 sm:px-3 py-2 sm:py-4 text-[9px] sm:text-[11px]">
+                                          <span className="px-1 sm:px-2 py-0.5 bg-rose-50 text-rose-600 rounded-md text-[9px] sm:text-[11px]">
                                             {formatCurrency(
                                               (parseInt(row[2] || 0) +
                                                 parseInt(row[3] || 0) +
@@ -1226,21 +1279,21 @@ const IuranPgriSection = () => {
                                           </span>
                                         </td>
                                         {isSuperAdmin && (
-                                          <td className="px-3 py-4">
-                                            <div className="flex items-center justify-center gap-2">
+                                          <td className="px-1.5 sm:px-3 py-2 sm:py-4">
+                                            <div className="flex items-center justify-center gap-1 sm:gap-2">
                                               <button
                                                 onClick={() => handleEdit(row)}
-                                                className="w-8 h-8 flex items-center justify-center bg-blue-50 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition-all shadow-sm"
+                                                className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center bg-blue-50 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition-all shadow-sm"
                                                 title="Edit"
                                               >
-                                                <FaEdit size={12} />
+                                                <FaEdit size={10} />
                                               </button>
                                               <button
                                                 onClick={() => handleDelete(row)}
-                                                className="w-8 h-8 flex items-center justify-center bg-rose-50 text-rose-500 rounded-lg hover:bg-rose-500 hover:text-white transition-all shadow-sm"
+                                                className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center bg-rose-50 text-rose-500 rounded-lg hover:bg-rose-500 hover:text-white transition-all shadow-sm"
                                                 title="Delete"
                                               >
-                                                <FaTrash size={12} />
+                                                <FaTrash size={10} />
                                               </button>
                                             </div>
                                           </td>
@@ -1249,58 +1302,58 @@ const IuranPgriSection = () => {
                                     );
                                   })}
                                   {/* Total Row */}
-                                  <tr className="bg-slate-900 text-white font-bold text-[11px] text-center sticky bottom-0">
+                                  <tr className="bg-slate-900 text-white font-bold text-[9px] sm:text-[11px] text-center sticky bottom-0">
                                     <td
-                                      className="px-3 py-5 border-r border-slate-800"
+                                      className="px-1.5 sm:px-3 py-2 sm:py-5 border-r border-slate-800"
                                       colSpan={2}
                                     >
-                                      TOTAL KESELURUHAN
+                                      TOTAL
                                     </td>
-                                    <td className="px-3 py-5 bg-indigo-500/20 text-indigo-300">
+                                    <td className="px-1.5 sm:px-3 py-2 sm:py-5 bg-indigo-500/20 text-indigo-300">
                                       {columnTotals[1]}
                                     </td>
-                                    <td className="px-3 py-5">
+                                    <td className="px-1.5 sm:px-3 py-2 sm:py-5">
                                       {formatCurrency(columnTotals[2])}
                                     </td>
-                                    <td className="px-3 py-5">
+                                    <td className="px-1.5 sm:px-3 py-2 sm:py-5">
                                       {formatCurrency(columnTotals[3])}
                                     </td>
-                                    <td className="px-3 py-5">
+                                    <td className="px-1.5 sm:px-3 py-2 sm:py-5">
                                       {formatCurrency(columnTotals[4])}
                                     </td>
-                                    <td className="px-3 py-5">
+                                    <td className="px-1.5 sm:px-3 py-2 sm:py-5">
                                       {formatCurrency(columnTotals[5])}
                                     </td>
-                                    <td className="px-3 py-5">
+                                    <td className="px-1.5 sm:px-3 py-2 sm:py-5">
                                       {formatCurrency(columnTotals[6])}
                                     </td>
-                                    <td className="px-3 py-5 text-emerald-400">
+                                    <td className="px-1.5 sm:px-3 py-2 sm:py-5 text-emerald-400">
                                       {formatCurrency(columnTotals[7])}
                                     </td>
-                                    <td className="px-3 py-5">
+                                    <td className="px-1.5 sm:px-3 py-2 sm:py-5">
                                       {formatCurrency(columnTotals[8])}
                                     </td>
-                                    <td className="px-3 py-5 bg-amber-500/20 text-amber-300 font-bold">
+                                    <td className="px-1.5 sm:px-3 py-2 sm:py-5 bg-amber-500/20 text-amber-300 font-bold">
                                       {formatCurrency(
                                         columnTotals[2] + columnTotals[3] + columnTotals[4] + columnTotals[8],
                                       )}
                                     </td>
-                                    <td className="px-3 py-5 bg-slate-800 font-bold text-amber-400">
+                                    <td className="px-1.5 sm:px-3 py-2 sm:py-5 bg-slate-800 font-bold text-amber-400">
                                       {formatCurrency(columnTotals[9])}
                                     </td>
-                                    <td className="px-3 py-5 text-rose-400">
+                                    <td className="px-1.5 sm:px-3 py-2 sm:py-5 text-rose-400">
                                       {formatCurrency(columnTotals[10])}
                                     </td>
-                                    <td className="px-3 py-5 text-blue-400">
+                                    <td className="px-1.5 sm:px-3 py-2 sm:py-5 text-blue-400">
                                       {formatCurrency(columnTotals[11])}
                                     </td>
-                                    <td className="px-3 py-5">
+                                    <td className="px-1.5 sm:px-3 py-2 sm:py-5">
                                       {formatCurrency(columnTotals[12])}
                                     </td>
-                                    <td className="px-3 py-5 bg-rose-500/20 text-white">
+                                    <td className="px-1.5 sm:px-3 py-2 sm:py-5 bg-rose-500/20 text-white">
                                       {formatCurrency(columnTotals[13])}
                                     </td>
-                                    {isSuperAdmin && <td className="px-3 py-5">-</td>}
+                                    {isSuperAdmin && <td className="px-1.5 sm:px-3 py-2 sm:py-5">-</td>}
                                   </tr>
                                 </>
                               ) : (
@@ -1321,20 +1374,19 @@ const IuranPgriSection = () => {
                   )}
 
                   {activeSubTab === "peruntukan" && (
-                    <div className="bg-white rounded-[32px] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden">
-                      <div className="p-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+                    <div className="bg-white rounded-2xl sm:rounded-[32px] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden">
+                      <div className="p-3 sm:p-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
                         <div className="flex items-center gap-2">
-                          <FaTable className="text-indigo-500 text-sm" />
-                          <h4 className="text-sm font-bold text-slate-800 tracking-tight uppercase tracking-widest text-[10px]">
-                            Peruntukan Cabang -{" "}
-                            <span className="text-indigo-600">
-                              {selectedMonth} {selectedYear}
-                            </span>
+                          <FaTable className="text-indigo-500 text-xs sm:text-sm" />
+                          <h4 className="text-[10px] sm:text-sm font-bold text-slate-800 tracking-tight uppercase tracking-widest">
+                            Peruntukan Cabang{" "}
+                            <span className="text-indigo-600 hidden sm:inline">- {selectedMonth} {selectedYear}</span>
+                            <span className="text-indigo-600 sm:hidden">{selectedMonth.slice(0,3)} {selectedYear}</span>
                           </h4>
                         </div>
                       </div>
                       <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
+                        <table className="min-w-full text-left border-collapse">
                           <thead>
                             <tr className="bg-slate-50/50 border-b border-slate-100">
                               {[
@@ -1347,7 +1399,7 @@ const IuranPgriSection = () => {
                               ].map((h, i) => (
                                 <th
                                   key={i}
-                                  className="px-6 py-4 text-[9px] font-bold uppercase tracking-widest text-slate-400 text-center whitespace-nowrap"
+                                  className="px-2 sm:px-6 py-2 sm:py-4 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider sm:tracking-widest text-slate-400 text-center whitespace-nowrap"
                                 >
                                   {h}
                                 </th>
@@ -1360,7 +1412,7 @@ const IuranPgriSection = () => {
                                 .fill(0)
                                 .map((_, i) => (
                                   <tr key={i} className="animate-pulse">
-                                    <td colSpan={6} className="p-8">
+                                    <td colSpan={6} className="p-3 sm:p-8">
                                       <div className="h-3 bg-slate-100 rounded-full w-full" />
                                     </td>
                                   </tr>
@@ -1372,26 +1424,26 @@ const IuranPgriSection = () => {
                                 return (
                                   <tr
                                     key={i}
-                                    className="hover:bg-slate-50/80 transition-colors text-center text-[12px] font-bold text-slate-600"
+                                    className="hover:bg-slate-50/80 transition-colors text-center text-[10px] sm:text-[12px] font-bold text-slate-600"
                                   >
-                                    <td className="px-6 py-5 text-slate-400 font-bold">
+                                    <td className="px-1.5 sm:px-6 py-2 sm:py-5 text-slate-400 font-bold text-[9px] sm:text-[12px]">
                                       {i + 1}
                                     </td>
-                                    <td className="px-6 py-5 font-bold text-slate-800 text-left whitespace-nowrap">
+                                    <td className="px-1.5 sm:px-6 py-2 sm:py-5 font-bold text-slate-800 text-left whitespace-nowrap text-[9px] sm:text-[12px]">
                                       {row[0]}
                                     </td>
-                                    <td className="px-6 py-5">
-                                      <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg font-bold">
+                                    <td className="px-1.5 sm:px-6 py-2 sm:py-5">
+                                      <span className="px-1.5 sm:px-3 py-0.5 sm:py-1 bg-blue-50 text-blue-600 rounded-lg font-bold text-[9px] sm:text-[12px]">
                                         {row[1]}
                                       </span>
                                     </td>
-                                    <td className="px-6 py-5">
+                                    <td className="px-1.5 sm:px-6 py-2 sm:py-5 text-[9px] sm:text-[12px]">
                                       {formatCurrency(row[5])}
                                     </td>
-                                    <td className="px-6 py-5">
+                                    <td className="px-1.5 sm:px-6 py-2 sm:py-5 text-[9px] sm:text-[12px]">
                                       {formatCurrency(row[6])}
                                     </td>
-                                    <td className="px-6 py-5 text-emerald-600 font-bold">
+                                    <td className="px-1.5 sm:px-6 py-2 sm:py-5 text-emerald-600 font-bold text-[9px] sm:text-[12px]">
                                       {formatCurrency(
                                         row[7] || totalPeruntukan,
                                       )}
@@ -1403,7 +1455,7 @@ const IuranPgriSection = () => {
                               <tr>
                                 <td
                                   colSpan={6}
-                                  className="py-16 text-center text-slate-300 font-bold uppercase tracking-widest text-xs"
+                                  className="py-8 sm:py-16 text-center text-slate-300 font-bold uppercase tracking-widest text-[10px] sm:text-xs"
                                 >
                                   Data Kosong
                                 </td>
@@ -1424,135 +1476,80 @@ const IuranPgriSection = () => {
       {/* Edit Modal */}
       <AnimatePresence>
         {isEditModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-slate-900/60 backdrop-blur-sm">
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white w-full max-w-lg rounded-[32px] shadow-2xl overflow-hidden border border-slate-100"
+              initial={{ opacity: 0, y: 100, scale: 1 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 100, scale: 1 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="bg-white w-full sm:max-w-lg rounded-t-2xl sm:rounded-[32px] shadow-2xl overflow-hidden border border-slate-100 sm:mx-4 max-h-[90vh] sm:max-h-auto overflow-y-auto"
             >
               {/* Modal Header */}
-              <div className="bg-slate-50 p-6 flex items-center justify-between border-b border-slate-100">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-500 text-white flex items-center justify-center shadow-lg shadow-blue-100">
-                    <FaEdit />
+              <div className="bg-slate-50 p-3 sm:p-6 flex items-center justify-between border-b border-slate-100 sticky top-0 bg-white z-10">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-blue-500 text-white flex items-center justify-center shadow-lg shadow-blue-100 flex-shrink-0">
+                    <FaEdit className="text-sm sm:text-base" />
                   </div>
-                  <div>
-                    <h3 className="text-base font-bold text-slate-800 tracking-tight">
-                      Koreksi Data: {editingRow?.[0]}
+                  <div className="min-w-0">
+                    <h3 className="text-sm sm:text-base font-bold text-slate-800 tracking-tight truncate">
+                      Koreksi: {editingRow?.[0]}
                     </h3>
-                    <p className="text-[9px] font-medium text-slate-400 uppercase tracking-widest">
-                      Periode: {selectedMonth} {selectedYear}
+                    <p className="text-[8px] sm:text-[9px] font-medium text-slate-400 uppercase tracking-wider sm:tracking-widest">
+                      {selectedMonth} {selectedYear}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsEditModalOpen(false)}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-200 text-slate-400 transition-all"
+                  className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg hover:bg-slate-200 text-slate-400 transition-all flex-shrink-0"
                 >
-                  <FaTimes />
+                  <FaTimes className="text-xs sm:text-sm" />
                 </button>
               </div>
 
               {/* Modal Body */}
-              <div className="p-8 space-y-5">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-1">
-                      Total Anggota
-                    </label>
-                    <input
-                      type="number"
-                      value={editForm.totalAnggota}
-                      onChange={(e) =>
-                        setEditForm({
-                          ...editForm,
-                          totalAnggota: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-blue-500 outline-none font-bold text-slate-700 transition-all shadow-inner"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-1">
-                      Tambahan Cabang
-                    </label>
-                    <input
-                      type="number"
-                      value={editForm.tambahanCabang}
-                      onChange={(e) =>
-                        setEditForm({
-                          ...editForm,
-                          tambahanCabang: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-blue-500 outline-none font-bold text-slate-700 transition-all shadow-inner"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-1">
-                      Potongan Bank
-                    </label>
-                    <input
-                      type="number"
-                      value={editForm.potonganBank}
-                      onChange={(e) =>
-                        setEditForm({
-                          ...editForm,
-                          potonganBank: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-blue-500 outline-none font-bold text-slate-700 transition-all shadow-inner"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-1">
-                      Setoran Tunai
-                    </label>
-                    <input
-                      type="number"
-                      value={editForm.setoranTunai}
-                      onChange={(e) =>
-                        setEditForm({
-                          ...editForm,
-                          setoranTunai: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-blue-500 outline-none font-bold text-slate-700 transition-all shadow-inner"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-1">
-                      Pembayaran
-                    </label>
-                    <input
-                      type="number"
-                      value={editForm.pembayaran}
-                      onChange={(e) =>
-                        setEditForm({
-                          ...editForm,
-                          pembayaran: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-blue-500 outline-none font-bold text-slate-700 transition-all shadow-inner"
-                    />
-                  </div>
+              <div className="p-3 sm:p-8 space-y-3 sm:space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
+                  {[
+                    { label: "Total Anggota", key: "totalAnggota" },
+                    { label: "Tambahan Cabang", key: "tambahanCabang" },
+                    { label: "Potongan Bank", key: "potonganBank" },
+                    { label: "Setoran Tunai", key: "setoranTunai" },
+                    { label: "Pembayaran", key: "pembayaran" },
+                  ].map((field) => (
+                    <div key={field.key} className="space-y-1">
+                      <label className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-wider sm:tracking-widest px-1">
+                        {field.label}
+                      </label>
+                      <input
+                        type="number"
+                        value={editForm[field.key]}
+                        onChange={(e) =>
+                          setEditForm({
+                            ...editForm,
+                            [field.key]: parseInt(e.target.value) || 0,
+                          })
+                        }
+                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-50 border-2 border-transparent rounded-lg sm:rounded-xl focus:bg-white focus:border-blue-500 outline-none font-bold text-slate-700 transition-all shadow-inner text-sm sm:text-base"
+                      />
+                    </div>
+                  ))}
                 </div>
 
                 {/* Preview Selisih */}
-                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                <div className="bg-slate-50 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-slate-100">
                   <div className="flex items-center justify-between">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                    <span className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-wider sm:tracking-widest">
                       Preview Pembayaran
                     </span>
-                    <span className="text-sm font-bold text-emerald-600">
+                    <span className="text-xs sm:text-sm font-bold text-emerald-600">
                       {formatCurrency(editForm.pembayaran || (editForm.potonganBank + editForm.setoranTunai))}
                     </span>
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-1">
+                <div className="space-y-1">
+                  <label className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-wider sm:tracking-widest px-1">
                     Keterangan / Alasan Koreksi
                   </label>
                   <textarea
@@ -1561,23 +1558,23 @@ const IuranPgriSection = () => {
                       setEditForm({ ...editForm, keterangan: e.target.value })
                     }
                     rows={2}
-                    className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-blue-500 outline-none font-bold text-slate-700 transition-all shadow-inner text-xs resize-none"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-50 border-2 border-transparent rounded-lg sm:rounded-xl focus:bg-white focus:border-blue-500 outline-none font-bold text-slate-700 transition-all shadow-inner text-xs resize-none"
                     placeholder="Contoh: Penyesuaian jumlah anggota manual..."
                   />
                 </div>
 
-                <div className="flex gap-3 pt-4">
+                <div className="flex gap-2 sm:gap-3 pt-2 sm:pt-4 sticky bottom-0 bg-white pb-1">
                   <button
                     onClick={() => setIsEditModalOpen(false)}
-                    className="flex-1 py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all active:scale-95"
+                    className="flex-1 py-3 sm:py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl sm:rounded-2xl font-bold text-[10px] sm:text-xs uppercase tracking-wider sm:tracking-widest transition-all active:scale-95"
                   >
                     Batal
                   </button>
                   <button
                     onClick={handleSaveEdit}
-                    className="flex-1 py-4 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-blue-100 transition-all active:scale-95"
+                    className="flex-1 py-3 sm:py-4 bg-blue-500 hover:bg-blue-600 text-white rounded-xl sm:rounded-2xl font-bold text-[10px] sm:text-xs uppercase tracking-wider sm:tracking-widest shadow-lg shadow-blue-100 transition-all active:scale-95"
                   >
-                    Simpan Koreksi
+                    Simpan
                   </button>
                 </div>
               </div>

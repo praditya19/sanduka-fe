@@ -61,7 +61,7 @@ function KeuanganInputContent() {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row overflow-hidden">
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-        <div className={`flex-1 transition-all duration-300 ${isSidebarOpen ? "md:ml-64" : "ml-0"}`}>
+      <div className={`flex-1 min-w-0 transition-all duration-300 ${isSidebarOpen ? "md:ml-64" : "ml-0"}`}>
           <HeaderMenu toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
           <HeaderMobile toggleSidebar={toggleSidebar} />
           <main className="p-4 md:p-8 mt-24 md:mt-20 max-w-[95%] mx-auto">
@@ -87,35 +87,35 @@ function KeuanganInputContent() {
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row overflow-hidden">
       <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
-      <div className={`flex-1 transition-all duration-300 ${isSidebarOpen ? "md:ml-64" : "ml-0"}`}>
+      <div className={`flex-1 min-w-0 transition-all duration-300 ${isSidebarOpen ? "md:ml-64" : "ml-0"}`}>
         <HeaderMenu toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
         <HeaderMobile toggleSidebar={toggleSidebar} />
 
         <main className="px-4 md:px-6 py-8 mt-24 md:mt-20">
           <div className="max-w-[1400px] mx-auto">
             {/* Header Section */}
-            <div className="flex items-center space-x-5 mb-8 px-2">
+            <div className="flex items-center space-x-3 md:space-x-5 mb-6 md:mb-8 px-2">
               <BackButton />
               <div>
-                <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Manajemen Input Keuangan</h1>
-                <p className="text-slate-400 text-sm font-medium uppercase tracking-widest text-[10px]">Administrasi Iuran & Pendapatan Organisasi</p>
+                <h1 className="text-lg md:text-3xl font-bold text-slate-800 tracking-tight">Manajemen Input Keuangan</h1>
+                <p className="text-slate-400 text-[9px] md:text-[10px] font-medium uppercase tracking-widest">Administrasi Iuran & Pendapatan Organisasi</p>
               </div>
             </div>
 
             {/* Stepper */}
-            <div className="mb-10 px-2">
-              <div className="flex items-center justify-between md:justify-start md:gap-0 max-w-2xl mx-auto">
+            <div className="mb-6 md:mb-10 overflow-x-auto -mx-2 px-2">
+              <div className="flex items-center justify-center md:justify-start gap-1 md:gap-0 w-full md:max-w-2xl md:mx-auto">
                 {tabs.map((tab, idx) => {
                   const isActive = activeTab === tab.id;
                   const isComplete = tabs.findIndex(t => t.id === activeTab) > idx;
                   return (
-                    <div key={tab.id} className="flex items-center flex-1 md:flex-none">
+                    <div key={tab.id} className="flex items-center flex-none">
                       <button
                         onClick={() => setActiveTab(tab.id)}
-                        className={`flex flex-col items-center gap-1.5 group transition-all ${isActive ? "scale-105" : "opacity-50 hover:opacity-80"
+                        className={`flex flex-col items-center gap-1 group transition-all ${isActive ? "scale-105" : "opacity-50 hover:opacity-80"
                           }`}
                       >
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all ${isActive
+                        <div className={`w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center text-xs md:text-sm font-bold transition-all ${isActive
                           ? "bg-slate-900 text-white shadow-lg shadow-slate-900/30"
                           : isComplete
                             ? "bg-emerald-500 text-white"
@@ -123,13 +123,13 @@ function KeuanganInputContent() {
                           }`}>
                           {isComplete ? "✓" : tab.icon}
                         </div>
-                        <span className={`text-[9px] font-bold uppercase tracking-widest whitespace-nowrap ${isActive ? "text-slate-800" : "text-slate-400"
+                        <span className={`text-[7px] md:text-[9px] font-bold uppercase tracking-wider md:tracking-widest whitespace-nowrap ${isActive ? "text-slate-800" : "text-slate-400"
                           }`}>
                           {tab.label}
                         </span>
                       </button>
                       {idx < tabs.length - 1 && (
-                        <div className={`hidden md:block h-px w-16 mx-4 mt-[-1.5rem] ${isComplete ? "bg-emerald-400" : "bg-slate-200"
+                        <div className={`hidden md:block h-px w-10 lg:w-16 mx-3 lg:mx-4 mt-[-1.5rem] ${isComplete ? "bg-emerald-400" : "bg-slate-200"
                           }`} />
                       )}
                     </div>
