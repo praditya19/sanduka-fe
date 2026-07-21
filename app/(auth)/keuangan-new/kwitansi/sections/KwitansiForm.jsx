@@ -187,7 +187,7 @@ export default function KwitansiForm() {
   useEffect(() => {
     GlobalApi.getPosPengeluaranSanduka().then((data) => {
       setPosPengeluaranList((data || []).sort((a, b) => a.namaPosPengeluaran.localeCompare(b.namaPosPengeluaran)));
-    }).catch(() => {});
+    }).catch(() => { });
   }, []);
 
   const handleChange = (e) => {
@@ -207,17 +207,38 @@ export default function KwitansiForm() {
       return updated;
     });
 
-    if ((name === "tahun" || name === "bulan") && form.tahun && form.bulan) {
+    if (name === "tahun" || name === "bulan") {
+      // Gunakan value baru, bukan form state lama (setState async)
       const year = name === "tahun" ? value : form.tahun;
       const month = name === "bulan" ? value : form.bulan;
       if (year && month) {
-        GlobalApi.getNamaKwitansi(year, month).then((data) => {
-          setNamaList(data || []);
-          setFilteredNames(data || []);
-        }).catch(() => {});
+        // API expects numeric month (1-12); form stores "01"-"12"
+        const monthNum = Number(month);
+        GlobalApi.getNamaKwitansi(year, monthNum)
+          .then((data) => {
+            const list = Array.isArray(data)
+              ? data
+              : Array.isArray(data?.data)
+                ? data.data
+                : [];
+            setNamaList(list);
+            setFilteredNames(list);
+            setIsDropdownVisible(list.length > 0);
+            if (list.length === 0) {
+              toast.error("Tidak ada data meninggal di periode ini");
+            }
+          })
+          .catch((err) => {
+            console.error("Gagal fetch nama meninggal:", err);
+            setNamaList([]);
+            setFilteredNames([]);
+            toast.error("Gagal memuat data nama meninggal");
+          });
       }
     }
   };
+
+
 
   const handleSearch = (e) => {
     const searchTerm = e.target.value.toLowerCase();
@@ -374,16 +395,38 @@ export default function KwitansiForm() {
                 </div>
               </div>
               <div className="mt-3">
-                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block px-1">Cari nama yang meninggal</label>
+                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block px-1">
+                  Cari nama yang meninggal
+                  {namaList.length > 0 && (
+                    <span className="ml-1 text-violet-500 normal-case tracking-normal">({namaList.length} data)</span>
+                  )}
+                </label>
                 <div className="relative" ref={dropdownRef}>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><FaSearch size={12} /></span>
-                    <input type="text" value={form.yangMeninggal} onChange={handleSearch} onFocus={() => { if (filteredNames.length > 0) setIsDropdownVisible(true); }} placeholder="Cari nama..." className="w-full pl-9 pr-3 py-2.5 bg-white border border-violet-100 rounded-xl outline-none font-medium text-sm text-slate-700" />
+                    <input
+                      type="text"
+                      value={form.yangMeninggal}
+                      onChange={handleSearch}
+                      onFocus={() => {
+                        if (namaList.length > 0) {
+                          setFilteredNames(namaList);
+                          setIsDropdownVisible(true);
+                        }
+                      }}
+                      placeholder={form.tahun && form.bulan ? "Cari / pilih nama..." : "Pilih tahun & bulan dulu"}
+                      disabled={!form.tahun || !form.bulan}
+                      className="w-full pl-9 pr-3 py-2.5 bg-white border border-violet-100 rounded-xl outline-none font-medium text-sm text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
                   </div>
                   {filteredNames.length > 0 && isDropdownVisible && (
                     <ul className="absolute z-20 w-full bg-white border border-slate-200 rounded-xl shadow-lg mt-1 max-h-48 overflow-y-auto">
                       {filteredNames.map((n) => (
-                        <li key={n.id} className="px-3 py-2 hover:bg-violet-50 cursor-pointer text-sm text-slate-700 font-medium" onClick={() => handleSelectName(n)}>
+                        <li
+                          key={n.id || n.namaLengkap}
+                          className="px-3 py-2 hover:bg-violet-50 cursor-pointer text-sm text-slate-700 font-medium"
+                          onClick={() => handleSelectName(n)}
+                        >
                           {n.namaLengkap}
                         </li>
                       ))}
@@ -391,6 +434,7 @@ export default function KwitansiForm() {
                   )}
                 </div>
               </div>
+
               <button type="button" onClick={addName} disabled={!form.yangMeninggal} className="mt-2 flex items-center space-x-1.5 px-4 py-2.5 bg-violet-100 text-violet-600 rounded-xl text-[10px] font-bold hover:bg-violet-200 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
                 <FaPlus size={10} /> <span>Tambah Nama</span>
               </button>

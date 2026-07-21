@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FaPlus,
@@ -80,7 +80,7 @@ const KasSanduka = () => {
     isOpen: false,
     title: "",
     message: "",
-    onConfirm: () => {},
+    onConfirm: () => { },
     type: "danger",
     isLoading: false,
   });
@@ -115,16 +115,87 @@ const KasSanduka = () => {
     pengeluaranTahun: new Date().getFullYear(),
     nominal: 0,
     keterangan: "",
+    // Santunan Duka fields
+    bulanMeninggal: months[new Date().getMonth()].label,
+    tahunMeninggal: new Date().getFullYear(),
+    yangMeninggal: "",
+    namaPenerima: "",
   });
+
+  // State for deceased members dropdown (Santunan Duka)
+  const [allNames, setAllNames] = useState([]);
+  const [filteredNames, setFilteredNames] = useState([]);
+  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
+  const [showManualInput, setShowManualInput] = useState(false);
+  const [loadingNames, setLoadingNames] = useState(false);
+  const dropdownRef = useRef(null);
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [editJenis, setEditJenis] = useState("");
   const [editForm, setEditForm] = useState({});
 
+  const isSantunanDukaSelected =
+    formOut.posPengeluaran === "Santunan Duka Anggota";
+
   useEffect(() => {
     fetchData();
     fetchAuxData();
   }, [monthFilter, yearFilter]);
+
+  // Close autocomplete dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownVisible(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Fetch deceased members when bulan/tahun meninggal changes (Santunan Duka)
+  useEffect(() => {
+    if (!isSantunanDukaSelected) return;
+    const monthObj = months.find((m) => m.label === formOut.bulanMeninggal);
+    if (!monthObj || !formOut.tahunMeninggal) return;
+    fetchDeceasedNames(formOut.tahunMeninggal, Number(monthObj.value));
+  }, [isSantunanDukaSelected, formOut.bulanMeninggal, formOut.tahunMeninggal]);
+
+  const fetchDeceasedNames = async (year, month) => {
+    setLoadingNames(true);
+    try {
+      const deceasedData = await GlobalApi.getNamaKwitansi(year, month);
+      const list = Array.isArray(deceasedData) ? deceasedData : [];
+      setAllNames(list);
+      setFilteredNames(list);
+    } catch (e) {
+      console.warn("Failed to fetch deceased members:", e);
+      setAllNames([]);
+      setFilteredNames([]);
+    } finally {
+      setLoadingNames(false);
+    }
+  };
+
+  const handleSearchYangMeninggal = (e) => {
+    const value = e.target.value;
+    const searchTerm = value.toLowerCase();
+    setFormOut((prev) => ({ ...prev, yangMeninggal: value }));
+    setFilteredNames(
+      allNames.filter((n) =>
+        n.namaLengkap?.toLowerCase().includes(searchTerm),
+      ),
+    );
+    setIsDropdownVisible(true);
+  };
+
+  const handleSelectYangMeninggal = (nameObj) => {
+    setFormOut((prev) => ({
+      ...prev,
+      yangMeninggal: nameObj.namaLengkap || nameObj,
+    }));
+    setIsDropdownVisible(false);
+  };
 
   const fetchAuxData = async () => {
     try {
@@ -148,6 +219,7 @@ const KasSanduka = () => {
       console.error("Error fetching aux data:", error);
     }
   };
+
 
   const fetchData = async () => {
     setLoading(true);
@@ -580,6 +652,17 @@ const KasSanduka = () => {
     }
     setSubmitting(true);
     try {
+      const isSantunanDuka = formOut.posPengeluaran === "Santunan Duka Anggota";
+
+      // Build auto keterangan for Santunan Duka
+      let autoKeterangan = formOut.keterangan;
+      if (isSantunanDuka) {
+        const detailDuka = `Santunan Duka ${formOut.bulanMeninggal} ${formOut.tahunMeninggal}`;
+        const infoAlmarhum = formOut.yangMeninggal ? ` - Almarhum/Almarhumah: ${formOut.yangMeninggal}` : "";
+        const infoPenerima = formOut.namaPenerima ? ` - Penerima: ${formOut.namaPenerima}` : "";
+        autoKeterangan = `${detailDuka}${infoAlmarhum}${infoPenerima}${formOut.keterangan ? " - " + formOut.keterangan : ""}`;
+      }
+
       const payload = {
         tanggalTransaksi: formOut.tanggalTransaksi,
         posPengeluaran: formOut.posPengeluaran,
@@ -588,7 +671,14 @@ const KasSanduka = () => {
         pengeluaranBulan: formOut.pengeluaranBulan,
         pengeluaranTahun: formOut.pengeluaranTahun,
         nominal: formOut.nominal,
-        keterangan: formOut.keterangan,
+        keterangan: autoKeterangan,
+        // Santunan Duka fields
+        ...(isSantunanDuka && {
+          bulanMeninggal: formOut.bulanMeninggal,
+          tahunMeninggal: formOut.tahunMeninggal,
+          yangMeninggal: formOut.yangMeninggal,
+          namaPenerima: formOut.namaPenerima,
+        }),
       };
       await GlobalApi.postPengeluaranSanduka(payload);
       toast.success("Pengeluaran kas berhasil dicatat!");
@@ -602,6 +692,10 @@ const KasSanduka = () => {
         pengeluaranTahun: new Date().getFullYear(),
         nominal: 0,
         keterangan: "",
+        bulanMeninggal: months[new Date().getMonth()].label,
+        tahunMeninggal: new Date().getFullYear(),
+        yangMeninggal: "",
+        namaPenerima: "",
       });
       fetchData();
     } catch (error) {
@@ -1439,6 +1533,138 @@ const KasSanduka = () => {
                   </p>
                 </div>
 
+                {isSantunanDukaSelected && (
+                  <div className="p-5 bg-rose-50 border border-rose-100 rounded-[28px] space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <FaInfoCircle className="text-rose-500 text-sm" />
+                      <h4 className="text-[11px] font-bold text-rose-700 uppercase tracking-widest">
+                        Data Santunan Duka
+                      </h4>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">
+                          Bulan Meninggal
+                        </label>
+                        <select
+                          required
+                          value={formOut.bulanMeninggal}
+                          onChange={(e) =>
+                            setFormOut({
+                              ...formOut,
+                              bulanMeninggal: e.target.value,
+                              yangMeninggal: "",
+                            })
+                          }
+                          className="w-full px-4 py-3.5 bg-white border border-rose-100 rounded-2xl focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 outline-none font-bold text-slate-700 transition-all"
+                        >
+                          {months.map((m) => (
+                            <option key={m.value} value={m.label}>
+                              {m.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">
+                          Tahun Meninggal
+                        </label>
+                        <select
+                          required
+                          value={formOut.tahunMeninggal}
+                          onChange={(e) =>
+                            setFormOut({
+                              ...formOut,
+                              tahunMeninggal: Number(e.target.value),
+                              yangMeninggal: "",
+                            })
+                          }
+                          className="w-full px-4 py-3.5 bg-white border border-rose-100 rounded-2xl focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 outline-none font-bold text-slate-700 transition-all"
+                        >
+                          {Array.from(
+                            { length: new Date().getFullYear() + 2 - 2020 + 1 },
+                            (_, i) => 2020 + i,
+                          ).map((y) => (
+                            <option key={y} value={y}>
+                              {y}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">
+                        Yang Meninggal
+                      </label>
+                      <div className="relative" ref={dropdownRef}>
+                        <div className="relative">
+                          <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-rose-400 text-sm" />
+                          <input
+                            type="text"
+                            required
+                            value={formOut.yangMeninggal}
+                            onChange={handleSearchYangMeninggal}
+                            onFocus={() => {
+                              if (filteredNames.length > 0)
+                                setIsDropdownVisible(true);
+                            }}
+                            placeholder={
+                              loadingNames
+                                ? "Memuat data..."
+                                : "Cari nama yang meninggal..."
+                            }
+                            disabled={loadingNames}
+                            className="w-full pl-12 pr-4 py-3.5 bg-white border border-rose-100 rounded-2xl focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 outline-none font-bold text-slate-700 transition-all disabled:opacity-50"
+                          />
+                        </div>
+                        {filteredNames.length > 0 && isDropdownVisible && (
+                          <ul className="absolute z-20 w-full bg-white border border-slate-200 rounded-2xl shadow-xl mt-1 max-h-48 overflow-y-auto">
+                            {filteredNames.map((n) => (
+                              <li
+                                key={n.id || n.namaLengkap}
+                                className="px-4 py-3 hover:bg-rose-50 cursor-pointer text-sm text-slate-700 font-medium border-b border-slate-50 last:border-0"
+                                onClick={() => handleSelectYangMeninggal(n)}
+                              >
+                                {n.namaLengkap}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                        {!loadingNames && allNames.length === 0 && (
+                          <p className="mt-2 text-[10px] text-slate-400 font-medium italic px-1">
+                            Tidak ada data.{" "}
+                            <button
+                              type="button"
+                              onClick={() => setShowManualInput(true)}
+                              className="text-rose-500 font-bold underline"
+                            >
+                              Input manual
+                            </button>
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">
+                        Nama Penerima
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={formOut.namaPenerima}
+                        onChange={(e) =>
+                          setFormOut({
+                            ...formOut,
+                            namaPenerima: e.target.value,
+                          })
+                        }
+                        placeholder="Nama penerima santunan"
+                        className="w-full px-4 py-3.5 bg-white border border-rose-100 rounded-2xl focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 outline-none font-bold text-slate-700 transition-all"
+                      />
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">
                     Keterangan
@@ -1460,6 +1686,7 @@ const KasSanduka = () => {
                   <button
                     type="button"
                     onClick={() => setShowModalOut(false)}
+
                     className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-slate-200 transition-all flex items-center justify-center space-x-2"
                   >
                     <FaUndo /> <span>Batal</span>
@@ -1613,13 +1840,13 @@ const KasSanduka = () => {
                     ? posPenerimaanList
                     : posPengeluaranList
                   ).length === 0 && (
-                    <div className="py-12 text-center">
-                      <FaInfoCircle className="mx-auto text-slate-200 text-3xl mb-2" />
-                      <p className="text-xs font-bold text-slate-400">
-                        Belum ada data pos
-                      </p>
-                    </div>
-                  )}
+                      <div className="py-12 text-center">
+                        <FaInfoCircle className="mx-auto text-slate-200 text-3xl mb-2" />
+                        <p className="text-xs font-bold text-slate-400">
+                          Belum ada data pos
+                        </p>
+                      </div>
+                    )}
                 </div>
               </div>
 
@@ -1726,20 +1953,18 @@ const KasSanduka = () => {
             {/* TABS */}
             <div className="flex mb-6 border-b">
               <button
-                className={`px-4 py-2 text-sm font-bold ${
-                  editJenis === "PEMASUKAN"
-                    ? "border-b-2 border-emerald-500 text-emerald-600"
-                    : "text-slate-400"
-                }`}
+                className={`px-4 py-2 text-sm font-bold ${editJenis === "PEMASUKAN"
+                  ? "border-b-2 border-emerald-500 text-emerald-600"
+                  : "text-slate-400"
+                  }`}
               >
                 Pemasukan
               </button>
               <button
-                className={`px-4 py-2 text-sm font-bold ${
-                  editJenis === "PENGELUARAN"
-                    ? "border-b-2 border-rose-500 text-rose-500"
-                    : "text-slate-400"
-                }`}
+                className={`px-4 py-2 text-sm font-bold ${editJenis === "PENGELUARAN"
+                  ? "border-b-2 border-rose-500 text-rose-500"
+                  : "text-slate-400"
+                  }`}
               >
                 Pengeluaran
               </button>
