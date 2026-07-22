@@ -646,13 +646,13 @@ const KasSanduka = () => {
 
   const handleSubmitOut = async (e) => {
     e.preventDefault();
-    if (!formOut.posPengeluaran || !formOut.cabang || formOut.nominal <= 0) {
+    const isSantunanDuka = formOut.posPengeluaran === "Santunan Duka Anggota";
+    if (!formOut.posPengeluaran || (!isSantunanDuka && !formOut.cabang) || formOut.nominal <= 0) {
       toast.error("Harap isi semua field yang wajib!");
       return;
     }
     setSubmitting(true);
     try {
-      const isSantunanDuka = formOut.posPengeluaran === "Santunan Duka Anggota";
 
       // Build auto keterangan for Santunan Duka
       let autoKeterangan = formOut.keterangan;
@@ -1427,29 +1427,31 @@ const KasSanduka = () => {
                       </select>
                     </div>
                   </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">
-                      Cabang
-                    </label>
-                    <div className="relative">
-                      <FaBuilding className="absolute left-4 top-1/2 -translate-y-1/2 text-rose-500" />
-                      <select
-                        required
-                        value={formOut.cabang}
-                        onChange={(e) =>
-                          setFormOut({ ...formOut, cabang: e.target.value })
-                        }
-                        className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 outline-none font-bold text-slate-700 appearance-none transition-all"
-                      >
-                        <option value="">Pilih Cabang</option>
-                        {cabangList.map((c) => (
-                          <option key={c.id} value={c.kecamatan}>
-                            {c.kecamatan}
-                          </option>
-                        ))}
-                      </select>
+                  {!isSantunanDukaSelected && (
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block px-1">
+                        Cabang
+                      </label>
+                      <div className="relative">
+                        <FaBuilding className="absolute left-4 top-1/2 -translate-y-1/2 text-rose-500" />
+                        <select
+                          required={!isSantunanDukaSelected}
+                          value={formOut.cabang}
+                          onChange={(e) =>
+                            setFormOut({ ...formOut, cabang: e.target.value })
+                          }
+                          className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 outline-none font-bold text-slate-700 appearance-none transition-all"
+                        >
+                          <option value="">Pilih Cabang</option>
+                          {cabangList.map((c) => (
+                            <option key={c.id} value={c.kecamatan}>
+                              {c.kecamatan}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
