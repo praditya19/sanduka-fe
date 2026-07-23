@@ -214,7 +214,13 @@ const KasSanduka = () => {
           a.namaPosPengeluaran.localeCompare(b.namaPosPengeluaran),
         ),
       );
-      setCabangList(resCabang.data || []);
+      setCabangList(
+        (resCabang.data || []).sort((a, b) => {
+          const nameA = a.kecamatan || a.namaCabang || a.cabang || String(a);
+          const nameB = b.kecamatan || b.namaCabang || b.cabang || String(b);
+          return nameA.localeCompare(nameB);
+        }),
+      );
     } catch (error) {
       console.error("Error fetching aux data:", error);
     }
@@ -483,7 +489,10 @@ const KasSanduka = () => {
   };
 
   const terbilang = (n) => {
-    if (n === 0 || !n) return "Tidak ada nominal";
+    if (n === 0 || !n || isNaN(n)) return "Nol";
+    const num = Math.floor(Math.abs(Number(n)));
+    if (num === 0) return "Nol";
+
     const bilangan = [
       "",
       "Satu",
@@ -498,26 +507,30 @@ const KasSanduka = () => {
       "Sepuluh",
       "Sebelas",
     ];
-    let temp = "";
-    if (n < 12) temp = " " + bilangan[n];
-    else if (n < 20) temp = terbilang(n - 10) + " Belas";
-    else if (n < 100)
-      temp = terbilang(Math.floor(n / 10)) + " Puluh" + terbilang(n % 10);
-    else if (n < 200) temp = " Seratus" + terbilang(n - 100);
-    else if (n < 1000)
-      temp = terbilang(Math.floor(n / 100)) + " Ratus" + terbilang(n % 100);
-    else if (n < 2000) temp = " Seribu" + terbilang(n - 1000);
-    else if (n < 1000000)
-      temp = terbilang(Math.floor(n / 1000)) + " Ribu" + terbilang(n % 1000);
-    else if (n < 1000000000)
-      temp =
-        terbilang(Math.floor(n / 1000000)) + " Juta" + terbilang(n % 1000000);
-    else if (n < 1000000000000)
-      temp =
-        terbilang(Math.floor(n / 1000000000)) +
-        " Miliar" +
-        terbilang(n % 1000000000);
-    return temp.trim();
+
+    const convert = (x) => {
+      let temp = "";
+      if (x < 12) temp = " " + bilangan[x];
+      else if (x < 20) temp = convert(x - 10) + " Belas";
+      else if (x < 100)
+        temp = convert(Math.floor(x / 10)) + " Puluh" + convert(x % 10);
+      else if (x < 200) temp = " Seratus" + convert(x - 100);
+      else if (x < 1000)
+        temp = convert(Math.floor(x / 100)) + " Ratus" + convert(x % 100);
+      else if (x < 2000) temp = " Seribu" + convert(x - 1000);
+      else if (x < 1000000)
+        temp = convert(Math.floor(x / 1000)) + " Ribu" + convert(x % 1000);
+      else if (x < 1000000000)
+        temp = convert(Math.floor(x / 1000000)) + " Juta" + convert(x % 1000000);
+      else if (x < 1000000000000)
+        temp =
+          convert(Math.floor(x / 1000000000)) +
+          " Miliar" +
+          convert(x % 1000000000);
+      return temp;
+    };
+
+    return convert(num).trim().replace(/\s+/g, " ");
   };
 
   const formatCurrency = (val) =>
@@ -622,7 +635,16 @@ const KasSanduka = () => {
     }
     setSubmitting(true);
     try {
-      await GlobalApi.postPemasukanSanduka(formIn);
+      const monthObj = months.find((m) => m.label === formIn.setoranBulan);
+      const monthInt = monthObj ? parseInt(monthObj.value, 10) : new Date().getMonth() + 1;
+
+      const payload = {
+        ...formIn,
+        setoranBulan: monthInt,
+        setoranTahun: parseInt(formIn.setoranTahun, 10),
+      };
+
+      await GlobalApi.postPemasukanSanduka(payload);
       toast.success("Pemasukan kas berhasil dicatat!");
       setShowModalIn(false);
       setFormIn({
@@ -663,19 +685,20 @@ const KasSanduka = () => {
         autoKeterangan = `${detailDuka}${infoAlmarhum}${infoPenerima}${formOut.keterangan ? " - " + formOut.keterangan : ""}`;
       }
 
+      const monthObj = months.find((m) => m.label === formOut.pengeluaranBulan);
+      const monthInt = monthObj ? parseInt(monthObj.value, 10) : new Date().getMonth() + 1;
+
       const payload = {
         tanggalTransaksi: formOut.tanggalTransaksi,
         posPengeluaran: formOut.posPengeluaran,
-        jenisPengeluaran: formOut.jenisPengeluaran,
-        cabang: formOut.cabang,
-        pengeluaranBulan: formOut.pengeluaranBulan,
-        pengeluaranTahun: formOut.pengeluaranTahun,
+        jenisPegeluaran: formOut.jenisPengeluaran,
+        cabang: formOut.cabang || "Pusat",
+        setoranBulan: monthInt,
+        setoranTahun: parseInt(formOut.pengeluaranTahun, 10),
         nominal: formOut.nominal,
         keterangan: autoKeterangan,
         // Santunan Duka fields
         ...(isSantunanDuka && {
-          bulanMeninggal: formOut.bulanMeninggal,
-          tahunMeninggal: formOut.tahunMeninggal,
           yangMeninggal: formOut.yangMeninggal,
           namaPenerima: formOut.namaPenerima,
         }),

@@ -94,7 +94,17 @@ const login = async (loginData) => {
 };
 
 // General
-const getCabang = () => axiosClient.get("/api/daftarCabang");
+const getCabang = async () => {
+  const res = await axiosClient.get("/api/daftarCabang");
+  if (res && res.data && Array.isArray(res.data)) {
+    res.data.sort((a, b) => {
+      const nameA = a.kecamatan || a.namaCabang || a.cabang || String(a);
+      const nameB = b.kecamatan || b.namaCabang || b.cabang || String(b);
+      return nameA.localeCompare(nameB);
+    });
+  }
+  return res;
+};
 const getJabatan = () => axiosClient.get("/api/daftarJabatan");
 const getGolonganJabatan = () => axiosClient.get("/api/daftarGolongan");
 const getUnitKerja = () => axiosClient.get("/api/unit-kerja");
