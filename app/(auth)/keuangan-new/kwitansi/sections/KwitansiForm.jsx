@@ -60,93 +60,230 @@ const calculateAge = (tanggalLahir) => {
 };
 
 const generateKwitansiHTML = (generateDataList) => {
-  const kwitansiHTML = generateDataList.map((data) => `<!DOCTYPE html>
+  const kwitansiHTML = generateDataList
+    .map(
+      (data) => `<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
   <title>Kwitansi</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; background: #fff; padding: 60px; font-size: 12px; }
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 2px solid #000; padding-bottom: 10px; }
-    .title { font-size: 20px; font-weight: bold; text-align: center; }
-    .info, .footer { width: 100%; margin-top: 10px; }
-    .info td { padding: 10px; vertical-align: top; border: 1px solid #ccc; }
-    .nominal { font-weight: bold; background: #000; color: #fff; text-align: center; }
-    .terbilang { font-weight: bold; color: #000; text-align: center; }
-    .signature { margin-top: 40px; width: 100%; display: flex; justify-content: space-between; }
-    .signature div { text-align: center; width: 30%; }
-    .footer { font-size: 12px; text-align: center; }
-    .data-meninggal { display: flex; justify-content: space-between; }
-    .data-item { width: 22%; }
-    .kwitansi { width: 210mm; height: 297mm; margin: 0 auto; padding: 20px; background: #fff; margin-bottom: 100px; }
-    .data-item p { margin: 4px 0; line-height: 1.4; }
-    @media (max-width: 600px) { .data-meninggal { flex-direction: column; } .data-item { width: 100%; } }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #fff;
+      padding: 60px;
+      font-size: 12px;
+    }
+
+    .kwitansi {
+       width: 100%;
+       max-width: 97m;
+      margin: 0 auto;
+      padding: 10px;
+      background-color: #fff;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin-bottom: 100px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      border-bottom: 2px solid #000;
+      padding-bottom: 10px;
+    }
+
+    .title {
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .info, .footer {
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .info td {
+      padding: 10px;
+      vertical-align: top;
+      border: 1px solid #ccc;
+    }
+
+    .nominal {
+      font-weight: bold;
+      background-color: #000;
+      color: white;
+      text-align: center;
+    }
+
+    .terbilang {
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .signature {
+      margin-top: 40px;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .signature div {
+      text-align: center;
+      width: 30%;
+    }
+
+    .footer {
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .data-meninggal {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .data-item {
+      width: 22%;
+    }
+
+    .data-item p {
+      margin: 4px 0;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 600px) {
+      .data-meninggal {
+        flex-direction: column;
+      }
+      .data-item {
+        width: 100%;
+      }
+    }
   </style>
 </head>
-<body>
-<div class="header">
-  <div class="left-header">
-    <p>Nomor Transaksi: ${data.noBukti}</p>
-    <p>Tanggal Transaksi: ${data.tanggal}</p>
-    <p>Pos Pengeluaran: ${data.posPengeluaran}</p>
-  </div>
-  <div class="title">TANDA TERIMA</div>
-  <div class="right-header">
-    <img src="https://sanduka-fe.vercel.app/_next/image?url=%2Fsanduka.png&w=256&q=75" alt="Logo" style="height: 50px;" />
-  </div>
-</div>
-<div class="data-meninggal">
-  <div class="data-item">
-    <p>Data Meninggal</p>
-    <p><strong>${data.nama}</strong></p>
-    <p>${data.umur} Tahun</p>
-    <p>${data.alamat}</p>
-    <p>${data.nomorHp}</p>
-  </div>
-  <div class="data-item">
-    <p>Data Dukung</p>
-    <p><strong>${data.dataDukung}</strong></p>
-    <p>${data.jabatan}</p>
-    <p>Sejak Menjadi Anggota</p>
-    <p>${data.sejakMenjadiAnggota}</p>
-  </div>
-  <div class="data-item">
-    <p>Data Pelaporan</p>
-    <p><strong>${data.tanggal}</strong></p>
-    <p><strong>Tanggal Meninggal:</strong> ${data.tanggalMeninggal}</p>
-  </div>
-</div>
-<table class="info">
-  <tr>
-    <td class="nominal">Terbilang</td>
-    <td class="nominal">Nominal</td>
-  </tr>
-  <tr>
-    <td class="terbilang"><strong>${data.terbilang}</strong></td>
-    <td class="terbilang"><strong>Rp ${data.nominal}</strong></td>
-  </tr>
-</table>
-${data.keterangan ? `<p style="margin-top:10px;"><strong>Keterangan:</strong> ${data.keterangan}</p>` : ""}
-<div class="signature">
-  <div>................., ..................<p>Yang Menyerahkan,</p></div>
-  <div>................., ..................<p>Penerima,</p></div>
-</div>
-<footer>
-  <table class="footer">
-    <tr>
-      <td>Sekretariat PGRI: <br /> Jalan Bata Putih VI, Kelurahan Demaan, Kecamatan Jepara, Kabupaten Jepara, Jawa Tengah, Telp/Fax : 0291 592479, email : pgrijepara@gmail.com</td>
-    </tr>
-  </table>
-</footer>
-</body>
-</html>`).join(`<div style="page-break-after: always; border-top: 2px dashed #999; margin: 50px 0;"></div>`);
 
-  return `<!DOCTYPE html>
-<html><head><style>
-  body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-  .container { display: flex; flex-direction: column; }
-</style></head>
-<body><div class="container">${kwitansiHTML}</div></body></html>`;
+<body>
+  <div class="kwitansi">
+
+    <div class="header">
+      <div class="left-header">
+        <p>Nomor Transaksi: ${data.noBukti}</p>
+        <p>Tanggal Transaksi: ${data.tanggal}</p>
+        <p>Pos Pengeluaran: ${data.posPengeluaran}</p>
+      </div>
+
+      <div class="title">TANDA TERIMA</div>
+
+      <div class="right-header">
+        <img src="https://sanduka-fe.vercel.app/_next/image?url=%2Fsanduka.png&w=256&q=75" 
+             style="height: 50px;" />
+      </div>
+    </div>
+
+    <div class="data-meninggal">
+      <div class="data-item">
+        <p>Data Meninggal</p>
+        <p><strong>${data.nama}</strong></p>
+        <p>${data.umur} Tahun</p>
+        <p>${data.alamat}</p>
+        <p>${data.nomorHp}</p>
+      </div>
+
+      <div class="data-item">
+        <p>Data Dukung</p>
+        <p><strong>${data.dataDukung}</strong></p>
+        <p>${data.jabatan}</p>
+        <p>Sejak Menjadi Anggota</p>
+        <p>${data.sejakMenjadiAnggota}</p>
+      </div>
+
+      <div class="data-item">
+        <p>Data Pelaporan</p>
+        <p><strong>${data.tanggal}</strong></p>
+        <p><strong>Tanggal Meninggal:</strong> ${data.tanggalMeninggal}</p>
+      </div>
+    </div>
+
+    <table class="info">
+      <tr>
+        <td class="nominal">Terbilang</td>
+        <td class="nominal">Nominal</td>
+      </tr>
+      <tr>
+        <td class="terbilang"><strong>${data.terbilang}</strong></td>
+        <td class="terbilang"><strong>Rp ${data.nominal}</strong></td>
+      </tr>
+    </table>
+
+    ${
+      data.keterangan
+        ? `<p style="margin-top:10px;"><strong>Keterangan:</strong> ${data.keterangan}</p>`
+        : ""
+    }
+
+    <div class="signature">
+      <div>
+        ................., ..................
+        <p>Yang Menyerahkan,</p>
+      </div>
+      <div>
+        ................., ..................
+        <p>Penerima,</p>
+      </div>
+    </div>
+
+    <footer>
+      <table class="footer">
+        <tr>
+          <td>
+            Sekretariat PGRI: <br />
+            Jalan Bata Putih VI, Kelurahan Demaan, Kecamatan Jepara, Kabupaten Jepara, Jawa Tengah,
+            Telp/Fax : 0291 592479, email : pgrijepara@gmail.com
+          </td>
+        </tr>
+      </table>
+    </footer>
+
+  </div>
+</body>
+</html>`
+    )
+    .join(`<div class="separator"></div>`);
+
+  return `
+  <html>
+    <head>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          margin: 0;
+          padding: 0;
+        }
+
+        .container {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .separator {
+          border-top: 2px dashed #999;
+          margin: 50px 0;
+          page-break-after: always;
+        }
+      </style>
+    </head>
+
+    <body>
+      <div class="container">
+        ${kwitansiHTML}
+      </div>
+    </body>
+  </html>
+  `;
 };
 
 export default function KwitansiForm() {
