@@ -878,7 +878,7 @@ export default function Tagihan() {
                             <div className="flex items-center">
                               <div className="w-3 h-3 bg-red-500 rounded-full mr-3"></div>
                               <span className="text-gray-700 font-medium">
-                                Potongan
+                                Pembayaran Bank
                               </span>
                             </div>
                             <span className="font-bold text-red-600 text-lg">
