@@ -203,7 +203,7 @@ const generateKwitansiHTML = (generateDataList) => {
 
       <div class="data-item">
         <p>Data Pelaporan</p>
-        <p><strong>${data.tanggal}</strong></p>
+        <p><strong>${data.tanggalPelaporan}</strong></p>
         <p><strong>Tanggal Meninggal:</strong> ${data.tanggalMeninggal}</p>
       </div>
     </div>
@@ -299,6 +299,7 @@ export default function KwitansiForm() {
     nominal: "",
     terbilang: "",
     keterangan: "",
+    tanggalPelaporan: "",
   });
   const [namaList, setNamaList] = useState([]);
   const [filteredNames, setFilteredNames] = useState([]);
@@ -410,6 +411,7 @@ export default function KwitansiForm() {
       const results = [];
       for (const name of selectedNames) {
         const res = await GlobalApi.searchUsersByName(name);
+        console.log(res)
         const user = res?.data?.users?.[0];
         if (user) {
           results.push({
@@ -429,6 +431,7 @@ export default function KwitansiForm() {
             menyerahkan: sessionStorage.getItem("nama") || "Tidak diketahui",
             penerima: form.namaPenerima || "Tidak diketahui",
             keterangan: form.keterangan || "",
+            tanggalPelaporan: formatDate(user.tanggalPelaporan) || "Tidak diketahui",
           });
         }
       }
