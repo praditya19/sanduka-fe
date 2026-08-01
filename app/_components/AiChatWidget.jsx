@@ -3,8 +3,14 @@ import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { Bot, Send, X, MessageSquare, Sparkles, User, RefreshCw, ChevronDown } from "lucide-react";
 import { BASE_URL } from "../_utils/GlobalApi";
+import { useAuth } from "../AuthContext";
+import { usePathname } from "next/navigation";
 
 export default function AiChatWidget() {
+  const auth = useAuth();
+  const pathname = usePathname();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
   const [isOpen, setIsOpen] = useState(false);
   const [inputMessage, setInputMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,6 +24,11 @@ export default function AiChatWidget() {
 
   const messagesEndRef = useRef(null);
 
+  useEffect(() => {
+    const token = auth?.token || (typeof window !== "undefined" ? sessionStorage.getItem("authToken") : null);
+    setIsAuthenticated(!!token);
+  }, [auth?.token, pathname]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -27,6 +38,13 @@ export default function AiChatWidget() {
       scrollToBottom();
     }
   }, [messages, isOpen]);
+
+  const publicRoutes = ["/sign-in", "/login", "/register", "/create-account"];
+  const isPublicRoute = publicRoutes.some((route) => pathname?.startsWith(route));
+
+  if (!isAuthenticated || isPublicRoute) {
+    return null;
+  }
 
   const handleSendMessage = async (customMessage = null) => {
     const textToSend = customMessage || inputMessage;
