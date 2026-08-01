@@ -891,6 +891,14 @@ export default function IconGrid() {
               bgHover: "hover:bg-indigo-100",
               iconColor: "text-indigo-700",
             })
+            .concat({
+              icon: faCog,
+              label: "AI Knowledge",
+              href: "/pengaturan/ai-knowledge",
+              color: "text-emerald-600",
+              bgHover: "hover:bg-emerald-100",
+              iconColor: "text-emerald-700",
+            })
         : role === "EDITOR"
           ? [
               ...icons.filter((item) => item.label === "Kontributor"),
@@ -908,6 +916,7 @@ export default function IconGrid() {
                 (item) =>
                   item.label !== "Tour & Travel" &&
                   item.label !== "Pengaturan" &&
+                  item.label !== "AI Knowledge" &&
                   item.label !== "Galeri" &&
                   item.label !== "Eksport Foto" &&
                   item.label !== "Keuangan",
