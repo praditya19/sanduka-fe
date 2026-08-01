@@ -144,6 +144,12 @@ const icons = [
     href: "/pengaduan",
     color: "text-red-700",
   },
+  {
+    icon: faCog,
+    label: "AI Knowledge",
+    href: "/pengaturan/ai-knowledge",
+    color: "text-emerald-600",
+  },
 ];
 
 export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
@@ -223,7 +229,7 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
     } else if (role === "SUPERADMIN") {
       return true;
     } else {
-      return item.label !== "Galeri";
+      return item.label !== "Galeri" && item.label !== "AI Knowledge";
     }
   });
 
