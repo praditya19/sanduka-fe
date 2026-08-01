@@ -4,6 +4,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { AuthProvider } from "./AuthContext";
 import "./globals.css";
 import { MuteProvider } from "./MuteContext";
+import AiChatWidget from "./_components/AiChatWidget";
 
 export default function RootLayout({ children }) {
   const router = useRouter();
@@ -34,9 +35,13 @@ export default function RootLayout({ children }) {
         }}
       >
         <AuthProvider>
-          <MuteProvider>{children}</MuteProvider>
+          <MuteProvider>
+            {children}
+            <AiChatWidget />
+          </MuteProvider>
         </AuthProvider>
       </body>
     </html>
   );
 }
+
