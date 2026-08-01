@@ -17,7 +17,7 @@ export default function AiChatWidget() {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      text: "Halo! Saya **Sanduka AI Assistant**. Ada yang bisa saya bantu terkait **Data Anggota**, **Rekap Iuran**, atau **Syarat & SOP Sanduka**?",
+      text: "Halo! Saya **Sanduka AI Assistant**. Ada yang bisa saya bantu?",
       toolsExecuted: [],
     },
   ]);
@@ -33,7 +33,7 @@ export default function AiChatWidget() {
   useEffect(() => {
     const fetchLatestKnowledge = async () => {
       try {
-        const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 
+        const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ||
           (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
             ? "http://localhost:8080"
             : BASE_URL);
@@ -111,7 +111,7 @@ export default function AiChatWidget() {
           text: m.text,
         }));
 
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ||
         (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
           ? "http://localhost:8080"
           : BASE_URL);
@@ -240,11 +240,10 @@ export default function AiChatWidget() {
                 )}
 
                 <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-3 text-xs sm:text-sm leading-relaxed shadow-sm ${
-                    msg.role === "user"
+                  className={`max-w-[80%] rounded-2xl px-4 py-3 text-xs sm:text-sm leading-relaxed shadow-sm ${msg.role === "user"
                       ? "bg-emerald-600 text-white rounded-br-none"
                       : "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-100 dark:border-slate-700/60 rounded-bl-none"
-                  }`}
+                    }`}
                 >
                   <p className="whitespace-pre-wrap">{msg.text}</p>
 
