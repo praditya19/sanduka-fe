@@ -5,6 +5,7 @@ import { Bot, Send, X, MessageSquare, Sparkles, User, RefreshCw, ChevronDown } f
 import { BASE_URL } from "../_utils/GlobalApi";
 import { useAuth } from "../AuthContext";
 import { usePathname } from "next/navigation";
+import FormattedMessage from "./FormattedMessage";
 
 export default function AiChatWidget() {
   const auth = useAuth();
@@ -245,7 +246,7 @@ export default function AiChatWidget() {
                       : "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-100 dark:border-slate-700/60 rounded-bl-none"
                     }`}
                 >
-                  <p className="whitespace-pre-wrap">{msg.text}</p>
+                  <FormattedMessage text={msg.text} />
 
                   {/* Executed Tools Badge */}
                   {msg.toolsExecuted && msg.toolsExecuted.length > 0 && (

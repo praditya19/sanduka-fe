@@ -8,6 +8,7 @@ import { useAuth } from "@/app/AuthContext";
 import { useRouter } from "next/navigation";
 import { BASE_URL } from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
+import FormattedMessage from "@/app/_components/FormattedMessage";
 import {
   Sparkles,
   Bot,
@@ -405,7 +406,7 @@ export default function AiKnowledgePage() {
                           : "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700/80 rounded-bl-none"
                       }`}
                     >
-                      <p className="whitespace-pre-wrap">{msg.text}</p>
+                      <FormattedMessage text={msg.text} />
 
                       {msg.toolsExecuted && msg.toolsExecuted.length > 0 && (
                         <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-700/80 flex flex-wrap gap-1">
