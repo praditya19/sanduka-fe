@@ -484,13 +484,6 @@ const TagihanForm = () => {
       return;
     }
     try {
-      const data = await GlobalApi.getTunggakanTransaksiCabang(cabang, Number(bulanVal), tahun);
-      const list = Array.isArray(data) ? data : [];
-      setTunggakanList(list);
-      const total = list.reduce((sum, t) => sum + (Number(t.tagihan) - Number(t.pembayaran || 0)), 0);
-      setTotalTunggakan(total);
-
-      // Calculate previous month's shortage (kekurangan)
       let prevMonthNum = Number(bulanVal) - 1;
       let prevYear = tahun;
       if (prevMonthNum === 0) {
@@ -500,14 +493,63 @@ const TagihanForm = () => {
       const prevMonthStr = String(prevMonthNum).padStart(2, "0");
       const prevMonthLabel = months.find(m => m.value === prevMonthStr)?.label;
 
-      const [dataTrans, bankIuran] = await Promise.all([
-        GlobalApi.getTransaksiCabangByBulanTahun(prevMonthNum, prevYear),
+      const [data, dataTrans, bankIuran] = await Promise.all([
+        GlobalApi.getTunggakanTransaksiCabang(cabang, Number(bulanVal), tahun),
+        GlobalApi.getTransaksiCabangByBulanTahun(prevMonthNum, prevYear).catch(() => []),
         GlobalApi.getRekapByPeriode(prevMonthLabel, prevYear).catch(() => []),
       ]);
 
+      const rawTunggakanList = Array.isArray(data) ? data : [];
       const rawList = Array.isArray(dataTrans) ? dataTrans : dataTrans?.data || [];
       const cabangNormalized = cabang.trim().toUpperCase();
       const cabangTrans = rawList.filter(item => item.cabang?.trim().toUpperCase() === cabangNormalized);
+
+      // Smart Netting: Get total "PEMASUKAN DARI BANK" payments for this cabang in previous month
+      let availableBankPayment = cabangTrans
+        .filter(i => (i.pos || "").toUpperCase().trim() === "PEMASUKAN DARI BANK")
+        .reduce((sum, i) => sum + Number(i.pembayaran || 0), 0);
+
+      // Group rawTunggakanList by setoranTahun & setoranBulan
+      // Deduct any "PEMASUKAN DARI BANK" payments from unpaid tagihan items in the same month
+      const groupedByMonth = {};
+      rawTunggakanList.forEach(t => {
+        const key = `${t.setoranTahun}-${t.setoranBulan}`;
+        if (!groupedByMonth[key]) groupedByMonth[key] = [];
+        groupedByMonth[key].push(t);
+      });
+
+      const list = [];
+      Object.values(groupedByMonth).forEach(items => {
+        let bankPayment = items
+          .filter(i => (i.pos || "").toUpperCase().trim() === "PEMASUKAN DARI BANK")
+          .reduce((sum, i) => sum + Number(i.pembayaran || 0), 0) + availableBankPayment;
+
+        items
+          .filter(i => (i.pos || "").toUpperCase().trim() !== "PEMASUKAN DARI BANK")
+          .forEach(item => {
+            let tag = Number(item.tagihan || 0);
+            let pem = Number(item.pembayaran || 0);
+            let sisa = tag - pem;
+            if (sisa > 0 && bankPayment > 0) {
+              if (bankPayment >= sisa) {
+                bankPayment -= sisa;
+                pem += sisa;
+                sisa = 0;
+              } else {
+                pem += bankPayment;
+                sisa -= bankPayment;
+                bankPayment = 0;
+              }
+            }
+            if (sisa > 0) {
+              list.push({ ...item, tagihan: tag, pembayaran: pem });
+            }
+          });
+      });
+
+      setTunggakanList(list);
+      const total = list.reduce((sum, t) => sum + (Number(t.tagihan) - Number(t.pembayaran || 0)), 0);
+      setTotalTunggakan(total);
 
       const toArray = (d) => Array.isArray(d) ? d : d?.data || [];
       let targetRealisasi = 0;

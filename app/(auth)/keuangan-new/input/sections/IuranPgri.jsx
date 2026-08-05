@@ -380,8 +380,8 @@ const IuranPgriSection = () => {
           const osanduka = override.sanduka ?? (totalAnggota * besaran.sanduka);
           tambahan = override.tambahanCabang ?? tambahan;
           totalCabang = ocab + tambahan;
-          potBank = override.potonganBank ?? potBank;
-          tunai = override.setoranTunai ?? tunai;
+          potBank = (override.potonganBank && Number(override.potonganBank) > 0) ? Number(override.potonganBank) : group.potBank;
+          tunai = (override.potonganBank && Number(override.potonganBank) > 0) ? Number(override.setoranTunai) : group.tunai;
           pembayaran = override.pembayaran ?? pembayaran;
           totalTagihan = opb + oprov + okab + totalCabang + osanduka;
           selisih = override.selisih ?? (opb + oprov + okab + osanduka - pembayaran);
