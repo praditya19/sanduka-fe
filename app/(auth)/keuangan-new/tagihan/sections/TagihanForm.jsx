@@ -125,8 +125,10 @@ const TagihanForm = () => {
       const toArray = (d) => Array.isArray(d) ? d : d?.data || [];
       const bankMap = {};
       toArray(bankIuran).forEach(item => {
-        const key = (item.cabang || "").trim().toUpperCase();
-        bankMap[key] = Number(item.potonganBank || 0);
+        const key = (item.cabang || "").toString().trim().replace(/\s+/g, " ").toUpperCase();
+        if (key) {
+          bankMap[key] = (bankMap[key] || 0) + Number(item.potonganBank || 0);
+        }
       });
       setBankTargetMap(bankMap);
 
@@ -459,16 +461,15 @@ const TagihanForm = () => {
   const fetchAllBankValues = async (cabang, bulanVal, tahun) => {
     const namaBulan = monthValueToLabel[bulanVal];
     if (!namaBulan || !cabang) return 0;
-    const cabangNormalized = cabang.trim().toUpperCase();
+    const cabangNormalized = cabang.toString().trim().replace(/\s+/g, " ").toUpperCase();
     let total = 0;
     const cfg = PERUNTUKAN_CONFIG["Iuran PGRI"];
     try {
       const data = await cfg.api(namaBulan, tahun);
       const records = Array.isArray(data) ? data : data?.data || [];
-      const match = records.find(r => r.cabang?.trim().toUpperCase() === cabangNormalized);
-      if (match) {
-        total = Number(match[cfg.bankField] || 0);
-      }
+      total = records
+        .filter(r => (r.cabang || "").toString().trim().replace(/\s+/g, " ").toUpperCase() === cabangNormalized)
+        .reduce((sum, r) => sum + Number(r[cfg.bankField] || 0), 0);
     } catch (e) {
       console.error("Error fetching bank value:", e);
     }
@@ -493,10 +494,12 @@ const TagihanForm = () => {
       const prevMonthStr = String(prevMonthNum).padStart(2, "0");
       const prevMonthLabel = months.find(m => m.value === prevMonthStr)?.label;
 
-      const [data, dataTrans, bankIuran] = await Promise.all([
+      const [data, dataTrans, bankIuran, rekapDerap, rekapDaspen] = await Promise.all([
         GlobalApi.getTunggakanTransaksiCabang(cabang, Number(bulanVal), tahun),
         GlobalApi.getTransaksiCabangByBulanTahun(prevMonthNum, prevYear).catch(() => []),
         GlobalApi.getRekapByPeriode(prevMonthLabel, prevYear).catch(() => []),
+        GlobalApi.getRekapDerapByPeriode(prevMonthLabel, prevYear).catch(() => []),
+        GlobalApi.getRekapDaspenByPeriode(prevMonthLabel, prevYear).catch(() => []),
       ]);
 
       const rawTunggakanList = Array.isArray(data) ? data : [];
@@ -553,16 +556,80 @@ const TagihanForm = () => {
 
       const toArray = (d) => Array.isArray(d) ? d : d?.data || [];
       let targetRealisasi = 0;
+      let rekapIuranTotal = 0;
       toArray(bankIuran).forEach(item => {
         if ((item.cabang || "").trim().toUpperCase() === cabangNormalized) {
-          targetRealisasi = Number(item.potonganBank || 0);
+          targetRealisasi += Number(item.potonganBank || 0);
+          rekapIuranTotal += (Number(item.pb || 0) + Number(item.provinsi || 0) + Number(item.kabupaten || 0));
+        }
+      });
+
+      let rekapDerapTotal = 0;
+      toArray(rekapDerap).forEach(item => {
+        if ((item.cabang || "").trim().toUpperCase() === cabangNormalized) {
+          rekapDerapTotal += (Number(item.peruntukanProvinsi || 0) + Number(item.peruntukanKabupaten || 0));
+        }
+      });
+
+      let rekapDaspenTotal = 0;
+      toArray(rekapDaspen).forEach(item => {
+        if ((item.cabang || "").trim().toUpperCase() === cabangNormalized) {
+          rekapDaspenTotal += Number(item.tagihan || 0);
+        }
+      });
+
+      const catPosMap = {
+        "IURAN": "Iuran PGRI",
+        "SANDUKA": "Sanduka",
+        "DASPEN": "Daspen",
+        "DERAP": "Derap",
+        "KALENDER": "Kalender"
+      };
+
+      const posGroup = {};
+      cabangTrans.forEach(t => {
+        const p = (t.pos || "Lain-lain").trim();
+        if (!posGroup[p]) posGroup[p] = { tagihan: 0, pembayaran: 0 };
+        posGroup[p].tagihan += Number(t.tagihan || 0);
+        posGroup[p].pembayaran += Number(t.pembayaran || 0);
+      });
+
+      const usedPosLabels = new Set();
+      let calculatedTotalTagihan = 0;
+
+      const baseRows = [
+        { label: "IURAN", total: rekapIuranTotal },
+        { label: "DASPEN", total: rekapDaspenTotal },
+        { label: "DERAP", total: rekapDerapTotal },
+      ];
+
+      baseRows.forEach(row => {
+        const matchingPos = Object.keys(catPosMap).find(k => k === row.label);
+        let rowTotal = row.total;
+        if (matchingPos) {
+          const tcPos = catPosMap[matchingPos];
+          const tcData = Object.entries(posGroup).find(([k]) => k.toUpperCase() === tcPos.toUpperCase())?.[1];
+          if (tcData && tcData.tagihan > 0) {
+            usedPosLabels.add(tcPos.toUpperCase());
+            rowTotal = tcData.tagihan;
+          }
+        }
+        calculatedTotalTagihan += rowTotal;
+      });
+
+      Object.entries(posGroup).forEach(([pos, vals]) => {
+        if (pos.toUpperCase() === "PEMASUKAN DARI BANK") return;
+        if (!usedPosLabels.has(pos.toUpperCase())) {
+          calculatedTotalTagihan += vals.tagihan;
         }
       });
 
       const excludedPos = ['PEMASUKAN DARI BANK'];
-      const tagihanWithoutExcluded = cabangTrans
+      const rawTagihanSum = cabangTrans
         .filter(item => !excludedPos.includes((item.pos || "").toUpperCase()))
         .reduce((sum, item) => sum + Number(item.tagihan || 0), 0);
+
+      const tagihanWithoutExcluded = Math.max(calculatedTotalTagihan, rawTagihanSum);
 
       const pemasukanBankTotal = cabangTrans
         .filter(item => (item.pos || "").toUpperCase() === 'PEMASUKAN DARI BANK')

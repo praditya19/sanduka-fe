@@ -80,7 +80,7 @@ function KeuanganDetailContent() {
       const rekapData = Array.isArray(rekapIuran) ? rekapIuran : [];
       const rekapByCabang = {};
       rekapData.forEach((r) => {
-        const key = (r.cabang || "").trim().toUpperCase();
+        const key = (r.cabang || "").toString().trim().replace(/\s+/g, " ").toUpperCase();
         if (!rekapByCabang[key]) {
           rekapByCabang[key] = { pb: 0, provinsi: 0, kabupaten: 0 };
         }
@@ -88,7 +88,7 @@ function KeuanganDetailContent() {
         rekapByCabang[key].provinsi += r.provinsi || 0;
         rekapByCabang[key].kabupaten += r.kabupaten || 0;
       });
-      const cabangKey = cabang.trim().toUpperCase();
+      const cabangKey = (cabang || "").toString().trim().replace(/\s+/g, " ").toUpperCase();
       const rekapIuranTotal = rekapByCabang[cabangKey]
         ? (rekapByCabang[cabangKey].pb + rekapByCabang[cabangKey].provinsi + rekapByCabang[cabangKey].kabupaten)
         : 0;
@@ -98,7 +98,7 @@ function KeuanganDetailContent() {
       const rekapDerapByCabang = {};
       let rekapDerapJumlah = 0;
       rekapDerapData.forEach((r) => {
-        const key = (r.cabang || "").trim().toUpperCase();
+        const key = (r.cabang || "").toString().trim().replace(/\s+/g, " ").toUpperCase();
         if (!rekapDerapByCabang[key]) {
           rekapDerapByCabang[key] = { provinsi: 0, kabupaten: 0, jumlah: 0 };
         }
@@ -115,7 +115,7 @@ function KeuanganDetailContent() {
       const rekapDaspenData = Array.isArray(rekapDaspen) ? rekapDaspen : [];
       const rekapDaspenByCabang = {};
       rekapDaspenData.forEach((r) => {
-        const key = (r.cabang || "").trim().toUpperCase();
+        const key = (r.cabang || "").toString().trim().replace(/\s+/g, " ").toUpperCase();
         if (!rekapDaspenByCabang[key]) {
           rekapDaspenByCabang[key] = { tagihan: 0, totalAnggota: 0 };
         }
