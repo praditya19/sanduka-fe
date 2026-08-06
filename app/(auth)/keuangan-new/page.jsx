@@ -67,12 +67,12 @@ export default function KeuanganNew() {
     try {
       const [transaksiCabangRes, balancingRes, orgRes] = await Promise.all([
         GlobalApi.getTransaksiCabangByBulanTahun(selectedMonth, selectedYear),
-        GlobalApi.getTransaksiBankBalancing("", null, selectedYear, selectedMonth, null, null),
+        GlobalApi.getBalancingSummaryPerCabang(selectedMonth, selectedYear),
         GlobalApi.getPemasukanUmum(),
       ]);
 
       const cabangTransData = Array.isArray(transaksiCabangRes) ? transaksiCabangRes : transaksiCabangRes?.data || [];
-      const balancingData = Array.isArray(balancingRes) ? balancingRes : [];
+      const balancingSummaryData = Array.isArray(balancingRes) ? balancingRes : [];
 
       // Transaksi cabang: group by cabang (normalized), sum tagihan (excl Pemasukan Dari Bank) and pembayaran
       const tcGrouped = {};
@@ -87,38 +87,20 @@ export default function KeuanganNew() {
         tcGrouped[cabang].realisasi += Number(item.pembayaran || 0);
       });
 
-      // Balancing: group by cabang for potongan bank and target
-      const npaMap = {};
-      balancingData.forEach((item) => {
-        const key = `${item.cabang}-${item.unitKerja}-${item.npa}`;
-        if (!npaMap[key] || item.id > npaMap[key].id) {
-          npaMap[key] = item;
-        }
-      });
-      const uniqueData = Object.values(npaMap);
-
+      // Balancing summary per cabang
       const balGrouped = {};
-      uniqueData.forEach((item) => {
+      balancingSummaryData.forEach((item) => {
         const cabang = (item.cabang || "Lainnya").trim().toUpperCase();
-        if (!balGrouped[cabang]) {
-          balGrouped[cabang] = { target: 0, potBank: 0, iuranAnggota: 0, iuranSanduka: 0, iuranDaspen: 0, iuranDerap: 0, iuranKalender: 0, iuranSumbangan: 0 };
-        }
-        const ia = parseFloat(item.totalIuranAnggota) || 0;
-        const isk = parseFloat(item.totalIuranSanduka) || 0;
-        const idp = parseFloat(item.totalIuranDaspen) || 0;
-        const idr = parseFloat(item.totalIuranDerap) || 0;
-        const ikl = parseFloat(item.totalIuranKalender) || 0;
-        const isb = parseFloat(item.totalIuranSumbangan) || 0;
-        balGrouped[cabang].target += ia + isk + idp + idr + ikl + isb;
-        balGrouped[cabang].iuranAnggota += ia;
-        balGrouped[cabang].iuranSanduka += isk;
-        balGrouped[cabang].iuranDaspen += idp;
-        balGrouped[cabang].iuranDerap += idr;
-        balGrouped[cabang].iuranKalender += ikl;
-        balGrouped[cabang].iuranSumbangan += isb;
-        if (item.keterangan === "Sukses") {
-          balGrouped[cabang].potBank += parseFloat(item.potongan) || 0;
-        }
+        balGrouped[cabang] = {
+          target: Number(item.target || 0),
+          potBank: Number(item.potBank || 0),
+          iuranAnggota: Number(item.iuranAnggota || 0),
+          iuranSanduka: Number(item.iuranSanduka || 0),
+          iuranDaspen: Number(item.iuranDaspen || 0),
+          iuranDerap: Number(item.iuranDerap || 0),
+          iuranKalender: Number(item.iuranKalender || 0),
+          iuranSumbangan: Number(item.iuranSumbangan || 0),
+        };
       });
 
       // Main categories and their balancing field names

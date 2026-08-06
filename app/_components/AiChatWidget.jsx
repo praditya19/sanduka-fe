@@ -34,10 +34,7 @@ export default function AiChatWidget() {
   useEffect(() => {
     const fetchLatestKnowledge = async () => {
       try {
-        const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ||
-          (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
-            ? "http://localhost:8080"
-            : BASE_URL);
+        const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || BASE_URL;
 
         const res = await axios.get(`${apiBaseUrl}/api/v1/ai/knowledge`);
         if (res.data && Array.isArray(res.data) && res.data.length > 0) {
@@ -112,10 +109,7 @@ export default function AiChatWidget() {
           text: m.text,
         }));
 
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ||
-        (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
-          ? "http://localhost:8080"
-          : BASE_URL);
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || BASE_URL;
 
       const targetUrl = `${apiBaseUrl}/api/v1/ai/chat`;
 

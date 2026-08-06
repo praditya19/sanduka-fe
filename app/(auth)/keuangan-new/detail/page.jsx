@@ -62,7 +62,7 @@ function KeuanganDetailContent() {
     setLoading(true);
     try {
       const [balancingRes, iuranRes, rekapIuran, rekapDerap, rekapDaspen, rekapKalender, transaksiCabangRes] = await Promise.all([
-        GlobalApi.getTransaksiBankBalancing("", null, selectedYear, selectedMonth, null, null),
+        GlobalApi.getTransaksiBankBalancing(cabang, null, selectedYear, selectedMonth, null, null),
         GlobalApi.getDefaultIuranById(2),
         GlobalApi.getRekapByPeriode(MONTHS_FULL[selectedMonth], selectedYear),
         GlobalApi.getRekapDerapByPeriode(MONTHS_FULL[selectedMonth], selectedYear),

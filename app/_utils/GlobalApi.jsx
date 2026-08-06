@@ -1424,6 +1424,22 @@ const getTransaksiBankBalancing = async (
   }
 };
 
+const getBalancingSummaryPerCabang = async (bulan = null, tahun = null) => {
+  try {
+    const params = new URLSearchParams();
+    if (bulan) params.append("bulan", bulan);
+    if (tahun) params.append("tahun", tahun);
+
+    const url = `/api/potongan-gaji/balancing/summary-cabang?${params.toString()}`;
+    const response = await axiosClient.get(url);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching balancing summary per cabang:", error);
+    throw error;
+  }
+};
+
+
 const getCountAnggotaPotonganBank = async (bulan, tahun) => {
   const params = new URLSearchParams();
   params.append("bulan", bulan);
@@ -4627,6 +4643,7 @@ export default {
   postIuranAnggota,
   uploadSinkronBank,
   getTransaksiBankBalancing,
+  getBalancingSummaryPerCabang,
   getCountAnggotaPotonganBank,
   getCountAnggotaSetorTunai,
   getCountAnggotaTerfilter,
