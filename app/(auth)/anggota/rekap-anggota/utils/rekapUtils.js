@@ -76,7 +76,7 @@ export const processData = (rawData) => {
         lastUpdatedAtIuran: "",
         sumbanganDetail: {
           "Cetak Kartu Biasa": 25000,
-          "IURAN HUT 80 PGRI": 30000,
+          [`IURAN HUT ${new Date().getFullYear() - 1945} RI`]: 30000,
         },
       };
     }
