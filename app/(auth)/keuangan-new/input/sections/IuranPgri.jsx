@@ -229,18 +229,12 @@ const IuranPgriSection = () => {
       const normalizeCabangKey = (value) =>
         (value || "").toString().trim().replace(/\s+/g, " ").toUpperCase();
 
-      // Parse transaksi_cabang untuk mapping pembayaran per cabang.
-      // Filter khusus pos Iuran PGRI & Sanduka (karena ini tab Iuran PGRI)
-      // Format: { "CABANG_NAME": totalPembayaran }
-      const posIuran = new Set(["iuran pgri", "iuran", "sanduka"]);
+      // Parse transaksi_cabang untuk mapping pembayaran per cabang (inputan tagihan cabang yang bersumber dari inputan pembayaran)
       const pembayaranPerCabang = {};
       if (transaksiData && Array.isArray(transaksiData)) {
         transaksiData.forEach((item) => {
           const cabangKey = normalizeCabangKey(item.cabang);
           if (!cabangKey) return;
-
-          const pos = (item.pos || "").toLowerCase().trim();
-          if (!posIuran.has(pos)) return;
 
           pembayaranPerCabang[cabangKey] =
             (pembayaranPerCabang[cabangKey] || 0) + Number(item.pembayaran || 0);
@@ -382,9 +376,10 @@ const IuranPgriSection = () => {
           totalCabang = ocab + tambahan;
           potBank = group.potBank;
           tunai = (override.setoranTunai !== undefined && override.setoranTunai !== null) ? Number(override.setoranTunai) : group.tunai;
-          pembayaran = override.pembayaran ?? pembayaran;
+          pembayaran = (pembayaranPerCabang[cabangKey] !== undefined && pembayaranPerCabang[cabangKey] > 0) ? pembayaranPerCabang[cabangKey] : (override.pembayaran ?? pembayaran);
           totalTagihan = opb + oprov + okab + totalCabang + osanduka;
-          selisih = override.selisih ?? (opb + oprov + okab + osanduka - pembayaran);
+          const curTagihanCabang = opb + oprov + okab + osanduka;
+          selisih = curTagihanCabang - pembayaran;
           return [
             cabName, totalAnggota, opb, oprov, okab, ocab, tambahan, totalCabang,
             osanduka, totalTagihan, potBank, tunai, pembayaran, selisih,
