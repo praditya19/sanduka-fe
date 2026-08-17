@@ -76,7 +76,7 @@ export const processData = (rawData) => {
         lastUpdatedAtIuran: "",
         sumbanganDetail: {
           "Cetak Kartu Biasa": 25000,
-          [`IURAN HUT ${new Date().getFullYear() - 1945} RI`]: 30000,
+          [`IURAN HUT ${new Date().getFullYear() - 1945} PGRI`]: 30000,
         },
       };
     }
@@ -128,10 +128,14 @@ export const processData = (rawData) => {
 
     if (Array.isArray(item.iuranSumbanganList)) {
       item.iuranSumbanganList.forEach((s) => {
-        if (!acc[unitKey].sumbanganDetail[s.jenis]) {
-          acc[unitKey].sumbanganDetail[s.jenis] = 0;
+        let jenisKey = s.jenis || s.namaSumbangan || "";
+        if (/HUT/i.test(jenisKey)) {
+          jenisKey = `IURAN HUT ${new Date().getFullYear() - 1945} PGRI`;
         }
-        acc[unitKey].sumbanganDetail[s.jenis] += s.jumlah;
+        if (!acc[unitKey].sumbanganDetail[jenisKey]) {
+          acc[unitKey].sumbanganDetail[jenisKey] = 0;
+        }
+        acc[unitKey].sumbanganDetail[jenisKey] += s.jumlah;
       });
     }
 

@@ -150,14 +150,19 @@ function RekapAnggota() {
     // Gunakan Map untuk memastikan tidak ada duplikat berdasarkan nama (case-insensitive)
     const existingMap = new Map();
     (selectedMember.detailSumbangan || []).forEach((s) => {
-      const lowKey = s.namaSumbangan.toLowerCase().trim();
+      let rawName = s.namaSumbangan || "";
+      if (/hut/i.test(rawName)) {
+        const year = selectedYear || new Date().getFullYear();
+        rawName = `Iuran Hut ${year - 1945} PGRI`;
+      }
+      const lowKey = rawName.toLowerCase().trim();
       // Jangan masukkan jika ini sebenarnya adalah kategori base
       if (baseKeys.includes(lowKey)) return;
 
       if (!existingMap.has(lowKey)) {
         existingMap.set(lowKey, {
           key: lowKey,
-          label: s.namaSumbangan,
+          label: rawName,
           iuran: s.jumlah,
           defaultJumlah: s.defaultJumlah || s.jumlah,
           manualJumlah: s.manualJumlah || 0,
