@@ -21,11 +21,11 @@ import {
   faHome,
   faChevronLeft,
   faChevronRight,
-  faExchangeAlt,
+  faCalendarDays,
   faRightLeft,
   faLocation,
   faCancel,
-  faCheck,
+  faNoteSticky,
   faSitemap,
   faUserPen,
   faImage,
@@ -900,8 +900,8 @@ export default function IconGrid() {
               iconColor: "text-emerald-700",
             })
             .concat({
-              icon: faCog,
-              label: "Event",
+              icon: faCalendarDays,
+              label: "Rekap Event",
               href: "/event/data-event",
               color: "text-emerald-600",
               bgHover: "hover:bg-emerald-100",
@@ -923,8 +923,8 @@ export default function IconGrid() {
           ? [
               ...icons.filter((item) => item.label === "Event"),
               {
-              icon: faCog,
-              label: "Event",
+              icon: faCalendarDays,
+              label: "Rekap Event",
               href: "/event/data-event",
               color: "text-emerald-600",
               bgHover: "hover:bg-emerald-100",
