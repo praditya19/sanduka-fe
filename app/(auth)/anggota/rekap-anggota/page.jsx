@@ -318,7 +318,23 @@ function RekapAnggota() {
     fetchBaseData();
   }, []);
 
-  const fetchInitialData = useCallback(async () => {
+  const selectedCabangRef = useRef(selectedCabang);
+  const selectedUnitKerjaRef = useRef(selectedUnitKerja);
+  const namaAnggotaInputRef = useRef(namaAnggotaInput);
+
+  useEffect(() => {
+    selectedCabangRef.current = selectedCabang;
+  }, [selectedCabang]);
+
+  useEffect(() => {
+    selectedUnitKerjaRef.current = selectedUnitKerja;
+  }, [selectedUnitKerja]);
+
+  useEffect(() => {
+    namaAnggotaInputRef.current = namaAnggotaInput;
+  }, [namaAnggotaInput]);
+
+  const fetchInitialData = useCallback(async (preserveFilters = false) => {
     // Beri jeda singkat untuk memastikan session/token di browser benar-benar siap
     await new Promise((resolve) => setTimeout(resolve, 100));
 
@@ -335,11 +351,15 @@ function RekapAnggota() {
       // SUPERADMIN tetap melihat semua data secara default ("")
       if (storedRole === "ADMIN" && storedCabang) {
         setIsAdmin(true);
-        setSelectedCabang(storedCabang);
+        if (!preserveFilters) {
+          setSelectedCabang(storedCabang);
+        }
         response = await GlobalApi.getNominalAggregatedData(storedCabang);
       } else {
         setIsAdmin(storedRole === "ADMIN");
-        setSelectedCabang("");
+        if (!preserveFilters) {
+          setSelectedCabang("");
+        }
         response = await GlobalApi.getNominalAggregatedData("");
       }
 
@@ -384,8 +404,32 @@ function RekapAnggota() {
         (item) => !(item.cabang === "Total" && !item.unitKerja),
       );
 
-      setData(regularData);
       setOriginalRekapData(regularData);
+
+      if (preserveFilters) {
+        const activeCabang = selectedCabangRef.current;
+        const activeUnitKerja = selectedUnitKerjaRef.current;
+        const activeNama = namaAnggotaInputRef.current;
+
+        const filtered = regularData.filter((item) => {
+          const matchCabang =
+            !activeCabang ||
+            item.cabang?.toLowerCase() === activeCabang.toLowerCase();
+          const matchUnit =
+            !activeUnitKerja ||
+            item.unitKerja?.toLowerCase() === activeUnitKerja.toLowerCase();
+          const matchName =
+            !activeNama ||
+            item.namaAnggota?.toLowerCase().includes(activeNama.toLowerCase());
+          return matchCabang && matchUnit && matchName;
+        });
+        setData(filtered);
+      } else {
+        setSelectedUnitKerja("");
+        setUnitKerjaInput("");
+        setNamaAnggotaInput("");
+        setData(regularData);
+      }
       setLoading(false);
     } catch (err) {
       console.error("Error fetching initial data:", err);
@@ -396,7 +440,7 @@ function RekapAnggota() {
   useEffect(() => {
     // Hanya ambil data jika AuthContext sudah selesai loading
     if (!authLoading) {
-      fetchInitialData();
+      fetchInitialData(false);
     }
   }, [fetchInitialData, authLoading, token]);
 
@@ -455,36 +499,27 @@ function RekapAnggota() {
   };
 
   const handleSelectCabang = async (cabang) => {
-    setSelectedCabang(cabang.kecamatan);
+    const cabName = cabang?.kecamatan || "";
+    setSelectedCabang(cabName);
     setShowCabangDropdown(false);
     setSelectedUnitKerja("");
     setUnitKerjaInput("");
     setNamaAnggotaInput("");
 
-    if (!cabang.kecamatan) {
+    const filteredUnit = unitKerjaList.filter(
+      (u) => u.cabang?.toLowerCase() === cabName.toLowerCase(),
+    );
+    setFilteredUnitKerja(filteredUnit);
+
+    if (!cabName) {
       setData(originalRekapData);
       return;
     }
 
-    try {
-      setLoading(true);
-      let res = await GlobalApi.getNominalAggregatedData(cabang.kecamatan);
-      const apiData = Array.isArray(res) ? res : res?.data || [];
-      const processed = processApiResponse(apiData, null, false);
-      const regular = processed.filter(
-        (item) => !(item.cabang === "Total" && !item.unitKerja),
-      );
-      setData(regular);
-
-      const filteredUnit = unitKerjaList.filter(
-        (u) => u.cabang?.toLowerCase() === cabang.kecamatan.toLowerCase(),
-      );
-      setFilteredUnitKerja(filteredUnit);
-    } catch (err) {
-      console.error("Error selecting cabang:", err);
-    } finally {
-      setLoading(false);
-    }
+    const filteredData = originalRekapData.filter(
+      (item) => item.cabang?.toLowerCase() === cabName.toLowerCase(),
+    );
+    setData(filteredData);
   };
 
   const handleUnitKerjaChange = (e) => {
@@ -505,7 +540,11 @@ function RekapAnggota() {
       (item) =>
         item.cabang?.toLowerCase() === selectedCabang.toLowerCase() &&
         (input === "" ||
-          item.unitKerja?.toLowerCase().includes(input.toLowerCase())),
+          item.unitKerja?.toLowerCase().includes(input.toLowerCase())) &&
+        (!namaAnggotaInput ||
+          item.namaAnggota
+            ?.toLowerCase()
+            .includes(namaAnggotaInput.toLowerCase())),
     );
     setData(filteredData);
   };
@@ -524,15 +563,20 @@ function RekapAnggota() {
   };
 
   const handleUnitKerjaSelect = (unitKerja) => {
-    const val = unitKerja.unitKerja;
+    const val = unitKerja?.unitKerja || "";
     setSelectedUnitKerja(val);
     setUnitKerjaInput(val);
     setShowUnitKerjaDropdown(false);
 
     const filteredData = originalRekapData.filter(
       (item) =>
-        item.cabang?.toLowerCase() === selectedCabang.toLowerCase() &&
-        (!val || item.unitKerja?.toLowerCase() === val.toLowerCase()),
+        (!selectedCabang ||
+          item.cabang?.toLowerCase() === selectedCabang.toLowerCase()) &&
+        (!val || item.unitKerja?.toLowerCase() === val.toLowerCase()) &&
+        (!namaAnggotaInput ||
+          item.namaAnggota
+            ?.toLowerCase()
+            .includes(namaAnggotaInput.toLowerCase())),
     );
     setData(filteredData);
   };
@@ -746,7 +790,7 @@ function RekapAnggota() {
         type: "success",
         message: "Data berhasil diperbarui!",
       });
-      fetchInitialData();
+      await fetchInitialData(true);
       return true;
     } catch (err) {
       console.error("Error updating iuran:", err);
