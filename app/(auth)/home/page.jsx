@@ -899,6 +899,14 @@ export default function IconGrid() {
               bgHover: "hover:bg-emerald-100",
               iconColor: "text-emerald-700",
             })
+            .concat({
+              icon: faCog,
+              label: "Event",
+              href: "/event/data-event",
+              color: "text-emerald-600",
+              bgHover: "hover:bg-emerald-100",
+              iconColor: "text-emerald-700",
+            })
         : role === "EDITOR"
           ? [
               ...icons.filter((item) => item.label === "Kontributor"),
@@ -911,12 +919,25 @@ export default function IconGrid() {
                 iconColor: "text-purple-700",
               },
             ]
+        : role === "PANITIA"
+          ? [
+              ...icons.filter((item) => item.label === "Event"),
+              {
+              icon: faCog,
+              label: "Event",
+              href: "/event/data-event",
+              color: "text-emerald-600",
+              bgHover: "hover:bg-emerald-100",
+              iconColor: "text-emerald-700",
+              },
+            ]
           : role === "ADMIN"
             ? icons.filter(
                 (item) =>
                   item.label !== "Tour & Travel" &&
                   item.label !== "Pengaturan" &&
                   item.label !== "AI Knowledge" &&
+                  item.label !== "Event" &&
                   item.label !== "Galeri" &&
                   item.label !== "Eksport Foto" &&
                   item.label !== "Keuangan",

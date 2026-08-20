@@ -2729,6 +2729,23 @@ const getAllPeserta = async (queryString = "") => {
   }
 };
 
+const getAllDaftarPesertaEvent = async (namaEvent = "", cabang = "") => {
+  try {
+    const params = {};
+
+    if (namaEvent) params.namaEvent = namaEvent;
+    if (cabang) params.cabang = cabang;
+
+    const response = await axiosClient.get("/api/event", {
+      params,
+    });
+
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 const deletePeserta = async (id) => {
   try {
     const response = await axiosClient.delete(`/api/event/${id}`);
@@ -4773,4 +4790,5 @@ export default {
   recordSiteVisit,
   getSiteVisitStats,
   getWeeklySiteVisitors,
+  getAllDaftarPesertaEvent,
 };
