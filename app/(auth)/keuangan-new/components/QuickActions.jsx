@@ -92,7 +92,7 @@ const QuickActions = () => {
       subtitle: "Statistik mendalam",
       icon: <FaChartLine />,
       color: "bg-orange-500",
-      href: "/statistik",
+      href: "/keuangan-new/analisis-tren",
     },
   ];
 
