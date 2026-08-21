@@ -1217,7 +1217,7 @@ const GaleriKegiatan = () => {
                           className="text-sm text-gray-600"
                           htmlFor="jabatan"
                         >
-                          Jabatan Organisasi PGRI{" "}
+                          Keterangan{" "}
                           <span className="text-red-500">*</span>
                         </label>
 
@@ -1226,7 +1226,7 @@ const GaleriKegiatan = () => {
                           type="text"
                           value={jabatan}
                           onChange={(e) => setJabatan(e.target.value)}
-                          placeholder="Masukkan jabatan organisasi PGRI"
+                          placeholder="Masukkan link drive"
                           className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
                         />
