@@ -357,6 +357,20 @@ const Page = () => {
     }
   };
 
+  const isLink = (text) => {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  return urlRegex.test(text);
+};
+
+const truncateWords = (text, maxWords = 44) => {
+  if (!text) return "-";
+
+  const words = text.split(" ");
+  if (words.length <= maxWords) return text;
+
+  return words.slice(0, maxWords).join(" ") + "...";
+  };
+  
   useEffect(() => {
     dataPeserta();
     fetchCabang();
@@ -405,10 +419,6 @@ const Page = () => {
     const newSidebarState = !isSidebarOpen;
     setIsSidebarOpen(newSidebarState);
     localStorage.setItem("isSidebarOpen", newSidebarState);
-  };
-
-  const handleExpand = (index) => {
-    setExpandedIndex(expandedIndex === index ? null : index);
   };
 
   return (
@@ -869,6 +879,9 @@ const Page = () => {
                           <th className="py-4 px-4 text-center text-sm font-semibold uppercase tracking-wider">
                             Materi
                           </th>
+                          <th className="py-4 px-4 text-center text-sm font-semibold uppercase tracking-wider">
+                            Keterangan
+                          </th>
                           <th className="py-4 px-4 text-center text-sm font-semibold uppercase tracking-wider rounded-tr-xl">
                             Aksi
                           </th>
@@ -1042,6 +1055,47 @@ const Page = () => {
                                 <span className="text-gray-400">-</span>
                               )}
                             </td>
+
+                           <td className="py-4 px-4">
+  <div className="flex flex-col gap-1">
+
+    {/* TEXT / LINK */}
+    {item.jabatan ? (
+      isLink(item.jabatan) ? (
+        <a
+          href={item.jabatan}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:underline break-words"
+        >
+          {expandedIndex === index
+            ? item.jabatan
+            : truncateWords(item.jabatan)}
+        </a>
+      ) : (
+        <span className="text-gray-800 break-words">
+          {expandedIndex === index
+            ? item.jabatan
+            : truncateWords(item.jabatan)}
+        </span>
+      )
+    ) : (
+      <span className="text-gray-400">-</span>
+    )}
+
+    {/* BUTTON LIHAT LEBIH BANYAK */}
+    {item.jabatan && item.jabatan.split(" ").length > 20 && (
+      <button
+        onClick={() =>
+          setExpandedIndex(expandedIndex === index ? null : index)
+        }
+        className="text-sm text-teal-600 hover:underline text-left"
+      >
+        {expandedIndex === index ? "Lihat lebih sedikit" : "Lihat lebih banyak"}
+      </button>
+    )}
+  </div>
+</td>
 
                             {/* Aksi */}
                             <td className="py-4 px-4">
