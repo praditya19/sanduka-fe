@@ -1226,7 +1226,7 @@ const GaleriKegiatan = () => {
                           type="text"
                           value={jabatan}
                           onChange={(e) => setJabatan(e.target.value)}
-                          placeholder="Masukkan link drive"
+                          placeholder="Isikan katerangan atau link"
                           className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
                         />
