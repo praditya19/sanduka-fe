@@ -1193,18 +1193,6 @@ const CreateEditor = () => {
                               )}
                             </div>
                           </div>
-                                onChange={(e) =>
-                                  setEditEditorData({
-                                    ...editEditorData,
-                                    role: e.target.value,
-                                  })
-                                }
-                              >
-                                <option value="EDITOR">EDITOR</option>
-                                <option value="ADMIN">ADMIN</option>
-                              </select>
-                            </div>
-                          </div>
 
                           <div className="mt-6 flex justify-end space-x-3">
                             <Button

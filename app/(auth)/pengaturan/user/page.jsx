@@ -1407,19 +1407,6 @@ const Page = () => {
                               )}
                             </div>
                           </div>
-                                onChange={(e) =>
-                                  setEditAdminData({
-                                    ...editAdminData,
-                                    role: e.target.value,
-                                  })
-                                }
-                              >
-                                <option value="SUPERADMIN">SUPER ADMIN</option>
-                                <option value="ADMIN">ADMIN</option>
-                                <option value="EDITOR">EDITOR</option>
-                              </select>
-                            </div>
-                          </div>
 
                           <div className="mt-6 flex justify-end space-x-3">
                             <Button
