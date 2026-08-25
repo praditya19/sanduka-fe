@@ -896,11 +896,12 @@ const Page = () => {
                 </div>
               </div>
             </main>
+            {/* POPUP: TAMBAH USER BARU */}
             {isPopupVisible && (
-              <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center mt-20">
+              <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center mt-20 z-50">
                 <div className="bg-white p-6 rounded shadow-lg w-full md:w-3/6 max-h-[80vh] overflow-auto relative">
                   <Button
-                    className="absolute top-2 right-2 text-gray-600 hover:text-blacktext-gray-800"
+                    className="absolute top-2 right-2 bg-red-500 text-white hover:bg-red-600 hover:text-white"
                     onClick={handleClosePopup}
                   >
                     <FontAwesomeIcon icon={faTimes} className="w-5 h-5" />
@@ -923,510 +924,474 @@ const Page = () => {
                     </Label>
                     <Button
                       className="bg-blue-500 text-white px-4 py-2 mt-4 md:mt-6 rounded w-full md:w-auto"
-                      onClick={cekNpa}
+                      onClick={handleCekNpa}
                     >
                       Cek NPA
                     </Button>
                   </div>
 
-                  {isPopupVisible && (
-                    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center mt-20">
-                      <div className="bg-white p-6 rounded shadow-lg w-full md:w-3/6 max-h-[80vh] overflow-auto relative">
-                        <Button
-                          className="absolute top-2 right-2 bg-red-500 text-white hover:bg-red-600 hover:text-white"
-                          onClick={handleClosePopup}
-                        >
-                          <FontAwesomeIcon icon={faTimes} className="w-5 h-5" />
-                        </Button>
+                  {adminData && (
+                    <div className="mt-4">
+                      <h3 className="text-lg font-semibold mb-4 text-center md:text-left">
+                        Data Admin
+                      </h3>
 
-                        <h2 className="text-lg font-bold mb-4 text-center">
-                          Tambah User Baru
-                        </h2>
-
-                        <div className="flex flex-col md:flex-row items-center md:space-x-4 mb-4">
-                          <Label className="block flex-1">
-                            <span className="text-gray-700">NPA PGRI</span>
-                            <Input
-                              type="text"
-                              value={npa}
-                              onChange={handleNpaChange}
-                              className="mt-1 block w-full"
-                              placeholder="Masukkan NPA PGRI"
-                            />
-                          </Label>
-                          <Button
-                            className="bg-blue-500 text-white px-4 py-2 mt-4 md:mt-6 rounded w-full md:w-auto"
-                            onClick={handleCekNpa}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
+                          <Label
+                            htmlFor="nama"
+                            className="block font-semibold md:w-1/3"
                           >
-                            Cek NPA
-                          </Button>
+                            Nama:
+                          </Label>
+                          <Input
+                            type="text"
+                            id="nama"
+                            value={adminData.namaLengkap}
+                            readOnly
+                            className="border rounded w-full p-2 text-black bg-gray-200"
+                          />
                         </div>
 
-                        {adminData && (
-                          <div className="mt-4">
-                            <h3 className="text-lg font-semibold mb-4 text-center md:text-left">
-                              Data Admin
-                            </h3>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                              <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
-                                <Label
-                                  htmlFor="nama"
-                                  className="block font-semibold md:w-1/3"
-                                >
-                                  Nama:
-                                </Label>
-                                <Input
-                                  type="text"
-                                  id="nama"
-                                  value={adminData.namaLengkap}
-                                  readOnly
-                                  className="border rounded w-full p-2 text-black bg-gray-200"
-                                />
-                              </div>
-
-                              <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
-                                <Label
-                                  htmlFor="npa_pgri"
-                                  className="block font-semibold md:w-1/3"
-                                >
-                                  NPA:
-                                </Label>
-                                <Input
-                                  type="text"
-                                  id="npa_pgri"
-                                  value={adminData.npaPgri}
-                                  readOnly
-                                  className="border rounded w-full p-2 text-black bg-gray-200"
-                                />
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                              <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
-                                <Label
-                                  htmlFor="jabatan"
-                                  className="block font-semibold md:w-1/3"
-                                >
-                                  Jabatan:
-                                </Label>
-                                <Input
-                                  type="text"
-                                  id="jabatan"
-                                  value={adminData.jabatan}
-                                  readOnly
-                                  className="border rounded w-full p-2 text-black bg-gray-200"
-                                />
-                              </div>
-
-                              <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
-                                <Label
-                                  htmlFor="email"
-                                  className="block font-semibold md:w-1/3"
-                                >
-                                  Email Asli:
-                                </Label>
-                                <Input
-                                  type="text"
-                                  id="email"
-                                  value={adminData.email || "-"}
-                                  readOnly
-                                  className="border rounded w-full p-2 text-black bg-gray-200"
-                                />
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                              <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
-                                <Label
-                                  htmlFor="adminEmailInput"
-                                  className="block font-semibold md:w-1/3"
-                                >
-                                  Email Login:
-                                </Label>
-                                <div className="w-full">
-                                  <Input
-                                    type="email"
-                                    id="adminEmailInput"
-                                    value={adminEmailInput}
-                                    onChange={(e) =>
-                                      setAdminEmailInput(e.target.value)
-                                    }
-                                    className="border rounded w-full p-2 text-black bg-white"
-                                    placeholder="Masukkan email untuk login admin"
-                                    required
-                                  />
-                                  <p className="text-xs text-gray-500 mt-1">
-                                    * Email ini yang akan digunakan pengurus untuk login
-                                  </p>
-                                </div>
-                              </div>
-
-                              <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
-                                <Label
-                                  htmlFor="cabang"
-                                  className="block font-semibold md:w-1/3"
-                                >
-                                  Cabang:
-                                </Label>
-                                <div className="w-full">
-                                  <div className="relative" ref={dropdownRef}>
-                                    <Input
-                                      type="text"
-                                      className="border-teal-500 rounded-lg p-2 bg-white shadow-sm w-full"
-                                      placeholder="Pilih Cabang"
-                                      value={selectedCabang}
-                                      readOnly
-                                      onFocus={() => {
-                                        setQuery("");
-                                        setShowDropdown(true);
-                                      }}
-                                    />
-                                    {showDropdown && (
-                                      <div className="absolute z-10 w-full mt-1">
-                                        <Input
-                                          type="text"
-                                          className="border rounded-lg p-2 w-full"
-                                          placeholder="Cari Cabang..."
-                                          value={query}
-                                          onChange={(e) =>
-                                            setQuery(e.target.value)
-                                          }
-                                          autoFocus
-                                        />
-                                        <ul className="mt-1 max-h-48 overflow-y-auto bg-white border rounded-lg shadow-sm">
-                                          {[...filteredOptions]
-                                            .sort((a, b) => a.kecamatan.localeCompare(b.kecamatan, "id"))
-                                            .map((item) => (
-                                            <li
-                                              key={item.idKecamatan}
-                                              className="p-2 cursor-pointer hover:bg-gray-100"
-                                              onClick={() => {
-                                                handleCabangChange(item);
-                                                setShowDropdown(false);
-                                              }}
-                                            >
-                                              {item.kecamatan}
-                                            </li>
-                                          ))}
-                                        </ul>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                              <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
-                                <Label
-                                  htmlFor="password"
-                                  className="block font-semibold md:w-1/3"
-                                >
-                                  Password:
-                                </Label>
-                                <div className="w-full relative">
-                                  <Input
-                                    type={showAddPassword ? "text" : "password"}
-                                    id="password"
-                                    value={editablePassword}
-                                    onChange={(e) => {
-                                      setEditablePassword(e.target.value);
-                                      setPasswordError("");
-                                    }}
-                                    className={`border rounded w-full p-2 pr-10 text-black bg-white ${
-                                      passwordError ? "border-red-500" : ""
-                                    }`}
-                                    placeholder="Masukkan password"
-                                    required
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() => setShowAddPassword(!showAddPassword)}
-                                    className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700 focus:outline-none"
-                                  >
-                                    <FontAwesomeIcon
-                                      icon={showAddPassword ? faEyeSlash : faEye}
-                                    />
-                                  </button>
-                                  {passwordError && (
-                                    <span className="text-red-500 text-sm mt-1 block">
-                                      {passwordError}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-
-                              <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
-                                <Label
-                                  htmlFor="role"
-                                  className="block font-semibold md:w-1/3"
-                                >
-                                  Role:
-                                </Label>
-                                <select
-                                  id="role"
-                                  className="border rounded w-full p-2 text-black bg-white"
-                                  value={role}
-                                  onChange={handleRoleChange}
-                                >
-                                  <option value="SUPERADMIN">
-                                    SUPER ADMIN
-                                  </option>
-                                  <option value="ADMIN">ADMIN</option>
-                                  <option value="EDITOR">EDITOR</option>
-                                </select>
-                              </div>
-                            </div>
-
-                            <div className="mt-6 flex justify-end">
-                              <Button
-                                className="bg-teal-600 text-white px-4 py-2 rounded w-full md:w-auto"
-                                onClick={handleAddUser}
-                              >
-                                Tambah
-                              </Button>
-                            </div>
-                          </div>
-                        )}
+                        <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
+                          <Label
+                            htmlFor="npa_pgri"
+                            className="block font-semibold md:w-1/3"
+                          >
+                            NPA:
+                          </Label>
+                          <Input
+                            type="text"
+                            id="npa_pgri"
+                            value={adminData.npaPgri}
+                            readOnly
+                            className="border rounded w-full p-2 text-black bg-gray-200"
+                          />
+                        </div>
                       </div>
-                    </div>
-                  )}
 
-                  {/* POPUP: EDIT ADMIN */}
-                  {isEditPopupVisible && (
-                    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center mt-20 z-50">
-                      <div className="bg-white p-6 rounded-lg shadow-lg w-full md:w-3/6 max-h-[85vh] overflow-auto relative">
-                        <Button
-                          className="absolute top-2 right-2 bg-red-500 text-white hover:bg-red-600"
-                          onClick={handleCloseEditPopup}
-                        >
-                          <FontAwesomeIcon icon={faTimes} className="w-5 h-5" />
-                        </Button>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
+                          <Label
+                            htmlFor="jabatan"
+                            className="block font-semibold md:w-1/3"
+                          >
+                            Jabatan:
+                          </Label>
+                          <Input
+                            type="text"
+                            id="jabatan"
+                            value={adminData.jabatan}
+                            readOnly
+                            className="border rounded w-full p-2 text-black bg-gray-200"
+                          />
+                        </div>
 
-                        <h2 className="text-lg font-bold mb-4 text-center">
-                          Edit Data Admin / Pengurus
-                        </h2>
+                        <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
+                          <Label
+                            htmlFor="email"
+                            className="block font-semibold md:w-1/3"
+                          >
+                            Email Asli:
+                          </Label>
+                          <Input
+                            type="text"
+                            id="email"
+                            value={adminData.email || "-"}
+                            readOnly
+                            className="border rounded w-full p-2 text-black bg-gray-200"
+                          />
+                        </div>
+                      </div>
 
-                        <form onSubmit={handleSaveEditAdmin} className="space-y-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <Label className="block font-semibold mb-1">
-                                Nama Lengkap:
-                              </Label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
+                          <Label
+                            htmlFor="adminEmailInput"
+                            className="block font-semibold md:w-1/3"
+                          >
+                            Email Login:
+                          </Label>
+                          <div className="w-full">
+                            <Input
+                              type="email"
+                              id="adminEmailInput"
+                              value={adminEmailInput}
+                              onChange={(e) =>
+                                setAdminEmailInput(e.target.value)
+                              }
+                              className="border rounded w-full p-2 text-black bg-white"
+                              placeholder="Masukkan email untuk login admin"
+                              required
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                              * Email ini yang akan digunakan pengurus untuk login
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
+                          <Label
+                            htmlFor="cabang"
+                            className="block font-semibold md:w-1/3"
+                          >
+                            Cabang:
+                          </Label>
+                          <div className="w-full">
+                            <div className="relative" ref={dropdownRef}>
                               <Input
                                 type="text"
-                                value={editAdminData.nama}
-                                onChange={(e) =>
-                                  setEditAdminData({
-                                    ...editAdminData,
-                                    nama: e.target.value,
-                                  })
-                                }
-                                className="border rounded w-full p-2 text-black bg-white"
-                                required
-                              />
-                            </div>
-
-                            <div>
-                              <Label className="block font-semibold mb-1">
-                                NPA PGRI:
-                              </Label>
-                              <Input
-                                type="text"
-                                value={editAdminData.npaPgri}
+                                className="border-teal-500 rounded-lg p-2 bg-white shadow-sm w-full"
+                                placeholder="Pilih Cabang"
+                                value={selectedCabang}
                                 readOnly
-                                className="border rounded w-full p-2 text-black bg-gray-200"
+                                onFocus={() => {
+                                  setQuery("");
+                                  setShowDropdown(true);
+                                }}
                               />
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <Label className="block font-semibold mb-1">
-                                Email Login Pengurus:
-                              </Label>
-                              <Input
-                                type="email"
-                                value={editAdminData.email}
-                                onChange={(e) =>
-                                  setEditAdminData({
-                                    ...editAdminData,
-                                    email: e.target.value,
-                                  })
-                                }
-                                className="border rounded w-full p-2 text-black bg-white"
-                                placeholder="Email untuk login"
-                                required
-                              />
-                              <p className="text-xs text-gray-500 mt-1">
-                                * Email ini yang digunakan untuk login
-                              </p>
-                            </div>
-
-                            <div>
-                              <Label className="block font-semibold mb-1">
-                                Cabang:
-                              </Label>
-                              <div className="relative" ref={editDropdownRef}>
-                                <Input
-                                  type="text"
-                                  className="border-teal-500 rounded-lg p-2 bg-white shadow-sm w-full"
-                                  placeholder="Pilih Cabang"
-                                  value={selectedEditCabang}
-                                  readOnly
-                                  onFocus={() => {
-                                    setEditQuery("");
-                                    setShowEditDropdown(true);
-                                  }}
-                                />
-                                {showEditDropdown && (
-                                  <div className="absolute z-20 w-full mt-1">
-                                    <Input
-                                      type="text"
-                                      className="border rounded-lg p-2 w-full"
-                                      placeholder="Cari Cabang..."
-                                      value={editQuery}
-                                      onChange={(e) =>
-                                        setEditQuery(e.target.value)
-                                      }
-                                      autoFocus
-                                    />
-                                    <ul className="mt-1 max-h-48 overflow-y-auto bg-white border rounded-lg shadow-lg">
-                                      {[...cabang]
-                                        .filter((c) =>
-                                          c.kecamatan
-                                            .toLowerCase()
-                                            .includes(editQuery.toLowerCase()),
-                                        )
-                                        .sort((a, b) =>
-                                          a.kecamatan.localeCompare(
-                                            b.kecamatan,
-                                            "id",
-                                          ),
-                                        )
-                                        .map((item) => (
-                                          <li
-                                            key={item.idKecamatan || item.id}
-                                            className="p-2 cursor-pointer hover:bg-gray-100"
-                                            onClick={() => {
-                                              setSelectedEditCabang(
-                                                item.kecamatan,
-                                              );
-                                              setShowEditDropdown(false);
-                                            }}
-                                          >
-                                            {item.kecamatan}
-                                          </li>
-                                        ))}
-                                    </ul>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <Label className="block font-semibold mb-1">
-                                No. HP / WhatsApp:
-                              </Label>
-                              <Input
-                                type="text"
-                                value={editAdminData.nohp}
-                                onChange={(e) =>
-                                  setEditAdminData({
-                                    ...editAdminData,
-                                    nohp: e.target.value,
-                                  })
-                                }
-                                className="border rounded w-full p-2 text-black bg-white"
-                              />
-                            </div>
-
-                            <div>
-                              <Label className="block font-semibold mb-1">
-                                Role:
-                              </Label>
-                              <select
-                                className="border rounded w-full p-2 text-black bg-white"
-                                value={editAdminData.role}
-                                onChange={(e) =>
-                                  setEditAdminData({
-                                    ...editAdminData,
-                                    role: e.target.value,
-                                  })
-                                }
-                              >
-                                <option value="ADMIN">ADMIN</option>
-                                <option value="EDITOR">EDITOR</option>
-                              </select>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-1 gap-4">
-                            <div>
-                              <Label className="block font-semibold mb-1">
-                                Password Akun:
-                              </Label>
-                              <div className="relative">
-                                <Input
-                                  type={showEditModalPassword ? "text" : "password"}
-                                  value={editAdminData.password}
-                                  onChange={(e) => {
-                                    setEditAdminData({
-                                      ...editAdminData,
-                                      password: e.target.value,
-                                    });
-                                    setEditPasswordError("");
-                                  }}
-                                  className={`border rounded w-full p-2 pr-10 text-black bg-white ${
-                                    editPasswordError ? "border-red-500" : ""
-                                  }`}
-                                  placeholder="Masukkan password"
-                                  required
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    setShowEditModalPassword(!showEditModalPassword)
-                                  }
-                                  className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700 focus:outline-none"
-                                >
-                                  <FontAwesomeIcon
-                                    icon={
-                                      showEditModalPassword ? faEyeSlash : faEye
+                              {showDropdown && (
+                                <div className="absolute z-10 w-full mt-1">
+                                  <Input
+                                    type="text"
+                                    className="border rounded-lg p-2 w-full"
+                                    placeholder="Cari Cabang..."
+                                    value={query}
+                                    onChange={(e) =>
+                                      setQuery(e.target.value)
                                     }
+                                    autoFocus
                                   />
-                                </button>
-                              </div>
-                              {editPasswordError && (
-                                <span className="text-red-500 text-sm mt-1 block">
-                                  {editPasswordError}
-                                </span>
+                                  <ul className="mt-1 max-h-48 overflow-y-auto bg-white border rounded-lg shadow-sm">
+                                    {[...filteredOptions]
+                                      .sort((a, b) => a.kecamatan.localeCompare(b.kecamatan, "id"))
+                                      .map((item) => (
+                                      <li
+                                        key={item.idKecamatan}
+                                        className="p-2 cursor-pointer hover:bg-gray-100"
+                                        onClick={() => {
+                                          handleCabangChange(item);
+                                          setShowDropdown(false);
+                                        }}
+                                      >
+                                        {item.kecamatan}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
                               )}
                             </div>
                           </div>
+                        </div>
+                      </div>
 
-                          <div className="mt-6 flex justify-end space-x-3">
-                            <Button
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
+                          <Label
+                            htmlFor="password"
+                            className="block font-semibold md:w-1/3"
+                          >
+                            Password:
+                          </Label>
+                          <div className="w-full relative">
+                            <Input
+                              type={showAddPassword ? "text" : "password"}
+                              id="password"
+                              value={editablePassword}
+                              onChange={(e) => {
+                                setEditablePassword(e.target.value);
+                                setPasswordError("");
+                              }}
+                              className={`border rounded w-full p-2 pr-10 text-black bg-white ${
+                                passwordError ? "border-red-500" : ""
+                              }`}
+                              placeholder="Masukkan password"
+                              required
+                            />
+                            <button
                               type="button"
-                              variant="outline"
-                              onClick={handleCloseEditPopup}
+                              onClick={() => setShowAddPassword(!showAddPassword)}
+                              className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700 focus:outline-none"
                             >
-                              Batal
-                            </Button>
-                            <Button
-                              type="submit"
-                              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
-                            >
-                              Simpan Perubahan
-                            </Button>
+                              <FontAwesomeIcon
+                                icon={showAddPassword ? faEyeSlash : faEye}
+                              />
+                            </button>
+                            {passwordError && (
+                              <span className="text-red-500 text-sm mt-1 block">
+                                {passwordError}
+                              </span>
+                            )}
                           </div>
-                        </form>
+                        </div>
+
+                        <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
+                          <Label
+                            htmlFor="role"
+                            className="block font-semibold md:w-1/3"
+                          >
+                            Role:
+                          </Label>
+                          <select
+                            id="role"
+                            className="border rounded w-full p-2 text-black bg-white"
+                            value={role}
+                            onChange={handleRoleChange}
+                          >
+                            <option value="SUPERADMIN">
+                              SUPER ADMIN
+                            </option>
+                            <option value="ADMIN">ADMIN</option>
+                            <option value="EDITOR">EDITOR</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="mt-6 flex justify-end">
+                        <Button
+                          className="bg-teal-600 text-white px-4 py-2 rounded w-full md:w-auto"
+                          onClick={handleAddUser}
+                        >
+                          Tambah
+                        </Button>
                       </div>
                     </div>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* POPUP: EDIT ADMIN */}
+            {isEditPopupVisible && (
+              <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center mt-20 z-50">
+                <div className="bg-white p-6 rounded-lg shadow-lg w-full md:w-3/6 max-h-[85vh] overflow-auto relative">
+                  <Button
+                    className="absolute top-2 right-2 bg-red-500 text-white hover:bg-red-600"
+                    onClick={handleCloseEditPopup}
+                  >
+                    <FontAwesomeIcon icon={faTimes} className="w-5 h-5" />
+                  </Button>
+
+                  <h2 className="text-lg font-bold mb-4 text-center">
+                    Edit Data Admin / Pengurus
+                  </h2>
+
+                  <form onSubmit={handleSaveEditAdmin} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label className="block font-semibold mb-1">
+                          Nama Lengkap:
+                        </Label>
+                        <Input
+                          type="text"
+                          value={editAdminData.nama}
+                          onChange={(e) =>
+                            setEditAdminData({
+                              ...editAdminData,
+                              nama: e.target.value,
+                            })
+                          }
+                          className="border rounded w-full p-2 text-black bg-white"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <Label className="block font-semibold mb-1">
+                          NPA PGRI:
+                        </Label>
+                        <Input
+                          type="text"
+                          value={editAdminData.npaPgri}
+                          readOnly
+                          className="border rounded w-full p-2 text-black bg-gray-200"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label className="block font-semibold mb-1">
+                          Email Login Pengurus:
+                        </Label>
+                        <Input
+                          type="email"
+                          value={editAdminData.email}
+                          onChange={(e) =>
+                            setEditAdminData({
+                              ...editAdminData,
+                              email: e.target.value,
+                            })
+                          }
+                          className="border rounded w-full p-2 text-black bg-white"
+                          placeholder="Email untuk login"
+                          required
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          * Email ini yang digunakan untuk login
+                        </p>
+                      </div>
+
+                      <div>
+                        <Label className="block font-semibold mb-1">
+                          Cabang:
+                        </Label>
+                        <div className="relative" ref={editDropdownRef}>
+                          <Input
+                            type="text"
+                            className="border-teal-500 rounded-lg p-2 bg-white shadow-sm w-full"
+                            placeholder="Pilih Cabang"
+                            value={selectedEditCabang}
+                            readOnly
+                            onFocus={() => {
+                              setEditQuery("");
+                              setShowEditDropdown(true);
+                            }}
+                          />
+                          {showEditDropdown && (
+                            <div className="absolute z-20 w-full mt-1">
+                              <Input
+                                type="text"
+                                className="border rounded-lg p-2 w-full"
+                                placeholder="Cari Cabang..."
+                                value={editQuery}
+                                onChange={(e) =>
+                                  setEditQuery(e.target.value)
+                                }
+                                autoFocus
+                              />
+                              <ul className="mt-1 max-h-48 overflow-y-auto bg-white border rounded-lg shadow-lg">
+                                {[...cabang]
+                                  .filter((c) =>
+                                    c.kecamatan
+                                      .toLowerCase()
+                                      .includes(editQuery.toLowerCase()),
+                                  )
+                                  .sort((a, b) =>
+                                    a.kecamatan.localeCompare(
+                                      b.kecamatan,
+                                      "id",
+                                    ),
+                                  )
+                                  .map((item) => (
+                                    <li
+                                      key={item.idKecamatan || item.id}
+                                      className="p-2 cursor-pointer hover:bg-gray-100"
+                                      onClick={() => {
+                                        setSelectedEditCabang(
+                                          item.kecamatan,
+                                        );
+                                        setShowEditDropdown(false);
+                                      }}
+                                    >
+                                      {item.kecamatan}
+                                    </li>
+                                  ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label className="block font-semibold mb-1">
+                          No. HP / WhatsApp:
+                        </Label>
+                        <Input
+                          type="text"
+                          value={editAdminData.nohp}
+                          onChange={(e) =>
+                            setEditAdminData({
+                              ...editAdminData,
+                              nohp: e.target.value,
+                            })
+                          }
+                          className="border rounded w-full p-2 text-black bg-white"
+                        />
+                      </div>
+
+                      <div>
+                        <Label className="block font-semibold mb-1">
+                          Role:
+                        </Label>
+                        <select
+                          className="border rounded w-full p-2 text-black bg-white"
+                          value={editAdminData.role}
+                          onChange={(e) =>
+                            setEditAdminData({
+                              ...editAdminData,
+                              role: e.target.value,
+                            })
+                          }
+                        >
+                          <option value="ADMIN">ADMIN</option>
+                          <option value="EDITOR">EDITOR</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4">
+                      <div>
+                        <Label className="block font-semibold mb-1">
+                          Password Akun:
+                        </Label>
+                        <div className="relative">
+                          <Input
+                            type={showEditModalPassword ? "text" : "password"}
+                            value={editAdminData.password}
+                            onChange={(e) => {
+                              setEditAdminData({
+                                ...editAdminData,
+                                password: e.target.value,
+                              });
+                              setEditPasswordError("");
+                            }}
+                            className={`border rounded w-full p-2 pr-10 text-black bg-white ${
+                              editPasswordError ? "border-red-500" : ""
+                            }`}
+                            placeholder="Masukkan password"
+                            required
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setShowEditModalPassword(!showEditModalPassword)
+                            }
+                            className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700 focus:outline-none"
+                          >
+                            <FontAwesomeIcon
+                              icon={
+                                showEditModalPassword ? faEyeSlash : faEye
+                              }
+                            />
+                          </button>
+                        </div>
+                        {editPasswordError && (
+                          <span className="text-red-500 text-sm mt-1 block">
+                            {editPasswordError}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-6 flex justify-end space-x-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleCloseEditPopup}
+                      >
+                        Batal
+                      </Button>
+                      <Button
+                        type="submit"
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+                      >
+                        Simpan Perubahan
+                      </Button>
+                    </div>
+                  </form>
                 </div>
               </div>
             )}
