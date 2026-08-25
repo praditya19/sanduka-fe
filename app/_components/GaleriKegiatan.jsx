@@ -8,6 +8,7 @@ import {
   FaTimesCircle,
   FaCheckCircle,
   FaExclamationCircle,
+  FaCalendarAlt, FaEye, FaArrowRight
 } from "react-icons/fa";
 import "swiper/css";
 import "swiper/css/navigation";
@@ -593,82 +594,143 @@ const GaleriKegiatan = () => {
   };
 
   const AllEventsPopup = () => {
-    if (!showAllEventsPopup) return null;
+  if (!showAllEventsPopup) return null;
 
-    return (
-      <div className="fixed inset-0 flex items-center justify-center z-[1000]">
-        <div
-          className="absolute inset-0 bg-black opacity-50"
-          onClick={() => setShowAllEventsPopup(false)}
-        ></div>
-        <div
-          className="relative bg-white rounded-lg shadow-xl z-[1001] w-full max-w-6xl mx-4 transform transition-all duration-300 ease-in-out overflow-hidden"
-          style={{ maxHeight: "90vh" }}
-          onClick={(e) =>
-            e.stopPropagation()
-          } /* Mencegah klik di dalam popup menutup modal */
-        >
-          <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center z-10">
-            <h3 className="text-2xl font-bold">Semua Event</h3>
-            <button
-              onClick={() => setShowAllEventsPopup(false)}
-              className="text-red-600 hover:text-red-800 transition-colors"
-              aria-label="Close"
-            >
-              <FaTimesCircle size={28} />
-            </button>
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-[1000]">
+      {/* Background dengan efek blur */}
+      <div
+        className="absolute inset-0 bg-gradient-to-br from-black/70 to-black/40 backdrop-blur-sm"
+        onClick={() => setShowAllEventsPopup(false)}
+      ></div>
+      
+      <div
+        className="relative bg-gradient-to-br from-white via-white to-gray-50 rounded-2xl shadow-2xl z-[1001] w-full max-w-6xl mx-4 transform transition-all duration-300 ease-in-out overflow-hidden border border-white/20"
+        style={{ maxHeight: "90vh" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header dengan gradient dan dekorasi */}
+        <div className="sticky top-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 p-4 flex justify-between items-center z-10 border-b-4 border-white/20">
+          <div className="flex items-center gap-3">
+            <div className="bg-white/20 p-2 rounded-full backdrop-blur-sm">
+              <FaCalendarAlt className="text-white text-xl" />
+            </div>
+            <h3 className="text-2xl font-bold text-white tracking-wide">
+              Semua Event
+            </h3>
+            <span className="bg-white/20 text-white text-xs font-semibold px-3 py-1 rounded-full backdrop-blur-sm">
+              {eventGalleries.length} Event
+            </span>
           </div>
-
-          <div
-            className="p-6 overflow-y-auto"
-            style={{ maxHeight: "calc(90vh - 80px)" }}
+          <button
+            onClick={() => setShowAllEventsPopup(false)}
+            className="text-white hover:text-indigo-200 transition-all duration-300 hover:rotate-90 transform"
+            aria-label="Close"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {eventGalleries.map((event) => (
-                <div
-                  key={event.id}
-                  className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow cursor-pointer transform hover:scale-105 duration-200 flex flex-col"
-                  onClick={() => handleEventClick(event)}
-                >
-                  <div
-                    className="relative w-full bg-gray-100"
-                    style={{ paddingBottom: "100%" }}
-                  >
-                    <Image
-                      src={event.imageUrl}
-                      alt={event.namaEvent || "Event image"}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    />
-                  </div>
+            <FaTimesCircle size={28} className="drop-shadow-lg" />
+          </button>
+        </div>
 
-                  <div className="p-4 flex-grow flex flex-col">
-                    <h4 className="text-lg font-semibold mb-2 line-clamp-2">
-                      {event.namaEvent}
-                    </h4>
-                    <div
-                      className="text-gray-600 text-sm line-clamp-3 mb-2"
-                      dangerouslySetInnerHTML={renderHTML(event.deskripsi)}
-                    ></div>
-                    <div className="mt-auto">
-                      {registrationStatus[event.id] && (
-                        <div className="mt-2">
-                          <span className="inline-block px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">
-                            {registrationStatus[event.id]}
-                          </span>
-                        </div>
-                      )}
+        <div
+          className="p-6 overflow-y-auto bg-gradient-to-b from-gray-50 to-white"
+          style={{ maxHeight: "calc(90vh - 80px)" }}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {eventGalleries.map((event, index) => (
+              <div
+                key={event.id}
+                className="group bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:-translate-y-2 flex flex-col border-2 border-transparent hover:border-indigo-500 relative"
+                style={{
+                  animationDelay: `${index * 100}ms`,
+                  animation: "fadeInUp 0.5s ease-out forwards",
+                }}
+                onClick={() => handleEventClick(event)}
+              >
+                {/* Badge event terbaru */}
+                {index < 3 && (
+                  <div className="absolute top-3 right-3 z-10">
+                    <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg animate-pulse">
+                      🔥 NEW
+                    </span>
+                  </div>
+                )}
+
+                {/* Image Container dengan overlay gradient */}
+                <div className="relative w-full bg-gray-100 overflow-hidden" style={{ paddingBottom: "100%" }}>
+                  <Image
+                    src={event.imageUrl}
+                    alt={event.namaEvent || "Event image"}
+                    fill
+                    className="object-cover transition-transform duration-700 group-hover:scale-110"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  />
+                  {/* Gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  
+                  {/* Ikon zoom di hover */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="bg-white/90 p-3 rounded-full backdrop-blur-sm transform scale-75 group-hover:scale-100 transition-transform duration-300">
+                      <FaEye className="text-indigo-600 text-xl" />
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
+
+                {/* Content dengan border bottom gradient */}
+                <div className="p-4 flex-grow flex flex-col relative">
+                  {/* Garis dekoratif */}
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
+                  
+                  <h4 className="text-lg font-bold mb-2 line-clamp-2 text-gray-800 group-hover:text-indigo-600 transition-colors duration-300">
+                    {event.namaEvent}
+                  </h4>
+                  
+                  <div
+                    className="text-gray-600 text-sm line-clamp-3 mb-3 leading-relaxed"
+                    dangerouslySetInnerHTML={renderHTML(event.deskripsi)}
+                  ></div>
+                  
+                  <div className="mt-auto flex items-center justify-between">
+                    {registrationStatus[event.id] && (
+                      <div className="mt-2">
+                        <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 rounded-full text-xs font-semibold border border-yellow-200 shadow-sm">
+                          <span className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span>
+                          {registrationStatus[event.id]}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {/* Tombol lihat detail */}
+                    <button className="mt-2 text-indigo-600 font-semibold text-sm flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:text-indigo-800">
+                      Lihat Detail
+                      <FaArrowRight className="text-xs group-hover:translate-x-1 transition-transform duration-300" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
+        
+        {/* Footer dengan dekorasi */}
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
       </div>
-    );
-  };
+      
+      {/* Tambahkan CSS Animation */}
+      <style jsx>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
+    </div>
+  );
+};
 
   const EventDetailPopup = () => {
     if (!showEventDetailPopup || !selectedEventDetail) return null;

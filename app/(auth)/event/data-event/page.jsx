@@ -102,6 +102,7 @@ const Page = () => {
   const [showDropdownCabang, setShowDropdownCabang] = useState(false);
   const [queryCabang, setQueryCabang] = useState("");
   const [eventOptions, setEventOptions] = useState([]);
+  const [eventParticipantCounts, setEventParticipantCounts] = useState({});
   const [selectedEvent, setSelectedEvent] = useState("");
   const [searchText, setSearchText] = useState("");
   const [selectedTahunDaftar, setSelectedTahunDaftar] = useState("");
@@ -141,6 +142,15 @@ const Page = () => {
     return `data:image/jpeg;base64,${base64}`;
   };
 
+  const getEventImageSrc = (event) => {
+    if (event?.imageUrl) return event.imageUrl;
+    if (!event?.photo) return null;
+
+    return event.photo.startsWith("data:")
+      ? event.photo
+      : `data:image/jpeg;base64,${event.photo}`;
+  };
+
   const handleDeleteClick = (id) => {
     setSelectedId(id);
     setShowDeleteModal(true);
@@ -154,9 +164,8 @@ const Page = () => {
     try {
       await GlobalApi.deletePeserta(selectedId);
 
-      console.log("Berhasil hapus ID:", selectedId);
-
       await dataPeserta();
+      await fetchEvent();
 
       setShowDeleteModal(false);
       setSelectedId(null);
@@ -170,8 +179,6 @@ const Page = () => {
   const fetchCabang = async () => {
     try {
       const res = await GlobalApi.getCabang();
-
-      console.log("DATA CABANG:", res);
 
       setCabangOptions(res?.data || []);
     } catch (err) {
@@ -188,11 +195,24 @@ const Page = () => {
 
   const fetchEvent = async () => {
     try {
-      const response = await GlobalApi.getSidebarGalleryByCategory("event");
+      const [eventResponse, participantResponse] = await Promise.all([
+        GlobalApi.getSidebarGalleryByCategory("event"),
+        GlobalApi.getAllDaftarPesertaEvent(),
+      ]);
 
-      console.log("DATA EVENT:", response);
+      const participantCounts = (participantResponse || []).reduce(
+        (counts, participant) => {
+          const eventName = participant?.namaEvent;
+          if (eventName) {
+            counts[eventName] = (counts[eventName] || 0) + 1;
+          }
+          return counts;
+        },
+        {},
+      );
 
-      setEventOptions(response || []);
+      setEventOptions(eventResponse || []);
+      setEventParticipantCounts(participantCounts);
     } catch (error) {
       console.error("Gagal mengambil data event:", error);
     }
@@ -358,19 +378,19 @@ const Page = () => {
   };
 
   const isLink = (text) => {
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
-  return urlRegex.test(text);
-};
-
-const truncateWords = (text, maxWords = 44) => {
-  if (!text) return "-";
-
-  const words = text.split(" ");
-  if (words.length <= maxWords) return text;
-
-  return words.slice(0, maxWords).join(" ") + "...";
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return urlRegex.test(text);
   };
-  
+
+  const truncateWords = (text, maxWords = 44) => {
+    if (!text) return "-";
+
+    const words = text.split(" ");
+    if (words.length <= maxWords) return text;
+
+    return words.slice(0, maxWords).join(" ") + "...";
+  };
+
   useEffect(() => {
     dataPeserta();
     fetchCabang();
@@ -443,6 +463,7 @@ const truncateWords = (text, maxWords = 44) => {
         >
           <div className="p-4 md:p-6 pt-20 bg-gray-50 min-h-screen mt-12">
             {/* Header Section */}
+
             <div className="mb-8">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                 <div className="flex items-center gap-3 mb-4 md:mb-0">
@@ -472,13 +493,214 @@ const truncateWords = (text, maxWords = 44) => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="bg-green-100 text-green-700 text-sm px-3 py-1 rounded-full flex items-center gap-1">
-                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                    {pesertaList.length} Peserta
+                  <span className="flex items-center gap-2 bg-gradient-to-r from-teal-50 to-cyan-50 px-4 py-2 rounded-full border border-teal-200 shadow-sm">
+                    <span className="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></span>
+                    <span className="text-sm font-semibold text-teal-700">
+                      {eventOptions.length} Event Tersedia
+                    </span>
                   </span>
                 </div>
               </div>
             </div>
+
+            {/* Daftar Event */}
+            {eventOptions.length > 0 && (
+              <section className="mb-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                  {eventOptions.map((event, index) => {
+                    const isSelected = selectedEvent === event.namaEvent;
+                    const eventImage = getEventImageSrc(event);
+
+                    return (
+                      <button
+                        key={event.id || index}
+                        type="button"
+                        onClick={() => {
+                          setSelectedEvent(event.namaEvent);
+                          dataPeserta(event.namaEvent, selectedCabang);
+                        }}
+                        className={`group relative overflow-hidden rounded-2xl border-2 bg-white text-left shadow-md transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl ${
+                          isSelected
+                            ? "border-teal-500 ring-4 ring-teal-200/70 shadow-teal-100"
+                            : "border-gray-200 hover:border-teal-300"
+                        }`}
+                        style={{
+                          animationDelay: `${index * 80}ms`,
+                          animation: "fadeInUp 0.4s ease-out forwards",
+                        }}
+                      >
+                        {/* Image Container dengan overlay gradient */}
+                        <div className="relative h-36 bg-gradient-to-br from-teal-50 to-cyan-100 overflow-hidden">
+                          {eventImage ? (
+                            <>
+                              <img
+                                src={eventImage}
+                                alt={event.namaEvent || "Gambar event"}
+                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                              />
+                              {/* Gradient Overlay */}
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            </>
+                          ) : (
+                            <div className="flex h-full items-center justify-center bg-gradient-to-br from-teal-100 to-cyan-100">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-14 w-14 text-teal-400 group-hover:text-teal-500 transition-colors duration-300"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={1.5}
+                                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                />
+                              </svg>
+                            </div>
+                          )}
+
+                          {/* Badge Status */}
+                          {isSelected && (
+                            <div className="absolute right-2 top-2 z-10 animate-bounce-in">
+                              <span className="flex items-center gap-1 rounded-full bg-gradient-to-r from-teal-500 to-cyan-500 px-3 py-1.5 text-xs font-bold text-white shadow-lg">
+                                <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+                                Dipilih
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Nomor Urut */}
+                          <div className="absolute left-2 top-2 z-10">
+                            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-black/50 backdrop-blur-sm text-xs font-bold text-white shadow-lg">
+                              {index + 1}
+                            </span>
+                          </div>
+
+                          {/* Ikon Hover */}
+                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <div className="bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-xl transform scale-75 group-hover:scale-100 transition-transform duration-300">
+                              {isSelected ? (
+                                <svg
+                                  className="h-6 w-6 text-teal-600"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                              ) : (
+                                <svg
+                                  className="h-6 w-6 text-teal-600"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                  />
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                  />
+                                </svg>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-4 relative">
+                          {/* Garis dekoratif */}
+                          <div
+                            className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-teal-400 to-cyan-400 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left ${isSelected ? "scale-x-100" : ""}`}
+                          ></div>
+
+                          <h3 className="line-clamp-2 min-h-[2.8rem] text-sm font-bold leading-5 text-gray-800 group-hover:text-teal-700 transition-colors duration-300">
+                            {event.namaEvent || "Event tanpa nama"}
+                          </h3>
+
+                          <div className="mt-3 flex items-center justify-between gap-2 pt-2 border-t border-gray-100">
+                            <div className="flex items-center gap-1.5">
+                              <svg
+                                className="h-3.5 w-3.5 text-gray-400"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                                />
+                              </svg>
+                              <span className="text-xs font-medium text-gray-500">
+                                Peserta
+                              </span>
+                            </div>
+                            <span className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-teal-50 to-cyan-50 px-3 py-1.5 text-xs font-bold text-teal-700 border border-teal-200 shadow-sm">
+                              <span className="text-teal-500">👥</span>
+                              {eventParticipantCounts[event.namaEvent] || 0}
+                            </span>
+                          </div>
+
+                          {/* Progress Bar jika dipilih */}
+                          {isSelected && (
+                            <div className="mt-2 h-1 w-full bg-gray-200 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full animate-pulse"
+                                style={{ width: "100%" }}
+                              ></div>
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Tambahkan CSS Animation */}
+                <style jsx>{`
+                  @keyframes fadeInUp {
+                    from {
+                      opacity: 0;
+                      transform: translateY(20px);
+                    }
+                    to {
+                      opacity: 1;
+                      transform: translateY(0);
+                    }
+                  }
+
+                  @keyframes bounceIn {
+                    0% {
+                      transform: scale(0);
+                      opacity: 0;
+                    }
+                    50% {
+                      transform: scale(1.2);
+                    }
+                    100% {
+                      transform: scale(1);
+                      opacity: 1;
+                    }
+                  }
+
+                  .animate-bounce-in {
+                    animation: bounceIn 0.5s ease-out;
+                  }
+                `}</style>
+              </section>
+            )}
 
             {/* Filters Section */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
@@ -746,10 +968,12 @@ const truncateWords = (text, maxWords = 44) => {
               {/* Tombol Download Excel - Baris baru */}
               <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
                 <div className="text-sm text-gray-500">
-                  <span className="font-medium">
-                    {pesertaList?.length || 0}
-                  </span>{" "}
-                  data ditemukan
+                  <div className="flex items-center gap-2">
+                    <span className="bg-green-100 text-green-700 text-sm px-3 py-1 rounded-full flex items-center gap-1">
+                      <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                      {pesertaList.length} Peserta Ditemukan
+                    </span>
+                  </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
@@ -1056,46 +1280,52 @@ const truncateWords = (text, maxWords = 44) => {
                               )}
                             </td>
 
-                           <td className="py-4 px-4">
-  <div className="flex flex-col gap-1">
+                            <td className="py-4 px-4">
+                              <div className="flex flex-col gap-1">
+                                {/* TEXT / LINK */}
+                                {item.jabatan ? (
+                                  isLink(item.jabatan) ? (
+                                    <a
+                                      href={item.jabatan}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-blue-600 hover:underline break-words"
+                                    >
+                                      {expandedIndex === index
+                                        ? item.jabatan
+                                        : truncateWords(item.jabatan)}
+                                    </a>
+                                  ) : (
+                                    <span className="text-gray-800 break-words">
+                                      {expandedIndex === index
+                                        ? item.jabatan
+                                        : truncateWords(item.jabatan)}
+                                    </span>
+                                  )
+                                ) : (
+                                  <span className="text-gray-400">-</span>
+                                )}
 
-    {/* TEXT / LINK */}
-    {item.jabatan ? (
-      isLink(item.jabatan) ? (
-        <a
-          href={item.jabatan}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-blue-600 hover:underline break-words"
-        >
-          {expandedIndex === index
-            ? item.jabatan
-            : truncateWords(item.jabatan)}
-        </a>
-      ) : (
-        <span className="text-gray-800 break-words">
-          {expandedIndex === index
-            ? item.jabatan
-            : truncateWords(item.jabatan)}
-        </span>
-      )
-    ) : (
-      <span className="text-gray-400">-</span>
-    )}
-
-    {/* BUTTON LIHAT LEBIH BANYAK */}
-    {item.jabatan && item.jabatan.split(" ").length > 20 && (
-      <button
-        onClick={() =>
-          setExpandedIndex(expandedIndex === index ? null : index)
-        }
-        className="text-sm text-teal-600 hover:underline text-left"
-      >
-        {expandedIndex === index ? "Lihat lebih sedikit" : "Lihat lebih banyak"}
-      </button>
-    )}
-  </div>
-</td>
+                                {/* BUTTON LIHAT LEBIH BANYAK */}
+                                {item.jabatan &&
+                                  item.jabatan.split(" ").length > 20 && (
+                                    <button
+                                      onClick={() =>
+                                        setExpandedIndex(
+                                          expandedIndex === index
+                                            ? null
+                                            : index,
+                                        )
+                                      }
+                                      className="text-sm text-teal-600 hover:underline text-left"
+                                    >
+                                      {expandedIndex === index
+                                        ? "Lihat lebih sedikit"
+                                        : "Lihat lebih banyak"}
+                                    </button>
+                                  )}
+                              </div>
+                            </td>
 
                             {/* Aksi */}
                             <td className="py-4 px-4">
