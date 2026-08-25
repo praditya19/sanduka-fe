@@ -289,17 +289,33 @@ const SyncData = () => {
     }
   };
 
-  const handleOpenEdit = (item) => {
-    let formattedDate = "";
-    if (item.tanggalLahir) {
-      if (Array.isArray(item.tanggalLahir)) {
-        const [y, m, d] = item.tanggalLahir;
-        formattedDate = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-      } else if (typeof item.tanggalLahir === "string") {
-        formattedDate = item.tanggalLahir.substring(0, 10);
+  const parseDateToInputValue = (value) => {
+    if (!value) return "";
+    if (Array.isArray(value)) {
+      const [y, m, d] = value;
+      return `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    }
+    if (typeof value === "string") {
+      if (value.includes("T")) return value.split("T")[0];
+      if (/^\d{4}-\d{2}-\d{2}$/.test(value.trim())) return value.trim();
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(value.trim())) {
+        const [d, m, y] = value.trim().split("/");
+        return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
       }
     }
+    try {
+      const d = new Date(value);
+      if (!isNaN(d.getTime())) {
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, "0");
+        const dd = String(d.getDate()).padStart(2, "0");
+        return `${yyyy}-${mm}-${dd}`;
+      }
+    } catch (e) {}
+    return "";
+  };
 
+  const handleOpenEdit = (item) => {
     setEditFormData({
       id: item.id,
       namaAnggota: item.namaAnggota || "",
@@ -308,7 +324,7 @@ const SyncData = () => {
       nomorHp: item.nomorHp || "",
       cabang: item.cabang || "",
       unitKerja: item.unitKerja || "",
-      tanggalLahir: formattedDate,
+      tanggalLahir: parseDateToInputValue(item.tanggalLahir),
       kategoriDaspen: item.kategoriDaspen || "",
       dataKtaDigital: Boolean(item.dataKtaDigital),
       dataDaspen: Boolean(item.dataDaspen),
