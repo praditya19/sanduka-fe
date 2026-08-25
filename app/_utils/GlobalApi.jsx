@@ -2228,7 +2228,17 @@ const deleteFiles = async (id) => {
     const response = await axiosClient.delete(`/api/files/${id}`);
     return response.data;
   } catch (error) {
-    console.error("Error fetching files data: ", error);
+    console.error("Error deleting files data: ", error);
+    throw error;
+  }
+};
+
+const updateFile = async (id, updatedData) => {
+  try {
+    const response = await axiosClient.put(`/api/files/${id}`, updatedData);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating files data: ", error);
     throw error;
   }
 };
@@ -4602,6 +4612,7 @@ export default {
   generateKwitansi,
   getNamaKwitansi,
   deleteFiles,
+  updateFile,
   getJumlahDataUpload,
   getRantingSummary,
   createRanting,

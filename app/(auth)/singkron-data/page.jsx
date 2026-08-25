@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
-  FaTrash, FaBars, FaTimes, FaCheckCircle, FaExclamationCircle,
+  FaTrash, FaEdit, FaBars, FaTimes, FaCheckCircle, FaExclamationCircle,
   FaDownload, FaUpload, FaSearch, FaSyncAlt, FaUsers, FaIdCard,
   FaLayerGroup, FaCheckDouble, FaTimesCircle, FaHourglassHalf
 } from "react-icons/fa";
@@ -145,6 +145,22 @@ const SyncData = () => {
   const [loadingDuplicates, setLoadingDuplicates] = useState(false);
   const [deletingDuplicates, setDeletingDuplicates] = useState(false);
   const [hideNonAktif, setHideNonAktif] = useState(true);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    id: null,
+    namaAnggota: "",
+    npa: "",
+    nip: "",
+    nomorHp: "",
+    cabang: "",
+    unitKerja: "",
+    tanggalLahir: "",
+    kategoriDaspen: "",
+    dataKtaDigital: false,
+    dataDaspen: false,
+    dataSanduka: false,
+    verifikasi: false,
+  });
 
   useEffect(() => { Modal.setAppElement('body'); }, []);
 
@@ -270,6 +286,63 @@ const SyncData = () => {
       setNotification({ type: 'error', message: 'Gagal mengunggah file.' });
     } finally {
       setLoader(false); setIsUploading(false); setIsUploadModalOpen(false);
+    }
+  };
+
+  const handleOpenEdit = (item) => {
+    let formattedDate = "";
+    if (item.tanggalLahir) {
+      if (Array.isArray(item.tanggalLahir)) {
+        const [y, m, d] = item.tanggalLahir;
+        formattedDate = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      } else if (typeof item.tanggalLahir === "string") {
+        formattedDate = item.tanggalLahir.substring(0, 10);
+      }
+    }
+
+    setEditFormData({
+      id: item.id,
+      namaAnggota: item.namaAnggota || "",
+      npa: item.npa || "",
+      nip: item.nip || "",
+      nomorHp: item.nomorHp || "",
+      cabang: item.cabang || "",
+      unitKerja: item.unitKerja || "",
+      tanggalLahir: formattedDate,
+      kategoriDaspen: item.kategoriDaspen || "",
+      dataKtaDigital: Boolean(item.dataKtaDigital),
+      dataDaspen: Boolean(item.dataDaspen),
+      dataSanduka: Boolean(item.dataSanduka),
+      verifikasi: Boolean(item.verifikasi),
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setEditFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!editFormData.id) return;
+    setLoader(true);
+    try {
+      await GlobalApi.updateFile(editFormData.id, editFormData);
+      setNotification({ type: "success", message: "Data sinkronisasi berhasil diperbarui!" });
+      setIsEditModalOpen(false);
+      const result = await GlobalApi.getAllFiles();
+      setData(result || []);
+      const totals = await GlobalApi.getAllTotalData();
+      setFilteredTotalFiles(totals);
+    } catch (error) {
+      console.error("Gagal mengupdate file:", error);
+      setNotification({ type: "error", message: "Gagal memperbarui data." });
+    } finally {
+      setLoader(false);
     }
   };
 
@@ -591,9 +664,14 @@ const SyncData = () => {
                               <td className="py-4 px-6 text-center">{getVerificationPill(item.verifikasi)}</td>
                               <td className="py-4 px-6 text-center">{getStatusPill(item.statusKeanggotaan)}</td>
                               <td className="py-4 px-6 text-center">
-                                <button onClick={() => handleDeleteClick(item.id)} className="text-red-500 hover:text-red-700 transition p-1" title="Hapus">
-                                  <FaTrash size={16} />
-                                </button>
+                                <div className="flex items-center justify-center gap-2">
+                                  <button onClick={() => handleOpenEdit(item)} className="text-blue-500 hover:text-blue-700 transition p-1" title="Edit Data">
+                                    <FaEdit size={16} />
+                                  </button>
+                                  <button onClick={() => handleDeleteClick(item.id)} className="text-red-500 hover:text-red-700 transition p-1" title="Hapus">
+                                    <FaTrash size={16} />
+                                  </button>
+                                </div>
                               </td>
                             </>)}
                           </tr>
@@ -615,7 +693,10 @@ const SyncData = () => {
                                   <div className="border-t my-2"></div>
                                   <div className="flex justify-between items-center">
                                     <span className="font-semibold">Aksi</span>
-                                    <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-3">
+                                      <button onClick={() => handleOpenEdit(item)} className="text-blue-500 hover:text-blue-700 p-1" title="Edit Data">
+                                        <FaEdit size={18} />
+                                      </button>
                                       <a href={`https://wa.me/${item.nomorHp}`} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-600"><FontAwesomeIcon icon={faWhatsapp} size="2x" /></a>
                                       <button onClick={() => handleDeleteClick(item.id)} className="text-red-500 hover:text-red-700"><FaTrash size={18} /></button>
                                     </div>
@@ -774,6 +855,189 @@ const SyncData = () => {
               </div>
             </>
           )}
+        </div>
+      </Modal>
+
+      {/* EDIT MODAL */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onRequestClose={() => setIsEditModalOpen(false)}
+        contentLabel="Edit Data Sinkronisasi"
+        className="fixed inset-0 flex items-center justify-center p-4 z-[100]"
+        overlayClassName="fixed inset-0 bg-black bg-opacity-60 z-[90]"
+      >
+        <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-xl max-h-[90vh] overflow-y-auto">
+          <div className="flex justify-between items-center mb-5 pb-3 border-b border-gray-100">
+            <div>
+              <h2 className="text-xl font-bold text-gray-800">Edit Data Sinkronisasi</h2>
+              <p className="text-xs text-gray-500 mt-0.5">Perbarui data anggota yang tersinkronisasi</p>
+            </div>
+            <button
+              onClick={() => setIsEditModalOpen(false)}
+              className="text-gray-400 hover:text-gray-600 transition p-1"
+            >
+              <FaTimes size={20} />
+            </button>
+          </div>
+
+          <form onSubmit={handleEditSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Nama Anggota</label>
+                <Input
+                  type="text"
+                  name="namaAnggota"
+                  value={editFormData.namaAnggota}
+                  onChange={handleEditChange}
+                  required
+                  placeholder="Nama Lengkap"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">NPA PGRI</label>
+                <Input
+                  type="text"
+                  name="npa"
+                  value={editFormData.npa}
+                  onChange={handleEditChange}
+                  placeholder="Nomor Pokok Anggota"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">NIP</label>
+                <Input
+                  type="text"
+                  name="nip"
+                  value={editFormData.nip}
+                  onChange={handleEditChange}
+                  placeholder="Nomor Induk Pegawai"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">No. HP / WhatsApp</label>
+                <Input
+                  type="text"
+                  name="nomorHp"
+                  value={editFormData.nomorHp}
+                  onChange={handleEditChange}
+                  placeholder="08xxxxxxxxxx"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Cabang</label>
+                <Input
+                  type="text"
+                  name="cabang"
+                  value={editFormData.cabang}
+                  onChange={handleEditChange}
+                  placeholder="Cabang / Kecamatan"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Unit Kerja</label>
+                <Input
+                  type="text"
+                  name="unitKerja"
+                  value={editFormData.unitKerja}
+                  onChange={handleEditChange}
+                  placeholder="Unit Kerja / Sekolah"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Tanggal Lahir</label>
+                <Input
+                  type="date"
+                  name="tanggalLahir"
+                  value={editFormData.tanggalLahir}
+                  onChange={handleEditChange}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Kategori Daspen</label>
+                <Input
+                  type="text"
+                  name="kategoriDaspen"
+                  value={editFormData.kategoriDaspen}
+                  onChange={handleEditChange}
+                  placeholder="A, B, C, D, atau kosong"
+                />
+              </div>
+            </div>
+
+            {/* Program Status Switches */}
+            <div className="pt-2 border-t border-gray-100">
+              <p className="text-xs font-bold text-gray-700 mb-3 uppercase tracking-wider">Status Kepesertaan & Verifikasi</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-gray-50 p-3 rounded-lg">
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-gray-700">
+                  <input
+                    type="checkbox"
+                    name="dataKtaDigital"
+                    checked={editFormData.dataKtaDigital}
+                    onChange={handleEditChange}
+                    className="w-4 h-4 text-teal-600 rounded focus:ring-teal-500"
+                  />
+                  KTA Digital
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-gray-700">
+                  <input
+                    type="checkbox"
+                    name="dataDaspen"
+                    checked={editFormData.dataDaspen}
+                    onChange={handleEditChange}
+                    className="w-4 h-4 text-teal-600 rounded focus:ring-teal-500"
+                  />
+                  Daspen
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-gray-700">
+                  <input
+                    type="checkbox"
+                    name="dataSanduka"
+                    checked={editFormData.dataSanduka}
+                    onChange={handleEditChange}
+                    className="w-4 h-4 text-teal-600 rounded focus:ring-teal-500"
+                  />
+                  Sanduka
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-gray-700">
+                  <input
+                    type="checkbox"
+                    name="verifikasi"
+                    checked={editFormData.verifikasi}
+                    onChange={handleEditChange}
+                    className="w-4 h-4 text-teal-600 rounded focus:ring-teal-500"
+                  />
+                  Verifikasi
+                </label>
+              </div>
+            </div>
+
+            <div className="pt-4 flex justify-end gap-3 border-t border-gray-100 mt-4">
+              <Button
+                type="button"
+                onClick={() => setIsEditModalOpen(false)}
+                className="bg-gray-100 text-gray-700 hover:bg-gray-200"
+              >
+                Batal
+              </Button>
+              <Button
+                type="submit"
+                className="bg-teal-600 hover:bg-teal-700 text-white font-semibold flex items-center gap-2"
+                disabled={loader}
+              >
+                {loader ? "Menyimpan..." : "Simpan Perubahan"}
+              </Button>
+            </div>
+          </form>
         </div>
       </Modal>
     </div>
