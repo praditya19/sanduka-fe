@@ -3877,10 +3877,10 @@ const updateBerita = async (id, data) => {
   }
 };
 
-const getAllBerita = async (status) => {
+const getAllBerita = async (status, size = 200) => {
   try {
     const response = await axiosClient.get("/api/berita/all", {
-      params: { status },
+      params: { status, size, page: 0 },
     });
 
     return response.data.content || response.data || [];

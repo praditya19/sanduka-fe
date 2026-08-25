@@ -72,15 +72,19 @@ export default function BeritaDetail() {
         // Fetch semua berita yang dipublish
         const allNews = await GlobalApi.getAllBerita("PUBLISH");
         const other = Array.isArray(allNews) ? [...allNews] : [];
-        const cleanParam = decodeURIComponent(String(id || "")).toLowerCase().trim();
+        const cleanParam = decodeURIComponent(String(id || "")).toLowerCase().trim().replace(/[^\w\s-]/g, "").replace(/[\s_-]+/g, "-");
 
         const currentIndex = other.findIndex((item) => {
           const itemSlug = createSlug(item.judul);
           const itemIdStr = String(item.id);
+          const cleanItemSlug = itemSlug.replace(/[^a-z0-9]/g, "");
+          const cleanTarget = cleanParam.replace(/[^a-z0-9]/g, "");
           return (
             itemIdStr === cleanParam ||
             itemSlug === cleanParam ||
+            (cleanItemSlug && cleanTarget && cleanItemSlug === cleanTarget) ||
             cleanParam.includes(itemSlug) ||
+            itemSlug.includes(cleanParam) ||
             cleanParam.endsWith(`-${item.id}`)
           );
         });
