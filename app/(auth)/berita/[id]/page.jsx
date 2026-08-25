@@ -24,6 +24,16 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 import { Facebook } from "lucide-react";
 
+const createSlug = (title) => {
+  if (!title) return "";
+  return title
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/[\s_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+};
+
 export default function BeritaDetail() {
   const params = useParams();
   const id = params?.id;
@@ -55,21 +65,46 @@ export default function BeritaDetail() {
   };
 
   useEffect(() => {
+    let activeNewsId = null;
+
     const fetchData = async () => {
       try {
         // Fetch semua berita yang dipublish
         const allNews = await GlobalApi.getAllBerita("PUBLISH");
+        const other = Array.isArray(allNews) ? [...allNews] : [];
+        const cleanParam = decodeURIComponent(String(id || "")).toLowerCase().trim();
 
-        // Pisahkan: 2 berita utama (termasuk berita current jika ada)
-        const other = [...allNews];
-        const currentIndex = other.findIndex(
-          (item) => item.id === parseInt(id),
-        );
+        const currentIndex = other.findIndex((item) => {
+          const itemSlug = createSlug(item.judul);
+          const itemIdStr = String(item.id);
+          return (
+            itemIdStr === cleanParam ||
+            itemSlug === cleanParam ||
+            cleanParam.includes(itemSlug) ||
+            cleanParam.endsWith(`-${item.id}`)
+          );
+        });
 
+        let current = null;
         if (currentIndex !== -1) {
-          const current = other[currentIndex];
+          current = other[currentIndex];
           setCurrentNews(current);
+          activeNewsId = current.id;
           other.splice(currentIndex, 1);
+        } else {
+          // Direct fetch from backend by slug or ID!
+          try {
+            const fetched = /^\d+$/.test(cleanParam)
+              ? await GlobalApi.getBeritaById(cleanParam)
+              : await GlobalApi.getBeritaBySlug(cleanParam);
+            if (fetched) {
+              current = fetched;
+              setCurrentNews(fetched);
+              activeNewsId = fetched.id;
+            }
+          } catch (e) {
+            console.error("Gagal getBeritaBySlug / getById:", e);
+          }
         }
 
         // Ambil 2 berita pertama sebagai headline utama
@@ -78,6 +113,20 @@ export default function BeritaDetail() {
 
         // Sisanya sebagai berita lainnya
         setOtherNews(other.slice(2, 8));
+
+        // Increment views bila berita ditemukan
+        if (activeNewsId) {
+          try {
+            const updatedBerita = await GlobalApi.getBeritaById(activeNewsId);
+            if (updatedBerita) {
+              setCurrentNews((prev) =>
+                prev ? { ...prev, views: updatedBerita.views } : prev,
+              );
+            }
+          } catch (e) {
+            console.error("Gagal increment views:", e);
+          }
+        }
       } catch (error) {
         console.error("Gagal ambil data:", error);
       } finally {
@@ -85,24 +134,8 @@ export default function BeritaDetail() {
       }
     };
 
-    const incrementViews = async () => {
-      try {
-        // Panggil getById untuk increment views di backend
-        const updatedBerita = await GlobalApi.getBeritaById(id);
-        if (updatedBerita) {
-          // Update views count di currentNews agar tampilan terbaru
-          setCurrentNews((prev) =>
-            prev ? { ...prev, views: updatedBerita.views } : prev,
-          );
-        }
-      } catch (error) {
-        console.error("Gagal increment views:", error);
-      }
-    };
-
     if (id) {
       fetchData();
-      incrementViews();
     }
   }, [id]);
 
@@ -121,18 +154,22 @@ export default function BeritaDetail() {
     const date = new Date(arr[0], arr[1] - 1, arr[2], arr[3], arr[4], arr[5]);
     return date.toLocaleDateString("id-ID", {
       day: "2-digit",
-      month: "long",
+      month: "short",
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
     });
   };
 
-  const formatReadingTime = (content) => {
-    if (!content) return "1 menit";
+  const calculateReadTime = (content) => {
+    if (!content) return 1;
     const wordsPerMinute = 200;
     const wordCount = content.replace(/<[^>]*>/g, "").split(/\s+/).length;
-    const minutes = Math.ceil(wordCount / wordsPerMinute);
+    return Math.ceil(wordCount / wordsPerMinute);
+  };
+
+  const formatReadingTime = (content) => {
+    const minutes = calculateReadTime(content);
     return `${minutes} menit`;
   };
 
@@ -239,8 +276,11 @@ export default function BeritaDetail() {
     });
   };
 
-  const shareUrl = typeof window !== "undefined" ? window.location.href : "";
-  const shareText = encodeURIComponent(currentNews?.judul || "");
+  const newsSlug = createSlug(currentNews?.judul);
+  const shareUrl = newsSlug
+    ? `https://www.pgrikabupatenjepara.com/berita/${newsSlug}`
+    : `https://www.pgrikabupatenjepara.com/berita/${currentNews?.id || id || ""}`;
+  const shareText = encodeURIComponent(currentNews?.judul || "Berita PGRI Kabupaten Jepara");
 
   const shareLinks = {
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,

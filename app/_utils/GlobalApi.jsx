@@ -3883,7 +3883,7 @@ const getAllBerita = async (status) => {
       params: { status },
     });
 
-    return response.data.content || [];
+    return response.data.content || response.data || [];
   } catch (error) {
     throw error;
   }
@@ -3892,6 +3892,15 @@ const getAllBerita = async (status) => {
 const getBeritaById = async (id) => {
   try {
     const response = await axiosClient.get(`/api/berita/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const getBeritaBySlug = async (slug) => {
+  try {
+    const response = await axiosClient.get(`/api/berita/slug/${encodeURIComponent(slug)}`);
     return response.data;
   } catch (error) {
     throw error;
@@ -4733,6 +4742,7 @@ export default {
   createBerita,
   getAllBerita,
   getBeritaById,
+  getBeritaBySlug,
   updateBerita,
   deleteBerita,
   publishBerita,
