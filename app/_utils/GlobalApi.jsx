@@ -4027,8 +4027,13 @@ const updateEditor = async (id, data) => {
       formData.append("passwordNew", data.passwordNew);
 
     const response = await axiosClient.put(
-      `/api/register-editor/update/${id}`,
+      `/api/register-editor/${id}`,
       formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
     );
 
     return response.data;

@@ -24,6 +24,9 @@ import {
   faMinusCircle,
   faPlusCircle,
   faTrash,
+  faEdit,
+  faEye,
+  faEyeSlash,
 } from "@fortawesome/free-solid-svg-icons";
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 
@@ -124,12 +127,36 @@ const CreateEditor = () => {
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const [npa, setNpa] = useState("");
   const [adminData, setAdminData] = useState(null);
+  const [editorEmailInput, setEditorEmailInput] = useState("");
   const [editableCabang, setEditableCabang] = useState("");
   const [selectedCabang, setSelectedCabang] = useState("");
   const [editablePassword, setEditablePassword] = useState("");
+  const [showAddPassword, setShowAddPassword] = useState(false);
   const [passwordError, setPasswordError] = useState("");
-  const [role, setRole] = useState(adminData?.status || "ADMIN");
+  const [role, setRole] = useState("ADMIN");
   const [showPassword, setShowPassword] = useState(false);
+  const [cabangList, setCabangList] = useState([]);
+
+  // Edit Editor Modal States
+  const [isEditPopupVisible, setIsEditPopupVisible] = useState(false);
+  const [showEditModalPassword, setShowEditModalPassword] = useState(false);
+  const [editEditorData, setEditEditorData] = useState({
+    id: "",
+    nama: "",
+    npaPgri: "",
+    cabang: "",
+    jabatan: "",
+    nohp: "",
+    email: "",
+    password: "",
+    role: "EDITOR",
+    daerah: "",
+  });
+  const [editPasswordError, setEditPasswordError] = useState("");
+  const [selectedEditCabang, setSelectedEditCabang] = useState("");
+  const [showEditDropdown, setShowEditDropdown] = useState(false);
+  const [editQuery, setEditQuery] = useState("");
+  const editDropdownRef = useRef(null);
 
   const fetchEditor = async (page = 0, size = entries) => {
     try {
@@ -159,10 +186,12 @@ const CreateEditor = () => {
   };
   const handleAddUserClick = () => {
     setIsPopupVisible(true);
+    setEditorEmailInput("");
   };
   const handleClosePopup = () => {
     setIsPopupVisible(false);
     setNpa("");
+    setEditorEmailInput("");
     setAdminData(null);
   };
   const handleNpaChange = (e) => {
@@ -196,12 +225,14 @@ const CreateEditor = () => {
         setAdminData(data);
         setEditableCabang(data.cabang);
         setSelectedCabang(data.cabang);
+        setEditorEmailInput("");
         setEditablePassword("");
         setPasswordError("");
       } else {
         setAdminData(null);
         setEditableCabang("");
         setSelectedCabang("");
+        setEditorEmailInput("");
         setEditablePassword("");
         setPasswordError("");
       }
@@ -210,12 +241,21 @@ const CreateEditor = () => {
       setAdminData(null);
       setEditableCabang("");
       setSelectedCabang("");
+      setEditorEmailInput("");
       setEditablePassword("");
       setPasswordError("");
     }
   };
   const handleAddUser = async (e) => {
     e.preventDefault();
+
+    if (!editorEmailInput.trim()) {
+      setNotification({
+        type: "error",
+        message: "Email login editor harus diisi!",
+      });
+      return;
+    }
 
     if (!editablePassword.trim()) {
       setPasswordError("Password harus diisi");
@@ -229,7 +269,7 @@ const CreateEditor = () => {
       npapgri: adminData.npaPgri,
       jabatan: adminData.jabatan,
       nohp: adminData.noHp,
-      email: adminData.email,
+      email: editorEmailInput.trim(),
       password: editablePassword,
       passwordNew: editablePassword,
       role: role,
@@ -284,21 +324,105 @@ const CreateEditor = () => {
     deleteAdmin(idAdmin);
   };
 
+  const handleEditEditorClick = (item) => {
+    setEditEditorData({
+      id: item.id,
+      nama: item.nama || "",
+      npaPgri: item.npaPgri || item.npapgri || "",
+      cabang: item.cabang || "",
+      jabatan: item.jabatan || "",
+      nohp: item.noHp || "",
+      email: item.email || "",
+      password: item.passwordNew || item.password || "",
+      role: (item.role || "EDITOR").toUpperCase(),
+      daerah: item.daerah || "",
+    });
+    setSelectedEditCabang(item.cabang || "");
+    setEditPasswordError("");
+    setIsEditPopupVisible(true);
+  };
+
+  const handleCloseEditPopup = () => {
+    setIsEditPopupVisible(false);
+    setEditPasswordError("");
+  };
+
+  const handleSaveEditEditor = async (e) => {
+    e.preventDefault();
+
+    if (!editEditorData.email.trim()) {
+      setNotification({
+        type: "error",
+        message: "Email login editor harus diisi!",
+      });
+      return;
+    }
+
+    if (!editEditorData.password.trim()) {
+      setEditPasswordError("Password harus diisi");
+      return;
+    }
+
+    const payload = {
+      daerah: editEditorData.daerah || "",
+      cabang: selectedEditCabang || editEditorData.cabang,
+      nama: editEditorData.nama,
+      npapgri: editEditorData.npaPgri,
+      jabatan: editEditorData.jabatan || "",
+      nohp: editEditorData.nohp || "",
+      email: editEditorData.email.trim(),
+      password: editEditorData.password.trim(),
+      passwordNew: editEditorData.password.trim(),
+      role: editEditorData.role || "EDITOR",
+    };
+
+    try {
+      await GlobalApi.updateEditor(editEditorData.id, payload);
+      setNotification({
+        type: "success",
+        message: "Data Editor berhasil diperbarui!",
+      });
+      setIsEditPopupVisible(false);
+      fetchEditor(currentPage, entries);
+    } catch (error) {
+      console.error("Error updating editor:", error);
+      setNotification({
+        type: "error",
+        message: "Gagal memperbarui data Editor!",
+      });
+    }
+  };
+
+  useEffect(() => {
+    const fetchCabang = async () => {
+      try {
+        const res = await GlobalApi.getCabang();
+        setCabangList(Array.isArray(res) ? res : res?.data || []);
+      } catch (err) {
+        console.error("Error fetching cabang:", err);
+      }
+    };
+    fetchCabang();
+  }, []);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
       }
+      if (editDropdownRef.current && !editDropdownRef.current.contains(event.target)) {
+        setShowEditDropdown(false);
+      }
     };
 
-    if (showDropdown) {
+    if (showDropdown || showEditDropdown) {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [showDropdown]);
+  }, [showDropdown, showEditDropdown]);
 
   useEffect(() => {
     if (!token) {
@@ -477,14 +601,26 @@ const CreateEditor = () => {
                                 <>
                                   {sessionStorage.getItem("role") ===
                                     "SUPERADMIN" && (
-                                    <Button
-                                      className="bg-red-500 text-white px-2 py-2 rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 transition ease-in-out duration-150"
-                                      onClick={() =>
-                                        handleDeleteEditorClick(item.id)
-                                      }
-                                    >
-                                      <FontAwesomeIcon icon={faTrash} />
-                                    </Button>
+                                    <>
+                                      <Button
+                                        className="bg-blue-500 text-white px-2 py-2 rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 transition ease-in-out duration-150"
+                                        onClick={() =>
+                                          handleEditEditorClick(item)
+                                        }
+                                        title="Edit Editor"
+                                      >
+                                        <FontAwesomeIcon icon={faEdit} />
+                                      </Button>
+                                      <Button
+                                        className="bg-red-500 text-white px-2 py-2 rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 transition ease-in-out duration-150"
+                                        onClick={() =>
+                                          handleDeleteEditorClick(item.id)
+                                        }
+                                        title="Hapus Editor"
+                                      >
+                                        <FontAwesomeIcon icon={faTrash} />
+                                      </Button>
+                                    </>
                                   )}
                                   <Link
                                     href={`https://wa.me/${phoneNumberForLink(
@@ -715,12 +851,12 @@ const CreateEditor = () => {
                                   htmlFor="email"
                                   className="block font-semibold md:w-1/3"
                                 >
-                                  Email:
+                                  Email Asli:
                                 </Label>
                                 <Input
                                   type="text"
                                   id="email"
-                                  value={adminData.email}
+                                  value={adminData.email || "-"}
                                   readOnly
                                   className="border rounded w-full p-2 text-black bg-gray-200"
                                 />
@@ -728,6 +864,31 @@ const CreateEditor = () => {
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                              <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
+                                <Label
+                                  htmlFor="editorEmailInput"
+                                  className="block font-semibold md:w-1/3"
+                                >
+                                  Email Login:
+                                </Label>
+                                <div className="w-full">
+                                  <Input
+                                    type="email"
+                                    id="editorEmailInput"
+                                    value={editorEmailInput}
+                                    onChange={(e) =>
+                                      setEditorEmailInput(e.target.value)
+                                    }
+                                    className="border rounded w-full p-2 text-black bg-white"
+                                    placeholder="Masukkan email untuk login editor"
+                                    required
+                                  />
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    * Email ini yang akan digunakan editor untuk login
+                                  </p>
+                                </div>
+                              </div>
+
                               <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
                                 <Label
                                   htmlFor="cabang"
@@ -743,35 +904,6 @@ const CreateEditor = () => {
                                   className="border rounded w-full p-2 text-black bg-gray-200"
                                 />
                               </div>
-                              <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
-                                <Label
-                                  htmlFor="password"
-                                  className="block font-semibold md:w-1/3"
-                                >
-                                  Password:
-                                </Label>
-                                <div className="w-full">
-                                  <Input
-                                    type="text"
-                                    id="password"
-                                    value={editablePassword}
-                                    onChange={(e) => {
-                                      setEditablePassword(e.target.value);
-                                      setPasswordError("");
-                                    }}
-                                    className={`border rounded w-full p-2 text-black bg-white ${
-                                      passwordError ? "border-red-500" : ""
-                                    }`}
-                                    placeholder="Masukkan password"
-                                    required
-                                  />
-                                  {passwordError && (
-                                    <span className="text-red-500 text-sm mt-1">
-                                      {passwordError}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -780,15 +912,38 @@ const CreateEditor = () => {
                                   htmlFor="password"
                                   className="block font-semibold md:w-1/3"
                                 >
-                                  Role:
+                                  Password:
                                 </Label>
-                                <Input
-                                  type="text"
-                                  id="role"
-                                  value={adminData.role}
-                                  readOnly
-                                  className="border rounded w-full p-2 text-black bg-gray-200"
-                                />
+                                <div className="w-full relative">
+                                  <Input
+                                    type={showAddPassword ? "text" : "password"}
+                                    id="password"
+                                    value={editablePassword}
+                                    onChange={(e) => {
+                                      setEditablePassword(e.target.value);
+                                      setPasswordError("");
+                                    }}
+                                    className={`border rounded w-full p-2 pr-10 text-black bg-white ${
+                                      passwordError ? "border-red-500" : ""
+                                    }`}
+                                    placeholder="Masukkan password"
+                                    required
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowAddPassword(!showAddPassword)}
+                                    className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700 focus:outline-none"
+                                  >
+                                    <FontAwesomeIcon
+                                      icon={showAddPassword ? faEyeSlash : faEye}
+                                    />
+                                  </button>
+                                  {passwordError && (
+                                    <span className="text-red-500 text-sm mt-1 block">
+                                      {passwordError}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
 
                               <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
@@ -796,16 +951,16 @@ const CreateEditor = () => {
                                   htmlFor="role"
                                   className="block font-semibold md:w-1/3"
                                 >
-                                  Ubah Role:
+                                  Role:
                                 </Label>
                                 <select
                                   id="role"
-                                  className="border rounded w-full p-2 text-black bg-gray-200"
+                                  className="border rounded w-full p-2 text-black bg-white"
                                   value={role}
                                   onChange={handleRoleChange}
                                 >
-                                  <option value="">-</option>
                                   <option value="EDITOR">EDITOR</option>
+                                  <option value="ADMIN">ADMIN</option>
                                 </select>
                               </div>
                             </div>
@@ -820,6 +975,253 @@ const CreateEditor = () => {
                             </div>
                           </div>
                         )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* POPUP: EDIT EDITOR */}
+                  {isEditPopupVisible && (
+                    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center mt-20 z-50">
+                      <div className="bg-white p-6 rounded-lg shadow-lg w-full md:w-3/6 max-h-[85vh] overflow-auto relative">
+                        <Button
+                          className="absolute top-2 right-2 bg-red-500 text-white hover:bg-red-600"
+                          onClick={handleCloseEditPopup}
+                        >
+                          <FontAwesomeIcon icon={faTimes} className="w-5 h-5" />
+                        </Button>
+
+                        <h2 className="text-lg font-bold mb-4 text-center">
+                          Edit Data Editor
+                        </h2>
+
+                        <form onSubmit={handleSaveEditEditor} className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <Label className="block font-semibold mb-1">
+                                Nama Lengkap:
+                              </Label>
+                              <Input
+                                type="text"
+                                value={editEditorData.nama}
+                                onChange={(e) =>
+                                  setEditEditorData({
+                                    ...editEditorData,
+                                    nama: e.target.value,
+                                  })
+                                }
+                                className="border rounded w-full p-2 text-black bg-white"
+                                required
+                              />
+                            </div>
+
+                            <div>
+                              <Label className="block font-semibold mb-1">
+                                NPA PGRI:
+                              </Label>
+                              <Input
+                                type="text"
+                                value={editEditorData.npaPgri}
+                                readOnly
+                                className="border rounded w-full p-2 text-black bg-gray-200"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <Label className="block font-semibold mb-1">
+                                Email Login Editor:
+                              </Label>
+                              <Input
+                                type="email"
+                                value={editEditorData.email}
+                                onChange={(e) =>
+                                  setEditEditorData({
+                                    ...editEditorData,
+                                    email: e.target.value,
+                                  })
+                                }
+                                className="border rounded w-full p-2 text-black bg-white"
+                                placeholder="Email untuk login"
+                                required
+                              />
+                              <p className="text-xs text-gray-500 mt-1">
+                                * Email ini yang digunakan untuk login
+                              </p>
+                            </div>
+
+                            <div>
+                              <Label className="block font-semibold mb-1">
+                                Cabang:
+                              </Label>
+                              <div className="relative" ref={editDropdownRef}>
+                                <Input
+                                  type="text"
+                                  className="border-teal-500 rounded-lg p-2 bg-white shadow-sm w-full"
+                                  placeholder="Pilih Cabang"
+                                  value={selectedEditCabang}
+                                  readOnly
+                                  onFocus={() => {
+                                    setEditQuery("");
+                                    setShowEditDropdown(true);
+                                  }}
+                                />
+                                {showEditDropdown && (
+                                  <div className="absolute z-20 w-full mt-1">
+                                    <Input
+                                      type="text"
+                                      className="border rounded-lg p-2 w-full"
+                                      placeholder="Cari Cabang..."
+                                      value={editQuery}
+                                      onChange={(e) =>
+                                        setEditQuery(e.target.value)
+                                      }
+                                      autoFocus
+                                    />
+                                    <ul className="mt-1 max-h-48 overflow-y-auto bg-white border rounded-lg shadow-lg">
+                                      {[...cabangList]
+                                        .filter((c) =>
+                                          c.kecamatan
+                                            .toLowerCase()
+                                            .includes(editQuery.toLowerCase()),
+                                        )
+                                        .sort((a, b) =>
+                                          a.kecamatan.localeCompare(
+                                            b.kecamatan,
+                                            "id",
+                                          ),
+                                        )
+                                        .map((item) => (
+                                          <li
+                                            key={item.idKecamatan || item.id}
+                                            className="p-2 cursor-pointer hover:bg-gray-100"
+                                            onClick={() => {
+                                              setSelectedEditCabang(
+                                                item.kecamatan,
+                                              );
+                                              setShowEditDropdown(false);
+                                            }}
+                                          >
+                                            {item.kecamatan}
+                                          </li>
+                                        ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <Label className="block font-semibold mb-1">
+                                No. HP / WhatsApp:
+                              </Label>
+                              <Input
+                                type="text"
+                                value={editEditorData.nohp}
+                                onChange={(e) =>
+                                  setEditEditorData({
+                                    ...editEditorData,
+                                    nohp: e.target.value,
+                                  })
+                                }
+                                className="border rounded w-full p-2 text-black bg-white"
+                              />
+                            </div>
+
+                            <div>
+                              <Label className="block font-semibold mb-1">
+                                Role:
+                              </Label>
+                              <select
+                                className="border rounded w-full p-2 text-black bg-white"
+                                value={editEditorData.role}
+                                onChange={(e) =>
+                                  setEditEditorData({
+                                    ...editEditorData,
+                                    role: e.target.value,
+                                  })
+                                }
+                              >
+                                <option value="EDITOR">EDITOR</option>
+                                <option value="ADMIN">ADMIN</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 gap-4">
+                            <div>
+                              <Label className="block font-semibold mb-1">
+                                Password Akun:
+                              </Label>
+                              <div className="relative">
+                                <Input
+                                  type={showEditModalPassword ? "text" : "password"}
+                                  value={editEditorData.password}
+                                  onChange={(e) => {
+                                    setEditEditorData({
+                                      ...editEditorData,
+                                      password: e.target.value,
+                                    });
+                                    setEditPasswordError("");
+                                  }}
+                                  className={`border rounded w-full p-2 pr-10 text-black bg-white ${
+                                    editPasswordError ? "border-red-500" : ""
+                                  }`}
+                                  placeholder="Masukkan password"
+                                  required
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setShowEditModalPassword(!showEditModalPassword)
+                                  }
+                                  className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700 focus:outline-none"
+                                >
+                                  <FontAwesomeIcon
+                                    icon={
+                                      showEditModalPassword ? faEyeSlash : faEye
+                                    }
+                                  />
+                                </button>
+                              </div>
+                              {editPasswordError && (
+                                <span className="text-red-500 text-sm mt-1 block">
+                                  {editPasswordError}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                                onChange={(e) =>
+                                  setEditEditorData({
+                                    ...editEditorData,
+                                    role: e.target.value,
+                                  })
+                                }
+                              >
+                                <option value="EDITOR">EDITOR</option>
+                                <option value="ADMIN">ADMIN</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <div className="mt-6 flex justify-end space-x-3">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={handleCloseEditPopup}
+                            >
+                              Batal
+                            </Button>
+                            <Button
+                              type="submit"
+                              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+                            >
+                              Simpan Perubahan
+                            </Button>
+                          </div>
+                        </form>
                       </div>
                     </div>
                   )}

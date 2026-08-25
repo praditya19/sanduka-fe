@@ -7,6 +7,9 @@ import {
   faMinusCircle,
   faPlusCircle,
   faTrash,
+  faEdit,
+  faEye,
+  faEyeSlash,
 } from "@fortawesome/free-solid-svg-icons";
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 import { faTimes } from "@fortawesome/free-solid-svg-icons";
@@ -127,28 +130,54 @@ const Page = () => {
   const [cabang, setCabang] = useState([]);
   const [editableCabang, setEditableCabang] = useState("");
   const [editablePassword, setEditablePassword] = useState("");
+  const [showAddPassword, setShowAddPassword] = useState(false);
   const [passwordError, setPasswordError] = useState("");
+  const [adminEmailInput, setAdminEmailInput] = useState("");
   const [selectedCabang, setSelectedCabang] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [query, setQuery] = useState("");
   const dropdownRef = useRef(null);
   const [notification, setNotification] = useState(null);
 
+  // Edit Admin Modal States
+  const [isEditPopupVisible, setIsEditPopupVisible] = useState(false);
+  const [showEditModalPassword, setShowEditModalPassword] = useState(false);
+  const [editAdminData, setEditAdminData] = useState({
+    id: "",
+    nama: "",
+    npaPgri: "",
+    cabang: "",
+    jabatan: "",
+    nohp: "",
+    email: "",
+    password: "",
+    role: "ADMIN",
+    daerah: "",
+  });
+  const [editPasswordError, setEditPasswordError] = useState("");
+  const [selectedEditCabang, setSelectedEditCabang] = useState("");
+  const [showEditDropdown, setShowEditDropdown] = useState(false);
+  const [editQuery, setEditQuery] = useState("");
+  const editDropdownRef = useRef(null);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
       }
+      if (editDropdownRef.current && !editDropdownRef.current.contains(event.target)) {
+        setShowEditDropdown(false);
+      }
     };
 
-    if (showDropdown) {
+    if (showDropdown || showEditDropdown) {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [showDropdown]);
+  }, [showDropdown, showEditDropdown]);
 
   const fetchAdminData = async (
     page = currentPage,
@@ -278,11 +307,13 @@ const Page = () => {
 
   const handleAddUserClick = () => {
     setIsPopupVisible(true);
+    setAdminEmailInput("");
   };
 
   const handleClosePopup = () => {
     setIsPopupVisible(false);
     setNpa("");
+    setAdminEmailInput("");
     setAdminData(null);
   };
 
@@ -298,12 +329,14 @@ const Page = () => {
         setAdminData(data);
         setEditableCabang(data.cabang);
         setSelectedCabang(data.cabang);
+        setAdminEmailInput(""); // Kosongkan agar diinput manual oleh superadmin
         setEditablePassword("");
         setPasswordError("");
       } else {
         setAdminData(null);
         setEditableCabang("");
         setSelectedCabang("");
+        setAdminEmailInput("");
         setEditablePassword("");
         setPasswordError("");
       }
@@ -312,6 +345,7 @@ const Page = () => {
       setAdminData(null);
       setEditableCabang("");
       setSelectedCabang("");
+      setAdminEmailInput("");
       setEditablePassword("");
       setPasswordError("");
     }
@@ -335,6 +369,11 @@ const Page = () => {
   const handleAddUser = async (e) => {
     e.preventDefault();
 
+    if (!adminEmailInput.trim()) {
+      toast.error("Email login pengurus harus diisi");
+      return;
+    }
+
     if (!editablePassword.trim()) {
       setPasswordError("Password harus diisi");
       return;
@@ -347,7 +386,7 @@ const Page = () => {
       npapgri: adminData.npaPgri,
       jabatan: adminData.jabatan,
       nohp: adminData.noHp,
-      email: adminData.email,
+      email: adminEmailInput.trim(),
       password: editablePassword,
       passwordNew: editablePassword,
       role: role,
@@ -381,6 +420,71 @@ const Page = () => {
       setNotification({
         type: "error",
         message: `Gagal menambahkan ${role}!`,
+      });
+    }
+  };
+
+  const handleEditAdminClick = (item) => {
+    setEditAdminData({
+      id: item.id,
+      nama: item.nama || "",
+      npaPgri: item.npaPgri || item.npapgri || "",
+      cabang: item.cabang || "",
+      jabatan: item.jabatan || "",
+      nohp: item.noHp || "",
+      email: item.email || "",
+      password: item.passwordNew || item.password || "",
+      role: (item.role || "ADMIN").toUpperCase(),
+      daerah: item.daerah || "",
+    });
+    setSelectedEditCabang(item.cabang || "");
+    setEditPasswordError("");
+    setIsEditPopupVisible(true);
+  };
+
+  const handleCloseEditPopup = () => {
+    setIsEditPopupVisible(false);
+    setEditPasswordError("");
+  };
+
+  const handleSaveEditAdmin = async (e) => {
+    e.preventDefault();
+
+    if (!editAdminData.email.trim()) {
+      toast.error("Email login pengurus harus diisi");
+      return;
+    }
+
+    if (!editAdminData.password.trim()) {
+      setEditPasswordError("Password harus diisi");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("daerah", editAdminData.daerah || "");
+    formData.append("cabang", selectedEditCabang || editAdminData.cabang);
+    formData.append("nama", editAdminData.nama);
+    formData.append("npapgri", editAdminData.npaPgri);
+    formData.append("jabatan", editAdminData.jabatan || "");
+    formData.append("nohp", editAdminData.nohp || "");
+    formData.append("email", editAdminData.email.trim());
+    formData.append("password", editAdminData.password.trim());
+    formData.append("passwordNew", editAdminData.password.trim());
+    formData.append("role", editAdminData.role || "ADMIN");
+
+    try {
+      await GlobalApi.updateAdminById(editAdminData.id, formData);
+      setNotification({
+        type: "success",
+        message: "Data Admin berhasil diperbarui!",
+      });
+      setIsEditPopupVisible(false);
+      fetchAdminData(currentPage, entries, searchQuery);
+    } catch (error) {
+      console.error("Error updating admin:", error);
+      setNotification({
+        type: "error",
+        message: "Gagal memperbarui data Admin!",
       });
     }
   };
@@ -585,14 +689,26 @@ const Page = () => {
                                     <>
                                       {sessionStorage.getItem("role") ===
                                         "SUPERADMIN" && (
-                                        <Button
-                                          className="bg-red-500 text-white px-2 py-2 rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 transition ease-in-out duration-150"
-                                          onClick={() =>
-                                            handleDeleteAdminClick(item.id)
-                                          }
-                                        >
-                                          <FontAwesomeIcon icon={faTrash} />
-                                        </Button>
+                                        <>
+                                          <Button
+                                            className="bg-blue-500 text-white px-2 py-2 rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 transition ease-in-out duration-150"
+                                            onClick={() =>
+                                              handleEditAdminClick(item)
+                                            }
+                                            title="Edit Admin"
+                                          >
+                                            <FontAwesomeIcon icon={faEdit} />
+                                          </Button>
+                                          <Button
+                                            className="bg-red-500 text-white px-2 py-2 rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 transition ease-in-out duration-150"
+                                            onClick={() =>
+                                              handleDeleteAdminClick(item.id)
+                                            }
+                                            title="Hapus Admin"
+                                          >
+                                            <FontAwesomeIcon icon={faTrash} />
+                                          </Button>
+                                        </>
                                       )}
                                       <Link
                                         href={`https://wa.me/${phoneNumberForLink(
@@ -662,6 +778,18 @@ const Page = () => {
                                           Action:
                                         </strong>
                                         <div className="flex space-x-2">
+                                          {sessionStorage.getItem("role") ===
+                                            "SUPERADMIN" && (
+                                            <button
+                                              className="bg-blue-500 text-white px-3 py-2 rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 transition ease-in-out duration-150"
+                                              onClick={() =>
+                                                handleEditAdminClick(item)
+                                              }
+                                              title="Edit Admin"
+                                            >
+                                              <FontAwesomeIcon icon={faEdit} />
+                                            </button>
+                                          )}
                                           <button
                                             className="bg-red-500 text-white px-3 py-2 rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 transition ease-in-out duration-150"
                                             onClick={() =>
@@ -896,12 +1024,12 @@ const Page = () => {
                                   htmlFor="email"
                                   className="block font-semibold md:w-1/3"
                                 >
-                                  Email:
+                                  Email Asli:
                                 </Label>
                                 <Input
                                   type="text"
                                   id="email"
-                                  value={adminData.email}
+                                  value={adminData.email || "-"}
                                   readOnly
                                   className="border rounded w-full p-2 text-black bg-gray-200"
                                 />
@@ -909,6 +1037,31 @@ const Page = () => {
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                              <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
+                                <Label
+                                  htmlFor="adminEmailInput"
+                                  className="block font-semibold md:w-1/3"
+                                >
+                                  Email Login:
+                                </Label>
+                                <div className="w-full">
+                                  <Input
+                                    type="email"
+                                    id="adminEmailInput"
+                                    value={adminEmailInput}
+                                    onChange={(e) =>
+                                      setAdminEmailInput(e.target.value)
+                                    }
+                                    className="border rounded w-full p-2 text-black bg-white"
+                                    placeholder="Masukkan email untuk login admin"
+                                    required
+                                  />
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    * Email ini yang akan digunakan pengurus untuk login
+                                  </p>
+                                </div>
+                              </div>
+
                               <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
                                 <Label
                                   htmlFor="cabang"
@@ -962,36 +1115,6 @@ const Page = () => {
                                   </div>
                                 </div>
                               </div>
-
-                              <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
-                                <Label
-                                  htmlFor="password"
-                                  className="block font-semibold md:w-1/3"
-                                >
-                                  Password:
-                                </Label>
-                                <div className="w-full">
-                                  <Input
-                                    type="text"
-                                    id="password"
-                                    value={editablePassword}
-                                    onChange={(e) => {
-                                      setEditablePassword(e.target.value);
-                                      setPasswordError("");
-                                    }}
-                                    className={`border rounded w-full p-2 text-black bg-white ${
-                                      passwordError ? "border-red-500" : ""
-                                    }`}
-                                    placeholder="Masukkan password"
-                                    required
-                                  />
-                                  {passwordError && (
-                                    <span className="text-red-500 text-sm mt-1">
-                                      {passwordError}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -1000,15 +1123,38 @@ const Page = () => {
                                   htmlFor="password"
                                   className="block font-semibold md:w-1/3"
                                 >
-                                  Role:
+                                  Password:
                                 </Label>
-                                <Input
-                                  type="text"
-                                  id="role"
-                                  value={adminData.role}
-                                  readOnly
-                                  className="border rounded w-full p-2 text-black bg-gray-200"
-                                />
+                                <div className="w-full relative">
+                                  <Input
+                                    type={showAddPassword ? "text" : "password"}
+                                    id="password"
+                                    value={editablePassword}
+                                    onChange={(e) => {
+                                      setEditablePassword(e.target.value);
+                                      setPasswordError("");
+                                    }}
+                                    className={`border rounded w-full p-2 pr-10 text-black bg-white ${
+                                      passwordError ? "border-red-500" : ""
+                                    }`}
+                                    placeholder="Masukkan password"
+                                    required
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowAddPassword(!showAddPassword)}
+                                    className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700 focus:outline-none"
+                                  >
+                                    <FontAwesomeIcon
+                                      icon={showAddPassword ? faEyeSlash : faEye}
+                                    />
+                                  </button>
+                                  {passwordError && (
+                                    <span className="text-red-500 text-sm mt-1 block">
+                                      {passwordError}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
 
                               <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
@@ -1016,11 +1162,11 @@ const Page = () => {
                                   htmlFor="role"
                                   className="block font-semibold md:w-1/3"
                                 >
-                                  Ubah Role:
+                                  Role:
                                 </Label>
                                 <select
                                   id="role"
-                                  className="border rounded w-full p-2 text-black bg-gray-200"
+                                  className="border rounded w-full p-2 text-black bg-white"
                                   value={role}
                                   onChange={handleRoleChange}
                                 >
@@ -1043,6 +1189,254 @@ const Page = () => {
                             </div>
                           </div>
                         )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* POPUP: EDIT ADMIN */}
+                  {isEditPopupVisible && (
+                    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center mt-20 z-50">
+                      <div className="bg-white p-6 rounded-lg shadow-lg w-full md:w-3/6 max-h-[85vh] overflow-auto relative">
+                        <Button
+                          className="absolute top-2 right-2 bg-red-500 text-white hover:bg-red-600"
+                          onClick={handleCloseEditPopup}
+                        >
+                          <FontAwesomeIcon icon={faTimes} className="w-5 h-5" />
+                        </Button>
+
+                        <h2 className="text-lg font-bold mb-4 text-center">
+                          Edit Data Admin / Pengurus
+                        </h2>
+
+                        <form onSubmit={handleSaveEditAdmin} className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <Label className="block font-semibold mb-1">
+                                Nama Lengkap:
+                              </Label>
+                              <Input
+                                type="text"
+                                value={editAdminData.nama}
+                                onChange={(e) =>
+                                  setEditAdminData({
+                                    ...editAdminData,
+                                    nama: e.target.value,
+                                  })
+                                }
+                                className="border rounded w-full p-2 text-black bg-white"
+                                required
+                              />
+                            </div>
+
+                            <div>
+                              <Label className="block font-semibold mb-1">
+                                NPA PGRI:
+                              </Label>
+                              <Input
+                                type="text"
+                                value={editAdminData.npaPgri}
+                                readOnly
+                                className="border rounded w-full p-2 text-black bg-gray-200"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <Label className="block font-semibold mb-1">
+                                Email Login Pengurus:
+                              </Label>
+                              <Input
+                                type="email"
+                                value={editAdminData.email}
+                                onChange={(e) =>
+                                  setEditAdminData({
+                                    ...editAdminData,
+                                    email: e.target.value,
+                                  })
+                                }
+                                className="border rounded w-full p-2 text-black bg-white"
+                                placeholder="Email untuk login"
+                                required
+                              />
+                              <p className="text-xs text-gray-500 mt-1">
+                                * Email ini yang digunakan untuk login
+                              </p>
+                            </div>
+
+                            <div>
+                              <Label className="block font-semibold mb-1">
+                                Cabang:
+                              </Label>
+                              <div className="relative" ref={editDropdownRef}>
+                                <Input
+                                  type="text"
+                                  className="border-teal-500 rounded-lg p-2 bg-white shadow-sm w-full"
+                                  placeholder="Pilih Cabang"
+                                  value={selectedEditCabang}
+                                  readOnly
+                                  onFocus={() => {
+                                    setEditQuery("");
+                                    setShowEditDropdown(true);
+                                  }}
+                                />
+                                {showEditDropdown && (
+                                  <div className="absolute z-20 w-full mt-1">
+                                    <Input
+                                      type="text"
+                                      className="border rounded-lg p-2 w-full"
+                                      placeholder="Cari Cabang..."
+                                      value={editQuery}
+                                      onChange={(e) =>
+                                        setEditQuery(e.target.value)
+                                      }
+                                      autoFocus
+                                    />
+                                    <ul className="mt-1 max-h-48 overflow-y-auto bg-white border rounded-lg shadow-lg">
+                                      {[...cabang]
+                                        .filter((c) =>
+                                          c.kecamatan
+                                            .toLowerCase()
+                                            .includes(editQuery.toLowerCase()),
+                                        )
+                                        .sort((a, b) =>
+                                          a.kecamatan.localeCompare(
+                                            b.kecamatan,
+                                            "id",
+                                          ),
+                                        )
+                                        .map((item) => (
+                                          <li
+                                            key={item.idKecamatan || item.id}
+                                            className="p-2 cursor-pointer hover:bg-gray-100"
+                                            onClick={() => {
+                                              setSelectedEditCabang(
+                                                item.kecamatan,
+                                              );
+                                              setShowEditDropdown(false);
+                                            }}
+                                          >
+                                            {item.kecamatan}
+                                          </li>
+                                        ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <Label className="block font-semibold mb-1">
+                                No. HP / WhatsApp:
+                              </Label>
+                              <Input
+                                type="text"
+                                value={editAdminData.nohp}
+                                onChange={(e) =>
+                                  setEditAdminData({
+                                    ...editAdminData,
+                                    nohp: e.target.value,
+                                  })
+                                }
+                                className="border rounded w-full p-2 text-black bg-white"
+                              />
+                            </div>
+
+                            <div>
+                              <Label className="block font-semibold mb-1">
+                                Role:
+                              </Label>
+                              <select
+                                className="border rounded w-full p-2 text-black bg-white"
+                                value={editAdminData.role}
+                                onChange={(e) =>
+                                  setEditAdminData({
+                                    ...editAdminData,
+                                    role: e.target.value,
+                                  })
+                                }
+                              >
+                                <option value="ADMIN">ADMIN</option>
+                                <option value="EDITOR">EDITOR</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 gap-4">
+                            <div>
+                              <Label className="block font-semibold mb-1">
+                                Password Akun:
+                              </Label>
+                              <div className="relative">
+                                <Input
+                                  type={showEditModalPassword ? "text" : "password"}
+                                  value={editAdminData.password}
+                                  onChange={(e) => {
+                                    setEditAdminData({
+                                      ...editAdminData,
+                                      password: e.target.value,
+                                    });
+                                    setEditPasswordError("");
+                                  }}
+                                  className={`border rounded w-full p-2 pr-10 text-black bg-white ${
+                                    editPasswordError ? "border-red-500" : ""
+                                  }`}
+                                  placeholder="Masukkan password"
+                                  required
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setShowEditModalPassword(!showEditModalPassword)
+                                  }
+                                  className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700 focus:outline-none"
+                                >
+                                  <FontAwesomeIcon
+                                    icon={
+                                      showEditModalPassword ? faEyeSlash : faEye
+                                    }
+                                  />
+                                </button>
+                              </div>
+                              {editPasswordError && (
+                                <span className="text-red-500 text-sm mt-1 block">
+                                  {editPasswordError}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                                onChange={(e) =>
+                                  setEditAdminData({
+                                    ...editAdminData,
+                                    role: e.target.value,
+                                  })
+                                }
+                              >
+                                <option value="SUPERADMIN">SUPER ADMIN</option>
+                                <option value="ADMIN">ADMIN</option>
+                                <option value="EDITOR">EDITOR</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <div className="mt-6 flex justify-end space-x-3">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={handleCloseEditPopup}
+                            >
+                              Batal
+                            </Button>
+                            <Button
+                              type="submit"
+                              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+                            >
+                              Simpan Perubahan
+                            </Button>
+                          </div>
+                        </form>
                       </div>
                     </div>
                   )}
