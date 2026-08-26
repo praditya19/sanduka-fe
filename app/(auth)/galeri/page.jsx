@@ -59,7 +59,7 @@ const SummernoteEditor = dynamic(
       };
     });
   },
-  { ssr: false }
+  { ssr: false },
 );
 
 const NotificationPopup = ({ type, message, onClose }) => {
@@ -73,21 +73,31 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getBgColor = () => {
     switch (type) {
-      case 'success':
-        return 'bg-green-100';
-      case 'error':
-        return 'bg-red-100';
+      case "success":
+        return "bg-green-100";
+      case "error":
+        return "bg-red-100";
       default:
-        return 'bg-blue-100';
+        return "bg-blue-100";
     }
   };
 
   const getIcon = () => {
     switch (type) {
-      case 'success':
-        return <FontAwesomeIcon icon={faCheckCircle} className="text-green-500 text-3xl" />;
-      case 'error':
-        return <FontAwesomeIcon icon={faExclamationCircle} className="text-red-500 text-3xl" />;
+      case "success":
+        return (
+          <FontAwesomeIcon
+            icon={faCheckCircle}
+            className="text-green-500 text-3xl"
+          />
+        );
+      case "error":
+        return (
+          <FontAwesomeIcon
+            icon={faExclamationCircle}
+            className="text-red-500 text-3xl"
+          />
+        );
       default:
         return null;
     }
@@ -95,19 +105,24 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getTextColor = () => {
     switch (type) {
-      case 'success':
-        return 'text-green-800';
-      case 'error':
-        return 'text-red-800';
+      case "success":
+        return "text-green-800";
+      case "error":
+        return "text-red-800";
       default:
-        return 'text-blue-800';
+        return "text-blue-800";
     }
   };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div className="absolute inset-0 bg-black bg-opacity-50" onClick={onClose}></div>
-      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+      <div
+        className="absolute inset-0 bg-black bg-opacity-50"
+        onClick={onClose}
+      ></div>
+      <div
+        className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}
+      >
         <button
           onClick={onClose}
           className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
@@ -117,17 +132,13 @@ const NotificationPopup = ({ type, message, onClose }) => {
         </button>
 
         <div className="flex flex-col items-center space-y-4">
-          <div className="animate-bounce">
-            {getIcon()}
-          </div>
+          <div className="animate-bounce">{getIcon()}</div>
 
           <h3 className={`text-xl font-bold ${getTextColor()}`}>
-            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+            {type === "success" ? "Berhasil!" : "Gagal!"}
           </h3>
 
-          <div className={`${getTextColor()} text-center`}>
-            {message}
-          </div>
+          <div className={`${getTextColor()} text-center`}>{message}</div>
         </div>
       </div>
     </div>
@@ -140,12 +151,13 @@ const Page = () => {
   const [galleries, setGalleries] = useState({
     NON_EVENT: [],
     EVENT: [],
-    INFO: []
+    INFO: [],
   });
   const [selectedFile, setSelectedFile] = useState(null);
   const [deskripsi, setDeskripsi] = useState("");
   const [category, setCategory] = useState("NON EVENT");
   const [namaEvent, setNamaEvent] = useState("");
+  const [statusEvent, setStatusEvent] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
@@ -188,57 +200,61 @@ const Page = () => {
 
   const fetchNonEventGalleries = async () => {
     try {
-      const nonEventGalleries = await GlobalApi.getSidebarGalleryByCategory('NON EVENT');
+      const nonEventGalleries =
+        await GlobalApi.getSidebarGalleryByCategory("NON EVENT");
 
       await Promise.all(nonEventGalleries.map(preloadImage));
 
-      setGalleries(prev => ({
+      setGalleries((prev) => ({
         ...prev,
-        NON_EVENT: nonEventGalleries
+        NON_EVENT: nonEventGalleries,
       }));
     } catch (error) {
       console.error("Error fetching NON EVENT galleries:", error);
       setNotification({
-        type: 'error',
-        message: 'Gagal mengambil data galeri NON EVENT. Silakan coba lagi.'
+        type: "error",
+        message: "Gagal mengambil data galeri NON EVENT. Silakan coba lagi.",
       });
     }
   };
 
   const fetchEventGalleries = async () => {
     try {
-      const eventGalleries = await GlobalApi.getSidebarGalleryByCategory('EVENT');
+      const eventGalleries =
+        await GlobalApi.getSidebarGalleryByCategory("EVENT");
+
+      console.log(eventGalleries);
 
       await Promise.all(eventGalleries.map(preloadImage));
 
-      setGalleries(prev => ({
+      setGalleries((prev) => ({
         ...prev,
-        EVENT: eventGalleries
+        EVENT: eventGalleries,
       }));
     } catch (error) {
       console.error("Error fetching EVENT galleries:", error);
       setNotification({
-        type: 'error',
-        message: 'Gagal mengambil data galeri EVENT. Silakan coba lagi.'
+        type: "error",
+        message: "Gagal mengambil data galeri EVENT. Silakan coba lagi.",
       });
     }
   };
 
   const fetchInfoGalleries = async () => {
     try {
-      const infoGalleries = await GlobalApi.getSidebarGalleryByCategory('INFO');
+      const infoGalleries = await GlobalApi.getSidebarGalleryByCategory("INFO");
 
       await Promise.all(infoGalleries.map(preloadImage));
 
-      setGalleries(prev => ({
+      setGalleries((prev) => ({
         ...prev,
-        INFO: infoGalleries
+        INFO: infoGalleries,
       }));
     } catch (error) {
       console.error("Error fetching INFO galleries:", error);
       setNotification({
-        type: 'error',
-        message: 'Gagal mengambil data galeri INFO. Silakan coba lagi.'
+        type: "error",
+        message: "Gagal mengambil data galeri INFO. Silakan coba lagi.",
       });
     }
   };
@@ -271,11 +287,12 @@ const Page = () => {
     setDeskripsi(gallery.deskripsi);
     setCategory(gallery.category);
     setNamaEvent(gallery.namaEvent || "");
+    setStatusEvent(gallery.statusEvent || "");
     setSelectedFile(null);
 
     setTimeout(() => {
-      if (window.jQuery && window.jQuery('.note-editable').length) {
-        window.jQuery('.note-editable').html(gallery.deskripsi);
+      if (window.jQuery && window.jQuery(".note-editable").length) {
+        window.jQuery(".note-editable").html(gallery.deskripsi);
       }
     }, 100);
   };
@@ -285,21 +302,22 @@ const Page = () => {
     setDeskripsi("");
     setCategory("NON EVENT");
     setNamaEvent("");
+    setStatusEvent("Belum Terlaksana");
     setEditingId(null);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
 
-    if (window.jQuery && window.jQuery('.note-editable').length) {
-      window.jQuery('.note-editable').html("");
+    if (window.jQuery && window.jQuery(".note-editable").length) {
+      window.jQuery(".note-editable").html("");
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-  
+
     try {
       let newGallery;
       if (editingId) {
@@ -309,12 +327,12 @@ const Page = () => {
           namaEvent: category === "EVENT" ? namaEvent : undefined,
           photo: selectedFile,
         });
-  
-        setGalleries(prev => ({
+
+        setGalleries((prev) => ({
           ...prev,
-          [category.replace(' ', '_')]: prev[category.replace(' ', '_')].map(
-            gallery => gallery.id === editingId ? newGallery : gallery
-          )
+          [category.replace(" ", "_")]: prev[category.replace(" ", "_")].map(
+            (gallery) => (gallery.id === editingId ? newGallery : gallery),
+          ),
         }));
       } else {
         newGallery = await GlobalApi.createSidebarGallery({
@@ -323,35 +341,36 @@ const Page = () => {
           namaEvent: category === "EVENT" ? namaEvent : undefined,
           photo: selectedFile,
         });
-  
-        setGalleries(prev => {
-          const categoryKey = category.replace(' ', '_');
+
+        setGalleries((prev) => {
+          const categoryKey = category.replace(" ", "_");
           const updatedCategoryGalleries = [...prev[categoryKey], newGallery];
-          
+
           return {
             ...prev,
-            [categoryKey]: updatedCategoryGalleries
+            [categoryKey]: updatedCategoryGalleries,
           };
         });
-  
+
         if (category === "NON EVENT") {
           const newItemIndex = galleries.NON_EVENT.length;
           const newItemPage = Math.floor(newItemIndex / itemsPerPage);
           setCurrentPage(newItemPage);
         }
       }
-  
+
       resetForm();
       setNotification({
-        type: 'success',
-        message: editingId ? 'Data berhasil diperbarui!' : 'Data berhasil ditambahkan!'
+        type: "success",
+        message: editingId
+          ? "Data berhasil diperbarui!"
+          : "Data berhasil ditambahkan!",
       });
-  
     } catch (error) {
       console.error("Error saving gallery:", error);
       setNotification({
-        type: 'error',
-        message: 'Terjadi kesalahan saat menyimpan data. Silakan coba lagi.'
+        type: "error",
+        message: "Terjadi kesalahan saat menyimpan data. Silakan coba lagi.",
       });
     } finally {
       setIsLoading(false);
@@ -362,35 +381,41 @@ const Page = () => {
     if (galleryToDelete) {
       try {
         await GlobalApi.deleteSidebarGallery(galleryToDelete.id);
-        
+
         setGalleries((prev) => {
-          const categoryKey = galleryToDelete.category.replace(' ', '_');
+          const categoryKey = galleryToDelete.category.replace(" ", "_");
           const updatedCategoryGalleries = prev[categoryKey].filter(
-            (gallery) => gallery.id !== galleryToDelete.id
+            (gallery) => gallery.id !== galleryToDelete.id,
           );
-          
-          const totalPages = Math.ceil(updatedCategoryGalleries.length / itemsPerPage);
-          
-          if (categoryKey === "NON_EVENT" && currentPage >= totalPages && totalPages > 0) {
+
+          const totalPages = Math.ceil(
+            updatedCategoryGalleries.length / itemsPerPage,
+          );
+
+          if (
+            categoryKey === "NON_EVENT" &&
+            currentPage >= totalPages &&
+            totalPages > 0
+          ) {
             setCurrentPage(totalPages - 1);
           }
-  
+
           return {
             ...prev,
-            [categoryKey]: updatedCategoryGalleries
+            [categoryKey]: updatedCategoryGalleries,
           };
         });
-  
+
         setIsDeleteModalOpen(false);
         setNotification({
-          type: 'success',
-          message: 'Data berhasil dihapus!'
+          type: "success",
+          message: "Data berhasil dihapus!",
         });
       } catch (error) {
         console.error("Error deleting gallery:", error);
         setNotification({
-          type: 'error',
-          message: 'Gagal menghapus data. Silakan coba lagi.'
+          type: "error",
+          message: "Gagal menghapus data. Silakan coba lagi.",
         });
       }
     }
@@ -405,11 +430,9 @@ const Page = () => {
   const indexOfFirstItem = currentPage * itemsPerPage;
   const currentItems = galleries.NON_EVENT.slice(
     currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
+    (currentPage + 1) * itemsPerPage,
   );
-  // const eventItems = galleries.filter(
-  //   (gallery) => gallery.category === "EVENT"
-  // );
+
   const totalPages = Math.ceil(galleries.NON_EVENT.length / itemsPerPage);
 
   const DeleteConfirmationModal = () => {
@@ -463,7 +486,13 @@ const Page = () => {
     }
   };
 
-  const ConfirmationDialog = ({ isOpen, onClose, onConfirm, title, message }) => {
+  const ConfirmationDialog = ({
+    isOpen,
+    onClose,
+    onConfirm,
+    title,
+    message,
+  }) => {
     if (!isOpen) return null;
 
     return (
@@ -505,20 +534,20 @@ const Page = () => {
     const [deleteId, setDeleteId] = useState(null);
     const [confirmDialog, setConfirmDialog] = useState({
       isOpen: false,
-      id: null
+      id: null,
     });
 
     const openConfirmDialog = (id) => {
       setConfirmDialog({
         isOpen: true,
-        id: id
+        id: id,
       });
     };
 
     const closeConfirmDialog = () => {
       setConfirmDialog({
         isOpen: false,
-        id: null
+        id: null,
       });
     };
 
@@ -538,22 +567,28 @@ const Page = () => {
 
         const byteArray = new Uint8Array(byteNumbers);
 
-        let mimeType = 'application/octet-stream';
-        let fileExtension = '.bin';
+        let mimeType = "application/octet-stream";
+        let fileExtension = ".bin";
 
-        if (byteArray[0] === 0x25 && byteArray[1] === 0x50 &&
-          byteArray[2] === 0x44 && byteArray[3] === 0x46) {
-          mimeType = 'application/pdf';
-          fileExtension = '.pdf';
-        }
-        else if (byteArray[0] === 0xFF && byteArray[1] === 0xD8) {
-          mimeType = 'image/jpeg';
-          fileExtension = '.jpg';
-        }
-        else if (byteArray[0] === 0x89 && byteArray[1] === 0x50 &&
-          byteArray[2] === 0x4E && byteArray[3] === 0x47) {
-          mimeType = 'image/png';
-          fileExtension = '.png';
+        if (
+          byteArray[0] === 0x25 &&
+          byteArray[1] === 0x50 &&
+          byteArray[2] === 0x44 &&
+          byteArray[3] === 0x46
+        ) {
+          mimeType = "application/pdf";
+          fileExtension = ".pdf";
+        } else if (byteArray[0] === 0xff && byteArray[1] === 0xd8) {
+          mimeType = "image/jpeg";
+          fileExtension = ".jpg";
+        } else if (
+          byteArray[0] === 0x89 &&
+          byteArray[1] === 0x50 &&
+          byteArray[2] === 0x4e &&
+          byteArray[3] === 0x47
+        ) {
+          mimeType = "image/png";
+          fileExtension = ".png";
         }
 
         const blob = new Blob([byteArray], { type: mimeType });
@@ -562,7 +597,7 @@ const Page = () => {
 
         const blobUrl = URL.createObjectURL(blob);
 
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = blobUrl;
         link.download = fileName;
         document.body.appendChild(link);
@@ -577,27 +612,40 @@ const Page = () => {
     };
 
     const isImageFile = (byteArray) => {
-      if (byteArray[0] === 0xFF && byteArray[1] === 0xD8) {
+      if (byteArray[0] === 0xff && byteArray[1] === 0xd8) {
         return true;
       }
-      if (byteArray[0] === 0x89 && byteArray[1] === 0x50 &&
-        byteArray[2] === 0x4E && byteArray[3] === 0x47) {
+      if (
+        byteArray[0] === 0x89 &&
+        byteArray[1] === 0x50 &&
+        byteArray[2] === 0x4e &&
+        byteArray[3] === 0x47
+      ) {
         return true;
       }
       return false;
     };
 
     const isPdfFile = (byteArray) => {
-      return (byteArray[0] === 0x25 && byteArray[1] === 0x50 &&
-        byteArray[2] === 0x44 && byteArray[3] === 0x46);
+      return (
+        byteArray[0] === 0x25 &&
+        byteArray[1] === 0x50 &&
+        byteArray[2] === 0x44 &&
+        byteArray[3] === 0x46
+      );
     };
 
     const getFileMimeType = (byteArray) => {
-      if (isPdfFile(byteArray)) return 'application/pdf';
-      if (byteArray[0] === 0xFF && byteArray[1] === 0xD8) return 'image/jpeg';
-      if (byteArray[0] === 0x89 && byteArray[1] === 0x50 &&
-        byteArray[2] === 0x4E && byteArray[3] === 0x47) return 'image/png';
-      return 'application/octet-stream';
+      if (isPdfFile(byteArray)) return "application/pdf";
+      if (byteArray[0] === 0xff && byteArray[1] === 0xd8) return "image/jpeg";
+      if (
+        byteArray[0] === 0x89 &&
+        byteArray[1] === 0x50 &&
+        byteArray[2] === 0x4e &&
+        byteArray[3] === 0x47
+      )
+        return "image/png";
+      return "application/octet-stream";
     };
 
     const getFileDataUri = (upload) => {
@@ -613,7 +661,7 @@ const Page = () => {
 
         const mimeType = getFileMimeType(byteArray);
 
-        let binary = '';
+        let binary = "";
         const bytes = new Uint8Array(byteArray);
         const len = bytes.byteLength;
         for (let i = 0; i < len; i++) {
@@ -641,8 +689,8 @@ const Page = () => {
 
       const eventName = selectedEvent?.namaEvent || "Event";
 
-      const participantsWithFiles = pesertaList.map(peserta => {
-        let fileHtml = '<span>Tidak ada</span>';
+      const participantsWithFiles = pesertaList.map((peserta) => {
+        let fileHtml = "<span>Tidak ada</span>";
 
         if (peserta.upload) {
           try {
@@ -680,11 +728,11 @@ const Page = () => {
             }
           } catch (error) {
             console.error("Error processing file for PDF embedding:", error);
-            fileHtml = '<span>Tersedia (Error)</span>';
+            fileHtml = "<span>Tersedia (Error)</span>";
           }
         }
 
-        let photoHtml = '';
+        let photoHtml = "";
         if (peserta.foto) {
           photoHtml = `
             <div style="text-align: center;">
@@ -756,8 +804,8 @@ const Page = () => {
               </thead>
               <tbody>
                 ${participantsWithFiles
-          .map(
-            (peserta, index) => `
+                  .map(
+                    (peserta, index) => `
                       <tr>
                         <td>${index + 1}</td>
                         <td class="photo-cell">${peserta.photoHtml}</td>
@@ -769,9 +817,9 @@ const Page = () => {
                         <td>${peserta.jabatan}</td>
                         <td class="file-cell">${peserta.fileHtml}</td>
                       </tr>
-                    `
-          )
-          .join("")}
+                    `,
+                  )
+                  .join("")}
               </tbody>
             </table>
           </div>
@@ -807,7 +855,7 @@ const Page = () => {
 
     const exportToExcel = async () => {
       try {
-        const XLSX = await import('xlsx');
+        const XLSX = await import("xlsx");
 
         const eventName = selectedEvent?.namaEvent || "Event";
 
@@ -815,32 +863,32 @@ const Page = () => {
 
         const mainData = pesertaList.map((peserta, index) => {
           return {
-            'No': index + 1,
-            'Foto': peserta.foto ? 'Tersedia' : 'Tidak ada',
-            'Nama': peserta.namaLengkap,
-            'NPA': peserta.npa,
-            'Cabang': peserta.cabang,
-            'Unit Kerja': peserta.unitKerja,
-            'Nomor HP': peserta.nomorHp,
-            'Jabatan Organisasi': peserta.jabatan,
-            'File': peserta.upload ? 'Tersedia' : 'Tidak ada'
+            No: index + 1,
+            Foto: peserta.foto ? "Tersedia" : "Tidak ada",
+            Nama: peserta.namaLengkap,
+            NPA: peserta.npa,
+            Cabang: peserta.cabang,
+            "Unit Kerja": peserta.unitKerja,
+            "Nomor HP": peserta.nomorHp,
+            "Jabatan Organisasi": peserta.jabatan,
+            File: peserta.upload ? "Tersedia" : "Tidak ada",
           };
         });
 
         const ws = XLSX.utils.json_to_sheet(mainData);
         const columnWidths = [
-          { wch: 5 },    // No
-          { wch: 10 },   // Foto
-          { wch: 30 },   // Nama
-          { wch: 15 },   // NPA
-          { wch: 20 },   // Cabang
-          { wch: 25 },   // Unit Kerja
-          { wch: 15 },   // Nomor HP
-          { wch: 25 },   // Jabatan Organisasi
-          { wch: 15 },   // File
+          { wch: 5 }, // No
+          { wch: 10 }, // Foto
+          { wch: 30 }, // Nama
+          { wch: 15 }, // NPA
+          { wch: 20 }, // Cabang
+          { wch: 25 }, // Unit Kerja
+          { wch: 15 }, // Nomor HP
+          { wch: 25 }, // Jabatan Organisasi
+          { wch: 15 }, // File
         ];
-        ws['!cols'] = columnWidths;
-        XLSX.utils.book_append_sheet(wb, ws, 'Daftar Peserta');
+        ws["!cols"] = columnWidths;
+        XLSX.utils.book_append_sheet(wb, ws, "Daftar Peserta");
 
         XLSX.writeFile(wb, `Daftar Peserta - ${eventName}.xlsx`);
       } catch (error) {
@@ -855,17 +903,17 @@ const Page = () => {
 
       try {
         await GlobalApi.deletePeserta(id);
-        setPesertaList(pesertaList.filter(peserta => peserta.id !== id));
+        setPesertaList(pesertaList.filter((peserta) => peserta.id !== id));
 
         setNotification({
-          type: 'success',
-          message: 'Peserta berhasil dihapus!'
+          type: "success",
+          message: "Peserta berhasil dihapus!",
         });
       } catch (error) {
         console.error("Error deleting peserta:", error);
         setNotification({
-          type: 'error',
-          message: 'Gagal menghapus peserta. Silakan coba lagi.'
+          type: "error",
+          message: "Gagal menghapus peserta. Silakan coba lagi.",
         });
       } finally {
         setIsDeleting(false);
@@ -990,11 +1038,20 @@ const Page = () => {
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {peserta.upload ? (
                               <button
-                                onClick={() => handleFileDownload(peserta.upload, selectedEvent.namaEvent, peserta.namaLengkap)}
+                                onClick={() =>
+                                  handleFileDownload(
+                                    peserta.upload,
+                                    selectedEvent.namaEvent,
+                                    peserta.namaLengkap,
+                                  )
+                                }
                                 className="text-blue-600 hover:text-blue-800 focus:outline-none"
                               >
                                 <div className="flex items-center">
-                                  <FontAwesomeIcon icon={faDownload} className="mr-1" />
+                                  <FontAwesomeIcon
+                                    icon={faDownload}
+                                    className="mr-1"
+                                  />
                                   <span>Unduh</span>
                                 </div>
                               </button>
@@ -1060,7 +1117,12 @@ const Page = () => {
       tempDiv.innerHTML = htmlContent;
 
       const textNodes = [];
-      const walk = document.createTreeWalker(tempDiv, NodeFilter.SHOW_TEXT, null, false);
+      const walk = document.createTreeWalker(
+        tempDiv,
+        NodeFilter.SHOW_TEXT,
+        null,
+        false,
+      );
 
       let node;
       while ((node = walk.nextNode())) {
@@ -1099,7 +1161,9 @@ const Page = () => {
           });
 
           if (parts[parts.length - 1]) {
-            fragment.appendChild(document.createTextNode(parts[parts.length - 1]));
+            fragment.appendChild(
+              document.createTextNode(parts[parts.length - 1]),
+            );
           }
 
           parent.replaceChild(fragment, textNode);
@@ -1112,10 +1176,12 @@ const Page = () => {
     const MAX_LENGTH = 200;
     const deskripsi = gallery.deskripsi || "";
     const isLong = deskripsi.length > MAX_LENGTH;
-    const displayedText = expanded ? deskripsi : deskripsi.slice(0, MAX_LENGTH) + (isLong ? "..." : "");
+    const displayedText = expanded
+      ? deskripsi
+      : deskripsi.slice(0, MAX_LENGTH) + (isLong ? "..." : "");
 
     return (
-      <div className="border p-4 rounded">
+      <div className="border p-4 rounded relative">
         {gallery.photo && (
           <div className="relative w-full h-48 mb-2">
             <img
@@ -1133,30 +1199,55 @@ const Page = () => {
         )}
 
         <div className="mb-3">
+          {/* Badge */}
+
+          {gallery.category === "EVENT" && (
+            <span
+              className={`absolute z-40 top-2 right-2 px-2 py-1 text-xs font-semibold rounded text-white ${
+                gallery.isTerlewat ? "bg-green-500" : "bg-yellow-500"
+              }`}
+            >
+              {gallery.isTerlewat ? "Sudah terlaksana" : "Belum terlaksana"}
+            </span>
+          )}
           {gallery.category === "EVENT" ? (
             <>
-              <h3 className="text-center font-bold text-base mb-2">{gallery.namaEvent}</h3>
+              <h3 className="text-center font-bold text-base mb-2">
+                {gallery.namaEvent}
+              </h3>
               <div className="text-sm text-gray-600 description-content">
-                <span dangerouslySetInnerHTML={{ __html: parseHTML(displayedText) }} />
+                <span
+                  dangerouslySetInnerHTML={{
+                    __html: parseHTML(displayedText),
+                  }}
+                />
                 {isLong && (
                   <button
                     onClick={() => setExpanded(!expanded)}
                     className="text-blue-500 ml-2 hover:underline"
                   >
-                    {expanded ? "Tampilkan lebih sedikit" : "Tampilkan lebih banyak"}
+                    {expanded
+                      ? "Tampilkan lebih sedikit"
+                      : "Tampilkan lebih banyak"}
                   </button>
                 )}
               </div>
             </>
           ) : (
             <div className="text-sm text-gray-600 description-content">
-              <span dangerouslySetInnerHTML={{ __html: parseHTML(displayedText) }} />
+              <span
+                dangerouslySetInnerHTML={{
+                  __html: parseHTML(displayedText),
+                }}
+              />
               {isLong && (
                 <button
                   onClick={() => setExpanded(!expanded)}
                   className="text-blue-500 ml-2 hover:underline"
                 >
-                  {expanded ? "Tampilkan lebih sedikit" : "Tampilkan lebih banyak"}
+                  {expanded
+                    ? "Tampilkan lebih sedikit"
+                    : "Tampilkan lebih banyak"}
                 </button>
               )}
             </div>
@@ -1230,10 +1321,11 @@ const Page = () => {
           <button
             key={page}
             onClick={() => onPageChange(page - 1)}
-            className={`px-3 py-1 border rounded text-sm ${page - 1 === currentPage
-              ? "bg-blue-500 text-white"
-              : "bg-white hover:bg-gray-50"
-              }`}
+            className={`px-3 py-1 border rounded text-sm ${
+              page - 1 === currentPage
+                ? "bg-blue-500 text-white"
+                : "bg-white hover:bg-gray-50"
+            }`}
           >
             {page}
           </button>
@@ -1266,122 +1358,252 @@ const Page = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
-          <div className="w-full p-6">
-            <div className="mt-10 mb-8">
-              <form
-                ref={formRef}
-                onSubmit={handleSubmit}
-                className="bg-white p-6 rounded-lg shadow-md w-full"
-              >
-                <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-bold mb-2">
-                    Kategori
-                  </label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full p-2 border rounded"
-                    required
-                  >
-                    <option value="EVENT">EVENT</option>
-                    <option value="NON EVENT">NON EVENT</option>
-                    <option value="INFO">INFO</option>
-                  </select>
+          <div className="w-full py-14 p-4">
+            {/* Form Section */}
+            <div className="mb-10">
+              <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div className="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700">
+                  <h2 className="text-xl font-semibold text-white">
+                    {editingId ? "Edit Galeri" : "Tambah Galeri Baru"}
+                  </h2>
                 </div>
-                {category === "EVENT" && (
-                  <div className="mb-4">
-                    <label className="block text-gray-700 text-sm font-bold mb-2">
-                      Nama Event
+
+                <form
+                  ref={formRef}
+                  onSubmit={handleSubmit}
+                  className="p-6 space-y-6"
+                >
+                  {/* Kategori & Nama Event - 1 Baris */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Kategori */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Kategori <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
+                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-gray-700"
+                        required
+                      >
+                        <option value="EVENT">📅 EVENT</option>
+                        <option value="NON EVENT">📋 NON EVENT</option>
+                        <option value="INFO">ℹ️ INFO</option>
+                      </select>
+                    </div>
+
+                    {/* Nama Event - Conditional */}
+                    {category === "EVENT" && (
+                      <div className="animate-fadeIn">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Status <span className="text-red-500">*</span>
+                        </label>
+
+                        <select
+                          value={statusEvent}
+                          onChange={(e) =>
+                            setStatusEvent(e.target.value === "true")
+                          }
+                          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-gray-700"
+                          required
+                        >
+                          <option value="false">Belum Terlaksana</option>
+                          <option value="true">Sudah Terlaksana</option>
+                        </select>
+                      </div>
+                    )}
+
+                    {category === "EVENT" && (
+                      <div className="animate-fadeIn">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Nama Event <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={namaEvent}
+                          onChange={(e) => setNamaEvent(e.target.value)}
+                          placeholder="Masukkan nama event"
+                          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-gray-700"
+                          required
+                        />
+                      </div>
+                    )}
+
+                    {/* Jika kategori bukan EVENT, tampilkan placeholder kosong untuk menjaga layout */}
+                    {category !== "EVENT" && (
+                      <div className="hidden md:block"></div>
+                    )}
+                  </div>
+
+                  {/* Keterangan */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Keterangan <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="text"
-                      value={namaEvent}
-                      onChange={(e) => setNamaEvent(e.target.value)}
-                      className="w-full p-2 border rounded"
-                      required
+                    {typeof window !== "undefined" && (
+                      <SummernoteEditor
+                        value={deskripsi}
+                        onChange={setDeskripsi}
+                        height={300}
+                      />
+                    )}
+                  </div>
+
+                  {/* Foto */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Foto{" "}
+                      {!editingId && <span className="text-red-500">*</span>}
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="file"
+                        onChange={handleFileChange}
+                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                        accept="image/*"
+                        required={!editingId}
+                        ref={fileInputRef}
+                      />
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Format: JPG, PNG, GIF (Max 5MB)
+                    </p>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-200">
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-blue-800 focus:ring-4 focus:ring-blue-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                    >
+                      {isLoading ? (
+                        <>
+                          <svg
+                            className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                          Menyimpan...
+                        </>
+                      ) : editingId ? (
+                        "🔄 Update"
+                      ) : (
+                        "📤 Upload"
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={resetForm}
+                      className="px-6 py-2.5 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 focus:ring-4 focus:ring-gray-300 transition-all duration-200"
+                    >
+                      ❌ Batal
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            {/* Gallery Sections */}
+            <div className="space-y-10">
+              {/* All Gallery */}
+              <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div className="px-6 py-4 bg-gradient-to-r from-purple-600 to-purple-700">
+                  <h2 className="text-xl font-semibold text-white flex items-center">
+                    <span className="mr-2">🖼️</span> Galeri Kegiatan
+                    <span className="ml-3 text-sm font-normal bg-white/20 px-3 py-1 rounded-full">
+                      {currentItems.length} item
+                    </span>
+                  </h2>
+                </div>
+
+                <div className="p-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {currentItems.map((gallery) => (
+                      <GalleryItem key={gallery.id} gallery={gallery} />
+                    ))}
+                  </div>
+
+                  <div className="mt-6">
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={setCurrentPage}
                     />
                   </div>
-                )}
-                <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-bold mb-2">
-                    Keterangan
-                  </label>
-                  {/* Use the dynamic Summernote component */}
-                  {typeof window !== "undefined" && (
-                    <SummernoteEditor
-                      value={deskripsi}
-                      onChange={setDeskripsi}
-                      height={300}
-                    />
+                </div>
+              </div>
+
+              {/* Event Section */}
+              <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div className="px-6 py-4 bg-gradient-to-r from-green-600 to-green-700">
+                  <h2 className="text-xl font-semibold text-white flex items-center">
+                    <span className="mr-2">📅</span> Event
+                    <span className="ml-3 text-sm font-normal bg-white/20 px-3 py-1 rounded-full">
+                      {galleries.EVENT.length} item
+                    </span>
+                  </h2>
+                </div>
+
+                <div className="p-6">
+                  {galleries.EVENT.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                      {galleries.EVENT.map((gallery) => (
+                        <GalleryItem key={gallery.id} gallery={gallery} />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <p className="text-lg">📭 Belum ada event</p>
+                    </div>
                   )}
                 </div>
-                <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-bold mb-2">
-                    Foto
-                  </label>
-                  <input
-                    type="file"
-                    onChange={handleFileChange}
-                    className="w-full p-2 border rounded"
-                    accept="image/*"
-                    required={!editingId}
-                    ref={fileInputRef}
-                  />
-                </div>
-
-                <div className="flex space-x-4">
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-blue-300"
-                  >
-                    {isLoading ? "Menyimpan..." : editingId ? "Update" : "Upload"}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={resetForm}
-                    className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-                  >
-                    Batal
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow-md w-full">
-              <h2 className="text-xl font-bold mb-4">Galeri Kegiatan</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {currentItems.map((gallery) => (
-                  <GalleryItem key={gallery.id} gallery={gallery} />
-                ))}
               </div>
 
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
-            </div>
+              {/* Info Section */}
+              <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div className="px-6 py-4 bg-gradient-to-r from-yellow-600 to-yellow-700">
+                  <h2 className="text-xl font-semibold text-white flex items-center">
+                    <span className="mr-2">ℹ️</span> Info
+                    <span className="ml-3 text-sm font-normal bg-white/20 px-3 py-1 rounded-full">
+                      {galleries.INFO.length} item
+                    </span>
+                  </h2>
+                </div>
 
-            <div className="bg-white p-6 rounded-lg shadow-md w-full mt-8">
-              <h2 className="text-xl font-bold mb-4">Event</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {galleries.EVENT.map((gallery) => (
-                  <GalleryItem key={gallery.id} gallery={gallery} />
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow-md w-full mt-8">
-              <h2 className="text-xl font-bold mb-4">Info</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {galleries.INFO.map((gallery) => (
-                  <GalleryItem key={gallery.id} gallery={gallery} />
-                ))}
+                <div className="p-6">
+                  {galleries.INFO.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                      {galleries.INFO.map((gallery) => (
+                        <GalleryItem key={gallery.id} gallery={gallery} />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <p className="text-lg">📭 Belum ada info</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

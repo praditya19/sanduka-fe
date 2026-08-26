@@ -759,10 +759,10 @@ const Page = () => {
                         <tr>
                           <th className="py-3 px-4 text-center border-b">No</th>
                           <th className="py-3 px-4 text-center border-b">
-                            Date lapor
+                            Data Meninggal
                           </th>
                           <th className="py-3 px-4 text-center border-b">
-                            Data Meninggal
+                            Date lapor
                           </th>
                           <th className="py-3 px-4 text-center border-b">
                             Cabang
@@ -800,9 +800,6 @@ const Page = () => {
                               <td className="py-3 px-4 text-center font-medium">
                                 {index + 1}
                               </td>
-                              <td className="py-3 px-4 text-center">
-                                {item.Date_lapor || "N/A"}
-                              </td>
                               <td className="py-3 px-4">
                                 <div>
                                   <p className="font-medium">
@@ -815,6 +812,9 @@ const Page = () => {
                                     {item.Alamat_Rumah}
                                   </p>
                                 </div>
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                {item.Date_lapor || "N/A"}
                               </td>
                               <td className="py-3 px-4 text-center">
                                 {item.Cabang}

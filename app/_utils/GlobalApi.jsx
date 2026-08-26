@@ -2585,6 +2585,7 @@ const updateSidebarGallery = async (id, data) => {
     formData.append("category", data.category);
     formData.append("deskripsi", data.deskripsi);
     formData.append("namaEvent", data.namaEvent);
+    formData.append("isTerlewat", data.isTerlewat);
     if (data.photo) {
       formData.append("photo", data.photo);
     }

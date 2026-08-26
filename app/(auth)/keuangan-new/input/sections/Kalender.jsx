@@ -111,11 +111,27 @@ const KalenderSection = () => {
     }
   };
 
+  const jumlahPesananNumber = parseInt(jumlahPesanan, 10) || 0;
   const totalPerUnit = besaran.provinsi + besaran.kabupaten + besaran.cabang;
-  const totalAkhir = totalPerUnit * jumlahPesanan;
-  const setorProvinsi = besaran.provinsi * jumlahPesanan;
-  const bagianKabupaten = besaran.kabupaten * jumlahPesanan;
-  const bagianCabang = besaran.cabang * jumlahPesanan;
+  const totalAkhir = totalPerUnit * jumlahPesananNumber;
+  const setorProvinsi = besaran.provinsi * jumlahPesananNumber;
+  const bagianKabupaten = besaran.kabupaten * jumlahPesananNumber;
+  const bagianCabang = besaran.cabang * jumlahPesananNumber;
+  const filteredRekapData = tableData.filter((row) =>
+    row.cabang?.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+  const peruntukanProvinsi = filteredRekapData.reduce(
+    (sum, row) => sum + (parseInt(row.peruntukanProvinsi) || 0),
+    0,
+  );
+  const peruntukanKabupaten = filteredRekapData.reduce(
+    (sum, row) => sum + (parseInt(row.peruntukanKabupaten) || 0),
+    0,
+  );
+  const peruntukanCabang = filteredRekapData.reduce(
+    (sum, row) => sum + (parseInt(row.peruntukanCabang) || 0),
+    0,
+  );
 
   useEffect(() => {
     fetchInitialData();
@@ -129,7 +145,11 @@ const KalenderSection = () => {
         GlobalApi.getDefaultIuranById(1), // Kalender ID = 1
       ]);
       setBulanList(resBulan.data || []);
-      setCabangList((resCabang.data || []).sort((a, b) => (a.kecamatan || "").localeCompare(b.kecamatan || "")));
+      setCabangList(
+        (resCabang.data || []).sort((a, b) =>
+          (a.kecamatan || "").localeCompare(b.kecamatan || ""),
+        ),
+      );
       if (resIuran) {
         setBesaran({
           provinsi: parseInt(resIuran.propinsi) || 0,
@@ -140,14 +160,31 @@ const KalenderSection = () => {
       const currentMonth = new Date().getMonth();
       if (resBulan.data?.[currentMonth]) {
         setSelectedMonth(resBulan.data[currentMonth].namaBulan);
-        checkSavedStatus(resBulan.data[currentMonth].namaBulan, new Date().getFullYear());
+        checkSavedStatus(
+          resBulan.data[currentMonth].namaBulan,
+          new Date().getFullYear(),
+        );
       }
     } catch (error) {
       console.error("Error fetching Kalender data:", error);
     }
   };
 
-  const MONTHS = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+  const MONTHS = [
+    "",
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
+  ];
 
   const fetchTableData = useCallback(async () => {
     if (!selectedMonth || !selectedYear) return;
@@ -163,15 +200,30 @@ const KalenderSection = () => {
       const currentMonthId = MONTHS.indexOf(selectedMonth);
       let prevMonthId = currentMonthId - 1;
       let prevYear = selectedYear;
-      if (prevMonthId < 1) { prevMonthId = 12; prevYear = selectedYear - 1; }
+      if (prevMonthId < 1) {
+        prevMonthId = 12;
+        prevYear = selectedYear - 1;
+      }
 
-      const prevData = await GlobalApi.getTableKalender(MONTHS[prevMonthId], prevYear, []);
+      const prevData = await GlobalApi.getTableKalender(
+        MONTHS[prevMonthId],
+        prevYear,
+        [],
+      );
       if (prevData && prevData.length > 0) {
-        const currentNonZero = (data || []).filter((d) => (parseInt(d.jumlah) || 0) > 0);
-        const nonZeroCabangs = new Set(currentNonZero.map((d) => d.cabang?.toUpperCase()));
+        const currentNonZero = (data || []).filter(
+          (d) => (parseInt(d.jumlah) || 0) > 0,
+        );
+        const nonZeroCabangs = new Set(
+          currentNonZero.map((d) => d.cabang?.toUpperCase()),
+        );
         data = prevData
           .filter((item) => !nonZeroCabangs.has(item.cabang?.toUpperCase()))
-          .map((item) => ({ ...item, bulan: selectedMonth, tahun: selectedYear }))
+          .map((item) => ({
+            ...item,
+            bulan: selectedMonth,
+            tahun: selectedYear,
+          }))
           .concat(currentNonZero);
       }
 
@@ -238,7 +290,11 @@ const KalenderSection = () => {
         };
       });
 
-      setTableData(mappedData.sort((a, b) => (a.cabang || "").localeCompare(b.cabang || "")));
+      setTableData(
+        mappedData.sort((a, b) =>
+          (a.cabang || "").localeCompare(b.cabang || ""),
+        ),
+      );
     } catch (error) {
       console.error("Error fetching Kalender table:", error);
     } finally {
@@ -437,11 +493,17 @@ const KalenderSection = () => {
       }));
 
       await GlobalApi.saveRekapKalenderBatch(payload);
-      toast.success("Rekapitulasi data Kalender berhasil disimpan ke database!", {
-        id: loadingToast,
-      });
+      toast.success(
+        "Rekapitulasi data Kalender berhasil disimpan ke database!",
+        {
+          id: loadingToast,
+        },
+      );
       setIsSaved(true);
-      const res = await GlobalApi.getRekapKalenderByPeriode(selectedMonth, selectedYear);
+      const res = await GlobalApi.getRekapKalenderByPeriode(
+        selectedMonth,
+        selectedYear,
+      );
       const data = Array.isArray(res) ? res : res?.data || [];
       setSavedDataCount(data.length);
     } catch (error) {
@@ -649,98 +711,102 @@ const KalenderSection = () => {
 
       <div className="p-6 space-y-8 overflow-y-auto">
         {/* Top Section: Configuration (Integrated) */}
-        {isAdminOrSuperAdmin && <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden"
-        >
-          <div className="bg-slate-50/50 p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-lg shadow-amber-100">
-                <FaCalculator className="text-base" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-slate-800 tracking-tight">
-                  Konfigurasi Harga Kalender
-                </h3>
-                <p className="text-slate-400 text-[9px] font-medium uppercase tracking-widest">
-                  Parameter Harga Per Unit
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => fetchInitialData()}
-              className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[9px] font-bold text-slate-400 uppercase tracking-widest hover:text-amber-500 hover:border-amber-200 transition-all shadow-sm"
-            >
-              Reset Default
-            </button>
-          </div>
-
-          <div className="p-6 sm:p-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-              {[
-                { label: "Porsi Provinsi", key: "provinsi" },
-                { label: "Porsi Kabupaten", key: "kabupaten" },
-                { label: "Porsi Cabang", key: "cabang" },
-              ].map((field) => (
-                <div key={field.key}>
-                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block px-1">
-                    {field.label}
-                  </label>
-                  <div className="relative group">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
-                      <span className="text-slate-300 font-bold text-sm">
-                        Rp
-                      </span>
-                    </div>
-                    <input
-                      type="number"
-                      value={besaran[field.key]}
-                      disabled={!isSuperAdmin}
-                      onChange={(e) =>
-                        setBesaran({
-                          ...besaran,
-                          [field.key]: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      className={`w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-amber-500 outline-none font-bold text-slate-700 transition-all text-base shadow-inner ${isSuperAdmin ? "group-hover:bg-slate-100/50" : "cursor-not-allowed opacity-60"}`}
-                    />
-                  </div>
+        {isAdminOrSuperAdmin && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden"
+          >
+            <div className="bg-slate-50/50 p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-lg shadow-amber-100">
+                  <FaCalculator className="text-base" />
                 </div>
-              ))}
-            </div>
-
-            <div className="space-y-2">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {/* Card Total - kiri */}
-                <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 px-4 py-3 rounded-2xl border border-amber-200 shadow-sm">
-                  <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-wider mb-0.5">
-                    Total Konfigurasi Kalender
+                <div>
+                  <h3 className="text-base font-bold text-slate-800 tracking-tight">
+                    Konfigurasi Harga Kalender
+                  </h3>
+                  <p className="text-slate-400 text-[9px] font-medium uppercase tracking-widest">
+                    Parameter Harga Per Unit
                   </p>
-                  <span className="text-xl font-bold text-amber-600">
-                    {formatCurrency(totalPerUnit)}
-                  </span>
                 </div>
+              </div>
+              <button
+                onClick={() => fetchInitialData()}
+                className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[9px] font-bold text-slate-400 uppercase tracking-widest hover:text-amber-500 hover:border-amber-200 transition-all shadow-sm"
+              >
+                Reset Default
+              </button>
+            </div>
 
-                {/* Tombol Simpan - kanan */}
-                {isSuperAdmin && <button
-                  onClick={handleSaveBesaran}
-                  disabled={loadingBesaran}
-                  className="w-full px-6 py-3 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl font-bold shadow-sm transition-all flex items-center justify-center gap-2 active:scale-[0.97]"
-                >
-                  {loadingBesaran ? (
-                    <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <FaSave className="text-xs" />
+            <div className="p-6 sm:p-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                {[
+                  { label: "Porsi Provinsi", key: "provinsi" },
+                  { label: "Porsi Kabupaten", key: "kabupaten" },
+                  { label: "Porsi Cabang", key: "cabang" },
+                ].map((field) => (
+                  <div key={field.key}>
+                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block px-1">
+                      {field.label}
+                    </label>
+                    <div className="relative group">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
+                        <span className="text-slate-300 font-bold text-sm">
+                          Rp
+                        </span>
+                      </div>
+                      <input
+                        type="number"
+                        value={besaran[field.key]}
+                        disabled={!isSuperAdmin}
+                        onChange={(e) =>
+                          setBesaran({
+                            ...besaran,
+                            [field.key]: parseInt(e.target.value) || 0,
+                          })
+                        }
+                        className={`w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-transparent rounded-[16px] focus:bg-white focus:border-amber-500 outline-none font-bold text-slate-700 transition-all text-base shadow-inner ${isSuperAdmin ? "group-hover:bg-slate-100/50" : "cursor-not-allowed opacity-60"}`}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {/* Card Total - kiri */}
+                  <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 px-4 py-3 rounded-2xl border border-amber-200 shadow-sm">
+                    <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-wider mb-0.5">
+                      Total Konfigurasi Kalender
+                    </p>
+                    <span className="text-xl font-bold text-amber-600">
+                      {formatCurrency(totalPerUnit)}
+                    </span>
+                  </div>
+
+                  {/* Tombol Simpan - kanan */}
+                  {isSuperAdmin && (
+                    <button
+                      onClick={handleSaveBesaran}
+                      disabled={loadingBesaran}
+                      className="w-full px-6 py-3 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl font-bold shadow-sm transition-all flex items-center justify-center gap-2 active:scale-[0.97]"
+                    >
+                      {loadingBesaran ? (
+                        <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        <FaSave className="text-xs" />
+                      )}
+                      <span className="text-base font-semibold tracking-tight">
+                        Simpan Konfigurasi
+                      </span>
+                    </button>
                   )}
-                  <span className="text-base font-semibold tracking-tight">
-                    Simpan Konfigurasi
-                  </span>
-                </button>}
+                </div>
               </div>
             </div>
-          </div>
-        </motion.div>}
+          </motion.div>
+        )}
 
         {/* Bottom Section: Laporan & Input */}
         <div className="space-y-6">
@@ -762,42 +828,41 @@ const KalenderSection = () => {
 
           <div className="space-y-8">
             {/* Summary Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
               {[
                 {
-                  label: "Setor Provinsi",
-                  val: setorProvinsi,
-                  color: "bg-amber-600",
+                  label: "Total Provinsi",
+                  val: peruntukanProvinsi,
+                  color: "bg-amber-700",
                   icon: <FaCalendarAlt />,
                 },
                 {
-                  label: "Bagian Kabupaten",
-                  val: bagianKabupaten,
-                  color: "bg-amber-500",
+                  label: "Total Kabupaten",
+                  val: peruntukanKabupaten,
+                  color: "bg-amber-600",
                   icon: <FaCalendarCheck />,
                 },
                 {
-                  label: "Bagian Cabang",
-                  val: bagianCabang,
-                  color: "bg-emerald-500",
+                  label: "Total Cabang",
+                  val: peruntukanCabang,
+                  color: "bg-emerald-600",
                   icon: <FaUsers />,
                 },
               ].map((stat, i) => (
                 <div
                   key={i}
-                  className={`${stat.color} p-5 rounded-[28px] text-white shadow-lg flex items-center justify-between group overflow-hidden relative`}
+                  className={`${stat.color} p-5 rounded-[28px] text-white shadow-md flex items-center justify-between opacity-90 hover:opacity-100 transition`}
                 >
-                  <div className="relative z-10">
-                    <p className="text-[9px] font-bold opacity-60 uppercase tracking-widest mb-0.5">
+                  <div>
+                    <p className="text-[9px] font-bold uppercase tracking-widest opacity-70 mb-0.5">
                       {stat.label}
                     </p>
                     <h4 className="text-lg font-bold">
                       {formatCurrency(stat.val)}
                     </h4>
                   </div>
-                  <div className="text-3xl opacity-10 group-hover:scale-125 transition-transform duration-500">
-                    {stat.icon}
-                  </div>
+                  <div className="text-2xl opacity-20">{stat.icon}</div>
                 </div>
               ))}
             </div>
@@ -917,9 +982,11 @@ const KalenderSection = () => {
                         className={`w-full pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-lg outline-none font-bold text-slate-700 focus:ring-2 focus:ring-amber-500/20 transition-all text-xs shadow-sm ${isSuperAdmin ? "cursor-pointer hover:border-amber-300" : "cursor-default opacity-70"}`}
                         placeholder="Pilih Cabang"
                       />
-                      {isSuperAdmin && <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-[8px] transition-transform duration-300 group-hover:text-amber-500">
-                        {showCabangDropdown ? "▲" : "▼"}
-                      </div>}
+                      {isSuperAdmin && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-[8px] transition-transform duration-300 group-hover:text-amber-500">
+                          {showCabangDropdown ? "▲" : "▼"}
+                        </div>
+                      )}
                     </div>
                     {showCabangDropdown && (
                       <motion.div
@@ -934,7 +1001,9 @@ const KalenderSection = () => {
                             <Input
                               type="text"
                               value={searchDropCabang}
-                              onChange={(e) => handleCabangSearch(e.target.value)}
+                              onChange={(e) =>
+                                handleCabangSearch(e.target.value)
+                              }
                               className="w-full pl-8 pr-3 py-2 text-[10px] font-bold border-slate-200 rounded-lg focus:ring-amber-500 bg-white"
                               placeholder="Ketik nama cabang..."
                               autoFocus
@@ -944,10 +1013,11 @@ const KalenderSection = () => {
                         <ul className="overflow-y-auto py-2 custom-scrollbar">
                           <li
                             onClick={() => handleSelectCabang("")}
-                            className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${!searchQuery
-                              ? "bg-amber-50 text-amber-600 border-amber-500"
-                              : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
-                              }`}
+                            className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${
+                              !searchQuery
+                                ? "bg-amber-50 text-amber-600 border-amber-500"
+                                : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
+                            }`}
                           >
                             Semua Cabang
                           </li>
@@ -960,11 +1030,14 @@ const KalenderSection = () => {
                             .map((cab, idx) => (
                               <li
                                 key={idx}
-                                onClick={() => handleSelectCabang(cab.kecamatan)}
-                                className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${searchQuery === cab.kecamatan
-                                  ? "bg-amber-50 text-amber-600 border-amber-500"
-                                  : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
-                                  }`}
+                                onClick={() =>
+                                  handleSelectCabang(cab.kecamatan)
+                                }
+                                className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 border-l-2 ${
+                                  searchQuery === cab.kecamatan
+                                    ? "bg-amber-50 text-amber-600 border-amber-500"
+                                    : "text-slate-500 border-transparent hover:bg-slate-50 hover:text-slate-800"
+                                }`}
                               >
                                 {cab.kecamatan}
                               </li>
@@ -994,7 +1067,10 @@ const KalenderSection = () => {
                       }
                       className="bg-transparent px-4 py-2.5 outline-none font-bold text-slate-600 text-xs uppercase tracking-widest cursor-pointer"
                     >
-                      {Array.from({ length: new Date().getFullYear() + 2 - 2020 + 1 }, (_, i) => 2020 + i).map((y) => (
+                      {Array.from(
+                        { length: new Date().getFullYear() + 2 - 2020 + 1 },
+                        (_, i) => 2020 + i,
+                      ).map((y) => (
                         <option key={y} value={y}>
                           {y}
                         </option>
@@ -1089,10 +1165,10 @@ const KalenderSection = () => {
                           </tr>
                         ))
                     ) : tableData.filter((r) =>
-                      r.cabang
-                        ?.toLowerCase()
-                        .includes(searchQuery.toLowerCase()),
-                    ).length > 0 ? (
+                        r.cabang
+                          ?.toLowerCase()
+                          .includes(searchQuery.toLowerCase()),
+                      ).length > 0 ? (
                       tableData
                         .filter((r) =>
                           r.cabang
@@ -1133,7 +1209,7 @@ const KalenderSection = () => {
                             <td className="px-4 py-4 text-amber-700 bg-amber-50/30 font-bold">
                               {formatCurrency(
                                 (parseInt(row.peruntukanProvinsi) || 0) +
-                                (parseInt(row.peruntukanKabupaten) || 0),
+                                  (parseInt(row.peruntukanKabupaten) || 0),
                               )}
                             </td>
                             <td className="px-4 py-4 text-emerald-600 font-bold">
@@ -1183,152 +1259,154 @@ const KalenderSection = () => {
                         ?.toLowerCase()
                         .includes(searchQuery.toLowerCase()),
                     ).length > 0 && (
-                        <tr className="bg-amber-50 border-t-2 border-amber-200 font-bold text-center text-[11px]">
-                          <td
-                            colSpan={2}
-                            className="px-4 py-4 text-amber-700 font-bold text-right"
-                          >
-                            TOTAL REKAP
-                          </td>
-                          <td className="px-4 py-4 text-amber-600">
-                            {tableData
+                      <tr className="bg-amber-50 border-t-2 border-amber-200 font-bold text-center text-[11px]">
+                        <td
+                          colSpan={2}
+                          className="px-4 py-4 text-amber-700 font-bold text-right"
+                        >
+                          TOTAL REKAP
+                        </td>
+                        <td className="px-4 py-4 text-amber-600">
+                          {tableData
+                            .filter((r) =>
+                              r.cabang
+                                ?.toLowerCase()
+                                .includes(searchQuery.toLowerCase()),
+                            )
+                            .reduce(
+                              (sum, row) => sum + (parseInt(row.jumlah) || 0),
+                              0,
+                            )}
+                        </td>
+                        <td className="px-4 py-4 text-amber-600">
+                          {formatCurrency(
+                            tableData
                               .filter((r) =>
                                 r.cabang
                                   ?.toLowerCase()
                                   .includes(searchQuery.toLowerCase()),
                               )
                               .reduce(
-                                (sum, row) => sum + (parseInt(row.jumlah) || 0),
+                                (sum, row) =>
+                                  sum + (parseInt(row.peruntukanProvinsi) || 0),
                                 0,
-                              )}
-                          </td>
-                          <td className="px-4 py-4 text-amber-600">
-                            {formatCurrency(
-                              tableData
-                                .filter((r) =>
-                                  r.cabang
-                                    ?.toLowerCase()
-                                    .includes(searchQuery.toLowerCase()),
-                                )
-                                .reduce(
-                                  (sum, row) =>
-                                    sum + (parseInt(row.peruntukanProvinsi) || 0),
-                                  0,
-                                ),
-                            )}
-                          </td>
-                          <td className="px-4 py-4 text-amber-600">
-                            {formatCurrency(
-                              tableData
-                                .filter((r) =>
-                                  r.cabang
-                                    ?.toLowerCase()
-                                    .includes(searchQuery.toLowerCase()),
-                                )
-                                .reduce(
-                                  (sum, row) =>
-                                    sum +
-                                    (parseInt(row.peruntukanKabupaten) || 0),
-                                  0,
-                                ),
-                            )}
-                          </td>
-                          <td className="px-4 py-4 text-amber-600">
-                            {formatCurrency(
-                              tableData
-                                .filter((r) =>
-                                  r.cabang
-                                    ?.toLowerCase()
-                                    .includes(searchQuery.toLowerCase()),
-                                )
-                                .reduce(
-                                  (sum, row) =>
-                                    sum + (parseInt(row.peruntukanCabang) || 0),
-                                  0,
-                                ),
-                            )}
-                          </td>
-                          <td className="px-4 py-4 text-emerald-600 font-bold">
-                            {formatCurrency(
-                              tableData
-                                .filter((r) =>
-                                  r.cabang
-                                    ?.toLowerCase()
-                                    .includes(searchQuery.toLowerCase()),
-                                )
-                                .reduce(
-                                  (sum, row) =>
-                                    sum + (parseInt(row.tambahanCabang) || 0),
-                                  0,
-                                ),
-                            )}
-                          </td>
-                          <td className="px-4 py-4 text-amber-600 font-bold">
-                            {formatCurrency(
-                              tableData
-                                .filter((r) =>
-                                  r.cabang
-                                    ?.toLowerCase()
-                                    .includes(searchQuery.toLowerCase()),
-                                )
-                                .reduce(
-                                  (sum, row) =>
-                                    sum + (parseInt(row.totalCabang) || 0),
-                                  0,
-                                ),
-                            )}
-                          </td>
-                          <td className="px-4 py-4 text-amber-700 bg-amber-50/30 font-bold">
-                            {formatCurrency(
-                              tableData
-                                .filter((r) =>
-                                  r.cabang
-                                    ?.toLowerCase()
-                                    .includes(searchQuery.toLowerCase()),
-                                )
-                                .reduce(
-                                  (sum, row) =>
-                                    sum +
-                                    (parseInt(row.peruntukanProvinsi) || 0) +
-                                    (parseInt(row.peruntukanKabupaten) || 0),
-                                  0,
-                                ),
-                            )}
-                          </td>
-                          <td className="px-4 py-4 text-emerald-600 font-bold">
-                            {formatCurrency(
-                              tableData
-                                .filter((r) =>
-                                  r.cabang
-                                    ?.toLowerCase()
-                                    .includes(searchQuery.toLowerCase()),
-                                )
-                                .reduce(
-                                  (sum, row) =>
-                                    sum + (parseInt(row.transfer) || 0),
-                                  0,
-                                ),
-                            )}
-                          </td>
-                          <td className="px-4 py-4 text-orange-600 font-bold">
-                            {formatCurrency(
-                              tableData
-                                .filter((r) =>
-                                  r.cabang
-                                    ?.toLowerCase()
-                                    .includes(searchQuery.toLowerCase()),
-                                )
-                                .reduce(
-                                  (sum, row) => sum + (parseInt(row.kurang) || 0),
-                                  0,
-                                ),
-                            )}
-                          </td>
+                              ),
+                          )}
+                        </td>
+                        <td className="px-4 py-4 text-amber-600">
+                          {formatCurrency(
+                            tableData
+                              .filter((r) =>
+                                r.cabang
+                                  ?.toLowerCase()
+                                  .includes(searchQuery.toLowerCase()),
+                              )
+                              .reduce(
+                                (sum, row) =>
+                                  sum +
+                                  (parseInt(row.peruntukanKabupaten) || 0),
+                                0,
+                              ),
+                          )}
+                        </td>
+                        <td className="px-4 py-4 text-amber-600">
+                          {formatCurrency(
+                            tableData
+                              .filter((r) =>
+                                r.cabang
+                                  ?.toLowerCase()
+                                  .includes(searchQuery.toLowerCase()),
+                              )
+                              .reduce(
+                                (sum, row) =>
+                                  sum + (parseInt(row.peruntukanCabang) || 0),
+                                0,
+                              ),
+                          )}
+                        </td>
+                        <td className="px-4 py-4 text-emerald-600 font-bold">
+                          {formatCurrency(
+                            tableData
+                              .filter((r) =>
+                                r.cabang
+                                  ?.toLowerCase()
+                                  .includes(searchQuery.toLowerCase()),
+                              )
+                              .reduce(
+                                (sum, row) =>
+                                  sum + (parseInt(row.tambahanCabang) || 0),
+                                0,
+                              ),
+                          )}
+                        </td>
+                        <td className="px-4 py-4 text-amber-600 font-bold">
+                          {formatCurrency(
+                            tableData
+                              .filter((r) =>
+                                r.cabang
+                                  ?.toLowerCase()
+                                  .includes(searchQuery.toLowerCase()),
+                              )
+                              .reduce(
+                                (sum, row) =>
+                                  sum + (parseInt(row.totalCabang) || 0),
+                                0,
+                              ),
+                          )}
+                        </td>
+                        <td className="px-4 py-4 text-amber-700 bg-amber-50/30 font-bold">
+                          {formatCurrency(
+                            tableData
+                              .filter((r) =>
+                                r.cabang
+                                  ?.toLowerCase()
+                                  .includes(searchQuery.toLowerCase()),
+                              )
+                              .reduce(
+                                (sum, row) =>
+                                  sum +
+                                  (parseInt(row.peruntukanProvinsi) || 0) +
+                                  (parseInt(row.peruntukanKabupaten) || 0),
+                                0,
+                              ),
+                          )}
+                        </td>
+                        <td className="px-4 py-4 text-emerald-600 font-bold">
+                          {formatCurrency(
+                            tableData
+                              .filter((r) =>
+                                r.cabang
+                                  ?.toLowerCase()
+                                  .includes(searchQuery.toLowerCase()),
+                              )
+                              .reduce(
+                                (sum, row) =>
+                                  sum + (parseInt(row.transfer) || 0),
+                                0,
+                              ),
+                          )}
+                        </td>
+                        <td className="px-4 py-4 text-orange-600 font-bold">
+                          {formatCurrency(
+                            tableData
+                              .filter((r) =>
+                                r.cabang
+                                  ?.toLowerCase()
+                                  .includes(searchQuery.toLowerCase()),
+                              )
+                              .reduce(
+                                (sum, row) => sum + (parseInt(row.kurang) || 0),
+                                0,
+                              ),
+                          )}
+                        </td>
+                        <td className="px-4 py-4 text-slate-400">-</td>
+                        <td className="px-4 py-4 text-slate-400">-</td>
+                        {isSuperAdmin && (
                           <td className="px-4 py-4 text-slate-400">-</td>
-                          <td className="px-4 py-4 text-slate-400">-</td>
-                          {isSuperAdmin && <td className="px-4 py-4 text-slate-400">-</td>}
-                        </tr>
-                      )}
+                        )}
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -1442,7 +1520,10 @@ const KalenderSection = () => {
                     }
                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-amber-500/20 focus:bg-white transition-all text-sm"
                   >
-                    {Array.from({ length: new Date().getFullYear() + 2 - 2020 + 1 }, (_, i) => 2020 + i).map((y) => (
+                    {Array.from(
+                      { length: new Date().getFullYear() + 2 - 2020 + 1 },
+                      (_, i) => 2020 + i,
+                    ).map((y) => (
                       <option key={y} value={y}>
                         {y}
                       </option>
