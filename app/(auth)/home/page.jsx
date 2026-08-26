@@ -715,6 +715,36 @@ export default function IconGrid() {
     }
   };
 
+  const getMemberAge = (data) => {
+    if (data?.usia) {
+      const u = String(data.usia).trim();
+      if (u && u !== "-" && u !== "0") {
+        return u.toLowerCase().includes("tahun") || u.toLowerCase().includes("th") ? u : `${u} Tahun`;
+      }
+    }
+    if (data?.umur) {
+      const u = String(data.umur).trim();
+      if (u && u !== "-" && u !== "0") {
+        return u.toLowerCase().includes("tahun") || u.toLowerCase().includes("th") ? u : `${u} Tahun`;
+      }
+    }
+    if (!data?.tanggalLahir) return null;
+    try {
+      const birthDate = new Date(data.tanggalLahir);
+      if (isNaN(birthDate.getTime())) return null;
+      const endDate = data.waktuMeninggalTerlapor ? new Date(data.waktuMeninggalTerlapor) : new Date();
+      if (isNaN(endDate.getTime())) return null;
+      let age = endDate.getFullYear() - birthDate.getFullYear();
+      const monthDiff = endDate.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && endDate.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      return age >= 0 && age < 130 ? `${age} Tahun` : null;
+    } catch {
+      return null;
+    }
+  };
+
   const MobileDeceasedScroll = ({ sortedData, formatDate }) => {
     return (
       <div className="w-full overflow-x-auto pb-4 mb-16">
@@ -754,6 +784,11 @@ export default function IconGrid() {
                     {currentData.tempatLahir},{" "}
                     {formatDate(currentData.tanggalLahir)}
                   </p>
+                  {getMemberAge(currentData) && (
+                    <p className="text-sm font-semibold text-blue-800">
+                      Usia: {getMemberAge(currentData)}
+                    </p>
+                  )}
                   <p className="text-sm">{currentData.jabatan}</p>
                   <p className="text-sm">{currentData.unitKerja}</p>
                   <p className="text-sm">{currentData.cabang}</p>
@@ -1273,6 +1308,12 @@ export default function IconGrid() {
                                 {currentData.tempatLahir},{" "}
                                 {formatDate(currentData.tanggalLahir)}
                               </p>
+                              {getMemberAge(currentData) && (
+                                <p>
+                                  <span className="font-medium text-blue-800">Usia:</span>{" "}
+                                  <span className="font-semibold text-blue-800">{getMemberAge(currentData)}</span>
+                                </p>
+                              )}
                               <p>
                                 <span className="font-medium">Jabatan:</span>{" "}
                                 {currentData.jabatan}

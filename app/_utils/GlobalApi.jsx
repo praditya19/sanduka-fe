@@ -2228,7 +2228,17 @@ const deleteFiles = async (id) => {
     const response = await axiosClient.delete(`/api/files/${id}`);
     return response.data;
   } catch (error) {
-    console.error("Error fetching files data: ", error);
+    console.error("Error deleting files data: ", error);
+    throw error;
+  }
+};
+
+const updateFile = async (id, updatedData) => {
+  try {
+    const response = await axiosClient.put(`/api/files/${id}`, updatedData);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating files data: ", error);
     throw error;
   }
 };
@@ -3878,13 +3888,13 @@ const updateBerita = async (id, data) => {
   }
 };
 
-const getAllBerita = async (status) => {
+const getAllBerita = async (status, size = 200) => {
   try {
     const response = await axiosClient.get("/api/berita/all", {
-      params: { status },
+      params: { status, size, page: 0 },
     });
 
-    return response.data.content || [];
+    return response.data.content || response.data || [];
   } catch (error) {
     throw error;
   }
@@ -3893,6 +3903,15 @@ const getAllBerita = async (status) => {
 const getBeritaById = async (id) => {
   try {
     const response = await axiosClient.get(`/api/berita/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const getBeritaBySlug = async (slug) => {
+  try {
+    const response = await axiosClient.get(`/api/berita/slug/${encodeURIComponent(slug)}`);
     return response.data;
   } catch (error) {
     throw error;
@@ -4009,8 +4028,13 @@ const updateEditor = async (id, data) => {
       formData.append("passwordNew", data.passwordNew);
 
     const response = await axiosClient.put(
-      `/api/register-editor/update/${id}`,
+      `/api/register-editor/${id}`,
       formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
     );
 
     return response.data;
@@ -4594,6 +4618,7 @@ export default {
   generateKwitansi,
   getNamaKwitansi,
   deleteFiles,
+  updateFile,
   getJumlahDataUpload,
   getRantingSummary,
   createRanting,
@@ -4734,6 +4759,7 @@ export default {
   createBerita,
   getAllBerita,
   getBeritaById,
+  getBeritaBySlug,
   updateBerita,
   deleteBerita,
   publishBerita,
