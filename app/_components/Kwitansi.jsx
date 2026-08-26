@@ -384,7 +384,7 @@ function Pengeluaran() {
 
     try {
       const canvas = await html2canvas(kwitansiElement, {
-        scale: 2,
+        scale: 4,
         useCORS: true,
       });
 
