@@ -531,11 +531,6 @@ const Page = () => {
                             : "border-gray-200 hover:border-teal-300"
                         }`}
                       >
-<<<<<<< HEAD
-                        {/* Content */}
-                        <div className="p-4">
-                          <h3 className="text-sm font-bold text-gray-800 group-hover:text-teal-700 transition-colors">
-=======
                         {/* Image Container dengan overlay gradient */}
                         <div className="relative h-36 bg-gradient-to-br from-teal-50 to-cyan-100 overflow-hidden">
                           {eventImage ? (
@@ -649,7 +644,6 @@ const Page = () => {
                           </div>
 
                           <h3 className="line-clamp-2 min-h-[2.8rem] text-sm font-bold leading-5 text-gray-800 group-hover:text-teal-700 transition-colors duration-300">
->>>>>>> 7daa6a5d15b14a6e287719c82fb66be425ca2034
                             {event.namaEvent || "Event tanpa nama"}
                           </h3>
 
