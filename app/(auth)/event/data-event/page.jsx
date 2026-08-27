@@ -211,7 +211,14 @@ const Page = () => {
         {},
       );
 
-      setEventOptions(eventResponse || []);
+      const sortedEvents = (eventResponse || []).sort((a, b) => {
+        const aTerlewat = !!a.isTerlewat;
+        const bTerlewat = !!b.isTerlewat;
+        if (aTerlewat !== bTerlewat) return aTerlewat ? 1 : -1;
+        return Number(b.id) - Number(a.id);
+      });
+
+      setEventOptions(sortedEvents);
       setEventParticipantCounts(participantCounts);
     } catch (error) {
       console.error("Gagal mengambil data event:", error);
@@ -570,11 +577,16 @@ const Page = () => {
                             </div>
                           )}
 
-                          {/* Nomor Urut */}
-                          <div className="absolute left-2 top-2 z-10">
+                          {/* Nomor Urut & Status */}
+                          <div className="absolute left-2 top-2 z-10 flex items-center gap-1.5">
                             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-black/50 backdrop-blur-sm text-xs font-bold text-white shadow-lg">
                               {index + 1}
                             </span>
+                            {event.isTerlewat && (
+                              <span className="px-2 py-1 rounded-full bg-red-600/90 backdrop-blur-sm text-[10px] font-bold text-white shadow-lg">
+                                Terlaksana
+                              </span>
+                            )}
                           </div>
 
                           {/* Ikon Hover */}
@@ -623,6 +635,18 @@ const Page = () => {
                           <div
                             className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-teal-400 to-cyan-400 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left ${isSelected ? "scale-x-100" : ""}`}
                           ></div>
+
+                          <div className="flex items-center gap-1.5 mb-1.5">
+                            {event.isTerlewat ? (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 border border-red-200">
+                                Sudah Terlaksana
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-100 text-teal-700 border border-teal-200">
+                                Event Aktif
+                              </span>
+                            )}
+                          </div>
 
                           <h3 className="line-clamp-2 min-h-[2.8rem] text-sm font-bold leading-5 text-gray-800 group-hover:text-teal-700 transition-colors duration-300">
                             {event.namaEvent || "Event tanpa nama"}
