@@ -157,7 +157,7 @@ const Page = () => {
   const [deskripsi, setDeskripsi] = useState("");
   const [category, setCategory] = useState("NON EVENT");
   const [namaEvent, setNamaEvent] = useState("");
-  const [statusEvent, setStatusEvent] = useState("");
+  const [statusEvent, setStatusEvent] = useState("false");
   const [editingId, setEditingId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
@@ -223,8 +223,6 @@ const Page = () => {
       const eventGalleries =
         await GlobalApi.getSidebarGalleryByCategory("EVENT");
 
-      console.log(eventGalleries);
-
       await Promise.all(eventGalleries.map(preloadImage));
 
       setGalleries((prev) => ({
@@ -287,7 +285,7 @@ const Page = () => {
     setDeskripsi(gallery.deskripsi);
     setCategory(gallery.category);
     setNamaEvent(gallery.namaEvent || "");
-    setStatusEvent(gallery.statusEvent || "");
+    setStatusEvent(gallery.isTerlewat ? "true" : "false");
     setSelectedFile(null);
 
     setTimeout(() => {
@@ -302,7 +300,7 @@ const Page = () => {
     setDeskripsi("");
     setCategory("NON EVENT");
     setNamaEvent("");
-    setStatusEvent("Belum Terlaksana");
+    setStatusEvent("false");
     setEditingId(null);
 
     if (fileInputRef.current) {
@@ -314,24 +312,58 @@ const Page = () => {
     }
   };
 
+  const handleToggleTerlewat = async (gallery) => {
+    try {
+      const nextStatus = !gallery.isTerlewat;
+      await GlobalApi.toggleTerlewatSidebarGallery(gallery.id, nextStatus);
+      setGalleries((prev) => ({
+        ...prev,
+        EVENT: prev.EVENT.map((item) =>
+          item.id === gallery.id ? { ...item, isTerlewat: nextStatus } : item,
+        ),
+      }));
+      setNotification({
+        type: "success",
+        message: nextStatus
+          ? `Event "${gallery.namaEvent}" ditandai sudah terlaksana!`
+          : `Event "${gallery.namaEvent}" diaktifkan kembali!`,
+      });
+    } catch (error) {
+      console.error("Error toggling terlewat:", error);
+      setNotification({
+        type: "error",
+        message: "Gagal mengubah status event.",
+      });
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
       let newGallery;
+      const isTerlewatVal =
+        category === "EVENT"
+          ? statusEvent === "true" || statusEvent === true
+          : undefined;
+
       if (editingId) {
         newGallery = await GlobalApi.updateSidebarGallery(editingId, {
           category: category,
           deskripsi: deskripsi,
           namaEvent: category === "EVENT" ? namaEvent : undefined,
+          isTerlewat: isTerlewatVal,
           photo: selectedFile,
         });
 
         setGalleries((prev) => ({
           ...prev,
           [category.replace(" ", "_")]: prev[category.replace(" ", "_")].map(
-            (gallery) => (gallery.id === editingId ? newGallery : gallery),
+            (gallery) =>
+              gallery.id === editingId
+                ? { ...gallery, ...newGallery, isTerlewat: isTerlewatVal }
+                : gallery,
           ),
         }));
       } else {
@@ -339,12 +371,16 @@ const Page = () => {
           category: category,
           deskripsi: deskripsi,
           namaEvent: category === "EVENT" ? namaEvent : undefined,
+          isTerlewat: isTerlewatVal,
           photo: selectedFile,
         });
 
         setGalleries((prev) => {
           const categoryKey = category.replace(" ", "_");
-          const updatedCategoryGalleries = [...prev[categoryKey], newGallery];
+          const updatedCategoryGalleries = [
+            ...prev[categoryKey],
+            { ...newGallery, isTerlewat: isTerlewatVal },
+          ];
 
           return {
             ...prev,
@@ -1203,11 +1239,11 @@ const Page = () => {
 
           {gallery.category === "EVENT" && (
             <span
-              className={`absolute z-40 top-2 right-2 px-2 py-1 text-xs font-semibold rounded text-white ${
-                gallery.isTerlewat ? "bg-green-500" : "bg-yellow-500"
+              className={`absolute z-40 top-2 right-2 px-2.5 py-1 text-xs font-bold rounded-md text-white shadow-md flex items-center gap-1 ${
+                gallery.isTerlewat ? "bg-red-600" : "bg-emerald-600"
               }`}
             >
-              {gallery.isTerlewat ? "Sudah terlaksana" : "Belum terlaksana"}
+              {gallery.isTerlewat ? "⏰ Sudah Terlaksana" : "✨ Belum Terlaksana"}
             </span>
           )}
           {gallery.category === "EVENT" ? (
@@ -1254,26 +1290,43 @@ const Page = () => {
           )}
         </div>
 
-        <div className="mt-2 space-x-2">
+        <div className="mt-2 flex flex-wrap gap-2">
           <button
             onClick={() => handleEdit(gallery)}
-            className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+            className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 text-sm font-medium"
           >
             Edit
           </button>
           <button
             onClick={() => handleDeleteClick(gallery)}
-            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm font-medium"
           >
             Hapus
           </button>
           {gallery.category === "EVENT" && (
-            <button
-              onClick={() => handlePesertaClick(gallery)}
-              className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
-            >
-              Peserta
-            </button>
+            <>
+              <button
+                onClick={() => handlePesertaClick(gallery)}
+                className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm font-medium"
+              >
+                Peserta
+              </button>
+              <button
+                onClick={() => handleToggleTerlewat(gallery)}
+                className={`px-3 py-1 rounded text-white text-sm font-medium transition-colors ${
+                  gallery.isTerlewat
+                    ? "bg-emerald-600 hover:bg-emerald-700"
+                    : "bg-orange-600 hover:bg-orange-700"
+                }`}
+                title={
+                  gallery.isTerlewat
+                    ? "Aktifkan kembali event"
+                    : "Tandai event sudah terlaksana"
+                }
+              >
+                {gallery.isTerlewat ? "Aktifkan" : "Terlaksana"}
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -1568,9 +1621,16 @@ const Page = () => {
                 <div className="p-6">
                   {galleries.EVENT.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                      {galleries.EVENT.map((gallery) => (
-                        <GalleryItem key={gallery.id} gallery={gallery} />
-                      ))}
+                      {[...galleries.EVENT]
+                        .sort((a, b) => {
+                          const aTerlewat = !!a.isTerlewat;
+                          const bTerlewat = !!b.isTerlewat;
+                          if (aTerlewat !== bTerlewat) return aTerlewat ? 1 : -1;
+                          return Number(b.id) - Number(a.id);
+                        })
+                        .map((gallery) => (
+                          <GalleryItem key={gallery.id} gallery={gallery} />
+                        ))}
                     </div>
                   ) : (
                     <div className="text-center py-8 text-gray-500">

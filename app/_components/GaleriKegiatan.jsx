@@ -264,7 +264,15 @@ const GaleriKegiatan = () => {
           return { ...item, imageUrl: objectUrl };
         }),
       );
-      setEventGalleries(processedGalleries);
+
+      const sortedGalleries = [...processedGalleries].sort((a, b) => {
+        const aTerlewat = !!a.isTerlewat;
+        const bTerlewat = !!b.isTerlewat;
+        if (aTerlewat !== bTerlewat) return aTerlewat ? 1 : -1;
+        return Number(b.id) - Number(a.id);
+      });
+
+      setEventGalleries(sortedGalleries);
     } catch (error) {
       console.error("Error fetching event galleries:", error);
     } finally {
@@ -529,10 +537,16 @@ const GaleriKegiatan = () => {
                         alt={item.deskripsi || "Gallery image"}
                         fill
                         sizes="(max-width: 640px) 100vw, (max-width: 768px) 90vw, 500px"
-                        className="object-contain"
+                        className={`object-contain ${item.isTerlewat ? "filter grayscale-[25%]" : ""}`}
                         priority={true}
                         quality={90}
                       />
+
+                      {item.isTerlewat && (
+                        <div className="absolute top-4 left-4 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md z-10 flex items-center gap-1">
+                          ⏰ Sudah Terlaksana
+                        </div>
+                      )}
 
                       {registrationStatus[item.id] && (
                         <div className="absolute top-4 right-4 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-full shadow-md z-10 flex items-center gap-1">
@@ -646,14 +660,20 @@ const GaleriKegiatan = () => {
                 }}
                 onClick={() => handleEventClick(event)}
               >
-                {/* Badge event terbaru */}
-                {index < 3 && (
+                {/* Badge event status */}
+                {event.isTerlewat ? (
+                  <div className="absolute top-3 right-3 z-10">
+                    <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                      ⏰ Sudah Terlaksana
+                    </span>
+                  </div>
+                ) : index < 3 ? (
                   <div className="absolute top-3 right-3 z-10">
                     <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg animate-pulse">
                       🔥 NEW
                     </span>
                   </div>
-                )}
+                ) : null}
 
                 {/* Image Container dengan overlay gradient */}
                 <div className="relative w-full bg-gray-100 overflow-hidden" style={{ paddingBottom: "100%" }}>
@@ -661,7 +681,9 @@ const GaleriKegiatan = () => {
                     src={event.imageUrl}
                     alt={event.namaEvent || "Event image"}
                     fill
-                    className="object-cover transition-transform duration-700 group-hover:scale-110"
+                    className={`object-cover transition-transform duration-700 group-hover:scale-110 ${
+                      event.isTerlewat ? "filter grayscale-[25%]" : ""
+                    }`}
                     sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   />
                   {/* Gradient overlay */}
@@ -1064,6 +1086,17 @@ const GaleriKegiatan = () => {
                   />
                 </div>
                 <div className="prose max-w-none">
+                  <div className="flex items-center gap-2 mb-2">
+                    {selectedEventDetail.isTerlewat ? (
+                      <span className="px-3 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full border border-red-200">
+                        Sudah Terlaksana
+                      </span>
+                    ) : (
+                      <span className="px-3 py-1 bg-teal-100 text-teal-700 text-xs font-bold rounded-full border border-teal-200">
+                        Event Aktif
+                      </span>
+                    )}
+                  </div>
                   <h4 className="text-xl sm:text-2xl font-bold mb-3">
                     {selectedEventDetail.namaEvent}
                   </h4>
@@ -1099,21 +1132,27 @@ const GaleriKegiatan = () => {
 
               {userData && (
                 <div className="bg-gray-50 rounded-lg p-6">
-                  {/* {isRegistered ? (
-                    <div className="text-center">
-                      <div className="inline-block px-8 py-3 bg-yellow-500 text-white rounded-lg font-semibold text-base shadow-md mb-4">
-                        {isRegistered}
+                  {selectedEventDetail.isTerlewat && !isAdminRegistration ? (
+                    <div className="text-center py-8">
+                      <div className="inline-block p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 mb-4">
+                        <FaTimesCircle className="text-3xl text-red-500 mx-auto mb-2" />
+                        <p className="font-bold text-base">Event Sudah Terlaksana</p>
+                        <p className="text-xs text-red-600 mt-1">
+                          Pendaftaran untuk event ini telah ditutup karena kegiatan telah selesai diselenggarakan.
+                        </p>
                       </div>
-
-                      <p className="text-gray-600">
-                        Anda sudah terdaftar untuk event ini.
-                      </p>
                     </div>
-                  ) : ( */}
+                  ) : (
                   <>
                     <h4 className="text-xl font-bold mb-4 text-center">
-                      Form Pendaftaran Event
+                      Form Pendaftaran Event {selectedEventDetail.isTerlewat && "(Admin Mode)"}
                     </h4>
+
+                    {selectedEventDetail.isTerlewat && (
+                      <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-xs text-red-700 font-medium">
+                        ⚠️ Perhatian: Event ini berstatus "Sudah Terlaksana". Pendaftaran hanya diizinkan untuk Admin.
+                      </div>
+                    )}
 
                     {/* ================= FOTO KTA ================= */}
                     <div className="flex flex-col items-center justify-center mb-5">
@@ -1486,7 +1525,7 @@ const GaleriKegiatan = () => {
                       )}
                     </button>
                   </>
-                  {/* )} */}
+                  )}
                 </div>
               )}
             </div>

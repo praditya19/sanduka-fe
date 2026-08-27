@@ -67,7 +67,15 @@ const Event = () => {
           return { ...item, imageUrl: objectUrl };
         })
       );
-      setEventGalleries(processedGalleries);
+
+      const sortedGalleries = [...processedGalleries].sort((a, b) => {
+        const aTerlewat = !!a.isTerlewat;
+        const bTerlewat = !!b.isTerlewat;
+        if (aTerlewat !== bTerlewat) return aTerlewat ? 1 : -1;
+        return Number(b.id) - Number(a.id);
+      });
+
+      setEventGalleries(sortedGalleries);
     } catch (error) {
       console.error("Error fetching events:", error);
     } finally {
@@ -114,7 +122,7 @@ const Event = () => {
   };
 
   const handleEventAction = (event) => {
-    if (registrationStatus[event.id]) return;
+    if (event?.isTerlewat || registrationStatus[event.id]) return;
 
     if (event?.deskripsi) {
       const url = extractUrl(event.deskripsi);
@@ -215,56 +223,87 @@ const Event = () => {
         ) : (
             /* SECTION KATALOG EVENT (GRID LAYOUT) */
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full">
-              {eventGalleries.map((event) => (
-                <div
-                  key={event.id}
-                  className="bg-white rounded-xl shadow-md overflow-hidden flex flex-col hover:shadow-2xl transition-all duration-300 relative border border-gray-100 group"
-                >
-                  <div className="absolute top-4 -right-10 bg-gray-800 text-white text-[10px] font-bold px-10 py-1 transform flex items-center justify-center rotate-45 z-20 shadow-md tracking-wider">
-                    KEGIATAN PGRI
-                  </div>
+              {eventGalleries.map((event) => {
+                const isTerlewat = !!event.isTerlewat;
 
-                  {/* Image Container */}
-                  <div 
-                    className="relative w-full aspect-square bg-gray-200 cursor-pointer overflow-hidden"
-                    onClick={() => setSelectedEvent(event)}
+                return (
+                  <div
+                    key={event.id}
+                    className={`bg-white rounded-xl shadow-md overflow-hidden flex flex-col hover:shadow-2xl transition-all duration-300 relative border ${
+                      isTerlewat
+                        ? "border-gray-200 opacity-90 hover:opacity-100"
+                        : "border-gray-100"
+                    } group`}
                   >
-                    <Image
-                      src={event.imageUrl}
-                      alt={event.namaEvent}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    
-                    {/* Badge Terdaftar */}
-                    {registrationStatus[event.id] && (
-                      <div className="absolute top-3 left-3 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-1 rounded shadow-md z-10 flex items-center gap-1">
-                        <FaCheckCircle size={12} /> TERDAFTAR
-                      </div>
-                    )}
-                  </div>
+                    {/* Badge Pojok Kanan Atas */}
+                    <div
+                      className={`absolute top-4 -right-10 ${
+                        isTerlewat ? "bg-red-600" : "bg-gray-800"
+                      } text-white text-[10px] font-bold px-10 py-1 transform flex items-center justify-center rotate-45 z-20 shadow-md tracking-wider`}
+                    >
+                      {isTerlewat ? "TERLAKSANA" : "KEGIATAN PGRI"}
+                    </div>
 
-                  {/* Blok Judul / Deskripsi Singkat */}
-                  <div 
-                    className="bg-[#17a2b8] text-white p-4 flex-grow flex items-center justify-center cursor-pointer"
-                    onClick={() => setSelectedEvent(event)}
-                  >
-                    <h3 className="text-sm font-semibold text-center line-clamp-2 leading-snug">
-                      {event.namaEvent}
-                    </h3>
-                  </div>
+                    {/* Image Container */}
+                    <div 
+                      className="relative w-full aspect-square bg-gray-200 cursor-pointer overflow-hidden"
+                      onClick={() => setSelectedEvent(event)}
+                    >
+                      <Image
+                        src={event.imageUrl}
+                        alt={event.namaEvent}
+                        fill
+                        className={`object-cover group-hover:scale-105 transition-transform duration-500 ${
+                          isTerlewat ? "filter grayscale-[25%]" : ""
+                        }`}
+                      />
 
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedEvent(event);
-                    }}
-                    className="w-full py-3 bg-[#117a8b] hover:bg-[#0f6674] text-white font-bold text-sm transition-colors flex items-center justify-center gap-2"
-                  >
-                    Selengkapnya <span className="text-lg leading-none">➔</span>
-                  </button>
-                </div>
-              ))}
+                      {/* Overlay jika sudah terlaksana */}
+                      {isTerlewat && (
+                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center z-10">
+                          <span className="bg-red-600/90 text-white font-bold text-xs px-3 py-1 rounded-full shadow-lg border border-white/20">
+                            Sudah Terlaksana
+                          </span>
+                        </div>
+                      )}
+                      
+                      {/* Badge Terdaftar */}
+                      {registrationStatus[event.id] && (
+                        <div className="absolute top-3 left-3 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-1 rounded shadow-md z-20 flex items-center gap-1">
+                          <FaCheckCircle size={12} /> TERDAFTAR
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Blok Judul / Deskripsi Singkat */}
+                    <div 
+                      className={`${
+                        isTerlewat ? "bg-slate-700" : "bg-[#17a2b8]"
+                      } text-white p-4 flex-grow flex items-center justify-center cursor-pointer`}
+                      onClick={() => setSelectedEvent(event)}
+                    >
+                      <h3 className="text-sm font-semibold text-center line-clamp-2 leading-snug">
+                        {event.namaEvent}
+                      </h3>
+                    </div>
+
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedEvent(event);
+                      }}
+                      className={`w-full py-3 ${
+                        isTerlewat
+                          ? "bg-slate-800 hover:bg-slate-900"
+                          : "bg-[#117a8b] hover:bg-[#0f6674]"
+                      } text-white font-bold text-sm transition-colors flex items-center justify-center gap-2`}
+                    >
+                      {isTerlewat ? "Lihat Detail (Selesai)" : "Selengkapnya"}{" "}
+                      <span className="text-lg leading-none">➔</span>
+                    </button>
+                  </div>
+                );
+              })}
             </div>
         )}
       </div>
@@ -305,11 +344,35 @@ const Event = () => {
                      
                      {/* 1. SCROLLABLE CONTENT */}
                      <div className="flex-1 overflow-y-auto p-6 lg:p-8 custom-scrollbar min-h-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          {selectedEvent.isTerlewat ? (
+                            <span className="px-3 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full border border-red-200">
+                              Sudah Terlaksana
+                            </span>
+                          ) : (
+                            <span className="px-3 py-1 bg-teal-100 text-teal-700 text-xs font-bold rounded-full border border-teal-200">
+                              Event Aktif
+                            </span>
+                          )}
+                        </div>
+
                         <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-4 pr-8 leading-tight">
                             {selectedEvent.namaEvent}
                         </h2>
 
                         <div className="w-20 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mb-6"></div>
+
+                        {selectedEvent.isTerlewat && (
+                          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3 text-red-800">
+                            <FaTimesCircle className="text-red-500 text-xl mt-0.5 flex-shrink-0" />
+                            <div>
+                              <p className="font-bold text-sm">Event Sudah Terlaksana</p>
+                              <p className="text-xs text-red-600 mt-0.5 leading-relaxed">
+                                Kegiatan ini telah selesai terlaksana, sehingga pendaftaran peserta sudah ditutup.
+                              </p>
+                            </div>
+                          </div>
+                        )}
 
                         <div className="prose max-w-none text-gray-700 pb-4">
                              <div dangerouslySetInnerHTML={{ __html: processHTML(selectedEvent.deskripsi) }} />
@@ -337,6 +400,13 @@ const Event = () => {
                                     Sudah Terdaftar
                                 </div>
                             </div>
+                        ) : selectedEvent.isTerlewat ? (
+                            <button
+                                disabled
+                                className="w-full py-4 bg-gray-400 text-white rounded-xl font-bold text-base shadow cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                                <FaTimesCircle /> Event Sudah Terlaksana (Pendaftaran Ditutup)
+                            </button>
                         ) : (
                             <button
                                 onClick={() => handleEventAction(selectedEvent)}
@@ -345,7 +415,7 @@ const Event = () => {
                                 Daftar Event Sekarang
                             </button>
                         )}
-                        {!registrationStatus[selectedEvent.id] && !userData && (
+                        {!registrationStatus[selectedEvent.id] && !selectedEvent.isTerlewat && !userData && (
                             <p className="text-xs text-center text-gray-500 mt-3">
                                 Anda akan diarahkan ke halaman pendaftaran / login.
                             </p>

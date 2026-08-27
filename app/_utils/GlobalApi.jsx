@@ -2575,6 +2575,9 @@ const createSidebarGallery = async (data) => {
     formData.append("category", data.category);
     formData.append("deskripsi", data.deskripsi);
     formData.append("namaEvent", data.namaEvent);
+    if (data.isTerlewat !== undefined) {
+      formData.append("isTerlewat", data.isTerlewat);
+    }
     if (data.photo) {
       formData.append("photo", data.photo);
     }
@@ -2613,6 +2616,19 @@ const updateSidebarGallery = async (id, data) => {
     throw error;
   }
 };
+
+const toggleTerlewatSidebarGallery = async (id, isTerlewat) => {
+  try {
+    const query = isTerlewat !== undefined ? `?isTerlewat=${isTerlewat}` : "";
+    const response = await axiosClient.patch(
+      `/api/sidebar-gallery/${id}/toggle-terlewat${query}`
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 const getAllSidebarGallery = async () => {
   try {
     const response = await axiosClient.get("/api/sidebar-gallery");
@@ -4818,4 +4834,5 @@ export default {
   getSiteVisitStats,
   getWeeklySiteVisitors,
   getAllDaftarPesertaEvent,
+  toggleTerlewatSidebarGallery,
 };
