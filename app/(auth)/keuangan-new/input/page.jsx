@@ -57,7 +57,14 @@ function KeuanganInputContent() {
     localStorage.setItem("isSidebarOpen", newState);
   };
 
+  const isSuperAdmin = userRole === "SUPERADMIN";
   const isAdminOrSuperAdmin = userRole === "SUPERADMIN" || userRole === "ADMIN";
+
+  useEffect(() => {
+    if (userRole && !isSuperAdmin && activeTab === "peruntukan-kabupaten") {
+      setActiveTab("iuran-pgri");
+    }
+  }, [userRole, isSuperAdmin, activeTab]);
 
   if (userRole !== null && !isAdminOrSuperAdmin) {
     return (
@@ -76,15 +83,21 @@ function KeuanganInputContent() {
     );
   }
 
-  const tabs = [
+  const baseTabs = [
     { id: "iuran-pgri", label: "Iuran PGRI", icon: <FaCoins />, color: "text-emerald-500", bg: "bg-emerald-50" },
     { id: "daspen", label: "Daspen", icon: <FaHandHoldingHeart />, color: "text-rose-500", bg: "bg-rose-50" },
     { id: "derap", label: "Derap", icon: <FaNewspaper />, color: "text-indigo-500", bg: "bg-indigo-50" },
     { id: "kalender", label: "Kalender", icon: <FaCalendarAlt />, color: "text-amber-500", bg: "bg-amber-50" },
     { id: "lain-lain", label: "Lain-Lain", icon: <FaEllipsisH />, color: "text-slate-500", bg: "bg-slate-50" },
     { id: "rekap", label: "Rekapitulasi", icon: <FaChartBar />, color: "text-purple-500", bg: "bg-purple-50" },
-    { id: "peruntukan-kabupaten", label: "Peruntukan Kabupaten", icon: <FaBuilding />, color: "text-blue-500", bg: "bg-blue-50" },
   ];
+
+  const tabs = isSuperAdmin
+    ? [
+        ...baseTabs,
+        { id: "peruntukan-kabupaten", label: "Peruntukan Kabupaten", icon: <FaBuilding />, color: "text-blue-500", bg: "bg-blue-50" },
+      ]
+    : baseTabs;
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row overflow-hidden">

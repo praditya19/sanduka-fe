@@ -210,6 +210,14 @@ export default function PeruntukanKabupatenSection() {
     window.print();
   };
 
+  if (userRole !== null && !isSuperAdmin) {
+    return (
+      <div className="bg-white p-12 rounded-3xl border border-slate-100 text-center">
+        <p className="text-slate-500 font-bold">Halaman Peruntukan Kabupaten hanya dapat diakses oleh SUPER ADMIN.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <Toaster position="top-right" />
