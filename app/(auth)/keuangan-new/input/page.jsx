@@ -13,10 +13,11 @@ import {
   FaCalendarAlt,
   FaEllipsisH,
   FaChevronRight,
-  FaChartBar
+  FaChartBar,
+  FaBuilding,
 } from "react-icons/fa";
 
-// Import sections (we will create these next)
+// Import sections
 import IuranPgriSection from "./sections/IuranPgri";
 import DaspenSection from "./sections/Daspen";
 import DerapSection from "./sections/Derap";
@@ -24,6 +25,7 @@ import KalenderSection from "./sections/Kalender";
 import BackButton from "../components/BackButton";
 import LainLainSection from "./sections/LainLain";
 import RekapitulasiSection from "./sections/Rekapitulasi";
+import PeruntukanKabupatenSection from "./sections/PeruntukanKabupaten";
 
 export default function KeuanganInput() {
   return (
@@ -81,6 +83,7 @@ function KeuanganInputContent() {
     { id: "kalender", label: "Kalender", icon: <FaCalendarAlt />, color: "text-amber-500", bg: "bg-amber-50" },
     { id: "lain-lain", label: "Lain-Lain", icon: <FaEllipsisH />, color: "text-slate-500", bg: "bg-slate-50" },
     { id: "rekap", label: "Rekapitulasi", icon: <FaChartBar />, color: "text-purple-500", bg: "bg-purple-50" },
+    { id: "peruntukan-kabupaten", label: "Peruntukan Kabupaten", icon: <FaBuilding />, color: "text-blue-500", bg: "bg-blue-50" },
   ];
 
   return (
@@ -104,7 +107,7 @@ function KeuanganInputContent() {
 
             {/* Stepper */}
             <div className="mb-6 md:mb-10 overflow-x-auto -mx-2 px-2">
-              <div className="flex items-center justify-center md:justify-start gap-1 md:gap-0 w-full md:max-w-2xl md:mx-auto">
+              <div className="flex items-center justify-center md:justify-start gap-1 md:gap-0 w-full md:max-w-3xl md:mx-auto">
                 {tabs.map((tab, idx) => {
                   const isActive = activeTab === tab.id;
                   const isComplete = tabs.findIndex(t => t.id === activeTab) > idx;
@@ -129,7 +132,7 @@ function KeuanganInputContent() {
                         </span>
                       </button>
                       {idx < tabs.length - 1 && (
-                        <div className={`hidden md:block h-px w-10 lg:w-16 mx-3 lg:mx-4 mt-[-1.5rem] ${isComplete ? "bg-emerald-400" : "bg-slate-200"
+                        <div className={`hidden md:block h-px w-8 lg:w-12 mx-2 lg:mx-3 mt-[-1.5rem] ${isComplete ? "bg-emerald-400" : "bg-slate-200"
                           }`} />
                       )}
                     </div>
@@ -153,6 +156,7 @@ function KeuanganInputContent() {
                   {activeTab === "kalender" && <KalenderSection />}
                   {activeTab === "lain-lain" && <LainLainSection />}
                   {activeTab === "rekap" && <RekapitulasiSection />}
+                  {activeTab === "peruntukan-kabupaten" && <PeruntukanKabupatenSection />}
                 </motion.div>
               </AnimatePresence>
             </div>
