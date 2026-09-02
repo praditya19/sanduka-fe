@@ -174,8 +174,15 @@ function KeuanganDetailContent() {
       });
 
       // --- TAGIHAN CABANG (from transaksi_cabang table) ---
-      const catPosMap = { "IURAN": "Iuran PGRI", "SANDUKA": "Sanduka", "DASPEN": "Daspen", "DERAP": "Derap", "KALENDER": "Kalender" };
-      const catPosReverse = Object.fromEntries(Object.entries(catPosMap).map(([k, v]) => [v.toUpperCase(), k]));
+      const normalizePos = (name) => (name || "").toString().trim().replace(/[\s\-_]+/g, "").toUpperCase();
+      const catPosAliases = {
+        "IURAN": ["IURANPGRI", "IURAN", "IURANANGGOTA"],
+        "SANDUKA": ["SANDUKA", "IURANSANDUKA"],
+        "DASPEN": ["DASPEN", "IURANDASPEN"],
+        "DERAP": ["DERAP", "IURANDERAP"],
+        "KALENDER": ["KALENDER", "IURANKALENDER"],
+        "LAIN-LAIN": ["LAINLAIN", "LAIN", "SUMBANGAN", "IURANSUMBANGAN"],
+      };
       const cabangTransData = Array.isArray(transaksiCabangRes) ? transaksiCabangRes : transaksiCabangRes?.data || [];
       const cabangTrans = cabangTransData.filter(t => t.cabang?.trim().toUpperCase() === cabangKey);
 
@@ -199,16 +206,27 @@ function KeuanganDetailContent() {
         }
       });
 
-      const usedPosLabels = new Set();
+      const usedPosKeys = new Set();
       const updatedTagihanRows = tagihanRows.map(row => {
-        const matchingPos = Object.keys(catPosMap).find(k => k === row.label);
-        if (matchingPos) {
-          const tcPos = catPosMap[matchingPos];
-          const tcData = posGroup[tcPos];
+        const rowNorm = normalizePos(row.label);
+        const aliases = catPosAliases[row.label] || [rowNorm];
+        const matchingEntry = Object.entries(posGroup).find(([pos]) => {
+          const norm = normalizePos(pos);
+          return aliases.includes(norm);
+        });
+
+        if (matchingEntry) {
+          const [matchedPos, tcData] = matchingEntry;
           if (tcData && tcData.tagihan > 0) {
-            usedPosLabels.add(tcPos.toUpperCase());
+            usedPosKeys.add(matchedPos);
             subtotal += tcData.tagihan - row.total;
-            return { label: row.label, count: row.count, total: tcData.tagihan, bayar: tcData.pembayaran || 0, keterangan: posKeterangan[tcPos] || "" };
+            return {
+              label: row.label,
+              count: row.count,
+              total: tcData.tagihan,
+              bayar: tcData.pembayaran || 0,
+              keterangan: posKeterangan[matchedPos] || "",
+            };
           }
         }
         return row;
@@ -217,17 +235,32 @@ function KeuanganDetailContent() {
       // Add non-overlapping pos as extra tagihan rows (skip Pemasukan Dari Bank — shown in REALISASI)
       const extraTagihanRows = [];
       Object.entries(posGroup).forEach(([pos, vals]) => {
-        if (!usedPosLabels.has(pos.toUpperCase())) {
-          if (pos.toUpperCase() === "PEMASUKAN DARI BANK") return;
-          extraTagihanRows.push({ label: pos.toUpperCase(), count: vals.count, total: vals.tagihan, bayar: vals.pembayaran || 0, keterangan: posKeterangan[pos] || "" });
-          subtotal += vals.tagihan;
+        const posNorm = normalizePos(pos);
+        if (posNorm === "PEMASUKANDARIBANK") return;
+        if (!usedPosKeys.has(pos)) {
+          const matchedAlias = Object.values(catPosAliases).some(aliasList =>
+            aliasList.includes(posNorm)
+          );
+          if (!matchedAlias) {
+            extraTagihanRows.push({
+              label: pos.toUpperCase(),
+              count: vals.count,
+              total: vals.tagihan,
+              bayar: vals.pembayaran || 0,
+              keterangan: posKeterangan[pos] || "",
+            });
+            subtotal += vals.tagihan;
+          }
         }
       });
 
       // Only show KALENDER if there's a matching transaksi_cabang entry
-      const hasKalenderTc = Object.keys(posGroup).some(p => p.toUpperCase() === "KALENDER");
-      // Custom sort order: PGRI, SANDUKA, DASPEN, DERAP, KALENDER, then others
-      const sortOrder = { "IURAN": 1, "SANDUKA": 2, "DASPEN": 3, "DERAP": 4, "KALENDER": 5 };
+      const hasKalenderTc = Object.keys(posGroup).some(p => {
+        const norm = normalizePos(p);
+        return norm === "KALENDER" || norm === "IURANKALENDER";
+      });
+      // Custom sort order: PGRI, SANDUKA, DASPEN, DERAP, KALENDER, LAIN-LAIN, then others
+      const sortOrder = { "IURAN": 1, "SANDUKA": 2, "DASPEN": 3, "DERAP": 4, "KALENDER": 5, "LAIN-LAIN": 6 };
       const filteredTagihan = [...updatedTagihanRows.filter((r) => {
         if (r.total === 0) return false;
         if (r.label === "KALENDER" && !hasKalenderTc) {

@@ -578,12 +578,14 @@ const TagihanForm = () => {
         }
       });
 
-      const catPosMap = {
-        "IURAN": "Iuran PGRI",
-        "SANDUKA": "Sanduka",
-        "DASPEN": "Daspen",
-        "DERAP": "Derap",
-        "KALENDER": "Kalender"
+      const normalizePos = (name) => (name || "").toString().trim().replace(/[\s\-_]+/g, "").toUpperCase();
+      const catPosAliases = {
+        "IURAN": ["IURANPGRI", "IURAN", "IURANANGGOTA"],
+        "SANDUKA": ["SANDUKA", "IURANSANDUKA"],
+        "DASPEN": ["DASPEN", "IURANDASPEN"],
+        "DERAP": ["DERAP", "IURANDERAP"],
+        "KALENDER": ["KALENDER", "IURANKALENDER"],
+        "LAIN-LAIN": ["LAINLAIN", "LAIN", "SUMBANGAN", "IURANSUMBANGAN"],
       };
 
       const posGroup = {};
@@ -594,7 +596,7 @@ const TagihanForm = () => {
         posGroup[p].pembayaran += Number(t.pembayaran || 0);
       });
 
-      const usedPosLabels = new Set();
+      const usedPosKeys = new Set();
       let calculatedTotalTagihan = 0;
 
       const baseRows = [
@@ -604,13 +606,17 @@ const TagihanForm = () => {
       ];
 
       baseRows.forEach(row => {
-        const matchingPos = Object.keys(catPosMap).find(k => k === row.label);
+        const rowNorm = normalizePos(row.label);
+        const aliases = catPosAliases[row.label] || [rowNorm];
         let rowTotal = row.total;
-        if (matchingPos) {
-          const tcPos = catPosMap[matchingPos];
-          const tcData = Object.entries(posGroup).find(([k]) => k.toUpperCase() === tcPos.toUpperCase())?.[1];
+        const matchingEntry = Object.entries(posGroup).find(([k]) => {
+          const norm = normalizePos(k);
+          return aliases.includes(norm);
+        });
+        if (matchingEntry) {
+          const [matchedPos, tcData] = matchingEntry;
           if (tcData && tcData.tagihan > 0) {
-            usedPosLabels.add(tcPos.toUpperCase());
+            usedPosKeys.add(matchedPos);
             rowTotal = tcData.tagihan;
           }
         }
@@ -618,9 +624,15 @@ const TagihanForm = () => {
       });
 
       Object.entries(posGroup).forEach(([pos, vals]) => {
-        if (pos.toUpperCase() === "PEMASUKAN DARI BANK") return;
-        if (!usedPosLabels.has(pos.toUpperCase())) {
-          calculatedTotalTagihan += vals.tagihan;
+        const posNorm = normalizePos(pos);
+        if (posNorm === "PEMASUKANDARIBANK") return;
+        if (!usedPosKeys.has(pos)) {
+          const matchedAlias = Object.values(catPosAliases).some(aliasList =>
+            aliasList.includes(posNorm)
+          );
+          if (!matchedAlias) {
+            calculatedTotalTagihan += vals.tagihan;
+          }
         }
       });
 

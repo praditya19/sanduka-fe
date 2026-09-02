@@ -104,14 +104,15 @@ export default function KeuanganNew() {
       });
 
       // Main categories and their balancing field names
-      const mainCategoryPos = ["IURAN PGRI", "SANDUKA", "DASPEN", "DERAP", "KALENDER"];
-      const balFieldMap = {
-        "IURAN PGRI": "iuranAnggota",
-        "SANDUKA": "iuranSanduka",
-        "DASPEN": "iuranDaspen",
-        "DERAP": "iuranDerap",
-        "KALENDER": "iuranKalender",
-      };
+      const normalizePos = (name) => (name || "").toString().trim().replace(/[\s\-_]+/g, "").toUpperCase();
+      const mainCategoryConfigs = [
+        { balField: "iuranAnggota", aliases: ["IURANPGRI", "IURAN", "IURANANGGOTA"] },
+        { balField: "iuranSanduka", aliases: ["SANDUKA", "IURANSANDUKA"] },
+        { balField: "iuranDaspen", aliases: ["DASPEN", "IURANDASPEN"] },
+        { balField: "iuranDerap", aliases: ["DERAP", "IURANDERAP"] },
+        { balField: "iuranKalender", aliases: ["KALENDER", "IURANKALENDER"] },
+        { balField: "iuranSumbangan", aliases: ["LAINLAIN", "LAIN", "SUMBANGAN", "IURANSUMBANGAN"] },
+      ];
 
       // Parse pemasukan organisasi for realisasi per cabang
       const orgPayments = {};
@@ -141,11 +142,15 @@ export default function KeuanganNew() {
         let realisasi = 0;
 
         // Add balancing categories not represented in transaksi_cabang
-        const tcPositions = new Set(cabangTransData.filter(t => (t.cabang || "").trim().toUpperCase() === cabang).map(t => (t.pos || "").trim().toUpperCase()));
+        const branchTcNormalized = cabangTransData
+          .filter(t => (t.cabang || "").trim().toUpperCase() === cabang)
+          .map(t => normalizePos(t.pos));
+
         if (bal) {
-          mainCategoryPos.forEach((pos) => {
-            if (!tcPositions.has(pos)) {
-              const field = balFieldMap[pos];
+          mainCategoryConfigs.forEach((cat) => {
+            const hasTc = branchTcNormalized.some((tcPos) => cat.aliases.includes(tcPos));
+            if (!hasTc) {
+              const field = cat.balField;
               if (field && bal[field] > 0) {
                 target += bal[field];
               }
