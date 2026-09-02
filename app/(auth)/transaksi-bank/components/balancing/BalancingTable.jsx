@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
-import { FaEdit, FaTrash, FaFileInvoiceDollar } from "react-icons/fa";
+import { FaEdit, FaTrash, FaFileInvoiceDollar, FaCheckCircle } from "react-icons/fa";
 
 const BalancingTable = ({
   loadingBalancing,
@@ -16,12 +16,14 @@ const BalancingTable = ({
   setSelectedId,
   setShowDeletePopup,
   handleEditClick,
+  handleLunasClick,
   month,
   year,
   setSelectedNpa,
   setSelectedBulan,
   setSelectedTahun,
   setShowTagihanModal,
+  posLainLainName,
 }) => {
   const [startIndex, setStartIndex] = useState(0);
 
@@ -112,7 +114,10 @@ const BalancingTable = ({
                     { key: "totalIuranDaspen", label: "Daspen" },
                     { key: "totalIuranDerap", label: "Derap" },
                     { key: "totalIuranKalender", label: "Kalender" },
-                    { key: "totalIuranSumbangan", label: "Lain-Lain" },
+                    {
+                      key: "totalIuranSumbangan",
+                      label: posLainLainName ? `Lain-Lain (${posLainLainName})` : "Lain-Lain",
+                    },
                     { key: "totalIuran", label: "Total Keuangan" },
                     { key: "potongan", label: "Potongan" },
                     { key: "selisih", label: "Selisih" },
@@ -211,22 +216,40 @@ const BalancingTable = ({
                       </td>
 
                       <td className="px-4 py-3 text-center whitespace-nowrap">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            item.keterangan === "Sukses"
-                              ? "bg-emerald-100 text-emerald-800"
-                              : item.keterangan === "Tunai"
-                                ? "bg-amber-100 text-amber-800"
-                                : "bg-rose-100 text-rose-800"
-                          }`}
-                        >
-                          {item.keterangan || "-"}
-                        </span>
+                        <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                          {item.statusPembayaran === "LUNAS" && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                              ✓ LUNAS
+                            </span>
+                          )}
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              item.keterangan === "Sukses"
+                                ? "bg-emerald-100 text-emerald-800"
+                                : item.keterangan === "Tunai"
+                                  ? "bg-amber-100 text-amber-800"
+                                  : "bg-rose-100 text-rose-800"
+                            }`}
+                          >
+                            {item.keterangan || "-"}
+                          </span>
+                        </div>
                       </td>
 
                       {(cekRole === "SUPERADMIN" || cekRole === "ADMIN") && (
                         <td className="px-4 py-3 text-center whitespace-nowrap">
                           <div className="flex items-center justify-center gap-2">
+                            {/* Tombol Set Lunas (Tampil jika belum lunas) */}
+                            {item.statusPembayaran !== "LUNAS" && (
+                              <button
+                                onClick={() => handleLunasClick?.(item)}
+                                className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors duration-150"
+                                title="Tandai Lunas"
+                              >
+                                <FaCheckCircle className="w-4 h-4" />
+                              </button>
+                            )}
+
                             {/* Khusus SUPERADMIN */}
                             {cekRole === "SUPERADMIN" && (
                               <>

@@ -46,14 +46,16 @@ export default function RekapitulasiSection() {
     if (!bulanLabel) return;
     setLoading(true);
     try {
-      const [resCabang, resIuran, resDaspen, resDerap, resKalender, resAnggota, resHut] = await Promise.all([
+      const [resCabang, resIuran, resDaspen, resDerap, resKalender, resAnggota, resHut, resTargetLain, resPos] = await Promise.all([
         GlobalApi.getCabang(),
         GlobalApi.getRekapByPeriode(bulanLabel, selectedYear),
         GlobalApi.getRekapDaspenByPeriode(bulanLabel, selectedYear),
         GlobalApi.getRekapDerapByPeriode(bulanLabel, selectedYear),
         GlobalApi.getRekapKalenderByPeriode(bulanLabel, selectedYear),
-        GlobalApi.getIuranAnggotaAll(selectedYear, selectedMonth),
-        GlobalApi.getTotalIuranSumbanganHut(selectedYear, selectedMonth),
+        GlobalApi.getIuranAnggotaAll(bulanLabel, selectedYear).catch(() => ({ data: [] })),
+        GlobalApi.getTotalIuranSumbanganHut(selectedYear, selectedMonth).catch(() => ({ data: [] })),
+        GlobalApi.getTableTargetLainLain(bulanLabel, selectedYear, "").catch(() => ({ data: [] })),
+        GlobalApi.getPosLainLain().catch(() => ({ data: [] })),
       ]);
 
       const cabangs = (resCabang.data || []).sort((a, b) => a.kecamatan.localeCompare(b.kecamatan));
@@ -65,6 +67,18 @@ export default function RekapitulasiSection() {
       const kalenderList = Array.isArray(resKalender) ? resKalender : resKalender?.data || [];
       const anggotaList = Array.isArray(resAnggota) ? resAnggota : resAnggota?.data || [];
       const hutList = Array.isArray(resHut) ? resHut : resHut?.data || [];
+      const targetLainList = Array.isArray(resTargetLain) ? resTargetLain : resTargetLain?.data || [];
+      const posList = Array.isArray(resPos) ? resPos : resPos?.data || [];
+
+      const matchedPos = posList.find((p) => {
+        const pBulan = (p.bulan || "").trim().toLowerCase();
+        const pTahun = String(p.tahun || "").trim();
+        return (
+          (!pBulan || pBulan === bulanLabel.toLowerCase()) &&
+          (!pTahun || pTahun === String(selectedYear))
+        );
+      }) || posList[0];
+      const posNominal = toNumber(matchedPos?.nominal || 0);
 
       const normalize = (s) => (s || "").trim().toUpperCase();
 
@@ -73,6 +87,7 @@ export default function RekapitulasiSection() {
       for (const r of daspenList) { const key = normalize(r.cabang); if (!byCabang[key]) byCabang[key] = {}; byCabang[key].daspen = r; }
       for (const r of derapList) { const key = normalize(r.cabang); if (!byCabang[key]) byCabang[key] = {}; byCabang[key].derap = r; }
       for (const r of kalenderList) { const key = normalize(r.cabang); if (!byCabang[key]) byCabang[key] = {}; byCabang[key].kalender = r; }
+      for (const r of targetLainList) { const key = normalize(r.cabang); if (!byCabang[key]) byCabang[key] = {}; byCabang[key].targetLain = r; }
 
       const lainByCabang = {};
       for (const r of anggotaList) {
@@ -84,13 +99,14 @@ export default function RekapitulasiSection() {
       const hutByCabang = {};
       for (const r of hutList) {
         const key = normalize(r.cabang);
-        hutByCabang[key] = toNumber(r.totalHut);
+        hutByCabang[key] = toNumber(r.totalHut || r.nominal || 0);
       }
 
       const merged = cabangs.map((c, idx) => {
         const key = normalize(c.kecamatan);
         const d = byCabang[key] || {};
 
+        const anggota = toNumber(d.iuran?.totalAnggota);
         const iuranDefault = toNumber(d.iuran?.cabangIuran);
         const iuranTambahan = toNumber(d.iuran?.tambahanCabang);
         const iuranTotal = iuranDefault + iuranTambahan;
@@ -107,8 +123,18 @@ export default function RekapitulasiSection() {
         const kalenderTambahan = toNumber(d.kalender?.tambahanCabang);
         const kalenderTotal = kalenderDefault + kalenderTambahan;
 
-        const hutDefault = toNumber(hutByCabang[key]);
+        // HUT calculation from iuran_sumbangan_hut or target_lain_lain or pos rate fallback
+        let hutDefault = toNumber(hutByCabang[key]);
+        if (hutDefault === 0 && d.targetLain) {
+          const tJumlah = toNumber(d.targetLain.jumlah || 0);
+          const tNom = posNominal || toNumber(d.targetLain.nominal || 0) || 10000;
+          hutDefault = toNumber(d.targetLain.total) || toNumber(d.targetLain.perolehanKabupaten) || (tJumlah * tNom);
+        }
+        if (hutDefault === 0 && posNominal > 0 && anggota > 0) {
+          hutDefault = posNominal * anggota;
+        }
         const hutTambahan = 0;
+
         const lainDefault = toNumber(lainByCabang[key]);
         const lainTambahan = 0;
 

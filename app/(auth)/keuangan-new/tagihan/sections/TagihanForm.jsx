@@ -252,6 +252,32 @@ const TagihanForm = () => {
 
         const targetRealisasiFinal = targetRealisasi + pemasukanBankTotal;
 
+        let hutSum = 0;
+        let lainnyaSum = 0;
+        Object.entries(posMap).forEach(([k, v]) => {
+          const norm = k.replace(/[\s\-_]+/g, "").toUpperCase();
+          if (
+            norm === "HUT" ||
+            norm.includes("HUT") ||
+            norm.includes("SUMBANGAN")
+          ) {
+            hutSum += v;
+          } else if (
+            ![
+              "DASPEN",
+              "IURAN",
+              "IURANPGRI",
+              "STUDITIRU",
+              "DERAP",
+              "SANDUKA",
+              "KALENDER",
+            ].includes(norm) &&
+            !excludedPos.includes(k)
+          ) {
+            lainnyaSum += v;
+          }
+        });
+
         return {
           ...g,
           totalTagihan: tagihanWithoutExcluded,
@@ -262,11 +288,8 @@ const TagihanForm = () => {
           derap: posMap['DERAP'] || 0,
           sanduka: posMap['SANDUKA'] || 0,
           kalender: posMap['KALENDER'] || 0,
-          hut: posMap['HUT'] || 0,
-          lainnya: Object.entries(posMap).reduce((sum, [k, v]) => {
-            if (!['DASPEN', 'IURAN', 'IURAN PGRI', 'STUDI TIRU', 'DERAP', 'SANDUKA', 'KALENDER', 'HUT'].includes(k) && !excludedPos.includes(k)) sum += v;
-            return sum;
-          }, 0),
+          hut: hutSum,
+          lainnya: lainnyaSum,
           targetRealisasi: targetRealisasiFinal,
           selisih: targetRealisasiFinal - tagihanWithoutExcluded
         };
@@ -705,8 +728,49 @@ const TagihanForm = () => {
   };
 
   const fetchPeruntukanCabang = async (cabang, bulanVal, tahun, itemIndex, pos) => {
+    if (!cabang || !bulanVal || !tahun || !pos) return;
+    const posNorm = pos.toUpperCase();
+
+    if (posNorm.includes("HUT") || posNorm.includes("LAIN") || posNorm.includes("SUMBANGAN")) {
+      try {
+        const namaBulan = monthValueToLabel[bulanVal];
+        const [resTarget, resHut] = await Promise.all([
+          GlobalApi.getTableTargetLainLain(namaBulan, tahun, cabang).catch(() => []),
+          GlobalApi.getTotalIuranSumbanganHut(tahun, Number(bulanVal)).catch(() => []),
+        ]);
+        const targetList = Array.isArray(resTarget) ? resTarget : resTarget?.data || [];
+        const hutList = Array.isArray(resHut) ? resHut : resHut?.data || [];
+        const cNorm = (cabang || "").trim().toUpperCase();
+
+        const hutItem = hutList.find(h => (h.cabang || "").trim().toUpperCase() === cNorm);
+        if (hutItem && Number(hutItem.totalHut || 0) > 0) {
+          setFormCabang(prev => {
+            const newItems = [...prev.items];
+            newItems[itemIndex] = { ...newItems[itemIndex], tagihan: Number(hutItem.totalHut) };
+            return { ...prev, items: newItems };
+          });
+          return;
+        }
+
+        const targetItem = targetList.find(t => (t.cabang || "").trim().toUpperCase() === cNorm);
+        if (targetItem) {
+          const val = Number(targetItem.total || targetItem.perolehanKabupaten || (Number(targetItem.jumlah || 0) * 10000) || 0);
+          if (val > 0) {
+            setFormCabang(prev => {
+              const newItems = [...prev.items];
+              newItems[itemIndex] = { ...newItems[itemIndex], tagihan: val };
+              return { ...prev, items: newItems };
+            });
+            return;
+          }
+        }
+      } catch (e) {
+        console.error("Error fetching hut/lain peruntukan:", e);
+      }
+    }
+
     const cfg = PERUNTUKAN_CONFIG[pos];
-    if (!cfg || !cabang || !bulanVal || !tahun) return;
+    if (!cfg) return;
     try {
       const namaBulan = monthValueToLabel[bulanVal];
       if (!namaBulan) return;

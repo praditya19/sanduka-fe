@@ -96,8 +96,14 @@ const LainLainSection = () => {
   const [loadingTambahPos, setLoadingTambahPos] = useState(false);
   const [posTableData, setPosTableData] = useState([]);
   const [isEditingPos, setIsEditingPos] = useState(false);
-  const [editingPosId, setEditingPosId] = useState(null);
-  const totalPerUnit = besaran.kabupaten;
+  const selectedPos = (posTableData || []).find((p) => p.nama === targetKeterangan);
+  const totalPerUnit = selectedPos
+    ? parseInt(selectedPos.peruntukanKabupaten, 10) ||
+      (parseInt(selectedPos.peruntukanProvinsi, 10) || 0) +
+        (parseInt(selectedPos.peruntukanKabupaten, 10) || 0) +
+        (parseInt(selectedPos.peruntukanCabang, 10) || 0) ||
+      besaran.kabupaten
+    : besaran.kabupaten;
   const totalAkhir = totalPerUnit * (parseInt(jumlahPesanan, 10) || 0);
 
   useEffect(() => {
@@ -376,12 +382,14 @@ const LainLainSection = () => {
 
   const handleUpdateTarget = async () => {
     try {
+      const posObj = (posTableData || []).find((p) => p.nama === editTargetData.keterangan);
+      const perKab = posObj ? parseInt(posObj.peruntukanKabupaten, 10) || totalPerUnit : totalPerUnit;
       await GlobalApi.updateTargetLainLain(editingTargetRow, {
         cabang: editTargetData.cabang,
         jumlah: String(editTargetData.jumlah),
         bulan: editTargetData.bulan,
         tahun: String(editTargetData.tahun),
-        perolehanKabupaten: editTargetData.jumlah * besaran.kabupaten,
+        perolehanKabupaten: editTargetData.jumlah * perKab,
       });
       toast.success("Target Lain-lain berhasil diperbarui!");
       setShowEditTargetModal(false);

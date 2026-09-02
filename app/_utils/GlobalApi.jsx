@@ -1549,6 +1549,19 @@ const deleteBalancingById = async (id) => {
   }
 };
 
+const setPelunasanBalancing = async (payload) => {
+  try {
+    const response = await axiosClient.post(
+      "/api/target-iuran-anggota/set-lunas",
+      payload,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error set lunas balancing:", error);
+    throw error;
+  }
+};
+
 const deleteBalancing = (tagihanUntukBulan) => {
   return axiosClient.delete(
     `/api/target-iuran-anggota/by-bulan?tagihanUntukBulan=${tagihanUntukBulan}`,
@@ -4749,6 +4762,7 @@ export default {
   getPengeluaranUmumById,
   getBalancingById,
   updateBalancing,
+  setPelunasanBalancing,
   updatePengeluaranUmum,
   deletePengeluaranUmum,
   deleteBalancing,

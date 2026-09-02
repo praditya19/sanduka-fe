@@ -19,6 +19,7 @@ import UploadModal from "./components/UploadModal";
 import TebNavigation from "./components/TebNavigation";
 import EditBalancingModal from "./components/EditBalancingModal";
 import DeleteModal from "./components/DeleteModal";
+import LunasBalancingModal from "./components/LunasBalancingModal";
 import TagihanModal from "./components/TagihanModal";
 import TagihanView from "./components/TagihanView";
 // component potongan
@@ -166,6 +167,8 @@ export default function BankTransactionPage() {
   const [filteredBalancingData, setFilteredBalancingData] = useState([]);
   const [editData, setEditData] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showLunasModal, setShowLunasModal] = useState(false);
+  const [selectedLunasItem, setSelectedLunasItem] = useState(null);
 
   const formatRupiah = (angka) => {
     const parsed = Number(angka);
@@ -239,6 +242,7 @@ export default function BankTransactionPage() {
     handleSort,
     handleSaveEdit,
     handleEditClick,
+    handleConfirmLunas,
     paymentNote,
     getBalancingdata,
     importLoader,
@@ -248,6 +252,7 @@ export default function BankTransactionPage() {
     handleDelete,
     deleteLoader,
     deleteProgress,
+    posLainLainName,
   } = useBalancing({
     role: cekRole,
     selectedCabang: dropdownFilters.selectedCabang,
@@ -261,6 +266,11 @@ export default function BankTransactionPage() {
     setShowDeleteBalancing,
     setNotification,
   });
+
+  const handleLunasClick = (item) => {
+    setSelectedLunasItem(item);
+    setShowLunasModal(true);
+  };
 
   const {
     dataIuran,
@@ -702,24 +712,26 @@ const [selectedBulan, setSelectedBulan] = useState(null);
                   updatedRowRef={updatedRowRef}
                   formatRupiah={formatRupiah}
                   handleEditClick={handleEditClick}
+                  handleLunasClick={handleLunasClick}
                   setSelectedId={setSelectedId}
                   setShowDeletePopup={setShowDeletePopup}
-                   month={month}
-  year={year}
-  setSelectedNpa={setSelectedNpa}
-  setSelectedBulan={setSelectedBulan}
-  setSelectedTahun={setSelectedTahun}
-  setShowTagihanModal={setShowTagihanModal}
+                  month={month}
+                  year={year}
+                  setSelectedNpa={setSelectedNpa}
+                  setSelectedBulan={setSelectedBulan}
+                  setSelectedTahun={setSelectedTahun}
+                  setShowTagihanModal={setShowTagihanModal}
+                  posLainLainName={posLainLainName}
                 />
               <TagihanModal
-  isOpen={showTagihanModal}
-  onClose={() => setShowTagihanModal(false)}
-  npa={selectedNpa}
-  bulan={selectedBulan}
-                  tahun={selectedTahun}
-                  generateSuratKuasa={generateSuratKuasa}
-      generateTagihanPDF={generateTagihanPDF}
-                />
+                isOpen={showTagihanModal}
+                onClose={() => setShowTagihanModal(false)}
+                npa={selectedNpa}
+                bulan={selectedBulan}
+                tahun={selectedTahun}
+                generateSuratKuasa={generateSuratKuasa}
+                generateTagihanPDF={generateTagihanPDF}
+              />
               </div>
             </div>
           )}
@@ -799,6 +811,20 @@ const [selectedBulan, setSelectedBulan] = useState(null);
           onCancel={() => setShowDeletePopup(false)}
         />
       )}
+
+      <LunasBalancingModal
+        isOpen={showLunasModal}
+        onClose={() => {
+          setShowLunasModal(false);
+          setSelectedLunasItem(null);
+        }}
+        item={selectedLunasItem}
+        monthName={month !== "all" ? (bulanList.find((b) => b.value === month)?.label || "") : ""}
+        year={year !== "all" ? year : ""}
+        posLainLainName={posLainLainName}
+        onConfirm={handleConfirmLunas}
+        formatRupiah={formatRupiah}
+      />
     </div>
   );
 }

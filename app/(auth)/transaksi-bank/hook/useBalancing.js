@@ -26,6 +26,24 @@ const useBalancing = ({
   const [resetUntukBulan, setResetUntukBulan] = useState("");
   const [deleteLoader, setDeleteLoader] = useState(false);
   const [deleteProgress, setDeleteProgress] = useState(0);
+  const [posLainLainName, setPosLainLainName] = useState("");
+
+  const fetchPosLainLain = async () => {
+    try {
+      const res = await GlobalApi.getPosLainLain();
+      const list = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+      if (list.length > 0) {
+        const found = list.find((p) => p && p.nama);
+        if (found) setPosLainLainName(found.nama);
+      }
+    } catch (err) {
+      console.warn("Gagal ambil pos lain-lain:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchPosLainLain();
+  }, []);
 
   const getBalancingdata = async () => {
     // ⛔ hanya ADMIN yang wajib punya cabang
@@ -286,6 +304,40 @@ const useBalancing = ({
     searchBalancing,
   ]);
 
+  const handleConfirmLunas = async (item) => {
+    try {
+      const parsedYear = year !== "all" ? Number(year) : null;
+      const parsedMonth = month !== "all" ? Number(month) : null;
+
+      await GlobalApi.setPelunasanBalancing({
+        id: item.id,
+        npa: item.npa,
+        rekening: item.rekening,
+        namaAnggota: item.nama,
+        cabang: item.cabang,
+        unitKerja: item.unitKerja,
+        nominal: item.totalIuran,
+        bulan: parsedMonth,
+        tahun: parsedYear,
+        keterangan: "Sukses",
+      });
+
+      setNotification({
+        type: "success",
+        message: `Status iuran untuk ${item.nama} berhasil ditandai LUNAS!`,
+      });
+
+      await getBalancingdata();
+    } catch (err) {
+      console.error("Gagal menandai lunas:", err);
+      setNotification({
+        type: "error",
+        message: err?.response?.data?.message || "Gagal menandai lunas.",
+      });
+      throw err;
+    }
+  };
+
   return {
     dataBalancing,
     loadingBalancing,
@@ -301,6 +353,7 @@ const useBalancing = ({
     handleDeleteClick,
     handleEditClick,
     handleSaveEdit,
+    handleConfirmLunas,
     handleImportBalancing,
     handleDelete,
     handleSort,
@@ -314,6 +367,7 @@ const useBalancing = ({
     setResetUntukBulan,
     deleteLoader,
     deleteProgress,
+    posLainLainName,
   };
 };
 export default useBalancing;

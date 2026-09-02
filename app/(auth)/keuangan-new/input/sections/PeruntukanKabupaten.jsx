@@ -42,6 +42,7 @@ export default function PeruntukanKabupatenSection() {
   const [mergedData, setMergedData] = useState([]);
   const [cabangList, setCabangList] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [posLainLainName, setPosLainLainName] = useState("");
 
   // Read role from session
   useEffect(() => {
@@ -57,12 +58,15 @@ export default function PeruntukanKabupatenSection() {
     if (!bulanLabel) return;
     setLoading(true);
     try {
-      const [resCabang, resIuran, resDaspen, resDerap, resKalender] = await Promise.all([
+      const [resCabang, resIuran, resDaspen, resDerap, resKalender, resLain, resPos, resHut] = await Promise.all([
         GlobalApi.getCabang(),
         GlobalApi.getRekapByPeriode(bulanLabel, selectedYear),
         GlobalApi.getRekapDaspenByPeriode(bulanLabel, selectedYear),
         GlobalApi.getRekapDerapByPeriode(bulanLabel, selectedYear),
         GlobalApi.getRekapKalenderByPeriode(bulanLabel, selectedYear),
+        GlobalApi.getTableTargetLainLain(bulanLabel, selectedYear, "").catch(() => ({ data: [] })),
+        GlobalApi.getPosLainLain().catch(() => ({ data: [] })),
+        GlobalApi.getTotalIuranSumbanganHut(selectedYear, selectedMonth).catch(() => ({ data: [] })),
       ]);
 
       const cabangs = (resCabang.data || []).sort((a, b) => a.kecamatan.localeCompare(b.kecamatan));
@@ -72,6 +76,22 @@ export default function PeruntukanKabupatenSection() {
       const daspenList = Array.isArray(resDaspen) ? resDaspen : resDaspen?.data || [];
       const derapList = Array.isArray(resDerap) ? resDerap : resDerap?.data || [];
       const kalenderList = Array.isArray(resKalender) ? resKalender : resKalender?.data || [];
+      const lainList = Array.isArray(resLain) ? resLain : resLain?.data || [];
+      const posList = Array.isArray(resPos) ? resPos : resPos?.data || [];
+      const hutList = Array.isArray(resHut) ? resHut : resHut?.data || [];
+
+      // Check if pos_lain_lain has configured peruntukanKabupaten rate
+      const matchedPos = posList.find((p) => {
+        const pBulan = (p.bulan || "").trim().toLowerCase();
+        const pTahun = String(p.tahun || "").trim();
+        return (
+          (!pBulan || pBulan === bulanLabel.toLowerCase()) &&
+          (!pTahun || pTahun === String(selectedYear))
+        );
+      }) || posList[0];
+      const posRateKab = toNumber(matchedPos?.peruntukanKabupaten || 0);
+      const matchedPosName = matchedPos?.nama || "";
+      setPosLainLainName(matchedPosName);
 
       const normalize = (s) => (s || "").trim().toUpperCase();
 
@@ -96,6 +116,17 @@ export default function PeruntukanKabupatenSection() {
         if (!byCabang[key]) byCabang[key] = {};
         byCabang[key].kalender = r;
       }
+      for (const r of lainList) {
+        const key = normalize(r.cabang);
+        if (!byCabang[key]) byCabang[key] = {};
+        byCabang[key].lain = r;
+      }
+
+      const hutByCabang = {};
+      for (const r of hutList) {
+        const key = normalize(r.cabang);
+        hutByCabang[key] = toNumber(r.totalHut || r.nominal || 0);
+      }
 
       const merged = cabangs.map((c, idx) => {
         const key = normalize(c.kecamatan);
@@ -104,10 +135,23 @@ export default function PeruntukanKabupatenSection() {
         const anggota = toNumber(d.iuran?.totalAnggota);
         const iuranKabupaten = toNumber(d.iuran?.kabupaten);
         const daspenKabupaten = toNumber(d.daspen?.kabupaten || d.daspen?.peruntukanKabupaten);
-        const derapKabupaten = toNumber(d.derap?.peruntukanKabupaten);
-        const kalenderKabupaten = toNumber(d.kalender?.peruntukanKabupaten);
+        const derapKabupaten = toNumber(d.derap?.peruntukanKabupaten || d.derap?.kabupaten || d.derap?.perolehanKabupaten);
+        const kalenderKabupaten = toNumber(d.kalender?.peruntukanKabupaten || d.kalender?.kabupaten || d.kalender?.perolehanKabupaten);
 
-        const totalPeruntukan = iuranKabupaten + daspenKabupaten + derapKabupaten + kalenderKabupaten;
+        // Support target_lain_lain.perolehanKabupaten, pos rate fallback, and hut sumbangan
+        const targetLainKab = toNumber(d.lain?.perolehanKabupaten || d.lain?.peruntukanKabupaten || d.lain?.kabupaten);
+        const hutKab = toNumber(hutByCabang[key]);
+
+        let lainKabupaten = targetLainKab;
+        if (lainKabupaten === 0 && posRateKab > 0 && anggota > 0) {
+          lainKabupaten = posRateKab * anggota;
+        }
+        if (lainKabupaten === 0 && hutKab > 0) {
+          lainKabupaten = hutKab;
+        }
+
+        const totalPeruntukan =
+          iuranKabupaten + daspenKabupaten + derapKabupaten + kalenderKabupaten + lainKabupaten;
 
         return {
           no: idx + 1,
@@ -117,6 +161,7 @@ export default function PeruntukanKabupatenSection() {
           daspenKabupaten,
           derapKabupaten,
           kalenderKabupaten,
+          lainKabupaten,
           totalPeruntukan,
         };
       });
@@ -128,7 +173,7 @@ export default function PeruntukanKabupatenSection() {
     } finally {
       setLoading(false);
     }
-  }, [bulanLabel, selectedYear]);
+  }, [bulanLabel, selectedYear, selectedMonth]);
 
   useEffect(() => {
     fetchAll();
@@ -154,6 +199,7 @@ export default function PeruntukanKabupatenSection() {
         acc.daspenKabupaten += r.daspenKabupaten;
         acc.derapKabupaten += r.derapKabupaten;
         acc.kalenderKabupaten += r.kalenderKabupaten;
+        acc.lainKabupaten += r.lainKabupaten;
         acc.totalPeruntukan += r.totalPeruntukan;
         return acc;
       },
@@ -163,6 +209,7 @@ export default function PeruntukanKabupatenSection() {
         daspenKabupaten: 0,
         derapKabupaten: 0,
         kalenderKabupaten: 0,
+        lainKabupaten: 0,
         totalPeruntukan: 0,
       }
     );
@@ -179,6 +226,7 @@ export default function PeruntukanKabupatenSection() {
         "DASPEN (Kabupaten)": r.daspenKabupaten,
         "DERAP Guru (Kabupaten)": r.derapKabupaten,
         "Kalender (Kabupaten)": r.kalenderKabupaten,
+        "Lain-Lain (Kabupaten)": r.lainKabupaten,
         "Total Peruntukan Kabupaten": r.totalPeruntukan,
       }));
 
@@ -190,6 +238,7 @@ export default function PeruntukanKabupatenSection() {
         "DASPEN (Kabupaten)": totals.daspenKabupaten,
         "DERAP Guru (Kabupaten)": totals.derapKabupaten,
         "Kalender (Kabupaten)": totals.kalenderKabupaten,
+        "Lain-Lain (Kabupaten)": totals.lainKabupaten,
         "Total Peruntukan Kabupaten": totals.totalPeruntukan,
       });
 
@@ -294,7 +343,7 @@ export default function PeruntukanKabupatenSection() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <div className="p-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-3xl text-white shadow-lg shadow-blue-500/20">
           <div className="flex items-center justify-between opacity-80 mb-2">
             <span className="text-[11px] font-bold uppercase tracking-wider">Iuran PGRI (Kab)</span>
@@ -322,7 +371,18 @@ export default function PeruntukanKabupatenSection() {
           <p className="text-[10px] text-amber-100 mt-1 font-medium">Alokasi kalender kabupaten</p>
         </div>
 
-        <div className="p-4 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-3xl text-white shadow-lg shadow-emerald-600/20">
+        <div className="p-4 bg-gradient-to-br from-teal-500 to-teal-600 rounded-3xl text-white shadow-lg shadow-teal-500/20">
+          <div className="flex items-center justify-between opacity-80 mb-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider">Lain-Lain (Kab)</span>
+            <FaCoins className="text-sm" />
+          </div>
+          <p className="text-[10px] text-teal-100 font-bold mb-1 truncate">
+            {posLainLainName || ""}
+          </p>
+          <p className="text-base md:text-xl font-extrabold">{formatRp(totals.lainKabupaten)}</p>
+        </div>
+
+        <div className="p-4 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-3xl text-white shadow-lg shadow-emerald-600/20 col-span-2 md:col-span-1">
           <div className="flex items-center justify-between opacity-80 mb-2">
             <span className="text-[11px] font-bold uppercase tracking-wider">Total Peruntukan Kab</span>
             <FaBuilding className="text-sm" />
@@ -361,6 +421,12 @@ export default function PeruntukanKabupatenSection() {
                 <th className="py-3 px-4 text-right">DASPEN (Kab)</th>
                 <th className="py-3 px-4 text-right">DERAP (Kab)</th>
                 <th className="py-3 px-4 text-right">Kalender (Kab)</th>
+                <th className="py-3 px-4 text-right">
+                  <div>Lain-Lain (Kab)</div>
+                  <div className="text-[9px] font-semibold text-teal-600 capitalize">
+                    {posLainLainName || ""}
+                  </div>
+                </th>
                 <th className="py-3 px-4 text-right font-extrabold text-blue-700 bg-blue-50/40">
                   Total Peruntukan Kab
                 </th>
@@ -372,7 +438,7 @@ export default function PeruntukanKabupatenSection() {
                   .fill(0)
                   .map((_, idx) => (
                     <tr key={idx} className="animate-pulse">
-                      <td colSpan={8} className="py-4 px-4">
+                      <td colSpan={9} className="py-4 px-4">
                         <div className="h-4 bg-slate-100 rounded-lg w-full" />
                       </td>
                     </tr>
@@ -402,6 +468,9 @@ export default function PeruntukanKabupatenSection() {
                     <td className="py-3 px-4 text-right font-semibold text-slate-700">
                       {formatRp(row.kalenderKabupaten)}
                     </td>
+                    <td className="py-3 px-4 text-right font-semibold text-slate-700">
+                      {formatRp(row.lainKabupaten)}
+                    </td>
                     <td className="py-3 px-4 text-right font-extrabold text-blue-600 bg-blue-50/30">
                       {formatRp(row.totalPeruntukan)}
                     </td>
@@ -409,7 +478,7 @@ export default function PeruntukanKabupatenSection() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-400 font-bold">
+                  <td colSpan={9} className="py-12 text-center text-slate-400 font-bold">
                     Tidak ada data peruntukan kabupaten untuk periode ini.
                   </td>
                 </tr>
@@ -428,6 +497,7 @@ export default function PeruntukanKabupatenSection() {
                   <td className="py-3 px-4 text-right">{formatRp(totals.daspenKabupaten)}</td>
                   <td className="py-3 px-4 text-right">{formatRp(totals.derapKabupaten)}</td>
                   <td className="py-3 px-4 text-right">{formatRp(totals.kalenderKabupaten)}</td>
+                  <td className="py-3 px-4 text-right">{formatRp(totals.lainKabupaten)}</td>
                   <td className="py-3 px-4 text-right font-black text-amber-400 bg-slate-800">
                     {formatRp(totals.totalPeruntukan)}
                   </td>
