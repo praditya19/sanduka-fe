@@ -33,7 +33,37 @@ const useBalancing = ({
       const res = await GlobalApi.getPosLainLain();
       const list = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
       if (list.length > 0) {
-        const found = list.find((p) => p && p.nama);
+        const bulanIndo = [
+          "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+          "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+        ];
+        const monthNum = month !== "all" ? Number(month) : new Date().getMonth() + 1;
+        const yearNum = year !== "all" ? String(year) : String(new Date().getFullYear());
+        const bulanName = bulanIndo[monthNum - 1] || "";
+
+        const found =
+          list.find((p) => {
+            const pBulan = (p.bulan || "").trim().toLowerCase();
+            const pTahun = String(p.tahun || "").trim();
+            return (
+              (!pBulan || pBulan === bulanName.toLowerCase()) &&
+              (!pTahun || pTahun === yearNum) &&
+              (p.nama || "").toUpperCase().includes("HUT")
+            );
+          }) ||
+          list.find((p) => {
+            const pBulan = (p.bulan || "").trim().toLowerCase();
+            const pTahun = String(p.tahun || "").trim();
+            return pBulan === bulanName.toLowerCase() && pTahun === yearNum;
+          }) ||
+          list.find((p) => {
+            const pBulan = (p.bulan || "").trim().toLowerCase();
+            return pBulan === bulanName.toLowerCase();
+          }) ||
+          list.find((p) => (p.nama || "").toUpperCase().includes("HUT")) ||
+          list.find((p) => String(p.tahun || "").trim() === yearNum) ||
+          list[0];
+
         if (found) setPosLainLainName(found.nama);
       }
     } catch (err) {

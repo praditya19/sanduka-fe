@@ -111,7 +111,7 @@ const TagihanView = ({ dataIuran, dataAnggota, posLainLainName, loading }) => {
             <tr><td>5.</td><td>Kalender</td><td>:</td><td>Rp. ${
               dataIuran?.kalender || "............................."
             }</td></tr>
-            <tr><td>6.</td><td>${posLainLainName ? `Lain - Lain (${posLainLainName})` : "Lain - Lain"}</td><td>:</td><td>Rp. ${
+            <tr><td>6.</td><td>${posLainLainName || "HUT 81 PGRI"}</td><td>:</td><td>Rp. ${
               dataIuran?.sumbangan ? dataIuran.sumbangan.toLocaleString("id-ID") : "............................."
             }</td></tr>
             <tr><td>7.</td><td>Total</td><td>:</td><td>Rp. ${[
@@ -231,7 +231,7 @@ const TagihanView = ({ dataIuran, dataAnggota, posLainLainName, loading }) => {
         ? `
         <tr>
           <td style="padding: 10px 5px; color: #7f8c8d;">4.</td>
-          <td style="padding: 10px 5px; color: #7f8c8d;">${posLainLainName ? `Lain-Lain (${posLainLainName})` : "Sumbangan"}</td>
+          <td style="padding: 10px 5px; color: #7f8c8d;">${posLainLainName || "HUT 81 PGRI"}</td>
           <td style="width: 20px; padding: 10px 5px; color: #7f8c8d;">:</td>
           <td style="text-align: right; padding: 10px 5px;">Rp. ${dataIuran.sumbangan?.toLocaleString("id-ID") || "0"}</td>
         </tr>
@@ -702,7 +702,7 @@ const TagihanView = ({ dataIuran, dataAnggota, posLainLainName, loading }) => {
                                   <div className="flex items-center">
                                     <div className="w-3 h-3 bg-pink-500 rounded-full mr-3"></div>
                                     <span className="text-gray-700 font-medium">
-                                      {posLainLainName ? `Lain-Lain (${posLainLainName})` : "Sumbangan"}
+                                      {posLainLainName || "HUT 81 PGRI"}
                                     </span>
                                   </div>
                                   <span className="font-semibold text-gray-900">

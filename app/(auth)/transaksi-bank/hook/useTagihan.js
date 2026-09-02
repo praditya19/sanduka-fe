@@ -33,11 +33,37 @@ const useTagihan = (npa, bulan, tahun, token) => {
 
       const list = Array.isArray(res) ? res : res?.data || [];
       const balancing = list[0];
+
+      const bulanIndo = [
+        "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+        "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+      ];
+      const bulanName = bulanIndo[Number(bulan) - 1] || "";
+
       const posList = Array.isArray(resPos) ? resPos : resPos?.data || [];
-      const matchedPos = posList.find((p) => {
-        const pTahun = String(p.tahun || "").trim();
-        return !pTahun || pTahun === String(tahun);
-      }) || posList[0];
+      const matchedPos =
+        posList.find((p) => {
+          const pBulan = (p.bulan || "").trim().toLowerCase();
+          const pTahun = String(p.tahun || "").trim();
+          return (
+            (!pBulan || pBulan === bulanName.toLowerCase()) &&
+            (!pTahun || pTahun === String(tahun)) &&
+            (p.nama || "").toUpperCase().includes("HUT")
+          );
+        }) ||
+        posList.find((p) => {
+          const pBulan = (p.bulan || "").trim().toLowerCase();
+          const pTahun = String(p.tahun || "").trim();
+          return pBulan === bulanName.toLowerCase() && pTahun === String(tahun);
+        }) ||
+        posList.find((p) => {
+          const pBulan = (p.bulan || "").trim().toLowerCase();
+          return pBulan === bulanName.toLowerCase();
+        }) ||
+        posList.find((p) => (p.nama || "").toUpperCase().includes("HUT")) ||
+        posList.find((p) => String(p.tahun || "").trim() === String(tahun)) ||
+        posList[0];
+
       const posName = matchedPos?.nama || "HUT 81 PGRI";
       setPosLainLainName(posName);
 
