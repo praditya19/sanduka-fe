@@ -143,11 +143,11 @@ export default function PeruntukanKabupatenSection() {
         const hutKab = toNumber(hutByCabang[key]);
 
         let lainKabupaten = targetLainKab;
-        if (lainKabupaten === 0 && posRateKab > 0 && anggota > 0) {
-          lainKabupaten = posRateKab * anggota;
-        }
         if (lainKabupaten === 0 && hutKab > 0) {
           lainKabupaten = hutKab;
+        }
+        if (lainKabupaten === 0 && posRateKab > 0 && anggota > 0) {
+          lainKabupaten = posRateKab * anggota;
         }
 
         const totalPeruntukan =

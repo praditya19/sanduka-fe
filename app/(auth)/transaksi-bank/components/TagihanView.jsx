@@ -1,4 +1,4 @@
-const TagihanView = ({ dataIuran, dataAnggota, loading }) => {
+const TagihanView = ({ dataIuran, dataAnggota, posLainLainName, loading }) => {
   if (loading) return <div>Loading...</div>;
   const formatTanggalLengkap = () => {
     const hariIndo = [
@@ -111,8 +111,8 @@ const TagihanView = ({ dataIuran, dataAnggota, loading }) => {
             <tr><td>5.</td><td>Kalender</td><td>:</td><td>Rp. ${
               dataIuran?.kalender || "............................."
             }</td></tr>
-            <tr><td>6.</td><td>Lain - Lain</td><td>:</td><td>Rp. ${
-              dataIuran?.sumbangan || "............................."
+            <tr><td>6.</td><td>${posLainLainName ? `Lain - Lain (${posLainLainName})` : "Lain - Lain"}</td><td>:</td><td>Rp. ${
+              dataIuran?.sumbangan ? dataIuran.sumbangan.toLocaleString("id-ID") : "............................."
             }</td></tr>
             <tr><td>7.</td><td>Total</td><td>:</td><td>Rp. ${[
               dataIuran?.pgri,
@@ -231,8 +231,9 @@ const TagihanView = ({ dataIuran, dataAnggota, loading }) => {
         ? `
         <tr>
           <td style="padding: 10px 5px; color: #7f8c8d;">4.</td>
-          <td style="padding: 10px 5px; color: #7f8c8d;">Sumbangan</td>
-          <td style="padding: 10px 5px; color: #7f8c8d;">:</td>
+          <td style="padding: 10px 5px; color: #7f8c8d;">${posLainLainName ? `Lain-Lain (${posLainLainName})` : "Sumbangan"}</td>
+          <td style="width: 20px; padding: 10px 5px; color: #7f8c8d;">:</td>
+          <td style="text-align: right; padding: 10px 5px;">Rp. ${dataIuran.sumbangan?.toLocaleString("id-ID") || "0"}</td>
         </tr>
         ${
           dataIuran.detailSumbangan?.length > 0
@@ -701,9 +702,13 @@ const TagihanView = ({ dataIuran, dataAnggota, loading }) => {
                                   <div className="flex items-center">
                                     <div className="w-3 h-3 bg-pink-500 rounded-full mr-3"></div>
                                     <span className="text-gray-700 font-medium">
-                                      Sumbangan
+                                      {posLainLainName ? `Lain-Lain (${posLainLainName})` : "Sumbangan"}
                                     </span>
                                   </div>
+                                  <span className="font-semibold text-gray-900">
+                                    Rp.{" "}
+                                    {dataIuran.sumbangan?.toLocaleString("id-ID")}
+                                  </span>
                                 </div>
 
                                 {dataIuran?.detailSumbangan?.length > 0 && (

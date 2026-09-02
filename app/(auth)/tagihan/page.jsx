@@ -14,6 +14,7 @@ export default function Tagihan() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [dataIuran, setDataIuran] = useState(null);
   const [dataAnggota, setDataAnggota] = useState(null);
+  const [posLainLainName, setPosLainLainName] = useState("");
 
   useEffect(() => {
     if (!token) {
@@ -53,34 +54,52 @@ export default function Tagihan() {
       const now = new Date();
       const bulan = now.getMonth() + 1;
       const tahun = now.getFullYear();
+      const bulanIso = `${tahun}-${String(bulan).padStart(2, "0")}-01`;
 
-      const res = await GlobalApi.getTransaksiBankBalancing(
-        null,
-        null,
-        tahun,
-        bulan,
-        null,
-        npa,
-      );
+      const [res, resHut, resPos] = await Promise.all([
+        GlobalApi.getTransaksiBankBalancing(
+          null,
+          null,
+          tahun,
+          bulan,
+          null,
+          npa,
+        ),
+        GlobalApi.getIuranSumbanganHutByNpa(npa, bulanIso).catch(() => null),
+        GlobalApi.getPosLainLain().catch(() => ({ data: [] })),
+      ]);
 
       const list = Array.isArray(res) ? res : res?.data || [];
       const balancing = list[0];
-      if (balancing) {
+      const posList = Array.isArray(resPos) ? resPos : resPos?.data || [];
+      const matchedPos = posList.find((p) => {
+        const pTahun = String(p.tahun || "").trim();
+        return !pTahun || pTahun === String(tahun);
+      }) || posList[0];
+      const posName = matchedPos?.nama || "HUT 81 PGRI";
+      setPosLainLainName(posName);
+
+      let sumbanganNominal = Number(balancing?.totalIuranSumbangan || 0);
+      if (!sumbanganNominal && resHut?.totalHut) {
+        sumbanganNominal = Number(resHut.totalHut);
+      }
+
+      if (balancing || sumbanganNominal > 0) {
         setDataIuran((prev) => ({
           ...(prev || {}),
-          pgri: balancing.totalIuranAnggota || 0,
-          sanduka: balancing.totalIuranSanduka || 0,
-          daspen: balancing.totalIuranDaspen || 0,
-          derap: balancing.totalIuranDerap || 0,
-          kalender: balancing.totalIuranKalender || 0,
-          sumbangan: balancing.totalIuranSumbangan || 0,
-          namaLengkap: balancing.nama,
-          unitKerja: balancing.unitKerja,
-          cabang: balancing.cabang,
-          jabatan: balancing.statusPegawai,
-          keterangan: balancing.keterangan,
-          potongan: balancing.potongan,
-          selisih: balancing.selisih,
+          pgri: balancing?.totalIuranAnggota || 0,
+          sanduka: balancing?.totalIuranSanduka || 0,
+          daspen: balancing?.totalIuranDaspen || 0,
+          derap: balancing?.totalIuranDerap || 0,
+          kalender: balancing?.totalIuranKalender || 0,
+          sumbangan: sumbanganNominal,
+          namaLengkap: balancing?.nama,
+          unitKerja: balancing?.unitKerja,
+          cabang: balancing?.cabang,
+          jabatan: balancing?.statusPegawai,
+          keterangan: balancing?.keterangan,
+          potongan: balancing?.potongan,
+          selisih: balancing?.selisih,
           bulan,
           tahun,
         }));
@@ -252,8 +271,8 @@ export default function Tagihan() {
             <tr><td>5.</td><td>Kalender</td><td>:</td><td>Rp. ${
               dataIuran?.kalender || "............................."
             }</td></tr>
-            <tr><td>6.</td><td>Lain - Lain</td><td>:</td><td>Rp. ${
-              dataIuran?.sumbangan || "............................."
+            <tr><td>6.</td><td>${posLainLainName ? `Lain - Lain (${posLainLainName})` : "Lain - Lain"}</td><td>:</td><td>Rp. ${
+              dataIuran?.sumbangan ? dataIuran.sumbangan.toLocaleString("id-ID") : "............................."
             }</td></tr>
             <tr><td>7.</td><td>Total</td><td>:</td><td>Rp. ${[
               dataIuran?.pgri,
@@ -372,8 +391,9 @@ export default function Tagihan() {
         ? `
         <tr>
           <td style="padding: 10px 5px; color: #7f8c8d;">4.</td>
-          <td style="padding: 10px 5px; color: #7f8c8d;">Sumbangan</td>
-          <td style="padding: 10px 5px; color: #7f8c8d;">:</td>
+          <td style="padding: 10px 5px; color: #7f8c8d;">${posLainLainName ? `Lain-Lain (${posLainLainName})` : "Sumbangan"}</td>
+          <td style="width: 20px; padding: 10px 5px; color: #7f8c8d;">:</td>
+          <td style="text-align: right; padding: 10px 5px;">Rp. ${dataIuran.sumbangan?.toLocaleString("id-ID") || "0"}</td>
         </tr>
         ${
           dataIuran.detailSumbangan?.length > 0
@@ -827,9 +847,13 @@ export default function Tagihan() {
                                 <div className="flex items-center">
                                   <div className="w-3 h-3 bg-pink-500 rounded-full mr-3"></div>
                                   <span className="text-gray-700 font-medium">
-                                    Sumbangan
+                                    {posLainLainName ? `Lain-Lain (${posLainLainName})` : "Sumbangan"}
                                   </span>
                                 </div>
+                                <span className="font-semibold text-gray-900">
+                                  Rp.{" "}
+                                  {dataIuran.sumbangan?.toLocaleString("id-ID")}
+                                </span>
                               </div>
 
                               {dataIuran?.detailSumbangan?.length > 0 && (

@@ -3,15 +3,16 @@ import useTagihan from "../hook/useTagihan";
 import TagihanView from "./TagihanView";
 import { useAuth } from "@/app/AuthContext";
 
-const TagihanModal = ({ isOpen, onClose, npa, bulan, tahun }) => {
+const TagihanModal = ({ isOpen, onClose, npa, bulan, tahun, posLainLainName }) => {
   const { token } = useAuth();
 
-  const { dataIuran, dataAnggota, loading } = useTagihan(
-    npa,
-    bulan,
-    tahun,
-    token,
-  );
+  const {
+    dataIuran,
+    dataAnggota,
+    posLainLainName: hookPosName,
+    loading,
+  } = useTagihan(npa, bulan, tahun, token);
+
   if (!isOpen) return null;
 
   return (
@@ -29,6 +30,7 @@ const TagihanModal = ({ isOpen, onClose, npa, bulan, tahun }) => {
           <TagihanView
             dataIuran={dataIuran}
             dataAnggota={dataAnggota}
+            posLainLainName={posLainLainName || hookPosName}
             loading={loading}
           />
         </div>
