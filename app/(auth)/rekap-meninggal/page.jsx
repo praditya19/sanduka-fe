@@ -244,12 +244,37 @@ const Page = () => {
   useEffect(() => {
     let dataToDisplay = [];
 
+    const cleanKeterangan = (ket) => {
+      if (!ket) return "-";
+      const cleaned = ket
+        .replace(/(?:data\s+)?di\s*ubah\s+oleh\s+sistem(?:\s*[\r\n]+)?/gi, "")
+        .replace(/(?:data\s+)?di\s*ubah\s+oleh\s+system(?:\s*[\r\n]+)?/gi, "")
+        .trim();
+      return cleaned || "-";
+    };
+
+    const cleanDataMeninggal = (dm) => {
+      if (!dm) return "-";
+      return dm
+        .split("\n")
+        .map((line) => line.trim())
+        .filter((line) => {
+          const lower = line.toLowerCase();
+          return lower !== "tidak ada" && lower !== "null";
+        })
+        .join("\n");
+    };
+
     const dataTerimaWithStatus = (dataLaporDiterima || []).map((item) => ({
       ...item,
+      Keterangan: cleanKeterangan(item.Keterangan),
+      Data_Meninggal: cleanDataMeninggal(item.Data_Meninggal),
       isTerima: true,
     }));
     const dataBelumWithStatus = (dataLaporBelum || []).map((item) => ({
       ...item,
+      Keterangan: cleanKeterangan(item.Keterangan),
+      Data_Meninggal: cleanDataMeninggal(item.Data_Meninggal),
       isTerima: false,
     }));
 

@@ -124,6 +124,7 @@ const Page = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [totalEntries, setTotalEntries] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [activeRoleTab, setActiveRoleTab] = useState("SUPERADMIN"); // "SUPERADMIN" | "ADMIN" | "EDITOR"
   const { token } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -184,12 +185,36 @@ const Page = () => {
     size = entries,
     nama = "",
     email = "",
+    roleTab = activeRoleTab,
   ) => {
     try {
-      const response = await GlobalApi.getAllAdmin(page, size, nama, email);
-      setAdminDataAll(response.data.content || []);
-      setTotalEntries(response.data.totalElements);
-      setTotalPages(response.data.totalPages);
+      if (roleTab === "EDITOR") {
+        const response = await GlobalApi.getAllEditor(page, size);
+        const list = (response?.content || response?.data?.content || []).map((u) => ({
+          ...u,
+          role: "EDITOR",
+        }));
+        setAdminDataAll(list);
+        setTotalEntries(response?.totalElements || response?.data?.totalElements || list.length);
+        setTotalPages(response?.totalPages || response?.data?.totalPages || 1);
+      } else if (roleTab === "SUPERADMIN") {
+        const response = await GlobalApi.getAllAdmin(0, 100, nama, email);
+        const list = (response?.data?.content || []).filter(
+          (u) => (u.role || "").toUpperCase() === "SUPERADMIN"
+        );
+        setAdminDataAll(list);
+        setTotalEntries(list.length);
+        setTotalPages(1);
+      } else {
+        // ADMIN (Admin Cabang)
+        const response = await GlobalApi.getAllAdmin(page, size, nama, email);
+        const list = (response?.data?.content || []).filter(
+          (u) => (u.role || "").toUpperCase() !== "SUPERADMIN"
+        );
+        setAdminDataAll(list);
+        setTotalEntries(response?.data?.totalElements || list.length);
+        setTotalPages(response?.data?.totalPages || 1);
+      }
     } catch (error) {
       console.error("Error fetching admin data:", error);
     }
@@ -274,16 +299,18 @@ const Page = () => {
 
   const deleteAdmin = async (idAdmin) => {
     try {
-      const response = await GlobalApi.deleteAdmin(idAdmin);
+      if (activeRoleTab === "EDITOR") {
+        await GlobalApi.deleteEditor(idAdmin);
+      } else {
+        await GlobalApi.deleteAdmin(idAdmin);
+      }
       setNotification({
         type: "success",
-        message: `Admin berhasil dihapus!`,
+        message: `${activeRoleTab === "EDITOR" ? "Editor" : "Admin"} berhasil dihapus!`,
       });
-      setTimeout(() => {
-        window.location.reload();
-      }, 4000);
+      fetchAdminData(currentPage, entries, searchQuery, "", activeRoleTab);
     } catch (error) {
-      console.error("Error fetching cabang:", error);
+      console.error("Error deleting user:", error);
     }
   };
 
@@ -295,14 +322,14 @@ const Page = () => {
   const handlePageChange = (newPage) => {
     if (newPage >= 0 && newPage < totalPages) {
       setCurrentPage(newPage);
-      fetchAdminData(newPage, entries);
+      fetchAdminData(newPage, entries, searchQuery, "", activeRoleTab);
     }
   };
 
   const handleSearchChange = (e) => {
     const query = e.target.value.toLowerCase();
     setSearchQuery(query);
-    fetchAdminData(0, entries, query);
+    fetchAdminData(0, entries, query, "", activeRoleTab);
   };
 
   const handleAddUserClick = () => {
@@ -574,9 +601,60 @@ const Page = () => {
               </ul>
             </nav>
             <main className="container mx-auto p-4 md:p-6 bg-white shadow-lg rounded-lg mt-4">
+              <div className="mb-4 border-b border-gray-200">
+                <div className="flex gap-2 mb-2">
+                  <button
+                    className={`px-4 py-2 text-sm font-bold border-b-2 transition ${
+                      activeRoleTab === "SUPERADMIN"
+                        ? "border-teal-600 text-teal-700 bg-teal-50/50"
+                        : "border-transparent text-gray-500 hover:text-gray-700"
+                    }`}
+                    onClick={() => {
+                      setActiveRoleTab("SUPERADMIN");
+                      setCurrentPage(0);
+                      fetchAdminData(0, entries, searchQuery, "", "SUPERADMIN");
+                    }}
+                  >
+                    Super Admin
+                  </button>
+                  <button
+                    className={`px-4 py-2 text-sm font-bold border-b-2 transition ${
+                      activeRoleTab === "ADMIN"
+                        ? "border-teal-600 text-teal-700 bg-teal-50/50"
+                        : "border-transparent text-gray-500 hover:text-gray-700"
+                    }`}
+                    onClick={() => {
+                      setActiveRoleTab("ADMIN");
+                      setCurrentPage(0);
+                      fetchAdminData(0, entries, searchQuery, "", "ADMIN");
+                    }}
+                  >
+                    Admin Cabang
+                  </button>
+                  <button
+                    className={`px-4 py-2 text-sm font-bold border-b-2 transition ${
+                      activeRoleTab === "EDITOR"
+                        ? "border-teal-600 text-teal-700 bg-teal-50/50"
+                        : "border-transparent text-gray-500 hover:text-gray-700"
+                    }`}
+                    onClick={() => {
+                      setActiveRoleTab("EDITOR");
+                      setCurrentPage(0);
+                      fetchAdminData(0, entries, searchQuery, "", "EDITOR");
+                    }}
+                  >
+                    Editor
+                  </button>
+                </div>
+              </div>
+
               <div className="mb-2">
                 <h3 className="text-base md:text-base font-bold mb-2">
-                  Data Pengurus Cabang
+                  {activeRoleTab === "SUPERADMIN"
+                    ? "Data Super Admin"
+                    : activeRoleTab === "EDITOR"
+                    ? "Data Editor"
+                    : "Data Pengurus Cabang (Admin)"}
                 </h3>
                 <div className="flex flex-col md:flex-row justify-between mb-4 space-y-4 md:space-y-0">
                   <div className="flex items-center  space-x-2">
@@ -596,10 +674,14 @@ const Page = () => {
                   </div>
                   {sessionStorage.getItem("role") === "SUPERADMIN" && (
                     <Button
-                      className="bg-blue-500 text-white text-xs px-4 py-2 rounded"
+                      className="bg-blue-500 hover:bg-blue-600 text-white text-xs px-4 py-2 rounded"
                       onClick={handleAddUserClick}
                     >
-                      Tambah Admin
+                      {activeRoleTab === "SUPERADMIN"
+                        ? "Tambah Super Admin"
+                        : activeRoleTab === "EDITOR"
+                        ? "Tambah Editor"
+                        : "Tambah Admin"}
                     </Button>
                   )}
                 </div>
@@ -1326,6 +1408,7 @@ const Page = () => {
                             })
                           }
                         >
+                          <option value="SUPERADMIN">SUPER ADMIN</option>
                           <option value="ADMIN">ADMIN</option>
                           <option value="EDITOR">EDITOR</option>
                         </select>

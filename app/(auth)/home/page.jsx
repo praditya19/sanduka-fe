@@ -462,6 +462,7 @@ export default function IconGrid() {
                   namaPelapor: userData.namaPelapor || deceased.namaPelapor,
                   nomorHpPelapor:
                     userData.nomorHpPelapor || deceased.nomorHpPelapor,
+                  agama: userData.agama || deceased.agama || null,
                   foto: decodedFoto || null,
                   originalIndex: index,
                 };
@@ -790,14 +791,26 @@ export default function IconGrid() {
                     </p>
                   )}
                   <p className="text-sm">{currentData.jabatan}</p>
-                  <p className="text-sm">{currentData.unitKerja}</p>
+                  {currentData.unitKerja &&
+                    currentData.unitKerja.toLowerCase() !== "tidak ada" &&
+                    currentData.unitKerja.toLowerCase() !== "null" && (
+                      <p className="text-sm">{currentData.unitKerja}</p>
+                    )}
                   <p className="text-sm">{currentData.cabang}</p>
                   <p className="text-sm">{currentData.alamat}</p>
                 </div>
 
-                <p className="text-center text-gray-600 mb-3 text-sm">
-                  Catatan: {currentData.keteranganTerlapor}
-                </p>
+                {(() => {
+                  const cleanCatatan = (currentData.keteranganTerlapor || "")
+                    .replace(/(?:data\s+)?di\s*ubah\s+oleh\s+sistem(?:\s*[\r\n]+)?/gi, "")
+                    .replace(/(?:data\s+)?di\s*ubah\s+oleh\s+system(?:\s*[\r\n]+)?/gi, "")
+                    .trim();
+                  return cleanCatatan ? (
+                    <p className="text-center text-gray-600 mb-3 text-sm">
+                      Catatan: {cleanCatatan}
+                    </p>
+                  ) : null;
+                })()}
 
                 <div className="flex justify-center mb-3">
                   <button className="bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-1 px-4 rounded-full transition duration-300">
@@ -1318,10 +1331,14 @@ export default function IconGrid() {
                                 <span className="font-medium">Jabatan:</span>{" "}
                                 {currentData.jabatan}
                               </p>
-                              <p>
-                                <span className="font-medium">Unit:</span>{" "}
-                                {currentData.unitKerja}
-                              </p>
+                              {currentData.unitKerja &&
+                                currentData.unitKerja.toLowerCase() !== "tidak ada" &&
+                                currentData.unitKerja.toLowerCase() !== "null" && (
+                                  <p>
+                                    <span className="font-medium">Unit:</span>{" "}
+                                    {currentData.unitKerja}
+                                  </p>
+                                )}
                               <p>
                                 <span className="font-medium">Cabang:</span>{" "}
                                 {currentData.cabang}
@@ -1332,12 +1349,18 @@ export default function IconGrid() {
                               </p>
                             </div>
 
-                            <div className="text-xs text-gray-600 border-t border-dashed border-gray-200 pt-2 mt-2">
-                              <p className="font-medium">Catatan:</p>
-                              <p className="italic">
-                                {currentData.keteranganTerlapor}
-                              </p>
-                            </div>
+                            {(() => {
+                              const cleanCatatan = (currentData.keteranganTerlapor || "")
+                                .replace(/(?:data\s+)?di\s*ubah\s+oleh\s+sistem(?:\s*[\r\n]+)?/gi, "")
+                                .replace(/(?:data\s+)?di\s*ubah\s+oleh\s+system(?:\s*[\r\n]+)?/gi, "")
+                                .trim();
+                              return cleanCatatan ? (
+                                <div className="text-xs text-gray-600 border-t border-dashed border-gray-200 pt-2 mt-2">
+                                  <p className="font-medium">Catatan:</p>
+                                  <p className="italic">{cleanCatatan}</p>
+                                </div>
+                              ) : null;
+                            })()}
 
                             <div className="mt-4">
                               <button className="w-full bg-green-600 hover:bg-green-700 text-white text-xs font-medium py-1.5 px-3 rounded-full transition">

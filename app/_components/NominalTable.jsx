@@ -2,6 +2,47 @@
 import React from "react";
 import { FaTrashAlt, FaEdit } from "react-icons/fa";
 
+const formatDateTime = (input) => {
+    if (!input) return "-";
+    if (Array.isArray(input)) {
+        if (input.length < 3) return "-";
+        const [year, month, day, hour = 0, min = 0, sec = 0] = input;
+        const d = String(day).padStart(2, "0");
+        const m = String(month).padStart(2, "0");
+        const y = String(year);
+        const hh = String(hour).padStart(2, "0");
+        const mm = String(min).padStart(2, "0");
+        const ss = String(sec).padStart(2, "0");
+        return `${d}-${m}-${y} ${hh}:${mm}:${ss}`;
+    }
+    if (typeof input === "string" || typeof input === "number") {
+        const str = String(input).trim();
+        if (!str || str === "-") return "-";
+        const ymdMatch = /^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})[T\s](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/.exec(str);
+        if (ymdMatch) {
+            const [, y, m, d, hh, mm, ss = "00"] = ymdMatch;
+            return `${d.padStart(2, "0")}-${m.padStart(2, "0")}-${y} ${hh.padStart(2, "0")}:${mm.padStart(2, "0")}:${ss.padStart(2, "0")}`;
+        }
+        const dmyMatch = /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})[T\s](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/.exec(str);
+        if (dmyMatch) {
+            const [, d, m, y, hh, mm, ss = "00"] = dmyMatch;
+            return `${d.padStart(2, "0")}-${m.padStart(2, "0")}-${y} ${hh.padStart(2, "0")}:${mm.padStart(2, "0")}:${ss.padStart(2, "0")}`;
+        }
+        const parsed = new Date(str);
+        if (!isNaN(parsed.getTime())) {
+            const d = String(parsed.getDate()).padStart(2, "0");
+            const m = String(parsed.getMonth() + 1).padStart(2, "0");
+            const y = parsed.getFullYear();
+            const hh = String(parsed.getHours()).padStart(2, "0");
+            const mm = String(parsed.getMinutes()).padStart(2, "0");
+            const ss = String(parsed.getSeconds()).padStart(2, "0");
+            return `${d}-${m}-${y} ${hh}:${mm}:${ss}`;
+        }
+        return str;
+    }
+    return "-";
+};
+
 const NominalTable = ({ data, onEdit, onDelete }) => {
     return (
         <div className="flex gap-4 w-full">
@@ -20,6 +61,7 @@ const NominalTable = ({ data, onEdit, onDelete }) => {
                             <th className="px-4 py-3 border">Kalender</th>
                             <th className="px-4 py-3 border">Lain-lain</th>
                             <th className="px-4 py-3 border">Total</th>
+                            <th className="px-4 py-3 border">Tanggal Update</th>
                             <th className="px-4 py-3 border">Aksi</th>
                         </tr>
                     </thead>
@@ -61,6 +103,17 @@ const NominalTable = ({ data, onEdit, onDelete }) => {
                                 </td>
                                 <td className="px-4 py-3 border text-right font-semibold">
                                     {item.total.toLocaleString()}
+                                </td>
+                                <td className="px-4 py-3 border text-center text-xs text-gray-600 whitespace-nowrap">
+                                    {formatDateTime(
+                                        item.lastUpdatedAtIuran ||
+                                        item.lastUpdateIuran ||
+                                        item.lastUpdatedAtIuranAnggota ||
+                                        item.updatedAt ||
+                                        item.updated_at ||
+                                        item.createdAt ||
+                                        item.created_at
+                                    )}
                                 </td>
                                 <td className="border text-center">
                                     <div className="flex items-center justify-center space-x-3 py-2">

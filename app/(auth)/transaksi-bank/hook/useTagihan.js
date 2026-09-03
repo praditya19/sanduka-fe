@@ -74,6 +74,9 @@ const useTagihan = (npa, bulan, tahun, token) => {
 
       if (balancing || sumbanganNominal > 0) {
         setDataIuran({
+          id: balancing?.id,
+          npa: balancing?.npa || npa,
+          rekening: balancing?.rekening,
           pgri: balancing?.totalIuranAnggota || 0,
           sanduka: balancing?.totalIuranSanduka || 0,
           daspen: balancing?.totalIuranDaspen || 0,
@@ -85,8 +88,10 @@ const useTagihan = (npa, bulan, tahun, token) => {
           cabang: balancing?.cabang,
           jabatan: balancing?.statusPegawai,
           keterangan: balancing?.keterangan,
+          statusPembayaran: balancing?.statusPembayaran || null,
           potongan: balancing?.potongan,
           selisih: balancing?.selisih,
+          totalIuran: balancing?.totalIuran,
           bulan,
           tahun,
         });
@@ -116,9 +121,11 @@ const useTagihan = (npa, bulan, tahun, token) => {
 
   return {
     dataIuran,
+    setDataIuran,
     dataAnggota,
     posLainLainName,
     loading,
+    refetch: fetchData,
   };
 };
 

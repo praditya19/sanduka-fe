@@ -137,15 +137,29 @@ const Event = () => {
   // --- 3. HELPER UI ---
   const stripHtml = (html) => {
     if (!html) return "";
+    let str = String(html)
+      .replace(/&amp;nbsp;/gi, " ")
+      .replace(/&amp;quot;/gi, '"')
+      .replace(/&amp;lt;/gi, "<")
+      .replace(/&amp;gt;/gi, ">")
+      .replace(/&amp;amp;/gi, "&");
     const tmp = document.createElement("DIV");
-    tmp.innerHTML = html;
-    return tmp.textContent || tmp.innerText || "";
+    tmp.innerHTML = str;
+    const text = tmp.textContent || tmp.innerText || "";
+    return text.replace(/&nbsp;?/gi, " ").replace(/\u00A0/g, " ");
   };
 
   const processHTML = (htmlContent) => {
     if (!htmlContent) return "";
+    let str = String(htmlContent)
+      .replace(/&amp;nbsp;/gi, " ")
+      .replace(/&amp;quot;/gi, '"')
+      .replace(/&amp;lt;/gi, "<")
+      .replace(/&amp;gt;/gi, ">")
+      .replace(/&amp;amp;/gi, "&");
+
     const urlRegex = /(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/g;
-    return htmlContent.replace(urlRegex, (url) => {
+    return str.replace(urlRegex, (url) => {
       const href = url.startsWith("www.") ? `http://${url}` : url;
       return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">${url}</a>`;
     });

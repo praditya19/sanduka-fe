@@ -124,6 +124,7 @@ export default function Tagihan() {
           cabang: balancing?.cabang,
           jabatan: balancing?.statusPegawai,
           keterangan: balancing?.keterangan,
+          statusPembayaran: balancing?.statusPembayaran || null,
           potongan: balancing?.potongan,
           selisih: balancing?.selisih,
           bulan,
@@ -479,8 +480,15 @@ export default function Tagihan() {
     }
   };
 
-  const keteranganText =
-    dataIuran?.keterangan === "Sukses"
+  const isLunas = (dataIuran?.statusPembayaran || "").toUpperCase() === "LUNAS";
+
+  const keteranganText = isLunas
+    ? dataIuran?.keterangan === "Tunai"
+      ? "Pembayaran Anda Tunai (LUNAS)"
+      : dataIuran?.keterangan === "Sukses"
+        ? "Pembayaran Anda Melalui Bank Jateng (LUNAS)"
+        : "LUNAS"
+    : dataIuran?.keterangan === "Sukses"
       ? "Pembayaran Anda Melalui Bank Jateng"
       : dataIuran?.keterangan === "Tunai"
         ? "Pembayaran Anda Tunai"
@@ -558,10 +566,18 @@ export default function Tagihan() {
                     </div>
 
                     {/* Status Keterangan */}
-                    <div className="bg-white rounded-xl p-3 shadow-lg">
+                    <div
+                      className={`rounded-xl p-3 shadow-lg transition-all ${
+                        isLunas
+                          ? "bg-emerald-50 border-2 border-emerald-400"
+                          : "bg-white"
+                      }`}
+                    >
                       <div className="flex items-center gap-3">
                         <div className="flex-shrink-0">
-                          {dataIuran?.keterangan === "Sukses" ? (
+                          {isLunas ? (
+                            <span className="text-2xl">✅</span>
+                          ) : dataIuran?.keterangan === "Sukses" ? (
                             <span className="text-2xl">✅</span>
                           ) : dataIuran?.keterangan === "Tunai" ? (
                             <span className="text-2xl">💰</span>
@@ -570,13 +586,20 @@ export default function Tagihan() {
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
-                            Status Pembayaran
-                          </p>
+                          <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                            <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
+                              Status Pembayaran
+                            </p>
+                            {isLunas && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-600 text-white shadow-sm">
+                                ✓ LUNAS
+                              </span>
+                            )}
+                          </div>
                           <p
-                            className={`text-sm font-semibold truncate ${
-                              dataIuran?.keterangan === "Sukses"
-                                ? "text-green-600"
+                            className={`text-sm font-bold truncate ${
+                              isLunas || dataIuran?.keterangan === "Sukses"
+                                ? "text-emerald-700"
                                 : dataIuran?.keterangan === "Tunai"
                                   ? "text-blue-600"
                                   : "text-gray-600"
@@ -939,21 +962,69 @@ export default function Tagihan() {
 
                         {/* Selisih */}
                         {dataIuran.selisih > 0 && (
-                          <div className="flex justify-between items-center p-3 bg-indigo-50 border-l-4 border-indigo-500 rounded-lg transition-colors mt-4">
+                          <div
+                            className={`flex justify-between items-center p-3 rounded-lg transition-colors mt-4 border-l-4 ${
+                              isLunas
+                                ? "bg-emerald-50 border-emerald-500"
+                                : "bg-indigo-50 border-indigo-500"
+                            }`}
+                          >
                             <div className="flex items-center">
-                              <div className="w-3 h-3 bg-indigo-500 rounded-full mr-3"></div>
-                              <span className="text-gray-700 font-medium">
-                                Selisih
-                              </span>
+                              <div
+                                className={`w-3 h-3 rounded-full mr-3 ${
+                                  isLunas ? "bg-emerald-500" : "bg-indigo-500"
+                                }`}
+                              ></div>
+                              <div>
+                                <span className="text-gray-700 font-medium block">
+                                  Selisih
+                                </span>
+                                {isLunas && (
+                                  <span className="text-xs text-emerald-700 font-semibold">
+                                    (Telah Dilunasi)
+                                  </span>
+                                )}
+                              </div>
                             </div>
-                            <span className="font-bold text-indigo-700 text-lg">
-                              Rp. {dataIuran.selisih?.toLocaleString("id-ID")}
-                            </span>
+                            <div className="text-right">
+                              {isLunas ? (
+                                <div className="flex items-center gap-2">
+                                  <span className="line-through text-gray-400 text-xs sm:text-sm">
+                                    Rp. {dataIuran.selisih?.toLocaleString("id-ID")}
+                                  </span>
+                                  <span className="font-bold text-emerald-600 text-base sm:text-lg">
+                                    Rp. 0 (LUNAS)
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className="font-bold text-indigo-700 text-lg">
+                                  Rp. {dataIuran.selisih?.toLocaleString("id-ID")}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         )}
                       </div>
 
-                      <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+                      <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center items-center">
+                        {isLunas && (
+                          <div className="flex items-center justify-center px-6 py-3 font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 rounded-xl shadow-sm">
+                            <svg
+                              className="w-5 h-5 mr-2 text-emerald-600"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                            Status: LUNAS
+                          </div>
+                        )}
                         <button
                           onClick={generatePowerOfAttorneyPDF}
                           className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-3 px-6 rounded-xl shadow-md transition duration-300 ease-in-out flex items-center justify-center"

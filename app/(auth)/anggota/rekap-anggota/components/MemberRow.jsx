@@ -36,8 +36,8 @@ const MemberRow = React.memo(({
         <div className="font-medium text-sm">{member.namaAnggota}</div>
         <div className="text-xs text-gray-600">{member.nip}</div>
         <div className="text-xs text-gray-600">{member.nomorRekening}</div>
-        <div className="text-xs text-gray-600 italic mt-1">
-          Update: {formatTanggal(member.lastUpdatedAtIuran, "DMY")}
+        <div className="text-xs text-gray-600 italic mt-1 font-medium text-teal-700">
+          Update: {formatTanggal(member.lastUpdatedAtIuran || member.lastUpdateIuran || member.updatedAt || member.updated_at || member.createdAt, "DMY_TIME")}
         </div>
       </td>
       <td className="p-3 md:border-b flex justify-between items-center md:table-cell border-b md:border-b-0 border-teal-50">

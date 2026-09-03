@@ -729,6 +729,9 @@ const [selectedBulan, setSelectedBulan] = useState(null);
                 npa={selectedNpa}
                 bulan={selectedBulan}
                 tahun={selectedTahun}
+                posLainLainName={posLainLainName}
+                onLunasClick={handleLunasClick}
+                onRefresh={getBalancingdata}
                 generateSuratKuasa={generateSuratKuasa}
                 generateTagihanPDF={generateTagihanPDF}
               />
