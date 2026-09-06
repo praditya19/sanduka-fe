@@ -55,6 +55,7 @@ import BiroTravel from "@/app/_components/BiroTravel";
 import Live from "@/app/_components/Live";
 import LembagaDisplay from "@/app/_components/Lembaga";
 import Metsos from "@/app/_components/Metsos";
+import DevTeamCard from "@/app/_components/DevTeamCard";
 import VisitorCounter from "@/app/_components/VisitorCounter";
 import Image from "next/image";
 import Sidebar from "@/app/_components/Sidebar";
@@ -1445,6 +1446,12 @@ export default function IconGrid() {
           <div className="px-4 mx-auto max-w-6xl mb-12 -mt-10">
             <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 w-full max-w-md sm:max-w-full">
               <Metsos />
+            </div>
+          </div>
+
+          <div className="px-4 mx-auto max-w-6xl mb-16 -mt-6">
+            <div className="bg-white rounded-xl shadow-md p-6 sm:p-8 w-full">
+              <DevTeamCard />
             </div>
           </div>
         </main>

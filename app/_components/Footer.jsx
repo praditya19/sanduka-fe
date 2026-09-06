@@ -87,38 +87,107 @@ const Footer = () => {
                   </a>
                 </Link>
               </div>
-            </div>
-          </div>
 
-          {/* App Links Section */}
-          <div className="flex flex-col items-center gap-4 mt-24">
-            <div className="bg-black p-2 rounded-full flex items-center">
-              <Image
-                src="/playstore.svg"
-                alt="Logo Icon"
-                width={20}
-                height={20}
-                className="mr-2"
-              />
-              <Link href="#" aria-label="Google Play" className="text-white">
-                <span className="hidden md:inline">Google Play Store</span>
-                <span className="md:hidden">Google Play Store</span>
-              </Link>
-            </div>
-
-            {/* <div className="bg-black p-2 rounded-full flex items-center">
-              <FaWhatsapp size={20} className="text-white h-5 mr-2" />
-              <Link href="https://wa.me/+6281325552982" legacyBehavior>
+              {/* Google Play Store Link */}
+              <div className="pt-2">
                 <a
+                  href="https://play.google.com/store/apps/details?id=com.pgrijepara.mypgri"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-white"
+                  className="bg-black/50 hover:bg-black/70 px-3.5 py-1.5 rounded-full inline-flex items-center border border-white/15 transition-colors"
+                  aria-label="Google Play Store"
                 >
-                  Konsultasi WhatsApp
+                  <Image
+                    src="/playstore.svg"
+                    alt="Logo Icon"
+                    width={18}
+                    height={18}
+                    className="mr-2"
+                  />
+                  <span className="text-sm text-white hover:text-yellow-400 transition-colors font-medium">
+                    Google Play Store
+                  </span>
                 </a>
-              </Link>
-            </div> */}
+              </div>
+            </div>
           </div>
+
+          {/* App & Tim Pengembang Section */}
+          <div className="w-full lg:w-1/3 mt-12 lg:mt-24">
+            <h3 className="font-bold mb-3 text-yellow-400">TIM PENGEMBANG</h3>
+            <div className="space-y-3">
+              <div className="flex items-center space-x-3">
+                <Image
+                  src="/logo-bts.png"
+                  width={38}
+                  height={38}
+                  alt="BTS Logo"
+                  className="object-contain rounded-lg bg-white/10 p-1"
+                />
+                <div>
+                  <a
+                    href="https://bts-app-xi.vercel.app/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white hover:text-yellow-400 font-medium text-base block transition-colors"
+                  >
+                    Brilliant Techology Solutions (BTS)
+                  </a>
+                  <p className="text-xs text-gray-300">Pengembang Sistem Sanduka</p>
+                </div>
+              </div>
+
+              <p className="text-xs text-gray-200 leading-relaxed">
+                Ingin membuat website atau sistem sejenis? Hubungi tim pengembang kami untuk konsultasi.
+              </p>
+
+              <div className="flex flex-wrap items-center gap-3 pt-1">
+                <a
+                  href="https://wa.me/628999937400?text=Halo%20tim%20Brilliant%20Techology%20Solutions%20(BTS)%2C%20saya%20tertarik%20untuk%20buat%20aplikasi%2Fsistem%20seperti%20Sanduka."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white text-xs px-3 py-1.5 rounded-md border border-white/20 transition-colors"
+                >
+                  <FaWhatsapp className="text-green-400" />
+                  <span>WhatsApp: +62 899-9937-400</span>
+                </a>
+
+                <a
+                  href="https://bts-app-xi.vercel.app/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-yellow-400 hover:underline"
+                >
+                  Kunjungi Website ↗
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="mt-12 pt-4 border-t border-green-800 text-center text-xs text-gray-300">
+          <p>
+            © {new Date().getFullYear()} SANDUKA PGRI Kabupaten Jepara. Dikembangkan oleh{" "}
+            <a
+              href="https://bts-app-xi.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white hover:text-yellow-400 font-medium underline"
+            >
+              Brilliant Techology Solutions (BTS)
+            </a>
+            . Ingin buat sistem sejenis?{" "}
+            <a
+              href="https://wa.me/628999937400?text=Halo%20tim%20Brilliant%20Techology%20Solutions%20(BTS)%2C%20saya%20tertarik%20untuk%20buat%20aplikasi%2Fsistem%20seperti%20Sanduka."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-yellow-400 hover:underline font-medium"
+            >
+              Hubungi kami di sini
+            </a>
+            .
+          </p>
         </div>
       </div>
     </div>
