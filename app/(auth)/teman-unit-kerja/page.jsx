@@ -32,9 +32,9 @@ const TemanUnitKerja = () => {
   const [unitKerjaOptions, setUnitKerjaOptions] = useState([]);
   const [queryUnit, setQueryUnit] = useState("");
   const [fotoBase64, setFotoBase64] = useState("");
-  
+
   // STATE BARU UNTUK ZOOM FOTO
-  const [zoomedImage, setZoomedImage] = useState(null); 
+  const [zoomedImage, setZoomedImage] = useState(null);
 
   const [role, setRole] = useState(null);
 
@@ -50,18 +50,18 @@ const TemanUnitKerja = () => {
         return;
       }
 
-      console.log("Fetched unitKerja from sessionStorage:", unitKerja);
-
       const result = await GlobalApi.getTemanUnitKerja(
         unitKerja,
         cabang,
         currentPage - 1,
-        itemsPerPage
+        itemsPerPage,
       );
-
-      setCardsData(result.content || []);
+      const activeMembers = (result.content || []).filter(
+        (item) => item.statusKeanggotaan === "Aktif",
+      );
+      setCardsData(activeMembers);
       setTotalPages(result.totalPages || 0);
-      const fotoBase64Array = result.content.map((item) => {
+      const fotoBase64Array = activeMembers.map((item) => {
         if (item.foto) {
           try {
             return atob(item.foto);
@@ -111,7 +111,7 @@ const TemanUnitKerja = () => {
             setFilteredUnitKerja(unitKerjaResponse.data);
           } else if (cabangFromStorage) {
             const filteredUnits = unitKerjaResponse.data.filter(
-              (unit) => unit.cabang === cabangFromStorage
+              (unit) => unit.cabang === cabangFromStorage,
             );
             setFilteredUnitKerja(filteredUnits);
           } else {
@@ -137,8 +137,6 @@ const TemanUnitKerja = () => {
   }, [token, router, unitKerjaOptions]);
 
   const handleUnitKerjaChange = async (selectedUnitKerja) => {
-    console.log("Unit Kerja yang dipilih:", selectedUnitKerja);
-
     sessionStorage.setItem("unitKerja", selectedUnitKerja);
     await fetchTemanUnitKerja(selectedUnitKerja);
   };
@@ -181,265 +179,295 @@ const TemanUnitKerja = () => {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-          <div className="min-h-screen flex flex-col justify-start bg-gray-300 pt-4 px-4">
-            <div
-              className={`w-1/6 flex flex-col items-start mt-12 ${
-                role === "USER" ? "hidden" : ""
-              }`}
-            >
-              <Label className="block text-sm font-medium mb-1">
-                Unit Kerja
-              </Label>
-              <Input
-                type="text"
-                className="border rounded-lg p-2 w-full bg-white shadow-sm"
-                placeholder="Pilih Unit Kerja"
-                value={queryUnit}
-                readOnly
-                onChange={(e) => setQueryUnit(e.target.value)}
-                onClick={() => {
-                  setQueryUnit("");
-                  setShowDropdownUnit(true);
-                }}
-              />
-
-              {showDropdownUnit && filteredUnitKerja.length > 0 && (
-                <div
-                  className="absolute z-10 border rounded-lg bg-white shadow-sm mt-[4.5%] w-1/6"
-                  id="dropdownUnit"
-                >
-                  <ul className="max-h-44 overflow-y-auto">
-                    <li className="py-2 px-2">
-                      <Input
-                        id="searchInput"
-                        type="text"
-                        className="border-b p-2 w-full bg-white mb-1"
-                        placeholder="Cari Unit Kerja..."
-                        value={queryUnit}
-                        onChange={(e) => setQueryUnit(e.target.value)}
-                        autoFocus
-                      />
-                    </li>
-                    <li
-                      className="p-2 cursor-pointer hover:bg-gray-100"
+          <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-100 via-gray-100 to-slate-200">
+            {/* Container utama */}
+            <div className="flex-1 w-full max-w-9xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+              {/* ====== SEARCH UNIT KERJA ====== */}
+              {role !== "USER" && (
+                <div className="relative w-full sm:w-80 mb-6">
+                  <Label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Unit Kerja
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      type="text"
+                      className="w-full border border-gray-300 rounded-xl pl-10 pr-4 py-2.5 bg-white shadow-sm 
+                       focus:ring-2 focus:ring-teal-500 focus:border-teal-500 
+                       transition-all duration-200 cursor-pointer"
+                      placeholder="Pilih Unit Kerja"
+                      value={queryUnit}
+                      readOnly
+                      onChange={(e) => setQueryUnit(e.target.value)}
                       onClick={() => {
-                        setShowDropdownUnit(false);
+                        setQueryUnit("");
+                        setShowDropdownUnit(true);
                       }}
+                    />
+                    {/* Ikon search */}
+                    <svg
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                      Pilih Unit Kerja
-                    </li>
-                    {filteredUnitKerja
-                      .filter((unit) =>
-                        unit.unitKerja
-                          .toLowerCase()
-                          .includes(queryUnit.toLowerCase())
-                      )
-                      .sort((a, b) => a.unitKerja.localeCompare(b.unitKerja, "id"))
-                      .map((unit) => (
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"
+                      />
+                    </svg>
+                  </div>
+
+                  {showDropdownUnit && filteredUnitKerja.length > 0 && (
+                    <div className="absolute z-20 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
+                      <div className="p-2 border-b border-gray-100">
+                        <Input
+                          id="searchInput"
+                          type="text"
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm 
+                           focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                          placeholder="Cari Unit Kerja..."
+                          value={queryUnit}
+                          onChange={(e) => setQueryUnit(e.target.value)}
+                          autoFocus
+                        />
+                      </div>
+                      <ul className="max-h-60 overflow-y-auto">
                         <li
-                          key={unit.id}
-                          value={unit.unitKerja}
-                          className="p-2 cursor-pointer hover:bg-gray-100"
-                          onClick={async () => {
-                            setQueryUnit(unit.unitKerja);
-                            await handleUnitKerjaChange(unit.unitKerja);
-                            setShowDropdownUnit(false);
-                          }}
+                          className="px-4 py-2 text-sm text-gray-500 italic cursor-pointer hover:bg-gray-50"
+                          onClick={() => setShowDropdownUnit(false)}
                         >
-                          {unit.unitKerja}
+                          Pilih Unit Kerja
                         </li>
-                      ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-
-            <div
-              className={`grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 ${
-                role === "USER" ? "mt-12" : "mt-4"
-              } `}
-            >
-              {loading ? (
-                <div className="flex justify-center items-center w-full col-span-4">
-                  <ClipLoader color="#3498db" size={50} />
-                </div>
-              ) : (
-                cardsData.map((data, index) => {
-                  const fotoFromState = fotoBase64[index];
-                  const base64Image = fotoFromState
-                    ? `data:image/jpeg;base64,${fotoFromState}`
-                    : profileImageUrl;
-
-                  return (
-                    <div
-                      key={index}
-                      className="bg-white items-center rounded-lg shadow-lg p-3 border border-gray-200 w-full hover:shadow-xl transition duration-300 ease-in-out"
-                    >
-                      <div className="bg-teal-500 text-white p-2 rounded-t-lg mb-4 w-full">
-                        <h2 className="text-sm font-semibold w-full">
-                          {data.namaLengkap}
-                        </h2>
-                        <p className="text-xs w-full">{data.npaPgri}</p>
-                      </div>
-
-                      <div className="flex w-full items-center">
-                        <div className="flex-shrink-0 w-1/3 flex justify-center self-start">
-                          {/* PERBAIKAN: Menambahkan div wrapper untuk trigger zoom */}
-                          <div 
-                            className="cursor-pointer hover:opacity-80 transition-opacity rounded-md overflow-hidden shadow-sm border-2 border-gray-200 w-[80px] h-[80px] flex items-center justify-center"
-                            onClick={() => setZoomedImage(base64Image)}
-                          >
-                            <Image
-                              src={base64Image}
-                              width={80}
-                              height={80}
-                              alt={
-                                fotoFromState
-                                  ? "Anggota Foto"
-                                  : `Fallback Image: ${profileImageUrl}`
-                              }
-                              className="object-cover w-full h-full"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="ml-2 w-2/3">
-                          <div className="flex items-center text-gray-800 text-sm mb-1">
-                            <FontAwesomeIcon
-                              icon={faCalendarAlt}
-                              className="text-gray-600"
-                            />
-                            <span className="ml-2">
-                              {formatDate(data.tanggalLahir)}
-                            </span>
-                          </div>
-                          <div className="flex items-center text-gray-800 text-sm mb-1">
-                            <FontAwesomeIcon
-                              icon={faUserTie}
-                              className="text-gray-600"
-                            />
-                            <span className="ml-2">{data.jabatan}</span>
-                          </div>
-                          <div className="flex items-center text-gray-800 text-sm">
-                            <FontAwesomeIcon
-                              icon={faHome}
-                              className="text-gray-600"
-                            />
-                            <span className="ml-2">{data.alamat}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="mt-4 justify-items-center">
-                        <div className="grid grid-cols-3 md:grid-cols-3 gap-4 text-gray-800 text-sm">
-                          <div className="flex flex-col items-start">
-                            <span className="font-semibold">Daspen:</span>
-                            <span className="mt-1">
-                              {data.pesertaDaspen ? (
-                                <span className="bg-green-500 text-white px-2 py-1 rounded">
-                                  Terdaftar
-                                </span>
-                              ) : (
-                                <span className="bg-red-500 text-white px-2 py-1 rounded text-xs">
-                                  Belum Terdaftar
-                                </span>
-                              )}
-                            </span>
-                          </div>
-                          <div className="flex flex-col items-start">
-                            <span className="font-semibold">KTA Digital:</span>
-                            <span className="mt-1">
-                              {data.pesertaKtaDigital ? (
-                                <span className="bg-green-500 text-white px-2 py-1 rounded ml-1">
-                                  Terdaftar
-                                </span>
-                              ) : (
-                                <span className="bg-red-500 text-white px-2 py-1 rounded">
-                                  Belum Terdaftar
-                                </span>
-                              )}
-                            </span>
-                          </div>
-                          <div className="flex flex-col items-start">
-                            <span className="font-semibold">Sanduka:</span>
-                            <span className="mt-1">
-                              {data.pesertaSanduka ? (
-                                <span className="bg-green-500 text-white px-2 py-1 rounded">
-                                  Terdaftar
-                                </span>
-                              ) : (
-                                <span className="bg-red-500 text-white px-2 py-1 rounded">
-                                  Belum Terdaftar
-                                </span>
-                              )}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
+                        {filteredUnitKerja
+                          .filter((unit) =>
+                            unit.unitKerja
+                              .toLowerCase()
+                              .includes(queryUnit.toLowerCase()),
+                          )
+                          .sort((a, b) =>
+                            a.unitKerja.localeCompare(b.unitKerja, "id"),
+                          )
+                          .map((unit) => (
+                            <li
+                              key={unit.id}
+                              className="px-4 py-2.5 text-sm text-gray-700 cursor-pointer 
+                               hover:bg-teal-50 hover:text-teal-700 transition-colors"
+                              onClick={async () => {
+                                setQueryUnit(unit.unitKerja);
+                                await handleUnitKerjaChange(unit.unitKerja);
+                                setShowDropdownUnit(false);
+                              }}
+                            >
+                              {unit.unitKerja}
+                            </li>
+                          ))}
+                      </ul>
                     </div>
-                  );
-                })
+                  )}
+                </div>
               )}
+
+              {/* ====== GRID CARD ====== */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                {loading
+                  ? // Skeleton loading
+                    Array.from({ length: 4 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="bg-white rounded-2xl shadow-sm p-4 animate-pulse"
+                      >
+                        <div className="h-16 bg-gray-200 rounded-xl mb-4" />
+                        <div className="flex gap-3">
+                          <div className="w-20 h-20 bg-gray-200 rounded-xl" />
+                          <div className="flex-1 space-y-2">
+                            <div className="h-3 bg-gray-200 rounded w-3/4" />
+                            <div className="h-3 bg-gray-200 rounded w-1/2" />
+                            <div className="h-3 bg-gray-200 rounded w-2/3" />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 mt-4">
+                          <div className="h-8 bg-gray-200 rounded" />
+                          <div className="h-8 bg-gray-200 rounded" />
+                          <div className="h-8 bg-gray-200 rounded" />
+                        </div>
+                      </div>
+                    ))
+                  : cardsData.map((data, index) => {
+                      const fotoFromState = fotoBase64[index];
+                      const base64Image = fotoFromState
+                        ? `data:image/jpeg;base64,${fotoFromState}`
+                        : profileImageUrl;
+
+                      return (
+                        <div
+                          key={index}
+                          className="group bg-white rounded-2xl shadow-md hover:shadow-2xl 
+                         border border-gray-100 overflow-hidden 
+                         transition-all duration-300 hover:-translate-y-1"
+                        >
+                          {/* Header gradient */}
+                          <div className="relative bg-gradient-to-r from-teal-500 to-cyan-500 px-4 py-3">
+                            <h2 className="text-sm font-bold text-white truncate">
+                              {data.namaLengkap}
+                            </h2>
+                            <p className="text-xs text-teal-50 mt-0.5">
+                              {data.npaPgri}
+                            </p>
+                            {/* Dekorasi bulat */}
+                            <div className="absolute -right-4 -top-4 w-16 h-16 rounded-full bg-white/10" />
+                            <div className="absolute -right-1 top-6 w-8 h-8 rounded-full bg-white/10" />
+                          </div>
+
+                          {/* Body */}
+                          <div className="p-4">
+                            <div className="flex gap-3">
+                              {/* Foto */}
+                              <div className="flex-shrink-0">
+                                <div
+                                  className="cursor-pointer rounded-xl overflow-hidden 
+                                 ring-2 ring-teal-100 group-hover:ring-teal-300 
+                                 transition-all duration-300 shadow-sm
+                                 w-[80px] h-[80px]"
+                                  onClick={() => setZoomedImage(base64Image)}
+                                >
+                                  <Image
+                                    src={base64Image}
+                                    width={80}
+                                    height={80}
+                                    alt={
+                                      fotoFromState
+                                        ? "Anggota Foto"
+                                        : `Fallback Image: ${profileImageUrl}`
+                                    }
+                                    className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Info */}
+                              <div className="flex-1 min-w-0 space-y-1.5">
+                                <div className="flex items-start gap-2 text-gray-700 text-xs">
+                                  <FontAwesomeIcon
+                                    icon={faCalendarAlt}
+                                    className="text-teal-500 mt-0.5 flex-shrink-0"
+                                  />
+                                  <span className="truncate">
+                                    {formatDate(data.tanggalLahir)}
+                                  </span>
+                                </div>
+                                <div className="flex items-start gap-2 text-gray-700 text-xs">
+                                  <FontAwesomeIcon
+                                    icon={faUserTie}
+                                    className="text-teal-500 mt-0.5 flex-shrink-0"
+                                  />
+                                  <span className="truncate">
+                                    {data.jabatan}
+                                  </span>
+                                </div>
+                                <div className="flex items-start gap-2 text-gray-700 text-xs">
+                                  <FontAwesomeIcon
+                                    icon={faHome}
+                                    className="text-teal-500 mt-0.5 flex-shrink-0"
+                                  />
+                                  <span className="line-clamp-2">
+                                    {data.alamat}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Status Badges */}
+                            <div className="mt-4 pt-3 border-t border-gray-100">
+                              <div className="grid grid-cols-3 gap-2 text-xs">
+                                <StatusBadge
+                                  label="Daspen"
+                                  active={data.pesertaDaspen}
+                                />
+                                <StatusBadge
+                                  label="KTA Digital"
+                                  active={data.pesertaKtaDigital}
+                                />
+                                <StatusBadge
+                                  label="Sanduka"
+                                  active={data.pesertaSanduka}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+              </div>
+
+              {/* ====== PAGINATION ====== */}
+              <ul className="flex flex-wrap items-center justify-center gap-2 mt-8 pb-4">
+                <li>
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className={`px-4 py-2 rounded-xl text-sm font-medium shadow-sm 
+            transition-all duration-200
+            ${
+              currentPage === 1
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : "bg-white text-teal-600 hover:bg-teal-600 hover:text-white hover:shadow-md"
+            }`}
+                  >
+                    ← Prev
+                  </button>
+                </li>
+
+                {(() => {
+                  const maxVisible = 3;
+                  const startPage = Math.max(
+                    1,
+                    currentPage - Math.floor(maxVisible / 2),
+                  );
+                  const endPage = Math.min(
+                    totalPages,
+                    startPage + maxVisible - 1,
+                  );
+
+                  const pages = [];
+                  for (let i = startPage; i <= endPage; i++) pages.push(i);
+
+                  return pages.map((page) => (
+                    <li key={page}>
+                      <button
+                        onClick={() => handlePageChange(page)}
+                        className={`w-9 h-9 rounded-xl text-sm font-semibold shadow-sm 
+                transition-all duration-200
+                ${
+                  currentPage === page
+                    ? "bg-teal-600 text-white shadow-md scale-105"
+                    : "bg-white text-teal-600 hover:bg-teal-50"
+                }`}
+                      >
+                        {page}
+                      </button>
+                    </li>
+                  ));
+                })()}
+
+                <li>
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className={`px-4 py-2 rounded-xl text-sm font-medium shadow-sm 
+            transition-all duration-200
+            ${
+              currentPage === totalPages
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : "bg-white text-teal-600 hover:bg-teal-600 hover:text-white hover:shadow-md"
+            }`}
+                  >
+                    Next →
+                  </button>
+                </li>
+              </ul>
             </div>
-            <ul className="flex mt-4 space-x-2 justify-center pb-8">
-              <li>
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className={`px-4 py-2 rounded-lg shadow-md ${
-                    currentPage === 1
-                      ? "bg-gray-300 cursor-not-allowed"
-                      : "bg-white text-blue-600 hover:bg-blue-600 hover:text-white transition duration-300"
-                  }`}
-                >
-                  Previous
-                </button>
-              </li>
-              {(() => {
-                const maxVisible = 3;
-                const startPage = Math.max(
-                  1,
-                  currentPage - Math.floor(maxVisible / 2)
-                );
-                const endPage = Math.min(
-                  totalPages,
-                  startPage + maxVisible - 1
-                );
-
-                const pages = [];
-                for (let i = startPage; i <= endPage; i++) {
-                  pages.push(i);
-                }
-
-                return pages.map((page) => (
-                  <li key={page}>
-                    <button
-                      onClick={() => handlePageChange(page)}
-                      className={`px-3 py-1 rounded-full shadow-md ${
-                        currentPage === page
-                          ? "bg-blue-600 text-white"
-                          : "bg-white text-blue-600 hover:bg-blue-600 hover:text-white transition duration-300"
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  </li>
-                ));
-              })()}
-              <li>
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className={`px-4 py-2 rounded-lg shadow-md ${
-                    currentPage === totalPages
-                      ? "bg-gray-300 cursor-not-allowed"
-                      : "bg-white text-blue-600 hover:bg-blue-600 hover:text-white transition duration-300"
-                  }`}
-                >
-                  Next
-                </button>
-              </li>
-            </ul>
           </div>
         </div>
       </div>
@@ -466,9 +494,33 @@ const TemanUnitKerja = () => {
           </div>
         </div>
       )}
-
     </div>
   );
 };
 
+function StatusBadge({ label, active }) {
+  return (
+    <div className="flex flex-col items-center">
+      <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
+        {label}
+      </span>
+      <span
+        className={`mt-1 inline-flex items-center gap-1 px-2 py-1 rounded-full 
+          text-[10px] font-semibold
+          ${
+            active
+              ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
+              : "bg-rose-50 text-rose-700 ring-1 ring-rose-200"
+          }`}
+      >
+        <span
+          className={`w-1.5 h-1.5 rounded-full ${
+            active ? "bg-emerald-500" : "bg-rose-500"
+          }`}
+        />
+        {active ? "Terdaftar" : "Belum"}
+      </span>
+    </div>
+  );
+}
 export default TemanUnitKerja;
