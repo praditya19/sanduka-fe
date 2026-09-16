@@ -645,34 +645,14 @@ const getAdminBantuan = () =>
   axiosClient.get("/api/register-admin/admins-per-cabang");
 
 // Teman Unit Kerja
-const getTemanUnitKerja = async (unitKerja, cabang = null) => {
+const getTemanUnitKerja = async (
+  unitKerja,
+  cabang = null,
+  page = 0,
+  size = 10,
+) => {
   try {
-    const size = 200;
-    let page = 0;
-    let allContent = [];
-    let totalPages = 1;
-    let lastResponse = null;
-
-    while (page < totalPages) {
-      const params = {
-        unitKerja: unitKerja,
-        page: page,
-        size: size,
-      };
-      if (cabang != null) {
-        params.cabang = cabang;
-      }
-      const response = await axiosClient.get("/api/auth/teman-unit-kerja", { params });
-      lastResponse = response;
-      const data = response.data;
-      if (data?.content) {
-        allContent = allContent.concat(data.content);
-      }
-      totalPages = data?.totalPages ?? 0;
-      page++;
-    }
-
-    return { ...lastResponse.data, content: allContent };
+    return await getAllAnggota(page, size, cabang, unitKerja);
   } catch (error) {
     console.error("Error fetching teman unit kerja:", error);
     throw error;
@@ -1077,7 +1057,10 @@ const getIuranPersenDaspen = async () => {
 };
 const updateIuranPersenDaspen = async (id, payload) => {
   try {
-    const response = await axiosClient.put(`/api/iuran-persen-daspen/${id}`, payload);
+    const response = await axiosClient.put(
+      `/api/iuran-persen-daspen/${id}`,
+      payload,
+    );
     return response.data;
   } catch (error) {
     console.error("Error updating iuran persen daspen:", error);
@@ -1329,7 +1312,10 @@ const getPosLainLainNames = async () => {
 
 const updatePosLainLain = async (id, updatedData) => {
   try {
-    const response = await axiosClient.put(`/api/pos-lain-lain/${id}`, updatedData);
+    const response = await axiosClient.put(
+      `/api/pos-lain-lain/${id}`,
+      updatedData,
+    );
     return response.data;
   } catch (error) {
     console.error("Error updating pos lain-lain:", error);
@@ -1349,7 +1335,10 @@ const deletePosLainLain = async (id) => {
 // Rekapitulasi Daspen
 const saveRekapDaspenBatch = async (data) => {
   try {
-    const response = await axiosClient.post("/api/rekapitulasi-daspen/batch", data);
+    const response = await axiosClient.post(
+      "/api/rekapitulasi-daspen/batch",
+      data,
+    );
     return response.data;
   } catch (error) {
     console.error("Error saving rekap daspen:", error);
@@ -1358,7 +1347,9 @@ const saveRekapDaspenBatch = async (data) => {
 };
 const getRekapDaspenByPeriode = async (bulan, tahun) => {
   try {
-    const response = await axiosClient.get(`/api/rekapitulasi-daspen/filter?bulan=${bulan}&tahun=${tahun}`);
+    const response = await axiosClient.get(
+      `/api/rekapitulasi-daspen/filter?bulan=${bulan}&tahun=${tahun}`,
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching rekap daspen:", error);
@@ -1438,7 +1429,6 @@ const getBalancingSummaryPerCabang = async (bulan = null, tahun = null) => {
     throw error;
   }
 };
-
 
 const getCountAnggotaPotonganBank = async (bulan, tahun) => {
   const params = new URLSearchParams();
@@ -1984,9 +1974,12 @@ const getIuranAnggotaAll = async (bulan, tahun) => {
 };
 const getTotalIuranSumbanganHut = async (tahun, bulan) => {
   try {
-    const response = await axiosClient.get(`/api/iuran-sumbangan-hut/total-by-cabang`, {
-      params: { tahun, bulan },
-    });
+    const response = await axiosClient.get(
+      `/api/iuran-sumbangan-hut/total-by-cabang`,
+      {
+        params: { tahun, bulan },
+      },
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching total iuran sumbangan hut:", error);
@@ -1995,31 +1988,54 @@ const getTotalIuranSumbanganHut = async (tahun, bulan) => {
 };
 const getIuranSumbanganHutByNpa = async (npa, bulan) => {
   try {
-    const response = await axiosClient.get(`/api/iuran-sumbangan-hut/by-npa/${npa}`, {
-      params: { bulan },
-    });
+    const response = await axiosClient.get(
+      `/api/iuran-sumbangan-hut/by-npa/${npa}`,
+      {
+        params: { bulan },
+      },
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching iuran sumbangan hut by npa:", error);
     throw error;
   }
 };
-const saveIuranSumbanganHut = async (npa, cabang, tagihanUntukBulan, defaultHut, manualHut) => {
+const saveIuranSumbanganHut = async (
+  npa,
+  cabang,
+  tagihanUntukBulan,
+  defaultHut,
+  manualHut,
+) => {
   try {
-    const response = await axiosClient.post(`/api/iuran-sumbangan-hut/save`, null, {
-      params: { npa, cabang, tagihanUntukBulan, defaultHut, manualHut },
-    });
+    const response = await axiosClient.post(
+      `/api/iuran-sumbangan-hut/save`,
+      null,
+      {
+        params: { npa, cabang, tagihanUntukBulan, defaultHut, manualHut },
+      },
+    );
     return response.data;
   } catch (error) {
     console.error("Error saving iuran sumbangan hut:", error);
     throw error;
   }
 };
-const updateIuranSumbanganHut = async (npa, cabang, tagihanUntukBulan, defaultHut, manualHut) => {
+const updateIuranSumbanganHut = async (
+  npa,
+  cabang,
+  tagihanUntukBulan,
+  defaultHut,
+  manualHut,
+) => {
   try {
-    const response = await axiosClient.put(`/api/iuran-sumbangan-hut/update`, null, {
-      params: { npa, cabang, tagihanUntukBulan, defaultHut, manualHut },
-    });
+    const response = await axiosClient.put(
+      `/api/iuran-sumbangan-hut/update`,
+      null,
+      {
+        params: { npa, cabang, tagihanUntukBulan, defaultHut, manualHut },
+      },
+    );
     return response.data;
   } catch (error) {
     console.error("Error updating iuran sumbangan hut:", error);
@@ -2634,7 +2650,7 @@ const toggleTerlewatSidebarGallery = async (id, isTerlewat) => {
   try {
     const query = isTerlewat !== undefined ? `?isTerlewat=${isTerlewat}` : "";
     const response = await axiosClient.patch(
-      `/api/sidebar-gallery/${id}/toggle-terlewat${query}`
+      `/api/sidebar-gallery/${id}/toggle-terlewat${query}`,
     );
     return response.data;
   } catch (error) {
@@ -3352,7 +3368,9 @@ const getPosPengeluaranUmum = async () => {
 
 const deletePosPengeluaranUmum = async (id) => {
   try {
-    const response = await axiosClient.delete(`/api/pos-pengeluaran-kas-umum/${id}`);
+    const response = await axiosClient.delete(
+      `/api/pos-pengeluaran-kas-umum/${id}`,
+    );
     return response.data;
   } catch (error) {
     if (error.response) {
@@ -3688,9 +3706,13 @@ const updateTransaksiCabang = async (id, payload) => {
 
 const createTransaksiCabangBatch = async (dataList) => {
   try {
-    const response = await axiosClient.post("/api/transaksi-cabang/batch", dataList, {
-      headers: { "Content-Type": "application/json" },
-    });
+    const response = await axiosClient.post(
+      "/api/transaksi-cabang/batch",
+      dataList,
+      {
+        headers: { "Content-Type": "application/json" },
+      },
+    );
     return response.data;
   } catch (error) {
     console.error("Error create transaksi cabang batch:", error);
@@ -3940,7 +3962,9 @@ const getBeritaById = async (id) => {
 
 const getBeritaBySlug = async (slug) => {
   try {
-    const response = await axiosClient.get(`/api/berita/slug/${encodeURIComponent(slug)}`);
+    const response = await axiosClient.get(
+      `/api/berita/slug/${encodeURIComponent(slug)}`,
+    );
     return response.data;
   } catch (error) {
     throw error;
@@ -4489,9 +4513,12 @@ const saveRekapKalenderBatch = async (data) => {
 
 const getRekapKalenderByPeriode = async (bulan, tahun) => {
   try {
-    const response = await axiosClient.get(`/api/rekapitulasi-kalender/filter`, {
-      params: { bulan, tahun },
-    });
+    const response = await axiosClient.get(
+      `/api/rekapitulasi-kalender/filter`,
+      {
+        params: { bulan, tahun },
+      },
+    );
     return response.data;
   } catch (error) {
     console.error("Error getRekapKalenderByPeriode:", error);

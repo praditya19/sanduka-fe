@@ -464,11 +464,11 @@ const Page = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <main
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
+          className={`min-w-0 w-full flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "md:ml-64" : "ml-0"
           }`}
         >
-          <div className="p-4 md:p-6 pt-20 bg-gray-50 min-h-screen mt-12">
+          <div className="min-w-0 p-4 md:p-6 pt-20 bg-gray-50 min-h-screen mt-12">
             {/* Header Section */}
 
             <div className="mb-8">
@@ -513,7 +513,7 @@ const Page = () => {
             {/* Daftar Event */}
             {eventOptions.length > 0 && (
               <section className="mb-8">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {eventOptions.map((event, index) => {
                     const isSelected = selectedEvent === event.namaEvent;
 
@@ -549,7 +549,7 @@ const Page = () => {
                         </div>
 
                         {/* Judul Event */}
-                        <h3 className="text-sm font-bold text-gray-800 mb-3">
+                        <h3 className="text-sm font-bold text-gray-800 mb-3 line-clamp-2">
                           {event.namaEvent || "Event tanpa nama"}
                         </h3>
 
@@ -570,10 +570,10 @@ const Page = () => {
             )}
 
             {/* Filters Section */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="min-w-0 bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-6">
+              <div className="grid min-w-0 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Filter Cabang */}
-                <div className="relative">
+                <div className="relative min-w-0">
                   <label className="text-sm font-semibold text-gray-700 mb-2 block flex items-center gap-2">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -631,7 +631,7 @@ const Page = () => {
                   </div>
                   {showDropdownCabang &&
                     sessionStorage.getItem("role") === "SUPERADMIN" && (
-                      <div className="absolute z-10 border border-gray-200 rounded-xl bg-white shadow-lg mt-1 w-full overflow-hidden">
+                      <div className="absolute z-10 border border-gray-200 rounded-xl bg-white shadow-lg mt-1 w-full max-h-64 overflow-hidden">
                         <ul className="max-h-60 overflow-y-auto">
                           <li className="py-2 px-3 border-b border-gray-100">
                             <Input
@@ -709,7 +709,7 @@ const Page = () => {
                 </div>
 
                 {/* Filter Event */}
-                <div>
+                <div className="min-w-0">
                   <label className="text-sm font-semibold text-gray-700 mb-2 block flex items-center gap-2">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -735,7 +735,7 @@ const Page = () => {
                       setSelectedEvent(value);
                       dataPeserta(value, selectedCabang);
                     }}
-                    className="border border-gray-200 rounded-xl p-3 w-full bg-gray-50 hover:bg-white transition-all duration-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 appearance-none cursor-pointer"
+                    className="min-w-0 max-w-full border border-gray-200 rounded-xl p-3 w-full bg-gray-50 hover:bg-white transition-all duration-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 appearance-none cursor-pointer"
                   >
                     <option value="">📅 Tampil Semua Event</option>
 
@@ -747,43 +747,8 @@ const Page = () => {
                   </select>
                 </div>
 
-                {/* Filter Tanggal Daftar */}
-                {/* <div>
-                  <label className="text-sm font-semibold text-gray-700 mb-2 block flex items-center gap-2">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 text-teal-600"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    Tanggal Daftar
-                  </label>
-
-                  <select
-                    value={selectedTahunDaftar}
-                    onChange={(e) => setSelectedTahunDaftar(e.target.value)}
-                    className="border border-gray-200 rounded-xl p-3 w-full bg-gray-50 hover:bg-white transition-all duration-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 appearance-none cursor-pointer"
-                  >
-                    <option value="">📆 Semua Tahun</option>
-
-                    {tahunDaftarOptions.map((tahun) => (
-                      <option key={tahun} value={tahun}>
-                        {tahun}
-                      </option>
-                    ))}
-                  </select>
-                </div> */}
-
                 {/* Filter Cari */}
-                <div>
+                <div className="min-w-0">
                   <label className="text-sm font-semibold text-gray-700 mb-2 block flex items-center gap-2">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -833,7 +798,7 @@ const Page = () => {
               </div>
 
               {/* Tombol Download Excel - Baris baru */}
-              <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 min-w-0">
                 <div className="text-sm text-gray-500">
                   <div className="flex items-center gap-2">
                     <span className="bg-green-100 text-green-700 text-sm px-3 py-1 rounded-full flex items-center gap-1">
@@ -843,7 +808,7 @@ const Page = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
                   {/* Tombol Refresh */}
                   <button
                     onClick={() => {
@@ -852,7 +817,7 @@ const Page = () => {
                       setSelectedCabang("");
                       dataPeserta("", "");
                     }}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 hover:shadow-md"
+                    className="inline-flex w-full sm:w-auto justify-center items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 hover:shadow-md"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -874,7 +839,7 @@ const Page = () => {
                   {/* Tombol Download Excel */}
                   <button
                     onClick={handleDownloadPeserta}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                    className="inline-flex w-full sm:w-auto justify-center items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
