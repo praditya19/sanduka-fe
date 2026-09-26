@@ -779,6 +779,7 @@ const GaleriKegiatan = () => {
     const [isCheckingNpa, setIsCheckingNpa] = useState(false);
     const [npaError, setNpaError] = useState("");
     const [formFotoBase64, setFormFotoBase64] = useState(fotoBase64);
+    const [validationErrors, setValidationErrors] = useState({});
 
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
@@ -801,10 +802,12 @@ const GaleriKegiatan = () => {
         setFormUserData(member);
         setFormFotoBase64(member.foto || null);
         setJabatan(member.jabatan || "");
+        setValidationErrors((prev) => ({ ...prev, registrationNpa: false }));
       } catch (error) {
         setFormUserData(null);
         setFormFotoBase64(null);
         setNpaError(error.message || "Data anggota tidak ditemukan.");
+        setValidationErrors((prev) => ({ ...prev, registrationNpa: true }));
       } finally {
         setIsCheckingNpa(false);
       }
@@ -876,6 +879,10 @@ const GaleriKegiatan = () => {
       if (!file) {
         setKtaFile(null);
         setKtaFileName("");
+        setValidationErrors((prev) => ({
+          ...prev,
+          uploadKta: !formFotoBase64,
+        }));
         return;
       }
 
@@ -896,6 +903,7 @@ const GaleriKegiatan = () => {
       ) {
         setKtaFile(file);
         setKtaFileName(file.name);
+        setValidationErrors((prev) => ({ ...prev, uploadKta: false }));
       } else {
         alert(
           "Format file KTA tidak didukung. Silakan pilih file PDF, JPG, JPEG, atau PNG.",
@@ -962,11 +970,35 @@ const GaleriKegiatan = () => {
     const handleSubmitRegistration = async () => {
       if (!currentEvent || isSubmitting) return;
 
-      try {
-        if (!jenisKelamin || !tanggalDaftar) {
-          throw new Error("Jenis kelamin dan tanggal daftar wajib diisi");
-        }
+      const errors = {
+        registrationNpa:
+          isAdminRegistration &&
+          (!registrationNpa.trim() ||
+            formUserData?.npaPgri !== registrationNpa.trim()),
+        jenisKelamin: !jenisKelamin,
+        jabatan: !jabatan.trim(),
+        tanggalDaftar: !tanggalDaftar,
+        uploadKta: !ktaFile && !formFotoBase64,
+      };
+      setValidationErrors(errors);
 
+      const firstInvalidField = Object.keys(errors).find((field) => errors[field]);
+      if (firstInvalidField) {
+        const fieldId =
+          firstInvalidField === "uploadKta"
+            ? "uploadKtaControl"
+            : firstInvalidField;
+        const field = document.getElementById(fieldId);
+        field?.scrollIntoView({ behavior: "smooth", block: "center" });
+        if (firstInvalidField === "uploadKta") {
+          field?.querySelector("button")?.focus({ preventScroll: true });
+        } else {
+          field?.focus({ preventScroll: true });
+        }
+        return;
+      }
+
+      try {
         setIsSubmitting(true);
         const userId = sessionStorage.getItem("userId");
 
@@ -1214,8 +1246,16 @@ const GaleriKegiatan = () => {
                                 setFormUserData(null);
                                 setFormFotoBase64(null);
                                 setNpaError("");
+                                setValidationErrors((prev) => ({
+                                  ...prev,
+                                  registrationNpa: true,
+                                }));
                               }}
-                              className="min-w-0 flex-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className={`min-w-0 flex-1 p-2 border rounded-md focus:outline-none focus:ring-2 ${
+                                validationErrors.registrationNpa
+                                  ? "border-red-500 focus:ring-red-200"
+                                  : "border-gray-300 focus:ring-blue-500"
+                              }`}
                               placeholder="Masukkan NPA anggota"
                             />
                             <button
@@ -1237,6 +1277,11 @@ const GaleriKegiatan = () => {
                         {npaError && (
                           <p className="text-red-500 text-sm mt-1">
                             {npaError}
+                          </p>
+                        )}
+                        {validationErrors.registrationNpa && !npaError && (
+                          <p className="text-red-500 text-sm mt-1">
+                            Masukkan NPA dan pilih Cek Data terlebih dahulu.
                           </p>
                         )}
                       </div>
@@ -1300,8 +1345,18 @@ const GaleriKegiatan = () => {
                         <select
                           id="jenisKelamin"
                           value={jenisKelamin}
-                          onChange={(e) => setJenisKelamin(e.target.value)}
-                          className="w-full mt-1 p-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          onChange={(e) => {
+                            setJenisKelamin(e.target.value);
+                            setValidationErrors((prev) => ({
+                              ...prev,
+                              jenisKelamin: false,
+                            }));
+                          }}
+                          className={`w-full mt-1 p-2 border rounded-md bg-white focus:outline-none focus:ring-2 ${
+                            validationErrors.jenisKelamin
+                              ? "border-red-500 focus:ring-red-200"
+                              : "border-gray-300 focus:ring-blue-500"
+                          }`}
                           required
                         >
                           <option value="">Pilih Jenis Kelamin</option>
@@ -1326,9 +1381,19 @@ const GaleriKegiatan = () => {
                           id="jabatan"
                           type="text"
                           value={jabatan}
-                          onChange={(e) => setJabatan(e.target.value)}
+                          onChange={(e) => {
+                            setJabatan(e.target.value);
+                            setValidationErrors((prev) => ({
+                              ...prev,
+                              jabatan: false,
+                            }));
+                          }}
                           placeholder="Isikan katerangan atau link"
-                          className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className={`w-full mt-1 p-2 border rounded-md focus:outline-none focus:ring-2 ${
+                            validationErrors.jabatan
+                              ? "border-red-500 focus:ring-red-200"
+                              : "border-gray-300 focus:ring-blue-500"
+                          }`}
                           required
                         />
 
@@ -1352,8 +1417,18 @@ const GaleriKegiatan = () => {
                           id="tanggalDaftar"
                           type="date"
                           value={tanggalDaftar}
-                          onChange={(e) => setTanggalDaftar(e.target.value)}
-                          className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          onChange={(e) => {
+                            setTanggalDaftar(e.target.value);
+                            setValidationErrors((prev) => ({
+                              ...prev,
+                              tanggalDaftar: false,
+                            }));
+                          }}
+                          className={`w-full mt-1 p-2 border rounded-md focus:outline-none focus:ring-2 ${
+                            validationErrors.tanggalDaftar
+                              ? "border-red-500 focus:ring-red-200"
+                              : "border-gray-300 focus:ring-blue-500"
+                          }`}
                           required
                         />
 
@@ -1383,7 +1458,14 @@ const GaleriKegiatan = () => {
                             className="hidden"
                           />
 
-                          <div className="w-full mt-1 border border-gray-300 rounded-md overflow-hidden flex">
+                          <div
+                            id="uploadKtaControl"
+                            className={`w-full mt-1 border rounded-md overflow-hidden flex ${
+                              validationErrors.uploadKta
+                                ? "border-red-500"
+                                : "border-gray-300"
+                            }`}
+                          >
                             <button
                               type="button"
                               onClick={() => ktaFileInputRef.current?.click()}
@@ -1506,13 +1588,7 @@ const GaleriKegiatan = () => {
                     <button
                       type="button"
                       onClick={handleSubmitRegistration}
-                      disabled={
-                        isSubmitting ||
-                        !jenisKelamin ||
-                        !tanggalDaftar ||
-                        (isAdminRegistration &&
-                          formUserData?.npaPgri !== registrationNpa.trim())
-                      }
+                      disabled={isSubmitting}
                       className="mt-6 w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-semibold transition-colors disabled:bg-blue-400 transform hover:scale-105 duration-200"
                     >
                       {isSubmitting ? (
