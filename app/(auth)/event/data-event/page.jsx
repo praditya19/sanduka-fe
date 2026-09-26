@@ -524,6 +524,12 @@ const Page = () => {
                         onClick={() => {
                           setSelectedEvent(event.namaEvent);
                           dataPeserta(event.namaEvent, selectedCabang);
+                          document
+                            .getElementById("data-peserta-table")
+                            ?.scrollIntoView({
+                              behavior: "smooth",
+                              block: "start",
+                            });
                         }}
                         className={`relative rounded-2xl border-2 bg-white text-left shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg p-4 ${
                           isSelected
@@ -865,7 +871,10 @@ const Page = () => {
             </div>
 
             {/* Data Table */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div
+              id="data-peserta-table"
+              className="scroll-mt-24 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+            >
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-20">
                   <div className="relative">
