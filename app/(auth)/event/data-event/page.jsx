@@ -110,6 +110,7 @@ const Page = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [expandedIndex, setExpandedIndex] = useState(null);
+  const [role, setRole] = useState(null);
   const router = useRouter();
   const { token } = useAuth();
 
@@ -152,12 +153,14 @@ const Page = () => {
   };
 
   const handleDeleteClick = (id) => {
+    if (!role || role === "USER") return;
+
     setSelectedId(id);
     setShowDeleteModal(true);
   };
 
   const handleConfirmDelete = async () => {
-    if (!selectedId) return;
+    if (!selectedId || !role || role === "USER") return;
 
     setLoadingDelete(true);
 
@@ -229,6 +232,12 @@ const Page = () => {
     if (!searchText.trim()) return true;
 
     const keyword = searchText.toLowerCase().trim();
+
+    if (role === "USER") {
+      return String(item?.namaLengkap ?? "")
+        .toLowerCase()
+        .includes(keyword);
+    }
 
     return Object.values(item).some((value) =>
       String(value ?? "")
@@ -423,6 +432,16 @@ const Page = () => {
   }, [token, router]);
 
   useEffect(() => {
+    const userRole = sessionStorage.getItem("role") || "";
+    setRole(userRole);
+
+    if (userRole === "USER") {
+      const nama = sessionStorage.getItem("nama") || "";
+      setSearchText(nama.split(",")[0].trim());
+    }
+  }, []);
+
+  useEffect(() => {
     const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
     setIsSidebarOpen(sidebarState);
   }, []);
@@ -469,155 +488,439 @@ const Page = () => {
           }`}
         >
           <div className="min-w-0 p-4 md:p-6 pt-20 bg-gray-50 min-h-screen mt-12">
-            {/* Header Section */}
-
-            <div className="mb-8">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                <div className="flex items-center gap-3 mb-4 md:mb-0">
-                  <div className="bg-gradient-to-r from-teal-500 to-teal-600 p-3 rounded-xl shadow-lg">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-7 w-7 text-white"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
+            {role === "USER" && (
+              <div className="mb-8">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                  <div className="flex items-center gap-3 mb-4 md:mb-0">
+                    <div className="bg-gradient-to-r from-teal-500 to-teal-600 p-3 rounded-xl shadow-lg">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-7 w-7 text-white"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+                        Manajemen Event
+                      </h1>
+                      <p className="text-sm text-gray-500 mt-1">
+                        Event Terdaftar
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
-                      Manajemen Event
-                    </h1>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Kelola data peserta event dengan mudah
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="flex items-center gap-2 bg-gradient-to-r from-teal-50 to-cyan-50 px-4 py-2 rounded-full border border-teal-200 shadow-sm">
-                    <span className="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></span>
-                    <span className="text-sm font-semibold text-teal-700">
-                      {eventOptions.length} Event Tersedia
+                  <div className="flex items-center gap-2">
+                    <span className="flex items-center gap-2 bg-gradient-to-r from-teal-50 to-cyan-50 px-4 py-2 rounded-full border border-teal-200 shadow-sm">
+                      <span className="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></span>
+                      <span className="text-sm font-semibold text-teal-700">
+                        {eventOptions.length} Event Tersedia
+                      </span>
                     </span>
-                  </span>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            {/* Daftar Event */}
-            {eventOptions.length > 0 && (
-              <section className="mb-8">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {eventOptions.map((event, index) => {
-                    const isSelected = selectedEvent === event.namaEvent;
-
-                    return (
-                      <button
-                        key={event.id || index}
-                        type="button"
-                        onClick={() => {
-                          setSelectedEvent(event.namaEvent);
-                          dataPeserta(event.namaEvent, selectedCabang);
-                          document
-                            .getElementById("data-peserta-table")
-                            ?.scrollIntoView({
-                              behavior: "smooth",
-                              block: "start",
-                            });
-                        }}
-                        className={`relative rounded-2xl border-2 bg-white text-left shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg p-4 ${
-                          isSelected
-                            ? "border-teal-500 ring-2 ring-teal-200"
-                            : "border-gray-200 hover:border-teal-300"
-                        }`}
-                      >
-                        {/* Badge Nomor + Status */}
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 text-xs font-bold text-gray-700">
-                            {index + 1}
-                          </span>
-
-                          {event.isTerlewat ? (
-                            <span className="px-2 py-1 rounded-full bg-red-600 text-[10px] font-bold text-white">
-                              Terlaksana
-                            </span>
-                          ) : (
-                            <span className="px-2 py-1 rounded-full bg-teal-500 text-[10px] font-bold text-white">
-                              Aktif
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Judul Event */}
-                        <h3 className="text-sm font-bold text-gray-800 mb-3 line-clamp-2">
-                          {event.namaEvent || "Event tanpa nama"}
-                        </h3>
-
-                        {/* Total Peserta */}
-                        <div className="flex items-center justify-between border-t pt-2 border-gray-100">
-                          <span className="text-xs text-gray-500 font-medium">
-                            Total Peserta
-                          </span>
-                          <span className="text-sm font-bold text-teal-600">
-                            {eventParticipantCounts[event.namaEvent] || 0}
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </section>
             )}
 
-            {/* Filters Section */}
-            <div className="min-w-0 bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-6">
-              <div className="grid min-w-0 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Filter Cabang */}
-                <div className="relative min-w-0">
-                  <label className="text-sm font-semibold text-gray-700 mb-2 block flex items-center gap-2">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 text-teal-600"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                      />
-                    </svg>
-                    Pilih Cabang
-                  </label>
-                  <div className="relative">
-                    <Input
-                      id="cabangInput"
-                      type="text"
-                      className="border border-gray-200 rounded-xl p-3 w-full bg-gray-50 hover:bg-white transition-all duration-200 cursor-pointer focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
-                      placeholder={selectedCabang || "Tampil Semua"}
-                      value={
-                        sessionStorage.getItem("role") === "SUPERADMIN"
-                          ? selectedCabang
-                          : sessionStorage.getItem("cabang") || "Tampil Semua"
-                      }
-                      disabled={sessionStorage.getItem("role") !== "SUPERADMIN"}
-                      readOnly={sessionStorage.getItem("role") !== "SUPERADMIN"}
-                      onClick={() => {
-                        if (sessionStorage.getItem("role") === "SUPERADMIN") {
-                          setShowDropdownCabang(true);
-                        }
-                      }}
-                    />
-                    {!sessionStorage.getItem("role") === "SUPERADMIN" && (
-                      <div className="absolute right-3 top-3 text-gray-400 pointer-events-none">
+            {role !== null && role !== "USER" && (
+              <>
+                {/* Header Section */}
+
+                <div className="mb-8">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                    <div className="flex items-center gap-3 mb-4 md:mb-0">
+                      <div className="bg-gradient-to-r from-teal-500 to-teal-600 p-3 rounded-xl shadow-lg">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-7 w-7 text-white"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                      </div>
+                      <div>
+                        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+                          Manajemen Event
+                        </h1>
+                        <p className="text-sm text-gray-500 mt-1">
+                          Kelola data peserta event dengan mudah
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="flex items-center gap-2 bg-gradient-to-r from-teal-50 to-cyan-50 px-4 py-2 rounded-full border border-teal-200 shadow-sm">
+                        <span className="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></span>
+                        <span className="text-sm font-semibold text-teal-700">
+                          {eventOptions.length} Event Tersedia
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Daftar Event */}
+                {eventOptions.length > 0 && (
+                  <section className="mb-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {eventOptions.map((event, index) => {
+                        const isSelected = selectedEvent === event.namaEvent;
+
+                        return (
+                          <button
+                            key={event.id || index}
+                            type="button"
+                            onClick={() => {
+                              setSelectedEvent(event.namaEvent);
+                              dataPeserta(event.namaEvent, selectedCabang);
+                              document
+                                .getElementById("data-peserta-table")
+                                ?.scrollIntoView({
+                                  behavior: "smooth",
+                                  block: "start",
+                                });
+                            }}
+                            className={`relative rounded-2xl border-2 bg-white text-left shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg p-4 ${
+                              isSelected
+                                ? "border-teal-500 ring-2 ring-teal-200"
+                                : "border-gray-200 hover:border-teal-300"
+                            }`}
+                          >
+                            {/* Badge Nomor + Status */}
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 text-xs font-bold text-gray-700">
+                                {index + 1}
+                              </span>
+
+                              {event.isTerlewat ? (
+                                <span className="px-2 py-1 rounded-full bg-red-600 text-[10px] font-bold text-white">
+                                  Terlaksana
+                                </span>
+                              ) : (
+                                <span className="px-2 py-1 rounded-full bg-teal-500 text-[10px] font-bold text-white">
+                                  Aktif
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Judul Event */}
+                            <h3 className="text-sm font-bold text-gray-800 mb-3 line-clamp-2">
+                              {event.namaEvent || "Event tanpa nama"}
+                            </h3>
+
+                            {/* Total Peserta */}
+                            <div className="flex items-center justify-between border-t pt-2 border-gray-100">
+                              <span className="text-xs text-gray-500 font-medium">
+                                Total Peserta
+                              </span>
+                              <span className="text-sm font-bold text-teal-600">
+                                {eventParticipantCounts[event.namaEvent] || 0}
+                              </span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </section>
+                )}
+
+                {/* Filters Section */}
+                <div className="min-w-0 bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-6">
+                  <div className="grid min-w-0 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Filter Cabang */}
+                    <div className="relative min-w-0">
+                      <label className="text-sm font-semibold text-gray-700 mb-2 block flex items-center gap-2">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4 text-teal-600"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                          />
+                        </svg>
+                        Pilih Cabang
+                      </label>
+                      <div className="relative">
+                        <Input
+                          id="cabangInput"
+                          type="text"
+                          className="border border-gray-200 rounded-xl p-3 w-full bg-gray-50 hover:bg-white transition-all duration-200 cursor-pointer focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
+                          placeholder={selectedCabang || "Tampil Semua"}
+                          value={
+                            sessionStorage.getItem("role") === "SUPERADMIN"
+                              ? selectedCabang
+                              : sessionStorage.getItem("cabang") ||
+                                "Tampil Semua"
+                          }
+                          disabled={
+                            sessionStorage.getItem("role") !== "SUPERADMIN"
+                          }
+                          readOnly={
+                            sessionStorage.getItem("role") !== "SUPERADMIN"
+                          }
+                          onClick={() => {
+                            if (
+                              sessionStorage.getItem("role") === "SUPERADMIN"
+                            ) {
+                              setShowDropdownCabang(true);
+                            }
+                          }}
+                        />
+                        {!sessionStorage.getItem("role") === "SUPERADMIN" && (
+                          <div className="absolute right-3 top-3 text-gray-400 pointer-events-none">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 9l-7 7-7-7"
+                              />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                      {showDropdownCabang &&
+                        sessionStorage.getItem("role") === "SUPERADMIN" && (
+                          <div className="absolute z-10 border border-gray-200 rounded-xl bg-white shadow-lg mt-1 w-full max-h-64 overflow-hidden">
+                            <ul className="max-h-60 overflow-y-auto">
+                              <li className="py-2 px-3 border-b border-gray-100">
+                                <Input
+                                  type="text"
+                                  className="border border-gray-200 rounded-lg p-2 w-full bg-gray-50 focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
+                                  placeholder="🔍 Cari Cabang..."
+                                  value={queryCabang}
+                                  onChange={(e) =>
+                                    setQueryCabang(e.target.value)
+                                  }
+                                  autoFocus
+                                />
+                              </li>
+                              <li
+                                className="p-3 cursor-pointer hover:bg-teal-50 transition-colors duration-150 flex items-center gap-2"
+                                onClick={() =>
+                                  handleCabangSelect({
+                                    kecamatan: "",
+                                    idKecamatan: null,
+                                  })
+                                }
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="h-4 w-4 text-teal-600"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                                  />
+                                </svg>
+                                Tampil Semua
+                              </li>
+                              {cabangOptions
+                                .filter((cabang) =>
+                                  cabang.kecamatan
+                                    .toLowerCase()
+                                    .includes(queryCabang.toLowerCase()),
+                                )
+                                .map((cabang) => (
+                                  <li
+                                    key={cabang.idKecamatan}
+                                    className="p-3 cursor-pointer hover:bg-teal-50 transition-colors duration-150 flex items-center gap-2 border-t border-gray-50"
+                                    onClick={() => handleCabangSelect(cabang)}
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      className="h-4 w-4 text-gray-400"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                                      />
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                                      />
+                                    </svg>
+                                    {cabang.kecamatan}
+                                  </li>
+                                ))}
+                            </ul>
+                          </div>
+                        )}
+                    </div>
+
+                    {/* Filter Event */}
+                    <div className="min-w-0">
+                      <label className="text-sm font-semibold text-gray-700 mb-2 block flex items-center gap-2">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4 text-teal-600"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                        Event
+                      </label>
+
+                      <select
+                        value={selectedEvent}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setSelectedEvent(value);
+                          dataPeserta(value, selectedCabang);
+                        }}
+                        className="min-w-0 max-w-full border border-gray-200 rounded-xl p-3 w-full bg-gray-50 hover:bg-white transition-all duration-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 appearance-none cursor-pointer"
+                      >
+                        <option value="">📅 Tampil Semua Event</option>
+
+                        {eventOptions.map((event, index) => (
+                          <option
+                            key={event.id || index}
+                            value={event.namaEvent}
+                          >
+                            {event.namaEvent}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Filter Cari */}
+                    <div className="min-w-0">
+                      <label className="text-sm font-semibold text-gray-700 mb-2 block flex items-center gap-2">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4 text-teal-600"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                          />
+                        </svg>
+                        Cari Anggota
+                      </label>
+
+                      <div className="relative">
+                        <input
+                          id="searchInput"
+                          type="text"
+                          placeholder="Cari nama, NPA, cabang, nomor HP, dll..."
+                          value={searchText}
+                          onChange={(e) => setSearchText(e.target.value)}
+                          className="border border-gray-200 rounded-xl p-3 pl-10 w-full bg-gray-50 hover:bg-white transition-all duration-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
+                        />
+
+                        <div className="absolute left-3 top-3.5 text-gray-400">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tombol Download Excel - Baris baru */}
+                  <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 min-w-0">
+                    <div className="text-sm text-gray-500">
+                      <div className="flex items-center gap-2">
+                        <span className="bg-green-100 text-green-700 text-sm px-3 py-1 rounded-full flex items-center gap-1">
+                          <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                          {pesertaList.length} Peserta Ditemukan
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+                      {/* Tombol Refresh */}
+                      <button
+                        onClick={() => {
+                          setSearchText("");
+                          setSelectedEvent("");
+                          setSelectedCabang("");
+                          dataPeserta("", "");
+                        }}
+                        className="inline-flex w-full sm:w-auto justify-center items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 hover:shadow-md"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                          />
+                        </svg>
+                        Reset Filter
+                      </button>
+
+                      {/* Tombol Download Excel */}
+                      <button
+                        onClick={handleDownloadPeserta}
+                        className="inline-flex w-full sm:w-auto justify-center items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                      >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           className="h-5 w-5"
@@ -629,246 +932,19 @@ const Page = () => {
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             strokeWidth={2}
-                            d="M19 9l-7 7-7-7"
+                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                           />
                         </svg>
-                      </div>
-                    )}
-                  </div>
-                  {showDropdownCabang &&
-                    sessionStorage.getItem("role") === "SUPERADMIN" && (
-                      <div className="absolute z-10 border border-gray-200 rounded-xl bg-white shadow-lg mt-1 w-full max-h-64 overflow-hidden">
-                        <ul className="max-h-60 overflow-y-auto">
-                          <li className="py-2 px-3 border-b border-gray-100">
-                            <Input
-                              type="text"
-                              className="border border-gray-200 rounded-lg p-2 w-full bg-gray-50 focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
-                              placeholder="🔍 Cari Cabang..."
-                              value={queryCabang}
-                              onChange={(e) => setQueryCabang(e.target.value)}
-                              autoFocus
-                            />
-                          </li>
-                          <li
-                            className="p-3 cursor-pointer hover:bg-teal-50 transition-colors duration-150 flex items-center gap-2"
-                            onClick={() =>
-                              handleCabangSelect({
-                                kecamatan: "",
-                                idKecamatan: null,
-                              })
-                            }
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-4 w-4 text-teal-600"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-                              />
-                            </svg>
-                            Tampil Semua
-                          </li>
-                          {cabangOptions
-                            .filter((cabang) =>
-                              cabang.kecamatan
-                                .toLowerCase()
-                                .includes(queryCabang.toLowerCase()),
-                            )
-                            .map((cabang) => (
-                              <li
-                                key={cabang.idKecamatan}
-                                className="p-3 cursor-pointer hover:bg-teal-50 transition-colors duration-150 flex items-center gap-2 border-t border-gray-50"
-                                onClick={() => handleCabangSelect(cabang)}
-                              >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  className="h-4 w-4 text-gray-400"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                                  />
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                                  />
-                                </svg>
-                                {cabang.kecamatan}
-                              </li>
-                            ))}
-                        </ul>
-                      </div>
-                    )}
-                </div>
-
-                {/* Filter Event */}
-                <div className="min-w-0">
-                  <label className="text-sm font-semibold text-gray-700 mb-2 block flex items-center gap-2">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 text-teal-600"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                    Event
-                  </label>
-
-                  <select
-                    value={selectedEvent}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setSelectedEvent(value);
-                      dataPeserta(value, selectedCabang);
-                    }}
-                    className="min-w-0 max-w-full border border-gray-200 rounded-xl p-3 w-full bg-gray-50 hover:bg-white transition-all duration-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 appearance-none cursor-pointer"
-                  >
-                    <option value="">📅 Tampil Semua Event</option>
-
-                    {eventOptions.map((event, index) => (
-                      <option key={event.id || index} value={event.namaEvent}>
-                        {event.namaEvent}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Filter Cari */}
-                <div className="min-w-0">
-                  <label className="text-sm font-semibold text-gray-700 mb-2 block flex items-center gap-2">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 text-teal-600"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                      />
-                    </svg>
-                    Cari Anggota
-                  </label>
-
-                  <div className="relative">
-                    <input
-                      id="searchInput"
-                      type="text"
-                      placeholder="Cari nama, NPA, cabang, nomor HP, dll..."
-                      value={searchText}
-                      onChange={(e) => setSearchText(e.target.value)}
-                      className="border border-gray-200 rounded-xl p-3 pl-10 w-full bg-gray-50 hover:bg-white transition-all duration-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
-                    />
-
-                    <div className="absolute left-3 top-3.5 text-gray-400">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                        />
-                      </svg>
+                        Download Excel
+                        <span className="hidden sm:inline text-xs bg-white/20 px-2 py-0.5 rounded-full">
+                          .xlsx
+                        </span>
+                      </button>
                     </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Tombol Download Excel - Baris baru */}
-              <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 min-w-0">
-                <div className="text-sm text-gray-500">
-                  <div className="flex items-center gap-2">
-                    <span className="bg-green-100 text-green-700 text-sm px-3 py-1 rounded-full flex items-center gap-1">
-                      <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                      {pesertaList.length} Peserta Ditemukan
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-                  {/* Tombol Refresh */}
-                  <button
-                    onClick={() => {
-                      setSearchText("");
-                      setSelectedEvent("");
-                      setSelectedCabang("");
-                      dataPeserta("", "");
-                    }}
-                    className="inline-flex w-full sm:w-auto justify-center items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 hover:shadow-md"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                      />
-                    </svg>
-                    Reset Filter
-                  </button>
-
-                  {/* Tombol Download Excel */}
-                  <button
-                    onClick={handleDownloadPeserta}
-                    className="inline-flex w-full sm:w-auto justify-center items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>
-                    Download Excel
-                    <span className="hidden sm:inline text-xs bg-white/20 px-2 py-0.5 rounded-full">
-                      .xlsx
-                    </span>
-                  </button>
-                </div>
-              </div>
-            </div>
+              </>
+            )}
 
             {/* Data Table */}
             <div
@@ -947,9 +1023,11 @@ const Page = () => {
                           <th className="py-4 px-4 text-center text-sm font-semibold uppercase tracking-wider">
                             Keterangan
                           </th>
-                          <th className="py-4 px-4 text-center text-sm font-semibold uppercase tracking-wider rounded-tr-xl">
-                            Aksi
-                          </th>
+                          {role && role !== "USER" && (
+                            <th className="py-4 px-4 text-center text-sm font-semibold uppercase tracking-wider rounded-tr-xl">
+                              Aksi
+                            </th>
+                          )}
                         </tr>
                       </thead>
                       <tbody>
@@ -1168,34 +1246,35 @@ const Page = () => {
                               </div>
                             </td>
 
-                            {/* Aksi */}
-                            <td className="py-4 px-4">
-                              <div className="flex items-center justify-center gap-2">
-                                <button
-                                  onClick={() => handleDeleteClick(item.id)}
-                                  className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-all duration-200 group relative"
-                                >
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="h-5 w-5"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
+                            {role && role !== "USER" && (
+                              <td className="py-4 px-4">
+                                <div className="flex items-center justify-center gap-2">
+                                  <button
+                                    onClick={() => handleDeleteClick(item.id)}
+                                    className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-all duration-200 group relative"
                                   >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                    />
-                                  </svg>
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      className="h-5 w-5"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                      />
+                                    </svg>
 
-                                  <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                                    Hapus
-                                  </span>
-                                </button>
-                              </div>
-                            </td>
+                                    <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                      Hapus
+                                    </span>
+                                  </button>
+                                </div>
+                              </td>
+                            )}
                           </tr>
                         ))}
                       </tbody>

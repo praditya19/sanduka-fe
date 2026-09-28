@@ -899,6 +899,14 @@ export default function IconGrid() {
             href: "/tagihan",
             color: "text-blue-700",
           })
+        .concat({
+              icon: faCalendarDays,
+              label: "Rekap Event",
+              href: "/event/data-event",
+              color: "text-emerald-600",
+              bgHover: "hover:bg-emerald-100",
+              iconColor: "text-emerald-700",
+            })
           .sort((a, b) => {
             const order = [
               "Lapor",
@@ -911,6 +919,7 @@ export default function IconGrid() {
               "Bantuan",
               "Teman Unit",
               "Pengaduan",
+              "Rekap Eventdat",
             ];
             return order.indexOf(a.label) - order.indexOf(b.label);
           })
