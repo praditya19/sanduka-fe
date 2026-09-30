@@ -138,6 +138,11 @@ const Page = () => {
     ),
   ].sort((a, b) => b - a);
 
+  const normalizeEventName = (name) => {
+    if (!name) return "";
+    return String(name).trim().toLowerCase().replace(/\s+/g, " ");
+  };
+
   const getImageSrc = (base64) => {
     if (!base64) return null;
     return `data:image/jpeg;base64,${base64}`;
@@ -207,7 +212,8 @@ const Page = () => {
         (counts, participant) => {
           const eventName = participant?.namaEvent;
           if (eventName) {
-            counts[eventName] = (counts[eventName] || 0) + 1;
+            const key = normalizeEventName(eventName);
+            counts[key] = (counts[key] || 0) + 1;
           }
           return counts;
         },
@@ -577,15 +583,24 @@ const Page = () => {
                   <section className="mb-8">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                       {eventOptions.map((event, index) => {
-                        const isSelected = selectedEvent === event.namaEvent;
+                        const isSelected =
+                          Boolean(selectedEvent) &&
+                          normalizeEventName(selectedEvent) ===
+                            normalizeEventName(event.namaEvent);
+
+                        const count =
+                          eventParticipantCounts[
+                            normalizeEventName(event.namaEvent)
+                          ] || 0;
 
                         return (
                           <button
                             key={event.id || index}
                             type="button"
                             onClick={() => {
-                              setSelectedEvent(event.namaEvent);
-                              dataPeserta(event.namaEvent, selectedCabang);
+                              const targetEvent = (event.namaEvent || "").trim();
+                              setSelectedEvent(targetEvent);
+                              dataPeserta(targetEvent, selectedCabang);
                               document
                                 .getElementById("data-peserta-table")
                                 ?.scrollIntoView({
@@ -627,7 +642,7 @@ const Page = () => {
                                 Total Peserta
                               </span>
                               <span className="text-sm font-bold text-teal-600">
-                                {eventParticipantCounts[event.namaEvent] || 0}
+                                {count}
                               </span>
                             </div>
                           </button>
@@ -816,14 +831,17 @@ const Page = () => {
                       >
                         <option value="">📅 Tampil Semua Event</option>
 
-                        {eventOptions.map((event, index) => (
-                          <option
-                            key={event.id || index}
-                            value={event.namaEvent}
-                          >
-                            {event.namaEvent}
-                          </option>
-                        ))}
+                        {eventOptions.map((event, index) => {
+                          const val = (event.namaEvent || "").trim();
+                          return (
+                            <option
+                              key={event.id || index}
+                              value={val}
+                            >
+                              {val}
+                            </option>
+                          );
+                        })}
                       </select>
                     </div>
 
