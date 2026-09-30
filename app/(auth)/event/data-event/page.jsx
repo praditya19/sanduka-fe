@@ -204,7 +204,7 @@ const Page = () => {
   const fetchEvent = async () => {
     try {
       const [eventResponse, participantResponse] = await Promise.all([
-        GlobalApi.getSidebarGalleryByCategory("event"),
+        GlobalApi.getSidebarGalleryByCategory("event", true),
         GlobalApi.getAllDaftarPesertaEvent(),
       ]);
 

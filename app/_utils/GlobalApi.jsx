@@ -2687,10 +2687,10 @@ const getSidebarGalleryById = async (id) => {
     throw error;
   }
 };
-const getSidebarGalleryByCategory = async (category) => {
+const getSidebarGalleryByCategory = async (category, summary = false) => {
   try {
     const response = await axiosClient.get(
-      `/api/sidebar-gallery/category/${category}`,
+      `/api/sidebar-gallery/category/${category}${summary ? "?summary=true" : ""}`,
     );
     return response.data;
   } catch (error) {
