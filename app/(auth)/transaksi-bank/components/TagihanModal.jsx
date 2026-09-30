@@ -11,6 +11,7 @@ const TagihanModal = ({
   tahun,
   posLainLainName,
   onLunasClick,
+  onBatalLunasClick,
   onRefresh,
 }) => {
   const { token } = useAuth();
@@ -38,6 +39,18 @@ const TagihanModal = ({
     }
   };
 
+  const handleBatalLunas = async (item) => {
+    if (typeof onBatalLunasClick === "function") {
+      await onBatalLunasClick(item);
+      if (typeof refetch === "function") {
+        await refetch();
+      }
+      if (typeof onRefresh === "function") {
+        await onRefresh();
+      }
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="bg-white w-[90%] md:w-[800px] rounded-xl shadow-lg p-6 relative">
@@ -56,6 +69,7 @@ const TagihanModal = ({
             posLainLainName={posLainLainName || hookPosName}
             loading={loading}
             onLunasClick={onLunasClick ? handleLunas : null}
+            onBatalLunasClick={onBatalLunasClick ? handleBatalLunas : null}
           />
         </div>
       </div>

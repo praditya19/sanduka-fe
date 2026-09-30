@@ -368,6 +368,40 @@ const useBalancing = ({
     }
   };
 
+  const handleConfirmBatalLunas = async (item) => {
+    try {
+      const parsedYear = year !== "all" ? Number(year) : null;
+      const parsedMonth = month !== "all" ? Number(month) : null;
+
+      await GlobalApi.batalPelunasanBalancing({
+        id: item.id,
+        npa: item.npa,
+        rekening: item.rekening,
+        namaAnggota: item.nama,
+        cabang: item.cabang,
+        unitKerja: item.unitKerja,
+        nominal: item.totalIuran,
+        bulan: parsedMonth,
+        tahun: parsedYear,
+        keterangan: "Tunai",
+      });
+
+      setNotification({
+        type: "success",
+        message: `Status LUNAS untuk ${item.nama} berhasil dibatalkan dan kembali ke Tunai!`,
+      });
+
+      await getBalancingdata();
+    } catch (err) {
+      console.error("Gagal membatalkan lunas:", err);
+      setNotification({
+        type: "error",
+        message: err?.response?.data?.message || "Gagal membatalkan lunas.",
+      });
+      throw err;
+    }
+  };
+
   return {
     dataBalancing,
     loadingBalancing,
@@ -384,6 +418,7 @@ const useBalancing = ({
     handleEditClick,
     handleSaveEdit,
     handleConfirmLunas,
+    handleConfirmBatalLunas,
     handleImportBalancing,
     handleDelete,
     handleSort,

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
-import { FaEdit, FaTrash, FaFileInvoiceDollar, FaCheckCircle } from "react-icons/fa";
+import { FaEdit, FaTrash, FaFileInvoiceDollar, FaCheckCircle, FaUndo } from "react-icons/fa";
 
 const BalancingTable = ({
   loadingBalancing,
@@ -17,6 +17,7 @@ const BalancingTable = ({
   setShowDeletePopup,
   handleEditClick,
   handleLunasClick,
+  handleBatalLunasClick,
   month,
   year,
   setSelectedNpa,
@@ -247,6 +248,17 @@ const BalancingTable = ({
                                 title="Tandai Lunas"
                               >
                                 <FaCheckCircle className="w-4 h-4" />
+                              </button>
+                            )}
+
+                            {/* Tombol Batal Lunas (Tampil jika sudah lunas) */}
+                            {item.statusPembayaran === "LUNAS" && (
+                              <button
+                                onClick={() => handleBatalLunasClick?.(item)}
+                                className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors duration-150"
+                                title="Batalkan Lunas (Kembalikan ke Tunai)"
+                              >
+                                <FaUndo className="w-4 h-4" />
                               </button>
                             )}
 

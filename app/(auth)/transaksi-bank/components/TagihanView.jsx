@@ -4,6 +4,7 @@ const TagihanView = ({
   posLainLainName,
   loading,
   onLunasClick,
+  onBatalLunasClick,
 }) => {
   if (loading) return <div>Loading...</div>;
   const formatTanggalLengkap = () => {
@@ -842,21 +843,48 @@ const TagihanView = ({
 
                       <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center items-center">
                         {isLunas ? (
-                          <div className="flex items-center justify-center px-6 py-3 font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 rounded-xl shadow-sm">
-                            <svg
-                              className="w-5 h-5 mr-2 text-emerald-600"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
-                            Status: LUNAS
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center px-6 py-3 font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 rounded-xl shadow-sm">
+                              <svg
+                                className="w-5 h-5 mr-2 text-emerald-600"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                              Status: LUNAS
+                            </div>
+                            {onBatalLunasClick && (
+                              <button
+                                onClick={() =>
+                                  onBatalLunasClick({
+                                    id: dataIuran.id,
+                                    npa: dataIuran.npa,
+                                    rekening: dataIuran.rekening,
+                                    nama: dataIuran.namaLengkap,
+                                    cabang: dataIuran.cabang,
+                                    unitKerja: dataIuran.unitKerja,
+                                    totalIuran:
+                                      dataIuran.totalIuran ||
+                                      (dataIuran.pgri +
+                                        dataIuran.sanduka +
+                                        dataIuran.daspen +
+                                        dataIuran.derap +
+                                        dataIuran.kalender +
+                                        dataIuran.sumbangan),
+                                  })
+                                }
+                                className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-3 px-5 rounded-xl shadow-md transition duration-300 ease-in-out flex items-center justify-center text-sm"
+                              >
+                                Batalkan Lunas
+                              </button>
+                            )}
                           </div>
                         ) : (
                           onLunasClick && (

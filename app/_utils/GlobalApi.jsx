@@ -1552,6 +1552,19 @@ const setPelunasanBalancing = async (payload) => {
   }
 };
 
+const batalPelunasanBalancing = async (payload) => {
+  try {
+    const response = await axiosClient.post(
+      "/api/target-iuran-anggota/batal-lunas",
+      payload,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error batal lunas balancing:", error);
+    throw error;
+  }
+};
+
 const deleteBalancing = (tagihanUntukBulan) => {
   return axiosClient.delete(
     `/api/target-iuran-anggota/by-bulan?tagihanUntukBulan=${tagihanUntukBulan}`,
@@ -4790,6 +4803,7 @@ export default {
   getBalancingById,
   updateBalancing,
   setPelunasanBalancing,
+  batalPelunasanBalancing,
   updatePengeluaranUmum,
   deletePengeluaranUmum,
   deleteBalancing,
