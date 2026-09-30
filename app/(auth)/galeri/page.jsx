@@ -13,7 +13,7 @@ import {
   faExclamationTriangle,
   faDownload,
 } from "@fortawesome/free-solid-svg-icons";
-import GlobalApi from "@/app/_utils/GlobalApi";
+import GlobalApi, { BASE_URL } from "@/app/_utils/GlobalApi";
 import { ClipLoader } from "react-spinners";
 import dynamic from "next/dynamic";
 
@@ -1035,12 +1035,19 @@ const Page = () => {
                             {index + 1}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {peserta.foto ? (
+                            {peserta.foto || peserta.fileKtaUrl ? (
                               <div className="h-16 w-16 relative overflow-hidden rounded-full">
                                 <img
-                                  src={`data:image/jpeg;base64,${peserta.foto}`}
+                                  src={
+                                    peserta.foto
+                                      ? `data:image/jpeg;base64,${peserta.foto}`
+                                      : `${BASE_URL}${peserta.fileKtaUrl}`
+                                  }
                                   alt={`Foto ${peserta.namaLengkap}`}
                                   className="w-full h-full rounded-full object-cover object-top"
+                                  onError={(e) => {
+                                    e.currentTarget.src = profileImageUrl;
+                                  }}
                                 />
                               </div>
                             ) : (
@@ -1072,15 +1079,19 @@ const Page = () => {
                             {peserta.jabatan}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {peserta.upload ? (
+                            {peserta.upload || peserta.fileMateriUrl ? (
                               <button
-                                onClick={() =>
-                                  handleFileDownload(
-                                    peserta.upload,
-                                    selectedEvent.namaEvent,
-                                    peserta.namaLengkap,
-                                  )
-                                }
+                                onClick={() => {
+                                  if (peserta.fileMateriUrl) {
+                                    window.open(`${BASE_URL}${peserta.fileMateriUrl}`, "_blank");
+                                  } else {
+                                    handleFileDownload(
+                                      peserta.upload,
+                                      selectedEvent.namaEvent,
+                                      peserta.namaLengkap,
+                                    );
+                                  }
+                                }}
                                 className="text-blue-600 hover:text-blue-800 focus:outline-none"
                               >
                                 <div className="flex items-center">

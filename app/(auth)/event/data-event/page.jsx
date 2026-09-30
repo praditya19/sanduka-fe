@@ -5,7 +5,7 @@ import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
-import GlobalApi from "@/app/_utils/GlobalApi";
+import GlobalApi, { BASE_URL } from "@/app/_utils/GlobalApi";
 import {
   FaTimesCircle,
   FaCheckCircle,
@@ -274,8 +274,8 @@ const Page = () => {
         "Unit Kerja": item.unitKerja || "-",
         "Nomor HP": item.nomorHp || "-",
         "Tanggal Daftar": formatTanggalDaftar(item.tanggalDaftar),
-        "File KTA": item.foto ? "Tersedia" : "-",
-        "File Materi": item.upload ? "Tersedia" : "-",
+        "File KTA": (item.foto || item.hasFileKta) ? "Tersedia" : "-",
+        "File Materi": (item.upload || item.hasFileMateri) ? "Tersedia" : "-",
       }));
 
       const XLSX = await import("xlsx");
@@ -1142,19 +1142,21 @@ const Page = () => {
 
                             {/* File KTA */}
                             <td className="py-4 px-4 text-center">
-                              {item.foto ? (
+                              {item.foto || item.fileKtaUrl ? (
                                 <div className="flex flex-col items-center gap-2">
                                   {/* Preview Gambar */}
                                   <img
-                                    src={getImageSrc(item.foto)}
+                                    src={item.foto ? getImageSrc(item.foto) : `${BASE_URL}${item.fileKtaUrl}`}
                                     alt="Foto Peserta"
                                     className="w-20 h-20 object-cover rounded border cursor-pointer hover:scale-105 transition"
                                   />
 
                                   {/* Tombol Download */}
                                   <a
-                                    href={getImageSrc(item.foto)}
-                                    download={`foto-${item.nama || "peserta"}.jpg`}
+                                    href={item.foto ? getImageSrc(item.foto) : `${BASE_URL}${item.fileKtaUrl}`}
+                                    download={item.fileKtaName || `foto-${item.nama || item.namaLengkap || "peserta"}.jpg`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     className="text-teal-600 hover:text-teal-800 text-sm underline"
                                   >
                                     Download
@@ -1167,15 +1169,19 @@ const Page = () => {
 
                             {/* File Materi */}
                             <td className="py-4 px-4 text-center">
-                              {item.upload ? (
+                              {item.upload || item.fileMateriUrl ? (
                                 <button
                                   type="button"
-                                  onClick={() =>
-                                    handleDownloadFile(
-                                      item.upload,
-                                      `dokumen-${item.namaLengkap || "peserta"}`,
-                                    )
-                                  }
+                                  onClick={() => {
+                                    if (item.fileMateriUrl) {
+                                      window.open(`${BASE_URL}${item.fileMateriUrl}`, '_blank');
+                                    } else {
+                                      handleDownloadFile(
+                                        item.upload,
+                                        `dokumen-${item.namaLengkap || "peserta"}`,
+                                      );
+                                    }
+                                  }}
                                   className="inline-flex items-center gap-1 text-teal-600 hover:text-teal-800 font-medium hover:underline transition-colors"
                                 >
                                   <svg
