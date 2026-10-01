@@ -10,6 +10,7 @@ import {
   FaTimesCircle,
   FaCheckCircle,
   FaExclamationCircle,
+  FaWhatsapp,
 } from "react-icons/fa";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
@@ -280,8 +281,8 @@ const Page = () => {
         "Unit Kerja": item.unitKerja || "-",
         "Nomor HP": item.nomorHp || "-",
         "Tanggal Daftar": formatTanggalDaftar(item.tanggalDaftar),
-        "File KTA": (item.foto || item.hasFileKta) ? "Tersedia" : "-",
-        "File Materi": (item.upload || item.hasFileMateri) ? "Tersedia" : "-",
+        "File KTA": item.foto || item.hasFileKta ? "Tersedia" : "-",
+        "File Materi": item.upload || item.hasFileMateri ? "Tersedia" : "-",
       }));
 
       const XLSX = await import("xlsx");
@@ -307,6 +308,14 @@ const Page = () => {
     const [tahun, bulan, hari] = tanggal;
 
     return `${String(hari).padStart(2, "0")}-${String(bulan).padStart(2, "0")}-${tahun}`;
+  };
+
+  const getWhatsAppNumber = (nomorHp) => {
+    const digits = String(nomorHp || "").replace(/\D/g, "");
+    if (!digits) return "";
+
+    if (digits.startsWith("62")) return digits;
+    return `62${digits.startsWith("0") ? digits.slice(1) : digits}`;
   };
 
   const handleDownloadFile = (base64, fileName = "dokumen") => {
@@ -598,7 +607,9 @@ const Page = () => {
                             key={event.id || index}
                             type="button"
                             onClick={() => {
-                              const targetEvent = (event.namaEvent || "").trim();
+                              const targetEvent = (
+                                event.namaEvent || ""
+                              ).trim();
                               setSelectedEvent(targetEvent);
                               dataPeserta(targetEvent, selectedCabang);
                               document
@@ -834,10 +845,7 @@ const Page = () => {
                         {eventOptions.map((event, index) => {
                           const val = (event.namaEvent || "").trim();
                           return (
-                            <option
-                              key={event.id || index}
-                              value={val}
-                            >
+                            <option key={event.id || index} value={val}>
                               {val}
                             </option>
                           );
@@ -1164,15 +1172,26 @@ const Page = () => {
                                 <div className="flex flex-col items-center gap-2">
                                   {/* Preview Gambar */}
                                   <img
-                                    src={item.foto ? getImageSrc(item.foto) : `${BASE_URL}${item.fileKtaUrl}`}
+                                    src={
+                                      item.foto
+                                        ? getImageSrc(item.foto)
+                                        : `${BASE_URL}${item.fileKtaUrl}`
+                                    }
                                     alt="Foto Peserta"
                                     className="w-20 h-20 object-cover rounded border cursor-pointer hover:scale-105 transition"
                                   />
 
                                   {/* Tombol Download */}
                                   <a
-                                    href={item.foto ? getImageSrc(item.foto) : `${BASE_URL}${item.fileKtaUrl}`}
-                                    download={item.fileKtaName || `foto-${item.nama || item.namaLengkap || "peserta"}.jpg`}
+                                    href={
+                                      item.foto
+                                        ? getImageSrc(item.foto)
+                                        : `${BASE_URL}${item.fileKtaUrl}`
+                                    }
+                                    download={
+                                      item.fileKtaName ||
+                                      `foto-${item.nama || item.namaLengkap || "peserta"}.jpg`
+                                    }
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-teal-600 hover:text-teal-800 text-sm underline"
@@ -1192,7 +1211,10 @@ const Page = () => {
                                   type="button"
                                   onClick={() => {
                                     if (item.fileMateriUrl) {
-                                      window.open(`${BASE_URL}${item.fileMateriUrl}`, '_blank');
+                                      window.open(
+                                        `${BASE_URL}${item.fileMateriUrl}`,
+                                        "_blank",
+                                      );
                                     } else {
                                       handleDownloadFile(
                                         item.upload,
@@ -1273,6 +1295,18 @@ const Page = () => {
                             {role && role !== "USER" && (
                               <td className="py-4 px-4">
                                 <div className="flex items-center justify-center gap-2">
+                                  {getWhatsAppNumber(item.nomorHp) && (
+                                    <a
+                                      href={`https://wa.me/${getWhatsAppNumber(item.nomorHp)}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      aria-label={`Hubungi ${item.namaLengkap || "peserta"} melalui WhatsApp`}
+                                      title="Hubungi melalui WhatsApp"
+                                      className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-all duration-200"
+                                    >
+                                      <FaWhatsapp className="h-5 w-5" />
+                                    </a>
+                                  )}
                                   <button
                                     onClick={() => handleDeleteClick(item.id)}
                                     className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-all duration-200 group relative"
