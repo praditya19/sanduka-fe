@@ -114,25 +114,11 @@ const Event = () => {
   };
 
   // --- 2. LOGIKA ACTION ---
-  const extractUrl = (text) => {
-    if (!text) return null;
-    const urlRegex = /(https?:\/\/[^\s<>"']+)/;
-    const match = text.match(urlRegex);
-    return match ? match[0] : null;
-  };
-
   const handleEventAction = (event) => {
-    if (event?.isTerlewat || registrationStatus[event.id]) return;
+  if (event?.isTerlewat || registrationStatus[event.id]) return;
 
-    if (event?.deskripsi) {
-      const url = extractUrl(event.deskripsi);
-      if (url) {
-        window.open(url, "_blank");
-        return;
-      }
-    }
-    router.push("/sign-in");
-  };
+  router.push("/sign-in");
+};
 
   // --- 3. HELPER UI ---
   const stripHtml = (html) => {
