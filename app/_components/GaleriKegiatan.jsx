@@ -1075,7 +1075,8 @@ const GaleriKegiatan = () => {
       }
     };
 
-    const isRegistered = registrationStatus[selectedEventDetail.id];
+    const isRegistered =
+      registrationStatus[selectedEventDetail.id] === "Sudah Terdaftar";
 
     return (
       <div className="fixed inset-0 flex items-center justify-center z-[1000]">
@@ -1588,14 +1589,16 @@ const GaleriKegiatan = () => {
                     <button
                       type="button"
                       onClick={handleSubmitRegistration}
-                      disabled={isSubmitting}
-                      className="mt-6 w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-semibold transition-colors disabled:bg-blue-400 transform hover:scale-105 duration-200"
+                      disabled={isSubmitting || isRegistered}
+                      className="mt-6 w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-semibold transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed disabled:transform-none transform hover:scale-105 duration-200"
                     >
                       {isSubmitting ? (
                         <div className="flex items-center justify-center">
                           <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                           Mendaftar...
                         </div>
+                      ) : isRegistered ? (
+                        "Anda Telah Terdaftar"
                       ) : (
                         "Daftar Event"
                       )}
@@ -1752,6 +1755,9 @@ const GaleriKegiatan = () => {
         setIsSubmitting(false);
       }
     };
+
+    const isRegistered =
+      registrationStatus[currentEvent?.id] === "Sudah Terdaftar";
 
     return (
       <div className="fixed inset-0 flex items-center justify-center z-[1000]">
@@ -1915,14 +1921,16 @@ const GaleriKegiatan = () => {
 
           <button
             onClick={handleSubmitRegistration}
-            disabled={isSubmitting}
-            className="mt-6 w-full px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition-colors disabled:bg-blue-400 transform hover:scale-105 duration-200"
+            disabled={isSubmitting || isRegistered}
+            className="mt-6 w-full px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed disabled:transform-none transform hover:scale-105 duration-200"
           >
             {isSubmitting ? (
               <div className="flex items-center justify-center">
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                 Mendaftar...
               </div>
+            ) : isRegistered ? (
+              "Anda Telah Terdaftar"
             ) : (
               "Daftar Event"
             )}
