@@ -2662,7 +2662,7 @@ const updateSidebarGallery = async (id, data) => {
 const toggleTerlewatSidebarGallery = async (id, isTerlewat) => {
   try {
     const query = isTerlewat !== undefined ? `?isTerlewat=${isTerlewat}` : "";
-    const response = await axiosClient.patch(
+    const response = await axios.patch(
       `/api/sidebar-gallery/${id}/toggle-terlewat${query}`,
     );
     return response.data;
