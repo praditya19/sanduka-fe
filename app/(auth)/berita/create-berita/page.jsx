@@ -219,8 +219,19 @@ const CreateBerita = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const roleSession = sessionStorage.getItem("role");
+    const namaSession = sessionStorage.getItem("nama");
+    const emailSession = sessionStorage.getItem("email");
+    const rawRole = roleSession?.toUpperCase() || "";
+    const roleToSend = rawRole || "SUPERADMIN";
+
     const dataToSubmit = {
       ...formData,
+      username: formData.username || namaSession || "Admin",
+      email: formData.email || emailSession || "",
+      role: roleToSend,
+      status: (formData.status || "DRAFT").toUpperCase(),
+      responContributor: formData.responContributor || namaSession || "Admin",
       galeriImages: formData.galeri.map((g) => g.file),
       galeriDeskripsi: formData.galeri.map((g) => g.deskripsi),
     };
@@ -231,11 +242,19 @@ const CreateBerita = () => {
         type: "success",
         message: "Berita berhasil disimpan!",
       });
-      window.location.reload();
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     } catch (error) {
+      const errorMessage =
+        (typeof error?.response?.data === "string" ? error?.response?.data : null) ||
+        error?.response?.data?.message ||
+        error?.message ||
+        "Terjadi kesalahan saat menyimpan berita.";
+
       setNotification({
         type: "error",
-        message: "Terjadi kesalahan saat menyimpan berita.",
+        message: errorMessage,
       });
     }
   };

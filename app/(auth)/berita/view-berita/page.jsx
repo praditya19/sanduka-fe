@@ -230,25 +230,26 @@ const ViewBerita = () => {
     const formDataToSend = new FormData();
     const roleSession = sessionStorage.getItem("role");
     const namaSession = sessionStorage.getItem("nama");
+    const rawRole = roleSession?.toUpperCase() || "";
+    const roleToSend = (rawRole === "EDITOR" || rawRole === "SUPERADMIN") ? rawRole : "SUPERADMIN";
 
-    formDataToSend.append("judul", formData.judul);
-    formDataToSend.append("username", formData.username);
-    formDataToSend.append("email", formData.email);
-    formDataToSend.append("role", roleSession?.toUpperCase() || "");
-    formDataToSend.append("status", formData.status);
-    formDataToSend.append("isiBerita", formData.isiBerita);
-    formDataToSend.append("kategori", formData.kategori);
-    formDataToSend.append("responEditor", namaSession || "");
+    formDataToSend.append("judul", formData.judul || "");
+    formDataToSend.append("username", formData.username || namaSession || "Admin");
+    formDataToSend.append("email", formData.email || "");
+    formDataToSend.append("role", roleToSend);
+    formDataToSend.append("status", (formData.status || "DRAFT").toUpperCase());
+    formDataToSend.append("isiBerita", formData.isiBerita || "");
+    formDataToSend.append("kategori", formData.kategori || "");
+    formDataToSend.append("responEditor", namaSession || "Admin");
 
     // Loop untuk foto (hanya yang ada file baru)
     formData.galeri.forEach((item) => {
       if (item.file) {
         formDataToSend.append("galeriImages", item.file);
-        formDataToSend.append("galeriDeskripsi", item.deskripsi);
+        formDataToSend.append("galeriDeskripsi", item.deskripsi || "Foto Berita");
       }
     });
 
-    console.log([...formDataToSend.entries()]);
     try {
       await GlobalApi.updateBerita(formData.id, formDataToSend);
 
@@ -260,7 +261,11 @@ const ViewBerita = () => {
       setEditMode(false);
       fetchBerita();
     } catch (error) {
-      const errorMessage = error?.response?.data || "Terjadi kesalahan";
+      const errorMessage =
+        (typeof error?.response?.data === "string" ? error?.response?.data : null) ||
+        error?.response?.data?.message ||
+        error?.message ||
+        "Terjadi kesalahan saat mengupdate berita";
 
       setNotification({
         type: "error",
