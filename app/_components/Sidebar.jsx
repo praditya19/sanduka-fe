@@ -19,6 +19,7 @@ import {
   faImage,
   faExclamationCircle,
   faFileInvoiceDollar,
+  faCalendarDays,
 } from "@fortawesome/free-solid-svg-icons";
 import { faUbuntu } from "@fortawesome/free-brands-svg-icons";
 import { Button } from "@/components/ui/button";
@@ -139,6 +140,12 @@ const icons = [
     color: "text-green-700",
   },
   {
+    icon: faCalendarDays,
+    label: "Rekap Event",
+    href: "/event/data-event",
+    color: "text-emerald-600",
+  },
+  {
     icon: faExclamationCircle,
     label: "Pengaduan",
     href: "/pengaduan",
@@ -226,6 +233,8 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
         "Pengaduan",
         "Tagihan",
       ].includes(item.label);
+    } else if (role === "PANITIA") {
+      return item.label === "Rekap Event";
     } else if (role === "SUPERADMIN") {
       return true;
     } else {
