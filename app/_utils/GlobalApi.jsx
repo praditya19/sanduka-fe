@@ -3965,7 +3965,7 @@ const updateBerita = async (id, data) => {
   }
 };
 
-const getAllBerita = async (status, size = 200) => {
+const getAllBerita = async (status, size = 50) => {
   try {
     const response = await axiosClient.get("/api/berita/all", {
       params: { status, size, page: 0 },

@@ -230,19 +230,33 @@ const GaleriKegiatan = () => {
     }
   };
 
+  const getImageUrl = (item) => {
+    if (!item) return null;
+    if (item.photo) {
+      if (item.photo.startsWith("data:") || item.photo.startsWith("http")) {
+        return item.photo;
+      }
+      if (item.photo.startsWith("/")) {
+        return `${GlobalApi.BASE_URL || "https://sb.pgrikabupatenjepara.com"}${item.photo}`;
+      }
+      return `data:image/jpeg;base64,${item.photo}`;
+    }
+    if (item.photoUrl) {
+      return item.photoUrl.startsWith("http")
+        ? item.photoUrl
+        : `${GlobalApi.BASE_URL || "https://sb.pgrikabupatenjepara.com"}${item.photoUrl}`;
+    }
+    return null;
+  };
+
   const fetchNonEventGalleries = async () => {
     try {
       setIsLoading(true);
       const data = await GlobalApi.getSidebarGalleryByCategory("NON EVENT");
-      const processedGalleries = await Promise.all(
-        data.map(async (item) => {
-          const blob = await fetch(`data:image/jpeg;base64,${item.photo}`).then(
-            (r) => r.blob(),
-          );
-          const objectUrl = URL.createObjectURL(blob);
-          return { ...item, imageUrl: objectUrl };
-        }),
-      );
+      const processedGalleries = (data || []).map((item) => ({
+        ...item,
+        imageUrl: getImageUrl(item),
+      }));
       setNonEventGalleries(processedGalleries);
     } catch (error) {
       console.error("Error fetching non-event galleries:", error);
@@ -255,15 +269,10 @@ const GaleriKegiatan = () => {
     try {
       setIsLoading(true);
       const data = await GlobalApi.getSidebarGalleryByCategory("EVENT");
-      const processedGalleries = await Promise.all(
-        data.map(async (item) => {
-          const blob = await fetch(`data:image/jpeg;base64,${item.photo}`).then(
-            (r) => r.blob(),
-          );
-          const objectUrl = URL.createObjectURL(blob);
-          return { ...item, imageUrl: objectUrl };
-        }),
-      );
+      const processedGalleries = (data || []).map((item) => ({
+        ...item,
+        imageUrl: getImageUrl(item),
+      }));
 
       const sortedGalleries = [...processedGalleries].sort((a, b) => {
         const aTerlewat = !!a.isTerlewat;
@@ -284,15 +293,10 @@ const GaleriKegiatan = () => {
     try {
       setIsLoading(true);
       const data = await GlobalApi.getAllSidebarGallery();
-      const processedGalleries = await Promise.all(
-        data.map(async (item) => {
-          const blob = await fetch(`data:image/jpeg;base64,${item.photo}`).then(
-            (r) => r.blob(),
-          );
-          const objectUrl = URL.createObjectURL(blob);
-          return { ...item, imageUrl: objectUrl };
-        }),
-      );
+      const processedGalleries = (data || []).map((item) => ({
+        ...item,
+        imageUrl: getImageUrl(item),
+      }));
       setGalleries(processedGalleries);
     } catch (error) {
       console.error("Error fetching galleries:", error);
