@@ -232,21 +232,23 @@ const GaleriKegiatan = () => {
 
   const getImageUrl = (item) => {
     if (!item) return null;
-    if (item.photo) {
-      if (item.photo.startsWith("data:") || item.photo.startsWith("http")) {
-        return item.photo;
-      }
-      if (item.photo.startsWith("/")) {
-        return `${GlobalApi.BASE_URL || "https://sb.pgrikabupatenjepara.com"}${item.photo}`;
-      }
-      return `data:image/jpeg;base64,${item.photo}`;
+    const photo = item.photo || item.photoUrl;
+    if (!photo) return null;
+
+    if (photo.startsWith("data:") || photo.startsWith("http")) {
+      return photo;
     }
-    if (item.photoUrl) {
-      return item.photoUrl.startsWith("http")
-        ? item.photoUrl
-        : `${GlobalApi.BASE_URL || "https://sb.pgrikabupatenjepara.com"}${item.photoUrl}`;
+    // Jika path file di server (misal /uploads/...) dan bukan data base64
+    // Catatan: Base64 JPEG selalu diawali '/9j/'
+    if (
+      photo.startsWith("/") &&
+      !photo.startsWith("/9j/") &&
+      photo.length < 500 &&
+      /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(photo)
+    ) {
+      return `${GlobalApi.BASE_URL || "https://sb.pgrikabupatenjepara.com"}${photo}`;
     }
-    return null;
+    return `data:image/jpeg;base64,${photo.replace(/^data:image\/[^;]+;base64,/, "")}`;
   };
 
   const fetchNonEventGalleries = async () => {
@@ -354,9 +356,12 @@ const GaleriKegiatan = () => {
 
   const stripHtml = (html) => {
     if (!html) return "";
-    const tmp = document.createElement("DIV");
-    tmp.innerHTML = html;
-    return tmp.textContent || tmp.innerText || "";
+    if (typeof document !== "undefined") {
+      const tmp = document.createElement("DIV");
+      tmp.innerHTML = html;
+      return tmp.textContent || tmp.innerText || "";
+    }
+    return html.replace(/<[^>]*>?/gm, "").trim();
   };
 
   const truncateHtml = (html, maxLength) => {
@@ -538,8 +543,9 @@ const GaleriKegiatan = () => {
                     >
                       <Image
                         src={item.imageUrl}
-                        alt={item.deskripsi || "Gallery image"}
+                        alt={stripHtml(item.deskripsi) || item.namaEvent || "Gallery image"}
                         fill
+                        unoptimized={true}
                         sizes="(max-width: 640px) 100vw, (max-width: 768px) 90vw, 500px"
                         className={`object-contain ${item.isTerlewat ? "filter grayscale-[25%]" : ""}`}
                         priority={true}
@@ -587,8 +593,9 @@ const GaleriKegiatan = () => {
                       <div className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px]">
                         <Image
                           src={item.imageUrl}
-                          alt={item.deskripsi || "Gallery image"}
+                          alt={stripHtml(item.deskripsi) || "Gallery image"}
                           fill
+                          unoptimized={true}
                           sizes="100vw"
                           className="object-cover"
                           priority={true}
@@ -685,6 +692,7 @@ const GaleriKegiatan = () => {
                     src={event.imageUrl}
                     alt={event.namaEvent || "Event image"}
                     fill
+                    unoptimized={true}
                     className={`object-cover transition-transform duration-700 group-hover:scale-110 ${
                       event.isTerlewat ? "filter grayscale-[25%]" : ""
                     }`}
@@ -1117,6 +1125,7 @@ const GaleriKegiatan = () => {
                     alt={selectedEventDetail.namaEvent}
                     width={800}
                     height={600}
+                    unoptimized={true}
                     className="w-full h-auto object-contain"
                     sizes="(max-width: 1024px) 100vw, 50vw"
                     style={{ maxHeight: "500px" }}
