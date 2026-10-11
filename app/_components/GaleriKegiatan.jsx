@@ -534,39 +534,38 @@ const GaleriKegiatan = () => {
                   <SwiperSlide
                     key={`${item.id}-${index}`}
                     className="flex flex-col items-center pb-8"
-                    style={{ width: "400px" }}
+                    style={{ width: "350px", maxWidth: "85vw" }}
                   >
                     <div
-                      className="relative w-full mx-auto cursor-pointer transition-transform duration-300 hover:scale-105"
+                      className="relative w-full aspect-square mx-auto cursor-pointer transition-all duration-300 hover:scale-[1.03] hover:shadow-xl rounded-2xl overflow-hidden shadow-md bg-white border border-gray-200/70"
                       onClick={() => handleEventClick(item)}
-                      style={{ height: "400px" }}
                     >
                       <Image
                         src={item.imageUrl}
                         alt={stripHtml(item.deskripsi) || item.namaEvent || "Gallery image"}
                         fill
                         unoptimized={true}
-                        sizes="(max-width: 640px) 100vw, (max-width: 768px) 90vw, 500px"
-                        className={`object-contain ${item.isTerlewat ? "filter grayscale-[25%]" : ""}`}
+                        sizes="(max-width: 640px) 85vw, 350px"
+                        className={`object-cover transition-transform duration-500 hover:scale-105 ${item.isTerlewat ? "filter grayscale-[25%]" : ""}`}
                         priority={true}
                         quality={90}
                       />
 
                       {item.isTerlewat && (
-                        <div className="absolute top-4 left-4 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md z-10 flex items-center gap-1">
+                        <div className="absolute top-4 left-4 bg-red-600/95 backdrop-blur-sm text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-md z-10 flex items-center gap-1">
                           ⏰ Sudah Terlaksana
                         </div>
                       )}
 
                       {registrationStatus[item.id] && (
-                        <div className="absolute top-4 right-4 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-full shadow-md z-10 flex items-center gap-1">
+                        <div className="absolute top-4 right-4 bg-yellow-400/95 backdrop-blur-sm text-yellow-900 text-xs font-bold px-3 py-1.5 rounded-full shadow-md z-10 flex items-center gap-1">
                           <FaCheckCircle /> Terdaftar
                         </div>
                       )}
                     </div>
 
                     <div className="mt-4 text-center w-full px-2 sm:px-4 md:px-8">
-                      <p className="text-lg font-bold text-gray-900">
+                      <p className="text-lg font-bold text-gray-900 line-clamp-2">
                         {item.namaEvent}
                       </p>
                     </div>
