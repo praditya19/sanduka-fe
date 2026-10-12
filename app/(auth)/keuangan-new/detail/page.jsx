@@ -61,7 +61,7 @@ function KeuanganDetailContent() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [balancingRes, iuranRes, rekapIuran, rekapDerap, rekapDaspen, rekapKalender, transaksiCabangRes] = await Promise.all([
+      const [balancingRes, iuranRes, rekapIuran, rekapDerap, rekapDaspen, rekapKalender, transaksiCabangRes, posLainRes] = await Promise.all([
         GlobalApi.getTransaksiBankBalancing(cabang, null, selectedYear, selectedMonth, null, null),
         GlobalApi.getDefaultIuranById(2),
         GlobalApi.getRekapByPeriode(MONTHS_FULL[selectedMonth], selectedYear),
@@ -69,12 +69,38 @@ function KeuanganDetailContent() {
         GlobalApi.getRekapDaspenByPeriode(MONTHS_FULL[selectedMonth], selectedYear),
         GlobalApi.getRekapKalenderByPeriode(MONTHS_FULL[selectedMonth], selectedYear),
         GlobalApi.getTransaksiCabangByBulanTahun(selectedMonth, selectedYear),
+        GlobalApi.getPosLainLain().catch(() => []),
       ]);
 
       const safeData = Array.isArray(balancingRes) ? balancingRes : [];
 
       // Filter by cabang (tidak deduplikasi — jumlahkan semua entry, sama seperti di IuranPgri)
       const cabangData = safeData.filter((item) => item.cabang === cabang);
+
+      // Pos Lain-Lain name resolution (e.g. HUT 81 PGRI)
+      const posLainList = Array.isArray(posLainRes) ? posLainRes : posLainRes?.data || [];
+      const bulanName = MONTHS_FULL[selectedMonth] || "";
+      const yearStr = String(selectedYear);
+      const matchedPos =
+        posLainList.find((p) => {
+          const pBulan = (p.bulan || "").trim().toLowerCase();
+          const pTahun = String(p.tahun || "").trim();
+          return (
+            (!pBulan || pBulan === bulanName.toLowerCase()) &&
+            (!pTahun || pTahun === yearStr) &&
+            (p.nama || "").toUpperCase().includes("HUT")
+          );
+        }) ||
+        posLainList.find((p) => {
+          const pBulan = (p.bulan || "").trim().toLowerCase();
+          const pTahun = String(p.tahun || "").trim();
+          return pBulan === bulanName.toLowerCase() && pTahun === yearStr;
+        }) ||
+        posLainList.find((p) => (p.bulan || "").trim().toLowerCase() === bulanName.toLowerCase()) ||
+        posLainList.find((p) => (p.nama || "").toUpperCase().includes("HUT")) ||
+        posLainList.find((p) => String(p.tahun || "").trim() === yearStr) ||
+        posLainList[0];
+      const posLainLainName = matchedPos?.nama ? String(matchedPos.nama).trim() : "";
 
       // Rekapitulasi Iuran — pb + provinsi + kabupaten
       const rekapData = Array.isArray(rekapIuran) ? rekapIuran : [];
@@ -126,13 +152,14 @@ function KeuanganDetailContent() {
       const rekapDaspenAnggota = rekapDaspenByCabang[cabangKey]?.totalAnggota || 0;
 
       // Per-category breakdown
+      const lainLabel = posLainLainName ? `LAIN-LAIN (${posLainLainName})` : "LAIN-LAIN";
       const categories = [
-        { label: "IURAN", field: "totalIuranAnggota" },
-        { label: "SANDUKA", field: "totalIuranSanduka" },
-        { label: "DASPEN", field: "totalIuranDaspen" },
-        { label: "DERAP", field: "totalIuranDerap" },
-        { label: "KALENDER", field: "totalIuranKalender" },
-        { label: "LAIN-LAIN", field: "totalIuranSumbangan" },
+        { label: "IURAN", baseLabel: "IURAN", field: "totalIuranAnggota" },
+        { label: "SANDUKA", baseLabel: "SANDUKA", field: "totalIuranSanduka" },
+        { label: "DASPEN", baseLabel: "DASPEN", field: "totalIuranDaspen" },
+        { label: "DERAP", baseLabel: "DERAP", field: "totalIuranDerap" },
+        { label: "KALENDER", baseLabel: "KALENDER", field: "totalIuranKalender" },
+        { label: lainLabel, baseLabel: "LAIN-LAIN", field: "totalIuranSumbangan", keterangan: posLainLainName },
       ];
 
       let subtotal = 0;
@@ -147,18 +174,18 @@ function KeuanganDetailContent() {
             total += val;
           }
         });
-        if (cat.label === "IURAN" && rekapIuranTotal > 0) {
+        if (cat.baseLabel === "IURAN" && rekapIuranTotal > 0) {
           total = rekapIuranTotal;
         }
-        if (cat.label === "DERAP" && rekapDerapTotal > 0) {
+        if (cat.baseLabel === "DERAP" && rekapDerapTotal > 0) {
           total = rekapDerapTotal;
           if (rekapDerapJumlah > 0) count = rekapDerapJumlah;
         }
-        if (cat.label === "DASPEN" && rekapDaspenTotal > 0) {
+        if (cat.baseLabel === "DASPEN" && rekapDaspenTotal > 0) {
           total = rekapDaspenTotal;
           if (rekapDaspenAnggota > 0) count = rekapDaspenAnggota;
         }
-        if (cat.label === "KALENDER") {
+        if (cat.baseLabel === "KALENDER") {
           const rekapKalenderData = Array.isArray(rekapKalender) ? rekapKalender : [];
           const kalenderCabang = rekapKalenderData.find(r => (r.cabang || "").trim().toUpperCase() === cabangKey);
           if (kalenderCabang) {
@@ -170,7 +197,14 @@ function KeuanganDetailContent() {
           }
         }
         subtotal += total;
-        return { label: cat.label, count, total };
+        return {
+          label: cat.label,
+          baseLabel: cat.baseLabel,
+          count,
+          total,
+          bayar: 0,
+          keterangan: cat.keterangan || "",
+        };
       });
 
       // --- TAGIHAN CABANG (from transaksi_cabang table) ---
@@ -181,7 +215,13 @@ function KeuanganDetailContent() {
         "DASPEN": ["DASPEN", "IURANDASPEN"],
         "DERAP": ["DERAP", "IURANDERAP"],
         "KALENDER": ["KALENDER", "IURANKALENDER"],
-        "LAIN-LAIN": ["LAINLAIN", "LAIN", "SUMBANGAN", "IURANSUMBANGAN"],
+        "LAIN-LAIN": [
+          "LAINLAIN",
+          "LAIN",
+          "SUMBANGAN",
+          "IURANSUMBANGAN",
+          ...(posLainLainName ? [normalizePos(posLainLainName), "HUT", "HUTPGRI", "HUT81", "HUT81PGRI"] : ["HUT", "HUTPGRI"]),
+        ],
       };
       const cabangTransData = Array.isArray(transaksiCabangRes) ? transaksiCabangRes : transaksiCabangRes?.data || [];
       const cabangTrans = cabangTransData.filter(t => t.cabang?.trim().toUpperCase() === cabangKey);
@@ -208,8 +248,8 @@ function KeuanganDetailContent() {
 
       const usedPosKeys = new Set();
       const updatedTagihanRows = tagihanRows.map(row => {
-        const rowNorm = normalizePos(row.label);
-        const aliases = catPosAliases[row.label] || [rowNorm];
+        const baseKey = row.baseLabel || (row.label.startsWith("LAIN-LAIN") ? "LAIN-LAIN" : row.label);
+        const aliases = catPosAliases[baseKey] || [normalizePos(row.label)];
         const matchingEntry = Object.entries(posGroup).find(([pos]) => {
           const norm = normalizePos(pos);
           return aliases.includes(norm);
@@ -221,11 +261,10 @@ function KeuanganDetailContent() {
             usedPosKeys.add(matchedPos);
             subtotal += tcData.tagihan - row.total;
             return {
-              label: row.label,
-              count: row.count,
+              ...row,
               total: tcData.tagihan,
               bayar: tcData.pembayaran || 0,
-              keterangan: posKeterangan[matchedPos] || "",
+              keterangan: posKeterangan[matchedPos] || row.keterangan || "",
             };
           }
         }
@@ -263,13 +302,17 @@ function KeuanganDetailContent() {
       const sortOrder = { "IURAN": 1, "SANDUKA": 2, "DASPEN": 3, "DERAP": 4, "KALENDER": 5, "LAIN-LAIN": 6 };
       const filteredTagihan = [...updatedTagihanRows.filter((r) => {
         if (r.total === 0) return false;
-        if (r.label === "KALENDER" && !hasKalenderTc) {
+        if (r.baseLabel === "KALENDER" && !hasKalenderTc) {
           subtotal -= r.total;
           return false;
         }
         return r.count > 0 || r.total > 0;
       }), ...extraTagihanRows]
-        .sort((a, b) => (sortOrder[a.label] || 99) - (sortOrder[b.label] || 99));
+        .sort((a, b) => {
+          const keyA = a.baseLabel || (a.label.startsWith("LAIN-LAIN") ? "LAIN-LAIN" : a.label);
+          const keyB = b.baseLabel || (b.label.startsWith("LAIN-LAIN") ? "LAIN-LAIN" : b.label);
+          return (sortOrder[keyA] || 99) - (sortOrder[keyB] || 99);
+        });
       totalAnggota = new Set(cabangData.map((d) => d.npa)).size;
       if (totalAnggota === 0) totalAnggota = cabangData.length;
 

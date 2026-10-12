@@ -102,11 +102,28 @@ const TagihanForm = () => {
 
   const fetchAuxData = async () => {
     try {
-      const [resPosIn, resCabang] = await Promise.all([
+      const [resPosIn, resCabang, resPosLain] = await Promise.all([
         GlobalApi.getPosPenerimaanUmum(),
         GlobalApi.getCabang(),
+        GlobalApi.getPosLainLain().catch(() => []),
       ]);
-      setPosPenerimaanList((resPosIn || []).sort((a, b) => a.namaPosPenerimaan.localeCompare(b.namaPosPenerimaan)));
+      const list = [...(resPosIn || [])];
+      const existingNames = new Set(list.map((p) => (p.namaPosPenerimaan || "").trim().toUpperCase()));
+
+      const posLainList = Array.isArray(resPosLain) ? resPosLain : resPosLain?.data || [];
+      posLainList.forEach((item, idx) => {
+        const name = (item.nama || "").trim();
+        if (name && !existingNames.has(name.toUpperCase())) {
+          list.push({ id: `lain-${idx}`, namaPosPenerimaan: name });
+          existingNames.add(name.toUpperCase());
+        }
+      });
+
+      if (!existingNames.has("LAIN-LAIN") && !existingNames.has("LAINLAIN")) {
+        list.push({ id: "lain-default", namaPosPenerimaan: "Lain-Lain" });
+      }
+
+      setPosPenerimaanList(list.sort((a, b) => a.namaPosPenerimaan.localeCompare(b.namaPosPenerimaan)));
       setCabangList((resCabang.data || []).sort((a, b) => a.kecamatan.localeCompare(b.kecamatan)));
     } catch (error) {
       console.error("Error fetching aux data:", error);
