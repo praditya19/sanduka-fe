@@ -77,28 +77,28 @@ function KeuanganDetailContent() {
       // Filter by cabang (tidak deduplikasi — jumlahkan semua entry, sama seperti di IuranPgri)
       const cabangData = safeData.filter((item) => item.cabang === cabang);
 
-      // Pos Lain-Lain name resolution (e.g. HUT 81 PGRI)
+      // Pos Lain-Lain name resolution (e.g. Smart Card, HUT 81 PGRI, dll.)
       const posLainList = Array.isArray(posLainRes) ? posLainRes : posLainRes?.data || [];
       const bulanName = MONTHS_FULL[selectedMonth] || "";
       const yearStr = String(selectedYear);
       const matchedPos =
-        posLainList.find((p) => {
-          const pBulan = (p.bulan || "").trim().toLowerCase();
-          const pTahun = String(p.tahun || "").trim();
-          return (
-            (!pBulan || pBulan === bulanName.toLowerCase()) &&
-            (!pTahun || pTahun === yearStr) &&
-            (p.nama || "").toUpperCase().includes("HUT")
-          );
-        }) ||
+        // 1. Prioritas utama: Cocok persis bulan dan tahun (misal: "Smart Card" di bulan/tahun terkait)
         posLainList.find((p) => {
           const pBulan = (p.bulan || "").trim().toLowerCase();
           const pTahun = String(p.tahun || "").trim();
           return pBulan === bulanName.toLowerCase() && pTahun === yearStr;
         }) ||
+        // 2. Cocok tahun dan bulannya kosong (berlaku setahun penuh)
+        posLainList.find((p) => {
+          const pBulan = (p.bulan || "").trim().toLowerCase();
+          const pTahun = String(p.tahun || "").trim();
+          return !pBulan && pTahun === yearStr;
+        }) ||
+        // 3. Cocok bulannya saja
         posLainList.find((p) => (p.bulan || "").trim().toLowerCase() === bulanName.toLowerCase()) ||
-        posLainList.find((p) => (p.nama || "").toUpperCase().includes("HUT")) ||
+        // 4. Cocok tahunnya saja
         posLainList.find((p) => String(p.tahun || "").trim() === yearStr) ||
+        // 5. Fallback ke item pos pertama
         posLainList[0];
       const posLainLainName = matchedPos?.nama ? String(matchedPos.nama).trim() : "";
 
