@@ -13,7 +13,13 @@ import GlobalApi from "@/app/_utils/GlobalApi";
 import Link from "next/link";
 import Image from "next/image";
 import toast, { Toaster } from "react-hot-toast";
-import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
+import {
+  FaTimesCircle,
+  FaCheckCircle,
+  FaExclamationCircle,
+} from "react-icons/fa";
+
+const MEMBER_PAGE_SIZE = 10;
 
 const FormStep1 = ({
   formData,
@@ -26,6 +32,7 @@ const FormStep1 = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMemberInfo, setSelectedMemberInfo] = useState(null);
   const [isFetchingMember, setIsFetchingMember] = useState(false);
+  const [isSearchingNames, setIsSearchingNames] = useState(false);
   const [filteredNames, setFilteredNames] = useState([]);
   const [cabangOptions, setCabangOptions] = useState([]);
   const [unitKerjaOptions, setUnitKerjaOptions] = useState([]);
@@ -43,7 +50,7 @@ const FormStep1 = ({
   const formattedDate = today.toISOString().split("T")[0];
   const [silaporData, setSilaporData] = useState(null);
   const [selectedCabang, setSelectedCabang] = useState(
-    silaporData?.cabang || ""
+    silaporData?.cabang || "",
   );
   const dropdownRef = useRef(null);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
@@ -53,7 +60,6 @@ const FormStep1 = ({
   const [showDropdownUnit, setShowDropdownUnit] = useState(false);
   const [canProceed, setCanProceed] = useState(true);
   const [temanUnitKerjaData, setTemanUnitKerjaData] = useState([]);
-  const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
   const [zoomedImage, setZoomedImage] = useState(null);
 
   useEffect(() => {
@@ -91,7 +97,7 @@ const FormStep1 = ({
   }, [token, router]);
 
   const filteredCabangOptions = cabangOptions.filter((cabang) =>
-    cabang.kecamatan.toLowerCase().includes(queryCabang.toLowerCase())
+    cabang.kecamatan.toLowerCase().includes(queryCabang.toLowerCase()),
   );
 
   useEffect(() => {
@@ -166,7 +172,7 @@ const FormStep1 = ({
 
   useEffect(() => {
     const unitsForSelectedCabang = unitKerjaOptions.filter(
-      (unit) => unit.cabang === selectedCabang
+      (unit) => unit.cabang === selectedCabang,
     );
     setFilteredUnitKerja(unitsForSelectedCabang);
   }, [selectedCabang, unitKerjaOptions]);
@@ -179,7 +185,7 @@ const FormStep1 = ({
     setShowDropdownCabang(false);
 
     const unitsForSelectedCabang = unitKerjaOptions.filter(
-      (unit) => unit.cabang === selectedKecamatan
+      (unit) => unit.cabang === selectedKecamatan,
     );
     setFilteredUnitKerja(unitsForSelectedCabang);
 
@@ -188,12 +194,13 @@ const FormStep1 = ({
       branch: selectedKecamatan,
       unit: "",
       memberName: "",
-      memberId: null
+      memberId: null,
     }));
     setQueryUnit("");
     setTemanUnitKerjaData([]);
     setFilteredNames([]);
     setSearchTerm("");
+    setIsSearchingNames(false);
     if (selectedMemberInfo) setSelectedMemberInfo(null);
   };
 
@@ -204,44 +211,47 @@ const FormStep1 = ({
   }, [silaporData]);
 
   useEffect(() => {
-    const fetchTemanUnitKerja = async () => {
-      if (!selectedUnitKerja) return;
-
-      try {
-        const response = await GlobalApi.getTemanUnitKerja(selectedUnitKerja, selectedCabang);
-        console.log("Data teman unit kerja yang diterima:", response);
-
-        const temanData = Array.isArray(response?.content)
-          ? response.content
-          : [];
-        setTemanUnitKerjaData(temanData);
-        setFilteredNames(temanData);
-        setIsDropdownVisible(true);
-      } catch (error) {
-        console.error("Error fetching teman unit kerja:", error);
-        setTemanUnitKerjaData([]);
-        setFilteredNames([]);
-      }
-    };
-
-    fetchTemanUnitKerja();
-  }, [selectedUnitKerja]);
-
-  useEffect(() => {
-    if (!Array.isArray(temanUnitKerjaData)) {
-      setFilteredNames([]);
-      return;
-    }
-
     if (searchTerm.trim() === "") {
       setFilteredNames(temanUnitKerjaData);
-    } else {
-      const filtered = temanUnitKerjaData.filter((item) =>
-        item.namaLengkap.toLowerCase().includes(searchTerm.toLowerCase().trim())
-      );
-      setFilteredNames(filtered);
     }
   }, [searchTerm, temanUnitKerjaData]);
+
+  useEffect(() => {
+    const keyword = searchTerm.trim();
+    if (!keyword || !formData.unit || !isDropdownVisible) return;
+
+    let isCurrentRequest = true;
+    const timeoutId = setTimeout(async () => {
+      setIsSearchingNames(true);
+
+      try {
+        const response = await GlobalApi.getTemanUnitKerja(
+          formData.unit,
+          selectedCabang,
+          0,
+          MEMBER_PAGE_SIZE,
+          keyword,
+        );
+        if (isCurrentRequest) {
+          setFilteredNames(
+            Array.isArray(response?.content) ? response.content : [],
+          );
+        }
+      } catch (error) {
+        if (isCurrentRequest) {
+          setFilteredNames([]);
+          console.error("Error searching anggota unit kerja:", error);
+        }
+      } finally {
+        if (isCurrentRequest) setIsSearchingNames(false);
+      }
+    }, 300);
+
+    return () => {
+      isCurrentRequest = false;
+      clearTimeout(timeoutId);
+    };
+  }, [searchTerm, formData.unit, selectedCabang, isDropdownVisible]);
 
   const handleUnitKerjaChange = async (unitKerja) => {
     setShowDropdownUnit(false);
@@ -255,13 +265,23 @@ const FormStep1 = ({
     setTemanUnitKerjaData([]);
     setFilteredNames([]);
     setSearchTerm("");
+    setIsSearchingNames(false);
     if (selectedMemberInfo) setSelectedMemberInfo(null);
 
     try {
-      const response = await GlobalApi.getTemanUnitKerja(unitKerja, selectedCabang);
-      setTemanUnitKerjaData(response.content || []);
+      const response = await GlobalApi.getTemanUnitKerja(
+        unitKerja,
+        selectedCabang,
+        0,
+        MEMBER_PAGE_SIZE,
+      );
+      const members = Array.isArray(response?.content) ? response.content : [];
+      setTemanUnitKerjaData(members);
+      setFilteredNames(members);
     } catch (error) {
       console.error("Error fetching teman unit kerja:", error);
+      setTemanUnitKerjaData([]);
+      setFilteredNames([]);
     }
   };
 
@@ -278,6 +298,7 @@ const FormStep1 = ({
   const handleSearch = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
+    setIsSearchingNames(Boolean(value.trim() && formData.unit));
 
     const lowerValue = value.toLowerCase().trim();
 
@@ -286,21 +307,18 @@ const FormStep1 = ({
       setFormData((prev) => ({ ...prev, memberId: null, memberName: "" }));
     }
 
-    if (Array.isArray(temanUnitKerjaData)) {
-      const filtered = temanUnitKerjaData.filter((item) =>
-        item.namaLengkap.toLowerCase().includes(lowerValue)
-      );
-      setFilteredNames(filtered);
-      setIsDropdownVisible(filtered.length > 0);
-    } else {
-      console.error("temanUnitKerjaData bukan array:", temanUnitKerjaData);
-    }
+    const filtered = temanUnitKerjaData.filter((item) =>
+      item.namaLengkap?.toLowerCase().includes(lowerValue),
+    );
+    setFilteredNames(filtered);
+    setIsDropdownVisible(true);
   };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsDropdownVisible(false);
+        setIsSearchingNames(false);
       }
     };
 
@@ -319,6 +337,7 @@ const FormStep1 = ({
     setSearchTerm(name);
     setFilteredNames([]);
     setIsDropdownVisible(false);
+    setIsSearchingNames(false);
     sessionStorage.setItem("selectedMemberId", id);
 
     setIsFetchingMember(true);
@@ -365,7 +384,7 @@ const FormStep1 = ({
     setFormData((prev) => ({ ...prev, branch: inputValue }));
 
     const filtered = unitKerjaOptions.filter(
-      (unit) => unit.cabang === inputValue
+      (unit) => unit.cabang === inputValue,
     );
     setFilteredUnitKerja(filtered);
     setIsUnitKerjaDisabled(false);
@@ -488,8 +507,9 @@ const FormStep1 = ({
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <div className="flex justify-center bg-red-600 py-2 rounded-b-lg shadow-md sm:mt-14 mt-12 sm:-mb-5 -mb-10">
             <h1 className="text-xl font-semibold text-white">Pelaporan</h1>
@@ -578,9 +598,7 @@ const FormStep1 = ({
                         }
                         readOnly={true}
                         onClick={() => {
-                          if (
-                            sessionStorage.getItem("role") === "SUPERADMIN"
-                          ) {
+                          if (sessionStorage.getItem("role") === "SUPERADMIN") {
                             setQueryCabang("");
                             setShowDropdownCabang(true);
                           }
@@ -620,9 +638,11 @@ const FormStep1 = ({
                               .filter((cabang) =>
                                 cabang.kecamatan
                                   .toLowerCase()
-                                  .includes(queryCabang.toLowerCase())
+                                  .includes(queryCabang.toLowerCase()),
                               )
-                              .sort((a, b) => a.kecamatan.localeCompare(b.kecamatan, "id"))
+                              .sort((a, b) =>
+                                a.kecamatan.localeCompare(b.kecamatan, "id"),
+                              )
                               .map((cabang) => (
                                 <li
                                   key={cabang.idKecamatan}
@@ -687,9 +707,11 @@ const FormStep1 = ({
                               .filter((unit) =>
                                 unit.unitKerja
                                   .toLowerCase()
-                                  .includes(queryUnit.toLowerCase())
+                                  .includes(queryUnit.toLowerCase()),
                               )
-                              .sort((a, b) => a.unitKerja.localeCompare(b.unitKerja, "id"))
+                              .sort((a, b) =>
+                                a.unitKerja.localeCompare(b.unitKerja, "id"),
+                              )
                               .map((unit) => (
                                 <li
                                   key={unit.id}
@@ -728,9 +750,10 @@ const FormStep1 = ({
                         className="text-sm"
                       />
 
-                      {Array.isArray(filteredNames) &&
-                        filteredNames.length > 0 &&
-                        isDropdownVisible && (
+                      {isDropdownVisible &&
+                        (filteredNames.length > 0 ||
+                          isSearchingNames ||
+                          searchTerm.trim()) && (
                           <ul className="absolute left-0 w-full mt-[70px] bg-white border border-gray-300 rounded-md shadow-lg z-20 max-h-60 overflow-y-auto">
                             {filteredNames.map((data) => (
                               <li
@@ -744,7 +767,10 @@ const FormStep1 = ({
                                   {data.namaLengkap}
                                 </span>
                                 <div className="text-xs text-gray-500 mt-1 flex flex-wrap items-center">
-                                  <span>TTL: {data.tempatLahir || "-"}, {formatTanggalArray(data.tanggalLahir)}</span>
+                                  <span>
+                                    TTL: {data.tempatLahir || "-"},{" "}
+                                    {formatTanggalArray(data.tanggalLahir)}
+                                  </span>
                                   <span className="mx-2 text-gray-300">•</span>
                                   <span>NPA: {data.npaPgri || "-"}</span>
                                   <span className="mx-2 text-gray-300">•</span>
@@ -752,18 +778,34 @@ const FormStep1 = ({
                                 </div>
                               </li>
                             ))}
+                            {isSearchingNames && (
+                              <li className="p-3 text-sm text-gray-500">
+                                Mencari anggota...
+                              </li>
+                            )}
+                            {!isSearchingNames &&
+                              searchTerm.trim() &&
+                              filteredNames.length === 0 && (
+                                <li className="p-3 text-sm text-gray-500">
+                                  Anggota tidak ditemukan.
+                                </li>
+                              )}
                           </ul>
                         )}
                     </div>
 
                     {isFetchingMember && (
-                      <p className="text-sm text-blue-500 mt-2">Memuat data anggota...</p>
+                      <p className="text-sm text-blue-500 mt-2">
+                        Memuat data anggota...
+                      </p>
                     )}
 
                     {selectedMemberInfo && !isFetchingMember && (
                       <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-4 w-full shadow-sm">
                         <Image
-                          onClick={() => setZoomedImage(selectedMemberInfo.foto)}
+                          onClick={() =>
+                            setZoomedImage(selectedMemberInfo.foto)
+                          }
                           src={selectedMemberInfo.foto}
                           alt="Foto Anggota"
                           width={60}
@@ -772,9 +814,12 @@ const FormStep1 = ({
                           unoptimized={true}
                         />
                         <div className="flex flex-col">
-                          <span className="text-sm font-bold text-gray-800">{searchTerm}</span>
+                          <span className="text-sm font-bold text-gray-800">
+                            {searchTerm}
+                          </span>
                           <span className="text-xs text-gray-600">
-                            Tanggal Lahir: {selectedMemberInfo.tanggalLahir || "-"}
+                            Tanggal Lahir:{" "}
+                            {selectedMemberInfo.tanggalLahir || "-"}
                           </span>
                           {selectedMemberInfo.npaPgri && (
                             <span className="text-xs text-gray-600">
@@ -919,7 +964,7 @@ const Resume = ({
       } catch (error) {
         console.error(
           "Error fetching report data:",
-          error.response?.data || error.message
+          error.response?.data || error.message,
         );
       }
     }
@@ -990,8 +1035,9 @@ const Resume = ({
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           {notification && (
             <NotificationPopup
@@ -1046,10 +1092,11 @@ const Resume = ({
                     <Label className="block text-sm font-medium text-center">
                       No HP:{" "}
                       <Link
-                        href={`https://wa.me/${formData?.nomorHp?.startsWith("+62")
-                          ? formData.nomorHp.replace("+62", "62")
-                          : formData?.nomorHp || ""
-                          }`}
+                        href={`https://wa.me/${
+                          formData?.nomorHp?.startsWith("+62")
+                            ? formData.nomorHp.replace("+62", "62")
+                            : formData?.nomorHp || ""
+                        }`}
                         className="text-blue-500"
                       >
                         {formatPhoneNumber(formData.nomorHp)} (WhatsApp)
@@ -1093,29 +1140,30 @@ const Resume = ({
                     <Label className="block text-sm font-medium text-center">
                       No HP:{" "}
                       <Link
-                        href={`https://wa.me/${pelaporData?.nomorHp || pelaporData?.nohp
-                          ? (
-                            pelaporData.nomorHp || pelaporData.nohp
-                          ).startsWith("0")
-                            ? "62" +
-                            (
-                              pelaporData.nomorHp || pelaporData.nohp
-                            ).substring(1)
-                            : (
-                              pelaporData.nomorHp || pelaporData.nohp
-                            ).startsWith("+62")
-                              ? (
+                        href={`https://wa.me/${
+                          pelaporData?.nomorHp || pelaporData?.nohp
+                            ? (
                                 pelaporData.nomorHp || pelaporData.nohp
-                              ).replace("+62", "62")
-                              : pelaporData.nomorHp || pelaporData.nohp
-                          : ""
-                          }`}
+                              ).startsWith("0")
+                              ? "62" +
+                                (
+                                  pelaporData.nomorHp || pelaporData.nohp
+                                ).substring(1)
+                              : (
+                                    pelaporData.nomorHp || pelaporData.nohp
+                                  ).startsWith("+62")
+                                ? (
+                                    pelaporData.nomorHp || pelaporData.nohp
+                                  ).replace("+62", "62")
+                                : pelaporData.nomorHp || pelaporData.nohp
+                            : ""
+                        }`}
                         className="text-blue-500"
                         target="_blank"
                         rel="noopener noreferrer"
                       >
                         {formatPhoneNumber(
-                          pelaporData?.nomorHp || pelaporData?.nohp || ""
+                          pelaporData?.nomorHp || pelaporData?.nohp || "",
                         )}{" "}
                         (WhatsApp)
                       </Link>
@@ -1159,20 +1207,20 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getBgColor = () => {
     switch (type) {
-      case 'success':
-        return 'bg-green-100';
-      case 'error':
-        return 'bg-red-100';
+      case "success":
+        return "bg-green-100";
+      case "error":
+        return "bg-red-100";
       default:
-        return 'bg-blue-100';
+        return "bg-blue-100";
     }
   };
 
   const getIcon = () => {
     switch (type) {
-      case 'success':
+      case "success":
         return <FaCheckCircle className="text-green-500 text-3xl" />;
-      case 'error':
+      case "error":
         return <FaExclamationCircle className="text-red-500 text-3xl" />;
       default:
         return null;
@@ -1181,19 +1229,24 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getTextColor = () => {
     switch (type) {
-      case 'success':
-        return 'text-green-800';
-      case 'error':
-        return 'text-red-800';
+      case "success":
+        return "text-green-800";
+      case "error":
+        return "text-red-800";
       default:
-        return 'text-blue-800';
+        return "text-blue-800";
     }
   };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
-      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+      <div
+        className="absolute inset-0 bg-black opacity-50"
+        onClick={onClose}
+      ></div>
+      <div
+        className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}
+      >
         <button
           onClick={onClose}
           className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
@@ -1203,17 +1256,13 @@ const NotificationPopup = ({ type, message, onClose }) => {
         </button>
 
         <div className="flex flex-col items-center space-y-4">
-          <div className="animate-bounce">
-            {getIcon()}
-          </div>
+          <div className="animate-bounce">{getIcon()}</div>
 
           <h3 className={`text-xl font-bold ${getTextColor()}`}>
-            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+            {type === "success" ? "Berhasil!" : "Gagal!"}
           </h3>
 
-          <div className={`${getTextColor()} text-center`}>
-            {message}
-          </div>
+          <div className={`${getTextColor()} text-center`}>{message}</div>
         </div>
       </div>
     </div>
@@ -1285,8 +1334,8 @@ const Page = () => {
       sessionStorage.setItem("npaTerlaporList", JSON.stringify(npaList));
 
       setNotification({
-        type: 'success',
-        message: `Laporan Berhasil`
+        type: "success",
+        message: `Laporan Berhasil`,
       });
 
       setTimeout(() => {
@@ -1296,8 +1345,8 @@ const Page = () => {
       console.error("Error saat menambahkan laporan:", error);
 
       setNotification({
-        type: 'error',
-        message: 'Gagal menambahkan laporan!'
+        type: "error",
+        message: "Gagal menambahkan laporan!",
       });
     }
   };
