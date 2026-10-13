@@ -650,9 +650,10 @@ const getTemanUnitKerja = async (
   cabang = null,
   page = 0,
   size = 10,
+  keyword = null,
 ) => {
   try {
-    return await getAllAnggota(page, size, cabang, unitKerja);
+    return await getAllAnggota(page, size, cabang, unitKerja, keyword);
   } catch (error) {
     console.error("Error fetching teman unit kerja:", error);
     throw error;
