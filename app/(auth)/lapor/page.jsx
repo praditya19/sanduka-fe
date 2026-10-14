@@ -19,7 +19,7 @@ import {
   FaExclamationCircle,
 } from "react-icons/fa";
 
-const MEMBER_PAGE_SIZE = 10;
+const MEMBER_PAGE_SIZE = 500;
 
 const FormStep1 = ({
   formData,
