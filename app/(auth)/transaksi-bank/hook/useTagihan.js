@@ -45,26 +45,14 @@ const useTagihan = (npa, bulan, tahun, token) => {
         posList.find((p) => {
           const pBulan = (p.bulan || "").trim().toLowerCase();
           const pTahun = String(p.tahun || "").trim();
-          return (
-            (!pBulan || pBulan === bulanName.toLowerCase()) &&
-            (!pTahun || pTahun === String(tahun)) &&
-            (p.nama || "").toUpperCase().includes("HUT")
-          );
-        }) ||
-        posList.find((p) => {
-          const pBulan = (p.bulan || "").trim().toLowerCase();
-          const pTahun = String(p.tahun || "").trim();
-          return pBulan === bulanName.toLowerCase() && pTahun === String(tahun);
+          return pBulan === bulanName.toLowerCase() && (!pTahun || pTahun === String(tahun));
         }) ||
         posList.find((p) => {
           const pBulan = (p.bulan || "").trim().toLowerCase();
           return pBulan === bulanName.toLowerCase();
-        }) ||
-        posList.find((p) => (p.nama || "").toUpperCase().includes("HUT")) ||
-        posList.find((p) => String(p.tahun || "").trim() === String(tahun)) ||
-        posList[0];
+        });
 
-      const posName = matchedPos?.nama || "HUT 81 PGRI";
+      const posName = matchedPos?.nama || "";
       setPosLainLainName(posName);
 
       let sumbanganNominal = Number(balancing?.totalIuranSumbangan || 0);

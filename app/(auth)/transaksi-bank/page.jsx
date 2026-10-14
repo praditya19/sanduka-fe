@@ -802,6 +802,7 @@ const [selectedBulan, setSelectedBulan] = useState(null);
                     <RekapTable
                       dataRekapitulasi={dataRekapitulasi}
                       formatRupiah={formatRupiah}
+                      posLainLainName={posLainLainName}
                     />
                   </div>
                 </div>
@@ -814,6 +815,7 @@ const [selectedBulan, setSelectedBulan] = useState(null);
         <EditBalancingModal
           editData={editData}
           setEditData={setEditData}
+          posLainLainName={posLainLainName}
           onClose={() => setShowEditModal(false)}
           onSave={handleSaveEdit}
         />

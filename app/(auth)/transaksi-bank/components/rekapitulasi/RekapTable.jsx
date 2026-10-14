@@ -2,7 +2,7 @@ import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 
-const RekapTable = ({ dataRekapitulasi, formatRupiah }) => {
+const RekapTable = ({ dataRekapitulasi, formatRupiah, posLainLainName }) => {
   const totals = dataRekapitulasi.reduce(
     (acc, item) => {
       acc.iuran += item.iuran || 0;
@@ -60,7 +60,7 @@ const RekapTable = ({ dataRekapitulasi, formatRupiah }) => {
               Kalender
             </th>
             <th className="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-wider text-white border-b border-gray-300">
-              Lain-lain
+              {posLainLainName ? `Lain-lain (${posLainLainName})` : "Lain-lain"}
             </th>
             <th className="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-wider text-white border-b border-gray-300">
               Total Keuangan

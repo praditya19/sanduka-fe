@@ -81,25 +81,34 @@ function KeuanganDetailContent() {
       const posLainList = Array.isArray(posLainRes) ? posLainRes : posLainRes?.data || [];
       const bulanName = MONTHS_FULL[selectedMonth] || "";
       const yearStr = String(selectedYear);
-      const matchedPos =
-        // 1. Prioritas utama: Cocok persis bulan dan tahun (misal: "Smart Card" di bulan/tahun terkait)
-        posLainList.find((p) => {
-          const pBulan = (p.bulan || "").trim().toLowerCase();
-          const pTahun = String(p.tahun || "").trim();
-          return pBulan === bulanName.toLowerCase() && pTahun === yearStr;
-        }) ||
-        // 2. Cocok tahun dan bulannya kosong (berlaku setahun penuh)
-        posLainList.find((p) => {
-          const pBulan = (p.bulan || "").trim().toLowerCase();
-          const pTahun = String(p.tahun || "").trim();
-          return !pBulan && pTahun === yearStr;
-        }) ||
-        // 3. Cocok bulannya saja
-        posLainList.find((p) => (p.bulan || "").trim().toLowerCase() === bulanName.toLowerCase()) ||
-        // 4. Cocok tahunnya saja
-        posLainList.find((p) => String(p.tahun || "").trim() === yearStr) ||
-        // 5. Fallback ke item pos pertama
-        posLainList[0];
+      // Cek nominal iuran lain-lain di cabangData (patokan nominal)
+      const itemWithLain = cabangData.find((item) => Number(item.totalIuranSumbangan || 0) > 0);
+      const sampleNominal = itemWithLain ? Number(itemWithLain.totalIuranSumbangan) : 0;
+
+      let matchedPos = null;
+      if (sampleNominal > 0) {
+        matchedPos =
+          posLainList.find((p) => {
+            const total =
+              Number(p.peruntukanKabupaten || 0) +
+              Number(p.peruntukanCabang || 0) +
+              Number(p.peruntukanProvinsi || 0);
+            const kab = Number(p.peruntukanKabupaten || 0);
+            return total === sampleNominal || kab === sampleNominal;
+          }) || (sampleNominal === 30000 ? { nama: "HUT 81 PGRI" } : null);
+      }
+
+      if (!matchedPos) {
+        matchedPos =
+          // 1. Cocok persis bulan dan tahun
+          posLainList.find((p) => {
+            const pBulan = (p.bulan || "").trim().toLowerCase();
+            const pTahun = String(p.tahun || "").trim();
+            return pBulan === bulanName.toLowerCase() && pTahun === yearStr;
+          }) ||
+          // 2. Cocok bulannya saja
+          posLainList.find((p) => (p.bulan || "").trim().toLowerCase() === bulanName.toLowerCase());
+      }
       const posLainLainName = matchedPos?.nama ? String(matchedPos.nama).trim() : "";
 
       // Rekapitulasi Iuran — pb + provinsi + kabupaten
@@ -152,14 +161,13 @@ function KeuanganDetailContent() {
       const rekapDaspenAnggota = rekapDaspenByCabang[cabangKey]?.totalAnggota || 0;
 
       // Per-category breakdown
-      const lainLabel = posLainLainName ? `LAIN-LAIN (${posLainLainName})` : "LAIN-LAIN";
       const categories = [
         { label: "IURAN", baseLabel: "IURAN", field: "totalIuranAnggota" },
         { label: "SANDUKA", baseLabel: "SANDUKA", field: "totalIuranSanduka" },
         { label: "DASPEN", baseLabel: "DASPEN", field: "totalIuranDaspen" },
         { label: "DERAP", baseLabel: "DERAP", field: "totalIuranDerap" },
         { label: "KALENDER", baseLabel: "KALENDER", field: "totalIuranKalender" },
-        { label: lainLabel, baseLabel: "LAIN-LAIN", field: "totalIuranSumbangan", keterangan: posLainLainName },
+        { label: "LAIN-LAIN", baseLabel: "LAIN-LAIN", field: "totalIuranSumbangan", keterangan: posLainLainName },
       ];
 
       let subtotal = 0;

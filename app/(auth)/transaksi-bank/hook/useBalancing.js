@@ -26,54 +26,76 @@ const useBalancing = ({
   const [resetUntukBulan, setResetUntukBulan] = useState("");
   const [deleteLoader, setDeleteLoader] = useState(false);
   const [deleteProgress, setDeleteProgress] = useState(0);
-  const [posLainLainName, setPosLainLainName] = useState("");
+  const [posLainLainList, setPosLainLainList] = useState([]);
 
   const fetchPosLainLain = async () => {
     try {
       const res = await GlobalApi.getPosLainLain();
       const list = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
-      if (list.length > 0) {
-        const bulanIndo = [
-          "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-          "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-        ];
-        const monthNum = month !== "all" ? Number(month) : new Date().getMonth() + 1;
-        const yearNum = year !== "all" ? String(year) : String(new Date().getFullYear());
-        const bulanName = bulanIndo[monthNum - 1] || "";
-
-        const found =
-          list.find((p) => {
-            const pBulan = (p.bulan || "").trim().toLowerCase();
-            const pTahun = String(p.tahun || "").trim();
-            return (
-              (!pBulan || pBulan === bulanName.toLowerCase()) &&
-              (!pTahun || pTahun === yearNum) &&
-              (p.nama || "").toUpperCase().includes("HUT")
-            );
-          }) ||
-          list.find((p) => {
-            const pBulan = (p.bulan || "").trim().toLowerCase();
-            const pTahun = String(p.tahun || "").trim();
-            return pBulan === bulanName.toLowerCase() && pTahun === yearNum;
-          }) ||
-          list.find((p) => {
-            const pBulan = (p.bulan || "").trim().toLowerCase();
-            return pBulan === bulanName.toLowerCase();
-          }) ||
-          list.find((p) => (p.nama || "").toUpperCase().includes("HUT")) ||
-          list.find((p) => String(p.tahun || "").trim() === yearNum) ||
-          list[0];
-
-        if (found) setPosLainLainName(found.nama);
-      }
+      setPosLainLainList(list);
     } catch (err) {
       console.warn("Gagal ambil pos lain-lain:", err);
+      setPosLainLainList([]);
     }
   };
 
   useEffect(() => {
     fetchPosLainLain();
   }, []);
+
+  const posLainLainName = useMemo(() => {
+    if (!posLainLainList || posLainLainList.length === 0) return "";
+
+    const bulanIndo = [
+      "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+      "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+    ];
+    const monthNum = month !== "all" && month ? Number(month) : null;
+    const yearStr = year !== "all" && year ? String(year).trim() : String(new Date().getFullYear());
+    const bulanName = monthNum ? (bulanIndo[monthNum - 1] || "").toLowerCase() : "";
+
+    // 1. Prioritas utama: Patokan nominal dari data balancing yang sedang tampil
+    const safeData = Array.isArray(dataBalancing) ? dataBalancing : [];
+    const itemWithLain = safeData.find((item) => Number(item.totalIuranSumbangan || item.lainLain || 0) > 0);
+    const sampleNominal = itemWithLain ? Number(itemWithLain.totalIuranSumbangan || itemWithLain.lainLain) : 0;
+
+    if (sampleNominal > 0) {
+      const matchedByNominal = posLainLainList.find((p) => {
+        const total =
+          Number(p.peruntukanKabupaten || 0) +
+          Number(p.peruntukanCabang || 0) +
+          Number(p.peruntukanProvinsi || 0);
+        const kab = Number(p.peruntukanKabupaten || 0);
+        return total === sampleNominal || kab === sampleNominal;
+      });
+      if (matchedByNominal?.nama) return String(matchedByNominal.nama).trim();
+      if (sampleNominal === 30000) return "HUT 81 PGRI";
+    }
+
+    // 2. Cocok persis bulan dan tahun
+    if (bulanName) {
+      const matchedBulanTahun = posLainLainList.find((p) => {
+        const pBulan = (p.bulan || "").trim().toLowerCase();
+        const pTahun = String(p.tahun || "").trim();
+        return pBulan === bulanName && (!pTahun || pTahun === yearStr);
+      });
+      if (matchedBulanTahun?.nama) return String(matchedBulanTahun.nama).trim();
+
+      // 3. Cocok bulannya saja
+      const matchedBulan = posLainLainList.find((p) => (p.bulan || "").trim().toLowerCase() === bulanName);
+      if (matchedBulan?.nama) return String(matchedBulan.nama).trim();
+    }
+
+    // 4. Cocokkan tahun dan pos HUT (misal HUT 81 PGRI di 2026)
+    const matchedHut = posLainLainList.find((p) => {
+      const pTahun = String(p.tahun || "").trim();
+      const isHut = (p.nama || "").toUpperCase().includes("HUT");
+      return isHut && (!pTahun || !yearStr || pTahun === yearStr);
+    });
+    if (matchedHut?.nama) return String(matchedHut.nama).trim();
+
+    return "";
+  }, [posLainLainList, dataBalancing, month, year]);
 
   const getBalancingdata = async () => {
     // ⛔ hanya ADMIN yang wajib punya cabang

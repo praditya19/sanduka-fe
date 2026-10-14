@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FaTimesCircle, FaSave } from "react-icons/fa";
 import GlobalApi from "@/app/_utils/GlobalApi";
 
-const EditBalancingModal = ({ editData, setEditData, onClose, onSave }) => {
+const EditBalancingModal = ({ editData, setEditData, posLainLainName, onClose, onSave }) => {
   if (!editData) return null;
   const [openCabang, setOpenCabang] = useState(false);
   const [openUnit, setOpenUnit] = useState(false);
@@ -390,7 +390,9 @@ const [filterUnitKerja, setFilterUnitKerja] = useState([]);
           </div>
 
           <div>
-            <label className="block text-sm font-medium">Iuran Sumbangan</label>
+            <label className="block text-sm font-medium">
+              Iuran Lain-Lain {posLainLainName || (editData.defaultLainLain === 30000 ? "HUT 81 PGRI" : "") ? `(${posLainLainName || "HUT 81 PGRI"})` : ""}
+            </label>
             <input
               type="number"
               className="w-full border px-3 py-2 rounded"
@@ -406,7 +408,7 @@ const [filterUnitKerja, setFilterUnitKerja] = useState([]);
 
           <div>
             <label className="block text-sm font-medium">
-              Manual Iuran Sumbangan
+              Manual Iuran Lain-Lain {posLainLainName || (editData.manualLainLain === 30000 ? "HUT 81 PGRI" : "") ? `(${posLainLainName || "HUT 81 PGRI"})` : ""}
             </label>
             <input
               type="number"
