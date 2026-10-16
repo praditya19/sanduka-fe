@@ -4,6 +4,8 @@ import { FaEdit, FaPrint, FaFileInvoiceDollar } from "react-icons/fa";
 const MemberRow = React.memo(({
   member,
   rowIndex,
+  isSelected,
+  onToggleSelection,
   lastUpdatedMemberNip,
   lastUpdatedMemberRef,
   filesDataMap,
@@ -112,8 +114,18 @@ const MemberRow = React.memo(({
           Rp. {parseInt(member.totalIuran || 0).toLocaleString("id-ID")}
         </span>
       </td>
-      <td className="p-3 md:border-b flex justify-center items-center md:table-cell bg-gray-50 md:bg-transparent">
-        <div className="flex justify-center gap-4 md:gap-2">
+      <td className="p-3 md:border-b flex justify-between items-center md:justify-center md:table-cell bg-gray-50 md:bg-transparent">
+        <span className="md:hidden font-bold text-teal-600 uppercase text-xs">
+          Aksi
+        </span>
+        <div className="flex items-center justify-center gap-4 md:gap-2">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => onToggleSelection(member)}
+            aria-label={`Pilih data ${member.namaAnggota || ""}`}
+            className="h-4 w-4 cursor-pointer accent-teal-600"
+          />
           <button
             className="text-teal-600 hover:text-teal-800 text-xl md:text-lg p-2 md:p-1 hover:bg-teal-50 rounded-full md:rounded transition-colors border md:border-0"
             onClick={() => handleMemberClick(member)}

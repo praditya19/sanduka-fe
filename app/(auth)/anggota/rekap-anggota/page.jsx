@@ -40,6 +40,19 @@ import {
   exportMandiriLogic,
 } from "./utils/exportUtils";
 
+const getMemberSelectionKey = (member) =>
+  [
+    member.nip || "",
+    member.npaPgri || "",
+    member.unitKerja || "",
+    member.namaAnggota || "",
+  ].join("|");
+
+const RESET_OPTIONS = [
+  { label: "DERAP", value: "derap" },
+  { label: "KALENDER", value: "kalender" },
+];
+
 function RekapAnggota() {
   // --- States ---
   const [data, setData] = useState([]);
@@ -67,6 +80,13 @@ function RekapAnggota() {
   const [loadButton, setLoadButton] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [notification, setNotification] = useState(null);
+  const [selectedMemberKeys, setSelectedMemberKeys] = useState([]);
+  const [isResetModalVisible, setIsResetModalVisible] = useState(false);
+  const [selectedResetTypes, setSelectedResetTypes] = useState([]);
+  const [resetPosLainLain, setResetPosLainLain] = useState([]);
+  const [isLoadingResetPosLainLain, setIsLoadingResetPosLainLain] =
+    useState(true);
+  const [isResetPrepared, setIsResetPrepared] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -120,6 +140,25 @@ function RekapAnggota() {
   const [keteranganLainLain, setKeteranganLainLain] = useState([]);
   const [standardIuranList, setStandardIuranList] = useState([]);
   const [notifDaspen, setNotifDaspen] = useState(null);
+
+  const resetOptions = useMemo(
+    () => [
+      ...RESET_OPTIONS,
+      ...resetPosLainLain
+        .filter((item) => item?.nama)
+        .map((item) => ({
+          label: item.nama,
+          value: `lainLain:${item.id ?? item.nama}`,
+          kind: "lainLain",
+          name: item.nama,
+          nominal:
+            (parseInt(item.peruntukanProvinsi, 10) || 0) +
+            (parseInt(item.peruntukanKabupaten, 10) || 0) +
+            (parseInt(item.peruntukanCabang, 10) || 0),
+        })),
+    ],
+    [resetPosLainLain],
+  );
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [dataIuran, setDataIuran] = useState(null);
@@ -227,6 +266,24 @@ function RekapAnggota() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    const fetchResetPosLainLain = async () => {
+      try {
+        const response = await GlobalApi.getPosLainLain();
+        const posList = Array.isArray(response)
+          ? response
+          : response?.data || [];
+        setResetPosLainLain(posList);
+      } catch (error) {
+        console.error("Gagal mengambil pilihan reset lain-lain:", error);
+      } finally {
+        setIsLoadingResetPosLainLain(false);
+      }
+    };
+
+    fetchResetPosLainLain();
+  }, []);
+
   const [filesDataMap, setFilesDataMap] = useState({});
   const [open, setOpen] = useState(false);
 
@@ -243,6 +300,25 @@ function RekapAnggota() {
 
   // --- Derived Data ---
   const groupedData = useMemo(() => processData(data), [data]);
+  const allMembersForReset = useMemo(
+    () =>
+      processData(originalRekapData).flatMap((group) =>
+        group.members.map((member) => ({
+          ...member,
+          cabang: group.cabang,
+          unitKerja: group.unitKerja,
+        })),
+      ),
+    [originalRekapData],
+  );
+  const selectedMembersForReset = useMemo(
+    () =>
+      allMembersForReset.filter((member) =>
+        selectedMemberKeys.includes(getMemberSelectionKey(member)),
+      ),
+    [allMembersForReset, selectedMemberKeys],
+  );
+
 
   const stats = useMemo(() => {
     const initial = {
@@ -456,6 +532,26 @@ function RekapAnggota() {
         })),
       );
   }, [groupedData]);
+
+  const handleToggleMemberSelection = useCallback((member) => {
+    const memberKey = getMemberSelectionKey(member);
+    setSelectedMemberKeys((currentKeys) =>
+      currentKeys.includes(memberKey)
+        ? currentKeys.filter((key) => key !== memberKey)
+        : [...currentKeys, memberKey],
+    );
+  }, []);
+
+  const openResetModal = () => {
+    setSelectedResetTypes([]);
+    setIsResetPrepared(false);
+    setIsResetModalVisible(true);
+  };
+
+  const closeResetModal = () => {
+    setIsResetModalVisible(false);
+    setIsResetPrepared(false);
+  };
 
   useEffect(() => {
     if (displayLimit >= memoizedFlattenedMembers.length) return;
@@ -910,7 +1006,7 @@ function RekapAnggota() {
     // =========================
     else if (selectedKategori === "lainlain" && selectedKeterangan) {
       try {
-        console.log("🔍 Nama dipilih:", selectedKeterangan);
+        // console.log("🔍 Nama dipilih:", selectedKeterangan);
 
         const searchNama = selectedKeterangan
           .toString()
@@ -923,20 +1019,20 @@ function RekapAnggota() {
           ? response
           : response?.data || [];
 
-        console.log("📋 Data list:", dataList);
+        // console.log("📋 Data list:", dataList);
 
         const matchingItem = dataList.find(
           (item) => cleanText(item.nama) === cleanText(searchNama),
         );
 
-        console.log("🎯 Matching item:", matchingItem);
+        // console.log("🎯 Matching item:", matchingItem);
 
         if (matchingItem) {
           initialValue =
             (parseInt(matchingItem.peruntukanProvinsi, 10) || 0) +
             (parseInt(matchingItem.peruntukanKabupaten, 10) || 0) +
             (parseInt(matchingItem.peruntukanCabang, 10) || 0);
-          console.log("💰 Initial value:", initialValue);
+          // console.log("💰 Initial value:", initialValue);
         } else {
           console.warn(
             "⚠️ Tidak ditemukan data dengan nama:",
@@ -1268,6 +1364,16 @@ function RekapAnggota() {
                   <FaPrint /> Cetak
                 </button>
                 <button
+                  type="button"
+                  onClick={openResetModal}
+                  disabled={selectedMembersForReset.length === 0}
+                  className="flex-1 lg:flex-none px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm shadow-sm"
+                >
+                  Reset
+                  {selectedMembersForReset.length > 0 &&
+                    ` (${selectedMembersForReset.length})`}
+                </button>
+                <button
                   onClick={exportToExcel}
                   disabled={isExporting}
                   className="flex-1 lg:flex-none px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors flex items-center justify-center gap-2 text-sm shadow-sm"
@@ -1450,6 +1556,10 @@ function RekapAnggota() {
                             key={`${member.unitKerja}-${member.npaPgri}`}
                             member={member}
                             rowIndex={rowIndex}
+                            isSelected={selectedMemberKeys.includes(
+                              getMemberSelectionKey(member),
+                            )}
+                            onToggleSelection={handleToggleMemberSelection}
                             filesDataMap={filesDataMap}
                             formatTanggal={formatTanggal}
                             handleMemberClick={handleMemberClick}
@@ -1546,6 +1656,186 @@ function RekapAnggota() {
         onMonthChange={setSelectedMonth}
         onYearChange={setSelectedYear}
       />
+
+      {isResetModalVisible && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4"
+          onClick={closeResetModal}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reset-data-title"
+            className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-xl bg-white p-6 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <h2
+                  id="reset-data-title"
+                  className="text-xl font-semibold text-gray-900"
+                >
+                  Reset Data Anggota
+                </h2>
+                <p className="mt-1 text-sm text-gray-600">
+                  Pilih data yang akan di-reset untuk{" "}
+                  <strong>{selectedMembersForReset.length} anggota</strong>{" "}
+                  terpilih.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeResetModal}
+                aria-label="Tutup popup reset"
+                className="rounded-md px-2 text-2xl leading-none text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              {resetOptions.map((option) => (
+                <label
+                  key={option.value}
+                  className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition ${
+                    selectedResetTypes.includes(option.value)
+                      ? "border-teal-600 bg-teal-50"
+                      : "border-gray-200 hover:border-teal-300"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    value={option.value}
+                    checked={selectedResetTypes.includes(option.value)}
+                    onChange={() => {
+                      setSelectedResetTypes((currentTypes) =>
+                        currentTypes.includes(option.value)
+                          ? currentTypes.filter((type) => type !== option.value)
+                          : [...currentTypes, option.value],
+                      );
+                      setIsResetPrepared(false);
+                    }}
+                    className="h-4 w-4 accent-teal-600"
+                  />
+                  <span className="font-medium text-gray-800">
+                    {option.label}
+                  </span>
+                </label>
+              ))}
+              {isLoadingResetPosLainLain && (
+                <p className="px-1 text-sm text-gray-500">
+                  Memuat pilihan lain-lain...
+                </p>
+              )}
+              {!isLoadingResetPosLainLain &&
+                resetPosLainLain.length === 0 && (
+                  <p className="px-1 text-sm text-gray-500">
+                    Tidak ada pilihan lain-lain yang tersedia.
+                  </p>
+                )}
+            </div>
+
+            {selectedResetTypes.length > 0 && (
+              <div className="mt-4 rounded-lg border border-gray-200 p-3">
+                <p className="mb-2 text-sm font-medium text-gray-700">
+                  Data yang dipilih
+                </p>
+                <ul className="space-y-3 text-sm text-gray-600">
+                  {selectedMembersForReset.slice(0, 5).map((member) => (
+                    <li
+                      key={getMemberSelectionKey(member)}
+                      className="flex flex-col gap-1 border-b border-gray-100 pb-2 last:border-0 last:pb-0"
+                    >
+                      <span className="font-medium text-gray-800">
+                        {member.namaAnggota || "Tanpa nama"}
+                      </span>
+                      {selectedResetTypes.map((type) => {
+                        const option = resetOptions.find(
+                          (option) => option.value === type,
+                        );
+                        const label = option?.label || type;
+                        const detail =
+                          option?.kind === "lainLain"
+                            ? member.detailSumbangan?.find(
+                                (item) =>
+                                  String(
+                                    item.namaSumbangan ||
+                                      item.jenis ||
+                                      item.namaIuran ||
+                                      item.nama ||
+                                      "",
+                                  )
+                                    .trim()
+                                    .toLowerCase() ===
+                                  option.name.trim().toLowerCase(),
+                              )
+                            : null;
+                        const value =
+                          option?.kind === "lainLain"
+                            ? detail?.jumlah ??
+                              detail?.defaultJumlah ??
+                              option.nominal ??
+                              0
+                            : member[type] || 0;
+
+                        return (
+                          <span key={type}>
+                            {label}:{" "}
+                            Rp. {parseInt(value).toLocaleString("id-ID")}
+                          </span>
+                        );
+                      })}
+                    </li>
+                  ))}
+                  {selectedMembersForReset.length > 5 && (
+                    <li className="text-gray-500">
+                      dan {selectedMembersForReset.length - 5} anggota lainnya
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
+
+            {isResetPrepared && (
+              <div
+                role="status"
+                className="mt-4 rounded-lg bg-blue-50 p-3 text-sm text-blue-800"
+              >
+                Pilihan reset{" "}
+                {selectedResetTypes
+                  .map(
+                    (type) =>
+                      resetOptions.find((option) => option.value === type)
+                        ?.label || type,
+                  )
+                  .join(", ")}{" "}
+                untuk {selectedMembersForReset.length} anggota sudah disiapkan.
+                Data belum berubah karena backend belum tersedia.
+              </div>
+            )}
+
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={closeResetModal}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+              >
+                {isResetPrepared ? "Tutup" : "Batal"}
+              </button>
+              {!isResetPrepared && (
+                <button
+                  type="button"
+                  disabled={selectedResetTypes.length === 0}
+                  onClick={() => setIsResetPrepared(true)}
+                  className="rounded-lg bg-teal-600 px-4 py-2 font-medium text-white hover:bg-teal-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+                >
+                  Siapkan Reset
+                </button>
+              )}
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
