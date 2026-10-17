@@ -1895,21 +1895,27 @@ const DataTable = ({
                             {item.nomorRekening || "-"}
                           </div>
 
-                          <div
-                            className={`text-sm mt-1 font-medium px-2 py-1 rounded-full inline-block ${filesByNip.find(
-                              (file) =>
-                                String(file?.nip) === String(item.nip),
-                            )?.verifikasi === true
-                              ? "bg-green-100 text-green-700"
-                              : "bg-red-100 text-red-700"
-                              }`}
-                          >
-                            {filesByNip.find(
-                              (file) => String(file?.nip) === String(item.nip),
-                            )?.verifikasi === true
-                              ? "Terdaftar Daspen"
-                              : "Belum Terdaftar Daspen"}
-                          </div>
+                          {(() => {
+                            const isDaspenVerified =
+                              item.pesertaDaspen === "Ya" ||
+                              filesByNip.find(
+                                (file) =>
+                                  String(file?.nip) === String(item.nip),
+                              )?.verifikasi === true;
+                            return (
+                              <div
+                                className={`text-sm mt-1 font-medium px-2 py-1 rounded-full inline-block ${
+                                  isDaspenVerified
+                                    ? "bg-green-100 text-green-700"
+                                    : "bg-red-100 text-red-700"
+                                }`}
+                              >
+                                {isDaspenVerified
+                                  ? "Terdaftar Daspen"
+                                  : "Belum Terdaftar Daspen"}
+                              </div>
+                            );
+                          })()}
 
                           <div className="text-[10px] text-gray-400 mt-2 border-t border-gray-100 pt-1">
                             {item.updatedAt && item.updatedAt.length >= 3
