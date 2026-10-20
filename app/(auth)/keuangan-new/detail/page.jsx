@@ -61,7 +61,7 @@ function KeuanganDetailContent() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [balancingRes, iuranRes, rekapIuran, rekapDerap, rekapDaspen, rekapKalender, transaksiCabangRes, posLainRes] = await Promise.all([
+      const [balancingRes, iuranRes, rekapIuran, rekapDerap, rekapDaspen, rekapKalender, transaksiCabangRes] = await Promise.all([
         GlobalApi.getTransaksiBankBalancing(cabang, null, selectedYear, selectedMonth, null, null),
         GlobalApi.getDefaultIuranById(2),
         GlobalApi.getRekapByPeriode(MONTHS_FULL[selectedMonth], selectedYear),
@@ -69,47 +69,12 @@ function KeuanganDetailContent() {
         GlobalApi.getRekapDaspenByPeriode(MONTHS_FULL[selectedMonth], selectedYear),
         GlobalApi.getRekapKalenderByPeriode(MONTHS_FULL[selectedMonth], selectedYear),
         GlobalApi.getTransaksiCabangByBulanTahun(selectedMonth, selectedYear),
-        GlobalApi.getPosLainLain().catch(() => []),
       ]);
 
       const safeData = Array.isArray(balancingRes) ? balancingRes : [];
 
       // Filter by cabang (tidak deduplikasi — jumlahkan semua entry, sama seperti di IuranPgri)
       const cabangData = safeData.filter((item) => item.cabang === cabang);
-
-      // Pos Lain-Lain name resolution (e.g. Smart Card, HUT 81 PGRI, dll.)
-      const posLainList = Array.isArray(posLainRes) ? posLainRes : posLainRes?.data || [];
-      const bulanName = MONTHS_FULL[selectedMonth] || "";
-      const yearStr = String(selectedYear);
-      // Cek nominal iuran lain-lain di cabangData (patokan nominal)
-      const itemWithLain = cabangData.find((item) => Number(item.totalIuranSumbangan || 0) > 0);
-      const sampleNominal = itemWithLain ? Number(itemWithLain.totalIuranSumbangan) : 0;
-
-      let matchedPos = null;
-      if (sampleNominal > 0) {
-        matchedPos =
-          posLainList.find((p) => {
-            const total =
-              Number(p.peruntukanKabupaten || 0) +
-              Number(p.peruntukanCabang || 0) +
-              Number(p.peruntukanProvinsi || 0);
-            const kab = Number(p.peruntukanKabupaten || 0);
-            return total === sampleNominal || kab === sampleNominal;
-          }) || (sampleNominal === 30000 ? { nama: "HUT 81 PGRI" } : null);
-      }
-
-      if (!matchedPos) {
-        matchedPos =
-          // 1. Cocok persis bulan dan tahun
-          posLainList.find((p) => {
-            const pBulan = (p.bulan || "").trim().toLowerCase();
-            const pTahun = String(p.tahun || "").trim();
-            return pBulan === bulanName.toLowerCase() && pTahun === yearStr;
-          }) ||
-          // 2. Cocok bulannya saja
-          posLainList.find((p) => (p.bulan || "").trim().toLowerCase() === bulanName.toLowerCase());
-      }
-      const posLainLainName = matchedPos?.nama ? String(matchedPos.nama).trim() : "";
 
       // Rekapitulasi Iuran — pb + provinsi + kabupaten
       const rekapData = Array.isArray(rekapIuran) ? rekapIuran : [];
@@ -160,174 +125,171 @@ function KeuanganDetailContent() {
       const rekapDaspenTotal = rekapDaspenByCabang[cabangKey]?.tagihan || 0;
       const rekapDaspenAnggota = rekapDaspenByCabang[cabangKey]?.totalAnggota || 0;
 
-      // Per-category breakdown
-      const categories = [
-        { label: "IURAN", baseLabel: "IURAN", field: "totalIuranAnggota" },
-        { label: "SANDUKA", baseLabel: "SANDUKA", field: "totalIuranSanduka" },
-        { label: "DASPEN", baseLabel: "DASPEN", field: "totalIuranDaspen" },
-        { label: "DERAP", baseLabel: "DERAP", field: "totalIuranDerap" },
-        { label: "KALENDER", baseLabel: "KALENDER", field: "totalIuranKalender" },
-        { label: "LAIN-LAIN", baseLabel: "LAIN-LAIN", field: "totalIuranSumbangan", keterangan: posLainLainName },
-      ];
-
-      let subtotal = 0;
-      let totalAnggota = 0;
-      const tagihanRows = categories.map((cat) => {
-        let count = 0;
-        let total = 0;
-        cabangData.forEach((item) => {
-          const val = parseFloat(item[cat.field]) || 0;
-          if (val > 0) {
-            count++;
-            total += val;
-          }
-        });
-        if (cat.baseLabel === "IURAN" && rekapIuranTotal > 0) {
-          total = rekapIuranTotal;
-        }
-        if (cat.baseLabel === "DERAP" && rekapDerapTotal > 0) {
-          total = rekapDerapTotal;
-          if (rekapDerapJumlah > 0) count = rekapDerapJumlah;
-        }
-        if (cat.baseLabel === "DASPEN" && rekapDaspenTotal > 0) {
-          total = rekapDaspenTotal;
-          if (rekapDaspenAnggota > 0) count = rekapDaspenAnggota;
-        }
-        if (cat.baseLabel === "KALENDER") {
-          const rekapKalenderData = Array.isArray(rekapKalender) ? rekapKalender : [];
-          const kalenderCabang = rekapKalenderData.find(r => (r.cabang || "").trim().toUpperCase() === cabangKey);
-          if (kalenderCabang) {
-            const kalTotal = (kalenderCabang.peruntukanProvinsi || 0) + (kalenderCabang.peruntukanKabupaten || 0);
-            if (kalTotal > 0) {
-              total = kalTotal;
-              count = kalenderCabang.jumlah || count;
-            }
-          }
-        }
-        subtotal += total;
-        return {
-          label: cat.label,
-          baseLabel: cat.baseLabel,
-          count,
-          total,
-          bayar: 0,
-          keterangan: cat.keterangan || "",
-        };
-      });
-
-      // --- TAGIHAN CABANG (from transaksi_cabang table) ---
-      const normalizePos = (name) => (name || "").toString().trim().replace(/[\s\-_]+/g, "").toUpperCase();
-      const catPosAliases = {
-        "IURAN": ["IURANPGRI", "IURAN", "IURANANGGOTA"],
-        "SANDUKA": ["SANDUKA", "IURANSANDUKA"],
-        "DASPEN": ["DASPEN", "IURANDASPEN"],
-        "DERAP": ["DERAP", "IURANDERAP"],
-        "KALENDER": ["KALENDER", "IURANKALENDER"],
-        "LAIN-LAIN": [
-          "LAINLAIN",
-          "LAIN",
-          "SUMBANGAN",
-          "IURANSUMBANGAN",
-          ...(posLainLainName ? [normalizePos(posLainLainName), "HUT", "HUTPGRI", "HUT81", "HUT81PGRI"] : ["HUT", "HUTPGRI"]),
-        ],
-      };
-      const cabangTransData = Array.isArray(transaksiCabangRes) ? transaksiCabangRes : transaksiCabangRes?.data || [];
-      const cabangTrans = cabangTransData.filter(t => t.cabang?.trim().toUpperCase() === cabangKey);
-
-      // Group transaksi_cabang by pos, sum tagihan & pembayaran
-      const posGroup = {};
-      cabangTrans.forEach(t => {
-        const p = t.pos || "Lain-lain";
-        if (!posGroup[p]) posGroup[p] = { count: 0, tagihan: 0, pembayaran: 0 };
-        posGroup[p].count++;
-        posGroup[p].tagihan += Number(t.tagihan || 0);
-        posGroup[p].pembayaran += Number(t.pembayaran || 0);
-      });
-
-      // Replace rekap values with transaksi_cabang values where available
-      // Track keterangan per pos from individual transaksi_cabang items
-      const posKeterangan = {};
-      cabangTrans.forEach(t => {
-        const p = t.pos || "Lain-lain";
-        if (t.keterangan && !posKeterangan[p]) {
-          posKeterangan[p] = t.keterangan;
-        }
-      });
-
-      const usedPosKeys = new Set();
-      const updatedTagihanRows = tagihanRows.map(row => {
-        const baseKey = row.baseLabel || (row.label.startsWith("LAIN-LAIN") ? "LAIN-LAIN" : row.label);
-        const aliases = catPosAliases[baseKey] || [normalizePos(row.label)];
-        const matchingEntry = Object.entries(posGroup).find(([pos]) => {
-          const norm = normalizePos(pos);
-          return aliases.includes(norm);
-        });
-
-        if (matchingEntry) {
-          const [matchedPos, tcData] = matchingEntry;
-          if (tcData && tcData.tagihan > 0) {
-            usedPosKeys.add(matchedPos);
-            subtotal += tcData.tagihan - row.total;
-            return {
-              ...row,
-              total: tcData.tagihan,
-              bayar: tcData.pembayaran || 0,
-              keterangan: posKeterangan[matchedPos] || row.keterangan || "",
-            };
-          }
-        }
-        return row;
-      });
-
-      // Add non-overlapping pos as extra tagihan rows (skip Pemasukan Dari Bank — shown in REALISASI)
-      const extraTagihanRows = [];
-      Object.entries(posGroup).forEach(([pos, vals]) => {
-        const posNorm = normalizePos(pos);
-        if (posNorm === "PEMASUKANDARIBANK") return;
-        if (!usedPosKeys.has(pos)) {
-          const matchedAlias = Object.values(catPosAliases).some(aliasList =>
-            aliasList.includes(posNorm)
-          );
-          if (!matchedAlias) {
-            extraTagihanRows.push({
-              label: pos.toUpperCase(),
-              count: vals.count,
-              total: vals.tagihan,
-              bayar: vals.pembayaran || 0,
-              keterangan: posKeterangan[pos] || "",
-            });
-            subtotal += vals.tagihan;
-          }
-        }
-      });
-
-      // Only show KALENDER if there's a matching transaksi_cabang entry
-      const hasKalenderTc = Object.keys(posGroup).some(p => {
-        const norm = normalizePos(p);
-        return norm === "KALENDER" || norm === "IURANKALENDER";
-      });
-      // Custom sort order: PGRI, SANDUKA, DASPEN, DERAP, KALENDER, LAIN-LAIN, then others
-      const sortOrder = { "IURAN": 1, "SANDUKA": 2, "DASPEN": 3, "DERAP": 4, "KALENDER": 5, "LAIN-LAIN": 6 };
-      const filteredTagihan = [...updatedTagihanRows.filter((r) => {
-        if (r.total === 0) return false;
-        if (r.baseLabel === "KALENDER" && !hasKalenderTc) {
-          subtotal -= r.total;
-          return false;
-        }
-        return r.count > 0 || r.total > 0;
-      }), ...extraTagihanRows]
-        .sort((a, b) => {
-          const keyA = a.baseLabel || (a.label.startsWith("LAIN-LAIN") ? "LAIN-LAIN" : a.label);
-          const keyB = b.baseLabel || (b.label.startsWith("LAIN-LAIN") ? "LAIN-LAIN" : b.label);
-          return (sortOrder[keyA] || 99) - (sortOrder[keyB] || 99);
-        });
-      totalAnggota = new Set(cabangData.map((d) => d.npa)).size;
+      let totalAnggota = new Set(cabangData.map((d) => d.npa)).size;
       if (totalAnggota === 0) totalAnggota = cabangData.length;
+
+      const sumbanganBalancingTotal = cabangData.reduce(
+        (s, item) => s + (Number(item.totalIuranSumbangan || item.iuranSumbangan) || 0),
+        0
+      );
+      const sumbanganBalancingCount = cabangData.filter(
+        item => parseFloat(item.totalIuranSumbangan || item.iuranSumbangan) > 0
+      ).length;
 
       // Peruntukan cabang = besaran.cabang * total anggota
       const rateCabang = parseCurrency(iuranRes.cabang);
       const peruntukanCabang = rateCabang * totalAnggota;
 
+      // --- TAGIHAN CABANG (from transaksi_cabang table) ---
+      // Hanya tampilkan pos-pos yang diinput pada Tagihan Cabang (transaksi_cabang).
+      // Jika tidak ada inputan di cabang, pos tersebut tidak muncul.
+      const normalizePos = (name) => (name || "").toString().trim().replace(/[\s\-_]+/g, "").toUpperCase();
+
+      const standardCategoryMeta = {
+        "IURAN": {
+          label: "IURAN",
+          baseLabel: "IURAN",
+          aliases: ["IURANPGRI", "IURAN", "IURANANGGOTA"],
+          order: 1,
+          getCount: () => totalAnggota,
+          fallbackTotal: rekapIuranTotal,
+        },
+        "SANDUKA": {
+          label: "SANDUKA",
+          baseLabel: "SANDUKA",
+          aliases: ["SANDUKA", "IURANSANDUKA"],
+          order: 2,
+          getCount: () => {
+            const cnt = cabangData.filter(item => parseFloat(item.totalIuranSanduka) > 0).length;
+            return cnt > 0 ? cnt : totalAnggota;
+          },
+          fallbackTotal: 0,
+        },
+        "DASPEN": {
+          label: "DASPEN",
+          baseLabel: "DASPEN",
+          aliases: ["DASPEN", "IURANDASPEN"],
+          order: 3,
+          getCount: () => (rekapDaspenAnggota > 0 ? rekapDaspenAnggota : totalAnggota),
+          fallbackTotal: rekapDaspenTotal,
+        },
+        "DERAP": {
+          label: "DERAP",
+          baseLabel: "DERAP",
+          aliases: ["DERAP", "IURANDERAP"],
+          order: 4,
+          getCount: () => (rekapDerapJumlah > 0 ? rekapDerapJumlah : 0),
+          fallbackTotal: rekapDerapTotal,
+        },
+        "KALENDER": {
+          label: "KALENDER",
+          baseLabel: "KALENDER",
+          aliases: ["KALENDER", "IURANKALENDER"],
+          order: 5,
+          getCount: () => {
+            const rekapKalenderData = Array.isArray(rekapKalender) ? rekapKalender : [];
+            const kalenderCabang = rekapKalenderData.find(r => (r.cabang || "").trim().toUpperCase() === cabangKey);
+            return kalenderCabang?.jumlah || 0;
+          },
+          fallbackTotal: 0,
+        },
+        "LAIN-LAIN": {
+          label: "LAIN-LAIN",
+          baseLabel: "LAIN-LAIN",
+          aliases: ["LAINLAIN", "LAIN", "SUMBANGAN", "IURANSUMBANGAN"],
+          order: 6,
+          getCount: () => (sumbanganBalancingCount > 0 ? sumbanganBalancingCount : totalAnggota),
+          fallbackTotal: sumbanganBalancingTotal,
+        },
+      };
+
+      const cabangTransData = Array.isArray(transaksiCabangRes) ? transaksiCabangRes : transaksiCabangRes?.data || [];
+      const cabangTrans = cabangTransData.filter(t => (t.cabang || "").trim().toUpperCase() === cabangKey);
+
+      // Filter out PEMASUKAN DARI BANK (shown in REALISASI)
+      const nonBankTrans = cabangTrans.filter(t => normalizePos(t.pos) !== "PEMASUKANDARIBANK");
+
+      // Group items by pos and tunggakan status
+      const posMap = new Map();
+      nonBankTrans.forEach(t => {
+        const rawPos = (t.pos || "Lain-lain").trim();
+        const norm = normalizePos(rawPos);
+        const ket = (t.keterangan || "").trim();
+        const isTunggakan = ket.toLowerCase().includes("tunggakan") || norm.includes("PIUTANG");
+
+        // Check if matches any standard category
+        let baseGroupKey = norm;
+        let matchedStd = null;
+        for (const [key, meta] of Object.entries(standardCategoryMeta)) {
+          if (meta.aliases.includes(norm)) {
+            baseGroupKey = key;
+            matchedStd = meta;
+            break;
+          }
+        }
+
+        // Separate tunggakan so it doesn't merge with regular monthly tagihan
+        const groupKey = isTunggakan && ket ? `${baseGroupKey}_${normalizePos(ket)}` : baseGroupKey;
+
+        if (!posMap.has(groupKey)) {
+          let customCount = 0;
+          let customFallback = 0;
+          if (!isTunggakan && (norm.includes("HUT") || norm.includes("SUMBANGAN") || norm.includes("LAIN"))) {
+            customCount = sumbanganBalancingCount > 0 ? sumbanganBalancingCount : totalAnggota;
+            customFallback = sumbanganBalancingTotal;
+          }
+
+          posMap.set(groupKey, {
+            label: matchedStd && !isTunggakan ? matchedStd.label : rawPos.toUpperCase(),
+            baseLabel: matchedStd ? matchedStd.baseLabel : rawPos.toUpperCase(),
+            order: isTunggakan ? 80 : (matchedStd ? matchedStd.order : 50),
+            count: isTunggakan ? 0 : (matchedStd ? matchedStd.getCount() : customCount),
+            tagihan: 0,
+            pembayaran: 0,
+            keteranganList: [],
+            fallbackTotal: customFallback,
+            isTunggakan,
+          });
+        }
+
+        const entry = posMap.get(groupKey);
+        let tagihanItem = Number(t.tagihan || 0);
+        const pembayaranItem = Number(t.pembayaran || 0);
+
+        // Jika transaksi tunggakan belum ada tagihan tapi ada pembayaran, tagihan disamakan dengan pembayaran
+        if (isTunggakan && tagihanItem === 0 && pembayaranItem > 0) {
+          tagihanItem = pembayaranItem;
+        }
+
+        entry.tagihan += tagihanItem;
+        entry.pembayaran += pembayaranItem;
+        if (ket) {
+          entry.keteranganList.push(ket);
+        }
+      });
+
+      const filteredTagihan = Array.from(posMap.values())
+        .map(entry => {
+          let total = entry.tagihan;
+          if (!entry.isTunggakan && (total === 0 || (total <= 30000 && entry.fallbackTotal > 30000)) && entry.fallbackTotal > 0) {
+            total = entry.fallbackTotal;
+          }
+          const uniqueKeterangan = Array.from(new Set(entry.keteranganList)).join(", ");
+          return {
+            label: entry.label,
+            baseLabel: entry.baseLabel,
+            count: entry.count,
+            total: total,
+            bayar: entry.pembayaran,
+            keterangan: uniqueKeterangan,
+            order: entry.order,
+            isTunggakan: entry.isTunggakan,
+          };
+        })
+        .filter(r => r.total > 0 || r.bayar > 0)
+        .sort((a, b) => (a.isTunggakan ? 1 : 0) - (b.isTunggakan ? 1 : 0) || a.order - b.order || a.label.localeCompare(b.label));
+
+      const subtotal = filteredTagihan.reduce((s, r) => s + (r.total || 0), 0);
       const totalTagihan = subtotal;
 
       // --- REALISASI ---
@@ -357,7 +319,7 @@ function KeuanganDetailContent() {
       // Pemasukan Dari Bank items from transaksi_cabang → shown in REALISASI
       cabangTrans.forEach((t) => {
         if ((t.pos || "").toUpperCase() === "PEMASUKAN DARI BANK") {
-          const nominal = Number(t.tagihan || 0);
+          const nominal = Number(t.tagihan || t.pembayaran || 0);
           if (nominal > 0) {
             trans.push({ date: formatDateLocal(t.tanggalTransaksi), desc: t.pos || "Pemasukan Dari Bank", keterangan: t.keterangan || "", amount: nominal });
           }
@@ -493,27 +455,33 @@ function KeuanganDetailContent() {
                   <h3 className="text-xs font-bold text-violet-600 uppercase tracking-[0.1em]">Tagihan</h3>
                 </div>
                 <div className="space-y-px">
-                  {tagihanData.map((row, i) => (
-                    <div key={i} className={`${i % 2 === 0 ? "bg-violet-50/40" : ""} -mx-2 px-2 py-1.5 rounded-lg`}>
-                      <div className="grid grid-cols-[1fr_auto] gap-x-2 text-sm">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <span className="font-semibold text-slate-700 whitespace-nowrap">{row.label}</span>
-                          {row.count > 1 && (
-                            <span className="text-[10px] font-semibold text-slate-800 bg-slate-200 px-1.5 py-0.5 rounded shrink-0 tracking-[0.15em]">{row.count.toLocaleString("id-ID")}</span>
-                          )}
+                  {tagihanData.length > 0 ? (
+                    tagihanData.map((row, i) => (
+                      <div key={i} className={`${i % 2 === 0 ? "bg-violet-50/40" : ""} -mx-2 px-2 py-1.5 rounded-lg`}>
+                        <div className="grid grid-cols-[1fr_auto] gap-x-2 text-sm">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="font-semibold text-slate-700 whitespace-nowrap">{row.label}</span>
+                            {row.count > 1 && (
+                              <span className="text-[10px] font-semibold text-slate-800 bg-slate-200 px-1.5 py-0.5 rounded shrink-0 tracking-[0.15em]">{row.count.toLocaleString("id-ID")}</span>
+                            )}
+                          </div>
+                          <span className="font-semibold text-slate-700 text-right tabular-nums">{formatCurrency(row.total)}</span>
                         </div>
-                        <span className="font-semibold text-slate-700 text-right tabular-nums">{formatCurrency(row.total)}</span>
+                        {/* Bayar sub-row */}
+                        <div className="flex items-center justify-between text-xs ml-1 mt-0.5">
+                          <span className="text-slate-400 font-medium">Bayar</span>
+                          <span className="font-semibold text-emerald-600 tabular-nums">{formatCurrency(row.bayar || 0)}</span>
+                        </div>
+                        {row.keterangan ? (
+                          <div className="text-[10px] text-slate-400 font-medium mt-px ml-1">{row.keterangan}</div>
+                        ) : null}
                       </div>
-                      {/* Bayar sub-row */}
-                      <div className="flex items-center justify-between text-xs ml-1 mt-0.5">
-                        <span className="text-slate-400 font-medium">Bayar</span>
-                        <span className="font-semibold text-emerald-600 tabular-nums">{formatCurrency(row.bayar || 0)}</span>
-                      </div>
-                      {row.keterangan ? (
-                        <div className="text-[10px] text-slate-400 font-medium mt-px ml-1">{row.keterangan}</div>
-                      ) : null}
+                    ))
+                  ) : (
+                    <div className="text-sm text-slate-400 font-semibold italic py-3 text-center">
+                      Belum ada inputan tagihan cabang
                     </div>
-                  ))}
+                  )}
                 </div>
 
                 {/* Total Tagihan */}

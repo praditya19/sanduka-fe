@@ -103,16 +103,6 @@ export default function KeuanganNew() {
         };
       });
 
-      // Main categories and their balancing field names
-      const normalizePos = (name) => (name || "").toString().trim().replace(/[\s\-_]+/g, "").toUpperCase();
-      const mainCategoryConfigs = [
-        { balField: "iuranAnggota", aliases: ["IURANPGRI", "IURAN", "IURANANGGOTA"] },
-        { balField: "iuranSanduka", aliases: ["SANDUKA", "IURANSANDUKA"] },
-        { balField: "iuranDaspen", aliases: ["DASPEN", "IURANDASPEN"] },
-        { balField: "iuranDerap", aliases: ["DERAP", "IURANDERAP"] },
-        { balField: "iuranKalender", aliases: ["KALENDER", "IURANKALENDER"] },
-        { balField: "iuranSumbangan", aliases: ["LAINLAIN", "LAIN", "SUMBANGAN", "IURANSUMBANGAN"] },
-      ];
 
       // Parse pemasukan organisasi for realisasi per cabang
       const orgPayments = {};
@@ -140,23 +130,6 @@ export default function KeuanganNew() {
         const bal = balGrouped[cabang];
         let target = tc.target;
         let realisasi = 0;
-
-        // Add balancing categories not represented in transaksi_cabang
-        const branchTcNormalized = cabangTransData
-          .filter(t => (t.cabang || "").trim().toUpperCase() === cabang)
-          .map(t => normalizePos(t.pos));
-
-        if (bal) {
-          mainCategoryConfigs.forEach((cat) => {
-            const hasTc = branchTcNormalized.some((tcPos) => cat.aliases.includes(tcPos));
-            if (!hasTc) {
-              const field = cat.balField;
-              if (field && bal[field] > 0) {
-                target += bal[field];
-              }
-            }
-          });
-        }
 
         // realisasi = transaksi_cabang pembayaran for Pemasukan Dari Bank + potBank
         const tcRealisasi = cabangTransData

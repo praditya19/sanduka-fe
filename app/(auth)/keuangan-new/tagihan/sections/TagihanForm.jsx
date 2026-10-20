@@ -496,6 +496,7 @@ const TagihanForm = () => {
     "Derap": { api: GlobalApi.getRekapDerapByPeriode, tagihanField: null, bankField: "transfer" },
     "Kalender": { api: GlobalApi.getRekapKalenderByPeriode, tagihanField: null, bankField: "transfer" },
     "Sanduka": { api: GlobalApi.getRekapByPeriode, tagihanField: "sanduka", bankField: null },
+    "Iuran Sanduka": { api: GlobalApi.getRekapByPeriode, tagihanField: "sanduka", bankField: null },
   };
 
   const fetchAllBankValues = async (cabang, bulanVal, tahun) => {
@@ -750,6 +751,39 @@ const TagihanForm = () => {
 
     if (posNorm.includes("HUT") || posNorm.includes("LAIN") || posNorm.includes("SUMBANGAN")) {
       try {
+        const cNorm = (cabang || "").trim().toUpperCase();
+
+        // 1. Ambil dari Balancing Summary (iuranSumbangan)
+        const balRes = await GlobalApi.getBalancingSummaryPerCabang(Number(bulanVal), tahun).catch(() => []);
+        const balList = Array.isArray(balRes) ? balRes : balRes?.data || [];
+        const balItem = balList.find(b => (b.cabang || "").trim().toUpperCase() === cNorm);
+
+        if (balItem && Number(balItem.iuranSumbangan || 0) > 0) {
+          setFormCabang(prev => {
+            const newItems = [...prev.items];
+            newItems[itemIndex] = { ...newItems[itemIndex], tagihan: Number(balItem.iuranSumbangan) };
+            return { ...prev, items: newItems };
+          });
+          return;
+        }
+
+        // 2. Fallback ke getTransaksiBankBalancing jika summary kosong
+        try {
+          const detailBalRes = await GlobalApi.getTransaksiBankBalancing(cabang, null, tahun, Number(bulanVal)).catch(() => []);
+          const detailBalList = Array.isArray(detailBalRes) ? detailBalRes : [];
+          const totalSumbangan = detailBalList.reduce((sum, item) => sum + (Number(item.totalIuranSumbangan || item.iuranSumbangan) || 0), 0);
+          if (totalSumbangan > 0) {
+            setFormCabang(prev => {
+              const newItems = [...prev.items];
+              newItems[itemIndex] = { ...newItems[itemIndex], tagihan: totalSumbangan };
+              return { ...prev, items: newItems };
+            });
+            return;
+          }
+        } catch (err) {
+          console.error("Error fetching detail balancing sumbangan:", err);
+        }
+
         const namaBulan = monthValueToLabel[bulanVal];
         const [resTarget, resHut] = await Promise.all([
           GlobalApi.getTableTargetLainLain(namaBulan, tahun, cabang).catch(() => []),
@@ -757,7 +791,6 @@ const TagihanForm = () => {
         ]);
         const targetList = Array.isArray(resTarget) ? resTarget : resTarget?.data || [];
         const hutList = Array.isArray(resHut) ? resHut : resHut?.data || [];
-        const cNorm = (cabang || "").trim().toUpperCase();
 
         const hutItem = hutList.find(h => (h.cabang || "").trim().toUpperCase() === cNorm);
         if (hutItem && Number(hutItem.totalHut || 0) > 0) {
@@ -787,35 +820,62 @@ const TagihanForm = () => {
     }
 
     const cfg = PERUNTUKAN_CONFIG[pos];
-    if (!cfg) return;
-    try {
-      const namaBulan = monthValueToLabel[bulanVal];
-      if (!namaBulan) return;
-      const data = await cfg.api(namaBulan, tahun);
-      const records = Array.isArray(data) ? data : data?.data || [];
-      const cabangNormalized = cabang.trim().toUpperCase();
-      const match = records.find(item => item.cabang?.trim().toUpperCase() === cabangNormalized);
-      if (match) {
-        let tagihanVal;
-        if (pos === "Iuran PGRI") {
-          tagihanVal = Number(match.pb || 0) + Number(match.provinsi || 0) + Number(match.kabupaten || 0);
-        } else if (pos === "Derap" || pos === "Kalender") {
-          tagihanVal = Number(match.peruntukanProvinsi || 0) + Number(match.peruntukanKabupaten || 0);
-        } else {
-          tagihanVal = cfg.calc ? cfg.calc(match) : match[cfg.tagihanField];
+    if (cfg) {
+      try {
+        const namaBulan = monthValueToLabel[bulanVal];
+        if (namaBulan) {
+          const data = await cfg.api(namaBulan, tahun);
+          const records = Array.isArray(data) ? data : data?.data || [];
+          const cabangNormalized = cabang.trim().toUpperCase();
+          const match = records.find(item => item.cabang?.trim().toUpperCase() === cabangNormalized);
+          if (match) {
+            let tagihanVal;
+            if (pos === "Iuran PGRI") {
+              tagihanVal = Number(match.pb || 0) + Number(match.provinsi || 0) + Number(match.kabupaten || 0);
+            } else if (pos === "Derap" || pos === "Kalender") {
+              tagihanVal = Number(match.peruntukanProvinsi || 0) + Number(match.peruntukanKabupaten || 0);
+            } else {
+              tagihanVal = cfg.calc ? cfg.calc(match) : match[cfg.tagihanField];
+            }
+            if (tagihanVal !== null && tagihanVal !== undefined && Number(tagihanVal) > 0) {
+              setFormCabang(prev => {
+                const newItems = [...prev.items];
+                newItems[itemIndex] = { ...newItems[itemIndex], tagihan: Number(tagihanVal) };
+                return { ...prev, items: newItems };
+              });
+              return;
+            }
+          }
         }
-        if (tagihanVal !== null && tagihanVal !== undefined) {
+      } catch (error) {
+        console.error("Error fetching peruntukan:", error);
+      }
+    }
+
+    // Fallback: Check balancing summary for other standard pos
+    try {
+      const cNorm = (cabang || "").trim().toUpperCase();
+      const balRes = await GlobalApi.getBalancingSummaryPerCabang(Number(bulanVal), tahun).catch(() => []);
+      const balList = Array.isArray(balRes) ? balRes : balRes?.data || [];
+      const balItem = balList.find(b => (b.cabang || "").trim().toUpperCase() === cNorm);
+      if (balItem) {
+        let balVal = 0;
+        if (posNorm.includes("DASPEN")) balVal = Number(balItem.iuranDaspen || 0);
+        else if (posNorm.includes("SANDUKA")) balVal = Number(balItem.iuranSanduka || 0);
+        else if (posNorm.includes("DERAP")) balVal = Number(balItem.iuranDerap || 0);
+        else if (posNorm.includes("KALENDER")) balVal = Number(balItem.iuranKalender || 0);
+
+        if (balVal > 0) {
           setFormCabang(prev => {
             const newItems = [...prev.items];
-            newItems[itemIndex] = { ...newItems[itemIndex], tagihan: tagihanVal > 0 ? Number(tagihanVal) : "" };
+            newItems[itemIndex] = { ...newItems[itemIndex], tagihan: balVal };
             return { ...prev, items: newItems };
           });
+          return;
         }
-      } else if (records.length > 0) {
-        toast("Data peruntukan untuk cabang ini belum tersedia", { icon: "ℹ️" });
       }
-    } catch (error) {
-      console.error("Error fetching peruntukan:", error);
+    } catch (e) {
+      console.error("Error fallback balancing summary:", e);
     }
   };
 
@@ -1421,7 +1481,7 @@ const TagihanForm = () => {
                     <select required value={formCabang.setoranBulan} onChange={(e) => {
                       const bulanVal = e.target.value;
                       setFormCabang(prev => ({ ...prev, setoranBulan: bulanVal }));
-                      formCabang.items.forEach((_, idx) => fetchPeruntukanCabang(formCabang.cabang, bulanVal, formCabang.setoranTahun, idx));
+                      formCabang.items.forEach((item, idx) => fetchPeruntukanCabang(formCabang.cabang, bulanVal, formCabang.setoranTahun, idx, item.pos));
                       fetchAllBankValues(formCabang.cabang, bulanVal, formCabang.setoranTahun);
                       fetchTunggakan(formCabang.cabang, bulanVal, formCabang.setoranTahun, true);
                     }} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
@@ -1433,7 +1493,7 @@ const TagihanForm = () => {
                     <select required value={formCabang.setoranTahun} onChange={(e) => {
                       const tahunVal = Number(e.target.value);
                       setFormCabang(prev => ({ ...prev, setoranTahun: tahunVal }));
-                      formCabang.items.forEach((_, idx) => fetchPeruntukanCabang(formCabang.cabang, formCabang.setoranBulan, tahunVal, idx));
+                      formCabang.items.forEach((item, idx) => fetchPeruntukanCabang(formCabang.cabang, formCabang.setoranBulan, tahunVal, idx, item.pos));
                       fetchAllBankValues(formCabang.cabang, formCabang.setoranBulan, tahunVal);
                       fetchTunggakan(formCabang.cabang, formCabang.setoranBulan, tahunVal, true);
                     }} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700">
