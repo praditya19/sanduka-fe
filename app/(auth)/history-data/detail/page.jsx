@@ -105,6 +105,9 @@ const Page = () => {
                       <div className="font-semibold">{item.nama}</div>
                       <div className="text-gray-600">NPA: {item.npa}</div>
                       <div className="text-gray-600">Cabang: {item.cabang}</div>
+                      {item.unit_kerja && (
+                        <div className="text-gray-600">Unit: {item.unit_kerja}</div>
+                      )}
                     </TableCell>
                     <TableCell className="border border-gray-300 p-2 hidden lg:table-cell">
                       {item.uraian}
@@ -114,6 +117,7 @@ const Page = () => {
                     <TableCell className="border border-gray-300 p-2 hidden lg:table-cell">
                       <div>Periode: {item.bulan} {item.tahun}</div>
                       {item.cabang_ke_2 && <div>Cabang Baru : {item.cabang_ke_2}</div>}
+                      {item.unit_kerja_ke_2 && <div>Unit Baru : {item.unit_kerja_ke_2}</div>}
                       <div>Petugas: {item.user}</div>
                     </TableCell>
                     <TableCell className="text-center border border-gray-300 p-2 lg:hidden">
@@ -141,11 +145,19 @@ const Page = () => {
                         <div>
                           <strong>Uraian:</strong> {item.uraian}
                         </div>
+                        {item.unit_kerja && (
+                          <div>
+                            <strong>Unit Kerja Asal:</strong> {item.unit_kerja}
+                          </div>
+                        )}
                         <div>
                           <strong>Info Tambahan:</strong>
                           <div>Periode: {item.bulan} {item.tahun}</div>
                           {item.cabang_ke_2 && (
                             <div>Cabang Baru : {item.cabang_ke_2}</div>
+                          )}
+                          {item.unit_kerja_ke_2 && (
+                            <div>Unit Kerja Baru : {item.unit_kerja_ke_2}</div>
                           )}
                           <div>Petugas: {item.user}</div>
                         </div>

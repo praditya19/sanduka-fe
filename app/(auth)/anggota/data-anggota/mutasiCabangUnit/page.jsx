@@ -305,20 +305,33 @@ const page = () => {
         ? userData.namaLengkap
         : sessionStorage.getItem("nama");
 
+    const cabangAwal = userData.cabang || "-";
+    const unitKerjaAwal = userData.unitKerja || "-";
+    const cabangTujuan = cabang || "-";
+    const unitKerjaTujuan = selectedUnitKerja || "-";
+
+    // Format keterangan agar menyimpan unit kerja asal dan tujuan
+    const perpindahanDeskripsi = `Pindah dari Cabang ${cabangAwal} (Unit Kerja: ${unitKerjaAwal}) ke Cabang ${cabangTujuan} (Unit Kerja: ${unitKerjaTujuan})`;
+    const formattedKeterangan = keterangan?.trim()
+      ? `${perpindahanDeskripsi} • Catatan: ${keterangan.trim()}`
+      : perpindahanDeskripsi;
+
     const historyData = {
       hari,
       tanggal,
       jam,
       npa: userData.npaPgri,
       nama: userData.namaLengkap,
-      cabang: userData.cabang,
-      uraian: "Pindah Cabang",
-      masuk: cabang,
-      keluar: userData.cabang,
+      cabang: cabangAwal,
+      uraian: "Pindah Cabang dan Unit Kerja",
+      masuk: cabangTujuan,
+      keluar: cabangAwal,
       bulan,
       tahun,
-      keterangan: keterangan,
-      cabang_ke_2: cabang,
+      keterangan: formattedKeterangan,
+      cabang_ke_2: cabangTujuan,
+      unit_kerja: unitKerjaAwal,
+      unit_kerja_ke_2: unitKerjaTujuan,
       user: namaLengkapUser,
     };
 

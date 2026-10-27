@@ -146,19 +146,30 @@ const MutasiModal = ({ isOpen, onClose, selectedMember }) => {
       ? selectedMember.namaLengkap
       : sessionStorage.getItem("nama");
 
+    const cabangAwal = selectedMember.cabang || "-";
+    const unitKerjaAwal = selectedMember.unitKerja || "-";
+    const cabangTujuan = cabang || "-";
+    const unitKerjaTujuan = selectedUnitKerja || "-";
+
+    // Format keterangan agar menyimpan unit kerja asal dan tujuan
+    const perpindahanDeskripsi = `Pindah dari Cabang ${cabangAwal} (Unit Kerja: ${unitKerjaAwal}) ke Cabang ${cabangTujuan} (Unit Kerja: ${unitKerjaTujuan})`;
+
     const historyData = {
       hari,
       tanggal,
       jam,
       npa: selectedMember.npaPgri || "N/A",
       nama: selectedMember.namaLengkap,
-      cabang: selectedMember.cabang,
-      uraian: "Pindah Cabang",
-      masuk: cabang,
-      keluar: selectedMember.cabang,
+      cabang: cabangAwal,
+      uraian: "Pindah Cabang dan Unit Kerja",
+      masuk: cabangTujuan,
+      keluar: cabangAwal,
       bulan,
       tahun,
-      cabang_ke_2: cabang,
+      keterangan: perpindahanDeskripsi,
+      cabang_ke_2: cabangTujuan,
+      unit_kerja: unitKerjaAwal,
+      unit_kerja_ke_2: unitKerjaTujuan,
       user: namaLengkapUser,
     };
 
