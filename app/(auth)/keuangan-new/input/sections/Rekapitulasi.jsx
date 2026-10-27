@@ -46,7 +46,19 @@ export default function RekapitulasiSection() {
     if (!bulanLabel) return;
     setLoading(true);
     try {
-      const [resCabang, resIuran, resDaspen, resDerap, resKalender, resAnggota, resHut, resTargetLain, resPos] = await Promise.all([
+      const [
+        resCabang,
+        resIuran,
+        resDaspen,
+        resDerap,
+        resKalender,
+        resAnggota,
+        resHut,
+        resTargetLain,
+        resPos,
+        resTargetDaspen,
+        resPersenDaspen,
+      ] = await Promise.all([
         GlobalApi.getCabang(),
         GlobalApi.getRekapByPeriode(bulanLabel, selectedYear),
         GlobalApi.getRekapDaspenByPeriode(bulanLabel, selectedYear),
@@ -56,6 +68,8 @@ export default function RekapitulasiSection() {
         GlobalApi.getTotalIuranSumbanganHut(selectedYear, selectedMonth).catch(() => ({ data: [] })),
         GlobalApi.getTableTargetLainLain(bulanLabel, selectedYear, "").catch(() => ({ data: [] })),
         GlobalApi.getPosLainLain().catch(() => ({ data: [] })),
+        GlobalApi.getAllTargetDaspen().catch(() => ({ data: [] })),
+        GlobalApi.getIuranPersenDaspen().catch(() => ({ data: [] })),
       ]);
 
       const cabangs = (resCabang.data || []).sort((a, b) => a.kecamatan.localeCompare(b.kecamatan));
@@ -69,6 +83,11 @@ export default function RekapitulasiSection() {
       const hutList = Array.isArray(resHut) ? resHut : resHut?.data || [];
       const targetLainList = Array.isArray(resTargetLain) ? resTargetLain : resTargetLain?.data || [];
       const posList = Array.isArray(resPos) ? resPos : resPos?.data || [];
+      const targetDaspenList = Array.isArray(resTargetDaspen) ? resTargetDaspen : resTargetDaspen?.data || [];
+      const persenDaspenList = Array.isArray(resPersenDaspen) ? resPersenDaspen : resPersenDaspen?.data || [];
+
+      const cabangPersenItem = persenDaspenList.find((p) => p.jenis === 'CABANG');
+      const daspenCabangRate = cabangPersenItem ? (toNumber(cabangPersenItem.persen) / 100) : 0.065;
 
       const matchedPos = posList.find((p) => {
         const pBulan = (p.bulan || "").trim().toLowerCase();
@@ -80,30 +99,56 @@ export default function RekapitulasiSection() {
       }) || posList[0];
       const posNominal = toNumber(matchedPos?.nominal || 0);
 
-      const normalize = (s) => (s || "").trim().toUpperCase();
+      const cleanBranch = (s) =>
+        (s || "").toString().trim().toUpperCase().replace(/^(CABANG|KECAMATAN|KEC\.)\s+/i, "").replace(/\s+/g, " ");
+
+      const matchBranch = (a, b) => {
+        const ca = cleanBranch(a);
+        const cb = cleanBranch(b);
+        if (!ca || !cb) return false;
+        if (ca === cb) return true;
+        return ca.includes(cb) || cb.includes(ca);
+      };
+
+      const matchMonth = (targetBulan, label, num) => {
+        if (!targetBulan) return false;
+        const tb = targetBulan.toString().trim().toLowerCase();
+        const lb = (label || "").toString().trim().toLowerCase();
+        const nb = String(num);
+        if (tb === lb || tb === nb) return true;
+        const monthNames = [
+          "januari", "februari", "maret", "april", "mei", "juni",
+          "juli", "agustus", "september", "oktober", "november", "desember"
+        ];
+        const idx = monthNames.indexOf(tb) + 1;
+        if (idx > 0 && String(idx) === nb) return true;
+        const lIdx = monthNames.indexOf(lb) + 1;
+        if (lIdx > 0 && String(lIdx) === tb) return true;
+        return false;
+      };
 
       const byCabang = {};
-      for (const r of iuranList) { const key = normalize(r.cabang); if (!byCabang[key]) byCabang[key] = {}; byCabang[key].iuran = r; }
-      for (const r of daspenList) { const key = normalize(r.cabang); if (!byCabang[key]) byCabang[key] = {}; byCabang[key].daspen = r; }
-      for (const r of derapList) { const key = normalize(r.cabang); if (!byCabang[key]) byCabang[key] = {}; byCabang[key].derap = r; }
-      for (const r of kalenderList) { const key = normalize(r.cabang); if (!byCabang[key]) byCabang[key] = {}; byCabang[key].kalender = r; }
-      for (const r of targetLainList) { const key = normalize(r.cabang); if (!byCabang[key]) byCabang[key] = {}; byCabang[key].targetLain = r; }
+      for (const r of iuranList) { const k = cleanBranch(r.cabang); if (!byCabang[k]) byCabang[k] = {}; byCabang[k].iuran = r; }
+      for (const r of daspenList) { const k = cleanBranch(r.cabang); if (!byCabang[k]) byCabang[k] = {}; byCabang[k].daspen = r; }
+      for (const r of derapList) { const k = cleanBranch(r.cabang); if (!byCabang[k]) byCabang[k] = {}; byCabang[k].derap = r; }
+      for (const r of kalenderList) { const k = cleanBranch(r.cabang); if (!byCabang[k]) byCabang[k] = {}; byCabang[k].kalender = r; }
+      for (const r of targetLainList) { const k = cleanBranch(r.cabang); if (!byCabang[k]) byCabang[k] = {}; byCabang[k].targetLain = r; }
 
       const lainByCabang = {};
       for (const r of anggotaList) {
-        const key = normalize(r.cabang);
-        if (!lainByCabang[key]) lainByCabang[key] = 0;
-        lainByCabang[key] += toNumber(r.totalIuranSumbangan);
+        const k = cleanBranch(r.cabang);
+        if (!lainByCabang[k]) lainByCabang[k] = 0;
+        lainByCabang[k] += toNumber(r.totalIuranSumbangan);
       }
 
       const hutByCabang = {};
       for (const r of hutList) {
-        const key = normalize(r.cabang);
-        hutByCabang[key] = toNumber(r.totalHut || r.nominal || 0);
+        const k = cleanBranch(r.cabang);
+        hutByCabang[k] = toNumber(r.totalHut || r.nominal || 0);
       }
 
       const merged = cabangs.map((c, idx) => {
-        const key = normalize(c.kecamatan);
+        const key = cleanBranch(c.kecamatan);
         const d = byCabang[key] || {};
 
         const anggota = toNumber(d.iuran?.totalAnggota);
@@ -111,7 +156,66 @@ export default function RekapitulasiSection() {
         const iuranTambahan = toNumber(d.iuran?.tambahanCabang);
         const iuranTotal = iuranDefault + iuranTambahan;
 
-        const daspenDefault = toNumber(d.daspen?.tagihan);
+        // Ambil 6.5% Daspen Peruntukan Cabang (Prioritaskan DASPEN Provinsi yang biru)
+        let tDaspenProv = targetDaspenList.find(
+          (t) =>
+            matchBranch(t.cabang, c.kecamatan) &&
+            String(t.tahun) === String(selectedYear) &&
+            matchMonth(t.bulan, bulanLabel, selectedMonth) &&
+            (!t.jenisData || String(t.jenisData).trim().toUpperCase() === "DASPEN")
+        );
+
+        // Jika belum ada upload di bulan berjalan, cari target DASPEN provinsi di tahun yang sama
+        if (!tDaspenProv) {
+          tDaspenProv = targetDaspenList.find(
+            (t) =>
+              matchBranch(t.cabang, c.kecamatan) &&
+              String(t.tahun) === String(selectedYear) &&
+              (!t.jenisData || String(t.jenisData).trim().toUpperCase() === "DASPEN")
+          );
+        }
+
+        // Fallback terakhir cari target cabang DASPEN
+        if (!tDaspenProv) {
+          tDaspenProv = targetDaspenList.find(
+            (t) =>
+              matchBranch(t.cabang, c.kecamatan) &&
+              (!t.jenisData || String(t.jenisData).trim().toUpperCase() === "DASPEN")
+          );
+        }
+
+        let daspenDefault = 0;
+        if (tDaspenProv) {
+          if (toNumber(tDaspenProv.perolehanCabang) > 0) {
+            daspenDefault = Math.round(toNumber(tDaspenProv.perolehanCabang));
+          } else {
+            const v1 = toNumber(tDaspenProv.valueKat1) || (toNumber(tDaspenProv.kategori1) * 7000);
+            const v2 = toNumber(tDaspenProv.valueKat2) || (toNumber(tDaspenProv.kategori2) * 2000);
+            const v3 = toNumber(tDaspenProv.valueKat3) || (toNumber(tDaspenProv.kategori3) * 100);
+            const totNom = toNumber(tDaspenProv.totalTarget) || (v1 + v2 + v3);
+            daspenDefault = Math.round(totNom * daspenCabangRate);
+          }
+        } else if (d.daspen?.peruntukanCabang && toNumber(d.daspen.peruntukanCabang) > 0) {
+          daspenDefault = Math.round(toNumber(d.daspen.peruntukanCabang));
+        } else if (d.daspen?.totalNominal && toNumber(d.daspen.totalNominal) > 0) {
+          daspenDefault = Math.round(toNumber(d.daspen.totalNominal) * daspenCabangRate);
+        } else {
+          const tDaspenAny = targetDaspenList.find(
+            (t) => matchBranch(t.cabang, c.kecamatan)
+          );
+          if (tDaspenAny) {
+            if (toNumber(tDaspenAny.perolehanCabang) > 0) {
+              daspenDefault = Math.round(toNumber(tDaspenAny.perolehanCabang));
+            } else {
+              const v1 = toNumber(tDaspenAny.valueKat1) || (toNumber(tDaspenAny.kategori1) * 7000);
+              const v2 = toNumber(tDaspenAny.valueKat2) || (toNumber(tDaspenAny.kategori2) * 2000);
+              const v3 = toNumber(tDaspenAny.valueKat3) || (toNumber(tDaspenAny.kategori3) * 100);
+              const totNom = toNumber(tDaspenAny.totalTarget) || (v1 + v2 + v3);
+              daspenDefault = Math.round(totNom * daspenCabangRate);
+            }
+          }
+        }
+
         const daspenTambahan = 0;
         const daspenTotal = daspenDefault + daspenTambahan;
 

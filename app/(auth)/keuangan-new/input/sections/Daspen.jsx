@@ -419,22 +419,25 @@ const DaspenSection = () => {
           else if (item.keterangan?.toLowerCase().startsWith("tunai")) autoTunai += tagihan;
         });
         const sandukaDB = targetData.find(r => r.cabang?.toUpperCase() === cabangName.toUpperCase() && r.jenisData === 'SANDUKA');
+        const daspen = targetData.find(r => r.cabang?.toUpperCase() === cabangName.toUpperCase() && r.jenisData === 'DASPEN');
+        const activeUpload = sandukaDB || daspen;
+
         const nomAutoK1 = autoK1 * kat1Val;
         const nomAutoK2 = autoK2 * kat2Val;
         const nomAutoK3 = autoK3 * kat3Val;
         const totAutoNominal = nomAutoK1 + nomAutoK2 + nomAutoK3;
-        const dbK1 = sandukaDB ? parseInt(sandukaDB.kategori1) : autoK1;
-        const dbK2 = sandukaDB ? parseInt(sandukaDB.kategori2) : autoK2;
-        const dbK3 = sandukaDB ? parseInt(sandukaDB.kategori3) : autoK3;
-        const nomDbK1 = sandukaDB ? parseFloat(sandukaDB.valueKat1) : nomAutoK1;
-        const nomDbK2 = sandukaDB ? parseFloat(sandukaDB.valueKat2) : nomAutoK2;
-        const nomDbK3 = sandukaDB ? parseFloat(sandukaDB.valueKat3) : nomAutoK3;
-        const totDbNominal = sandukaDB ? parseFloat(sandukaDB.totalTarget || (nomDbK1 + nomDbK2 + nomDbK3)) : totAutoNominal;
-        const dbTransfer = sandukaDB ? parseFloat(sandukaDB.transfer || 0) : autoTransfer;
-        const dbPemb1 = sandukaDB ? parseFloat(sandukaDB.pembayaran1 || 0) : 0;
-        const dbSelisih = sandukaDB ? (totDbNominal - dbTransfer) : (totAutoNominal - autoTransfer);
-        const dbPerunCabang = totDbNominal * cabangPersen;
-        const dbPerunKabupaten = totDbNominal * kabupatenPersen;
+        const dbK1 = activeUpload ? parseInt(activeUpload.kategori1) : autoK1;
+        const dbK2 = activeUpload ? parseInt(activeUpload.kategori2) : autoK2;
+        const dbK3 = activeUpload ? parseInt(activeUpload.kategori3) : autoK3;
+        const nomDbK1 = activeUpload ? parseFloat(activeUpload.valueKat1) : nomAutoK1;
+        const nomDbK2 = activeUpload ? parseFloat(activeUpload.valueKat2) : nomAutoK2;
+        const nomDbK3 = activeUpload ? parseFloat(activeUpload.valueKat3) : nomAutoK3;
+        const totDbNominal = activeUpload ? parseFloat(activeUpload.totalTarget || (nomDbK1 + nomDbK2 + nomDbK3)) : totAutoNominal;
+        const dbTransfer = activeUpload ? parseFloat(activeUpload.transfer || 0) : autoTransfer;
+        const dbPemb1 = activeUpload ? parseFloat(activeUpload.pembayaran1 || 0) : 0;
+        const dbSelisih = activeUpload ? (totDbNominal - dbTransfer) : (totAutoNominal - autoTransfer);
+        const dbPerunCabang = activeUpload?.perolehanCabang ? parseFloat(activeUpload.perolehanCabang) : (totDbNominal * cabangPersen);
+        const dbPerunKabupaten = activeUpload?.perolehanKabupaten ? parseFloat(activeUpload.perolehanKabupaten) : (totDbNominal * kabupatenPersen);
         const dbTagihan = totDbNominal - dbPerunCabang;
         const dbTotAnggota = dbK1 + dbK2 + dbK3;
         return {
