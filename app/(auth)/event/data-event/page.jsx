@@ -173,7 +173,7 @@ const Page = () => {
     try {
       await GlobalApi.deletePeserta(selectedId);
 
-      await dataPeserta();
+      await dataPeserta(selectedEvent, selectedCabang);
       await fetchEvent();
 
       setShowDeleteModal(false);
@@ -198,8 +198,6 @@ const Page = () => {
   const handleCabangSelect = (cabang) => {
     setSelectedCabang(cabang.kecamatan || "");
     setShowDropdownCabang(false);
-
-    dataPeserta("", cabang.kecamatan || "");
   };
 
   const fetchEvent = async () => {
@@ -423,11 +421,13 @@ const Page = () => {
   };
 
   useEffect(() => {
-    dataPeserta();
+    dataPeserta(selectedEvent, selectedCabang);
+  }, [selectedEvent, selectedCabang]);
+
+  useEffect(() => {
     fetchCabang();
-    dataPeserta("", selectedCabang);
     fetchEvent();
-  }, [selectedCabang]);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -611,7 +611,6 @@ const Page = () => {
                                 event.namaEvent || ""
                               ).trim();
                               setSelectedEvent(targetEvent);
-                              dataPeserta(targetEvent, selectedCabang);
                               document
                                 .getElementById("data-peserta-table")
                                 ?.scrollIntoView({
@@ -836,7 +835,6 @@ const Page = () => {
                         onChange={(e) => {
                           const value = e.target.value;
                           setSelectedEvent(value);
-                          dataPeserta(value, selectedCabang);
                         }}
                         className="min-w-0 max-w-full border border-gray-200 rounded-xl p-3 w-full bg-gray-50 hover:bg-white transition-all duration-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 appearance-none cursor-pointer"
                       >
@@ -921,7 +919,6 @@ const Page = () => {
                           setSearchText("");
                           setSelectedEvent("");
                           setSelectedCabang("");
-                          dataPeserta("", "");
                         }}
                         className="inline-flex w-full sm:w-auto justify-center items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 hover:shadow-md"
                       >
