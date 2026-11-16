@@ -8,7 +8,8 @@ import {
   FaTimesCircle,
   FaCheckCircle,
   FaExclamationCircle,
-  FaCalendarAlt, FaEye, FaArrowRight
+  FaCalendarAlt, FaEye, FaArrowRight,
+  FaCamera, FaMapMarkerAlt, FaSyncAlt, FaSpinner
 } from "react-icons/fa";
 import "swiper/css";
 import "swiper/css/navigation";
@@ -780,6 +781,21 @@ const GaleriKegiatan = () => {
     const [ktaFileName, setKtaFileName] = useState("");
     const fileInputRef = useRef(null);
     const ktaFileInputRef = useRef(null);
+
+    // State & Ref untuk Foto Kehadiran
+    const [fotoKehadiranFile, setFotoKehadiranFile] = useState(null);
+    const [fotoKehadiranFileName, setFotoKehadiranFileName] = useState("");
+    const [fotoKehadiranPreview, setFotoKehadiranPreview] = useState(null);
+    const fotoKehadiranInputRef = useRef(null);
+    const fotoKehadiranCameraRef = useRef(null);
+
+    // State untuk Tag Location & Koordinat GPS
+    const [latitude, setLatitude] = useState(null);
+    const [longitude, setLongitude] = useState(null);
+    const [tagLocation, setTagLocation] = useState("");
+    const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+    const [locationStatus, setLocationStatus] = useState("");
+
     const loginRole =
       typeof window !== "undefined" ? sessionStorage.getItem("role") : null;
     const isAdminRegistration = ["ADMIN", "SUPERADMIN"].includes(loginRole);
@@ -801,6 +817,97 @@ const GaleriKegiatan = () => {
         setFormFotoBase64(fotoBase64);
       }
     }, [fotoBase64, isAdminRegistration, userData]);
+
+    // Deteksi Otomatis Lokasi GPS Saat Form Registrasi Dibuka
+    const detectLocation = () => {
+      if (typeof window === "undefined" || !navigator.geolocation) {
+        setLocationStatus("Geolokasi tidak didukung oleh browser ini.");
+        return;
+      }
+
+      setIsDetectingLocation(true);
+      setLocationStatus("Mendeteksi lokasi GPS otomatis...");
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          setLatitude(lat);
+          setLongitude(lng);
+
+          const coordsText = `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
+          let locationName = coordsText;
+
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 4000);
+            const res = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+              {
+                signal: controller.signal,
+                headers: { "Accept-Language": "id" },
+              }
+            );
+            clearTimeout(timeoutId);
+            if (res.ok) {
+              const data = await res.json();
+              if (data && data.display_name) {
+                locationName = data.display_name;
+              }
+            }
+          } catch (e) {
+            // Gunakan format koordinat jika lookup reverse geocoding gagal/timeout
+          }
+
+          setTagLocation(locationName);
+          setLocationStatus(`Lokasi terdeteksi: ${coordsText}`);
+          setIsDetectingLocation(false);
+        },
+        (err) => {
+          console.warn("Geolocation error:", err);
+          let errMsg = "Gagal mendeteksi lokasi";
+          if (err.code === 1) errMsg = "Izin akses lokasi ditolak oleh browser";
+          else if (err.code === 2) errMsg = "Posisi GPS tidak tersedia";
+          else if (err.code === 3) errMsg = "Waktu permintaan lokasi habis (timeout)";
+          setLocationStatus(errMsg);
+          setIsDetectingLocation(false);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    };
+
+    useEffect(() => {
+      detectLocation();
+    }, []);
+
+    const handleFotoKehadiranChange = (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
+      if (!allowedTypes.includes(file.type)) {
+        alert("Format foto kehadiran harus berupa gambar (JPG, PNG, atau WEBP).");
+        e.target.value = "";
+        return;
+      }
+
+      setFotoKehadiranFile(file);
+      setFotoKehadiranFileName(file.name);
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFotoKehadiranPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    };
+
+    const handleRemoveFotoKehadiran = () => {
+      setFotoKehadiranFile(null);
+      setFotoKehadiranFileName("");
+      setFotoKehadiranPreview(null);
+      if (fotoKehadiranInputRef.current) fotoKehadiranInputRef.current.value = "";
+      if (fotoKehadiranCameraRef.current) fotoKehadiranCameraRef.current.value = "";
+    };
 
     const handleCheckNpa = async () => {
       const npa = registrationNpa.trim();
@@ -1058,6 +1165,31 @@ const GaleriKegiatan = () => {
         if (uploadFile) {
           formData.append("upload", uploadFile, fileName);
         }
+
+        // Foto Kehadiran (Bukti Presensi)
+        if (fotoKehadiranFile) {
+          formData.append(
+            "fotoKehadiran",
+            fotoKehadiranFile,
+            fotoKehadiranFileName || "foto-kehadiran.jpg"
+          );
+        }
+
+        // Koordinat Geolocation & Tag Lokasi
+        if (latitude !== null && latitude !== undefined) {
+          formData.append("latitude", latitude);
+        }
+        if (longitude !== null && longitude !== undefined) {
+          formData.append("longitude", longitude);
+        }
+        if (tagLocation && tagLocation.trim()) {
+          formData.append("tagLocation", tagLocation.trim());
+        }
+
+        // Default Kehadiran & Role
+        formData.append("kehadiran", "HADIR");
+        const userCurrentRole = loginRole || userDataDaftar?.role || "PESERTA";
+        formData.append("role", userCurrentRole);
 
         await GlobalApi.addPesertaEvent(formData);
 
@@ -1595,6 +1727,154 @@ const GaleriKegiatan = () => {
                           MOV, MPEG, WEBM
                         </p>
                       </div>
+
+                      {/* ================= FOTO KEHADIRAN ================= */}
+                      <div className="bg-white p-3 rounded-md border border-gray-200">
+                        <label className="text-sm font-semibold text-gray-700 flex items-center justify-between">
+                          <span className="flex items-center gap-2">
+                            <FaCamera className="text-blue-600" />
+                            Foto Kehadiran / Selfie Pendaftaran
+                          </span>
+                          <span className="text-xs text-blue-600 font-normal">
+                            (Opsional / Bukti Kehadiran)
+                          </span>
+                        </label>
+                        <p className="text-xs text-gray-500 mt-1 mb-2">
+                          Ambil swafoto (selfie) atau unggah foto sebagai bukti kehadiran Anda pada event ini.
+                        </p>
+
+                        {/* Hidden inputs untuk Galeri & Kamera */}
+                        <input
+                          ref={fotoKehadiranInputRef}
+                          id="fotoKehadiranInput"
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFotoKehadiranChange}
+                          className="hidden"
+                        />
+                        <input
+                          ref={fotoKehadiranCameraRef}
+                          id="fotoKehadiranCamera"
+                          type="file"
+                          accept="image/*"
+                          capture="user"
+                          onChange={handleFotoKehadiranChange}
+                          className="hidden"
+                        />
+
+                        {fotoKehadiranPreview ? (
+                          <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md flex items-center gap-3">
+                            <div className="w-16 h-16 rounded-md overflow-hidden bg-gray-100 flex-shrink-0 border border-blue-300">
+                              <img
+                                src={fotoKehadiranPreview}
+                                alt="Preview Kehadiran"
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-blue-900 truncate">
+                                {fotoKehadiranFileName || "Foto Kehadiran Terpilih"}
+                              </p>
+                              <span className="inline-block mt-1 px-2 py-0.5 text-xs font-semibold rounded bg-green-100 text-green-800">
+                                Siap Diunggah
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={handleRemoveFotoKehadiran}
+                              className="text-red-500 hover:text-red-700 p-1 transition-colors"
+                              title="Hapus foto kehadiran"
+                            >
+                              <FaTimesCircle size={20} />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={() => fotoKehadiranCameraRef.current?.click()}
+                              className="flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-medium transition-colors"
+                            >
+                              <FaCamera /> Ambil Selfie / Kamera
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => fotoKehadiranInputRef.current?.click()}
+                              className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 rounded text-xs font-medium transition-colors"
+                            >
+                              Pilih dari Berkas
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* ================= AUTO TAG LOCATION ================= */}
+                      <div className="bg-white p-3 rounded-md border border-gray-200">
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                            <FaMapMarkerAlt className="text-red-500" />
+                            Kehadiran & Tag Location Otomatis
+                          </label>
+                          <button
+                            type="button"
+                            onClick={detectLocation}
+                            disabled={isDetectingLocation}
+                            className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors disabled:text-gray-400"
+                            title="Perbarui koordinat lokasi GPS"
+                          >
+                            <FaSyncAlt className={isDetectingLocation ? "animate-spin" : ""} size={12} />
+                            {isDetectingLocation ? "Mendeteksi..." : "Perbarui Lokasi"}
+                          </button>
+                        </div>
+                        <p className="text-xs text-gray-500 mb-2">
+                          Sistem secara otomatis mendeteksi lokasi saat pendaftaran untuk verifikasi presensi.
+                        </p>
+
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-xs">
+                            <span
+                              className={`px-2 py-0.5 rounded font-semibold flex items-center gap-1 ${
+                                latitude && longitude
+                                  ? "bg-green-100 text-green-800"
+                                  : isDetectingLocation
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-gray-100 text-gray-600"
+                              }`}
+                            >
+                              {latitude && longitude ? (
+                                <>
+                                  <FaCheckCircle size={11} /> Hadir (GPS Terkunci)
+                                </>
+                              ) : isDetectingLocation ? (
+                                <>
+                                  <FaSpinner className="animate-spin" size={11} /> Mendeteksi...
+                                </>
+                              ) : (
+                                "Lokasi Belum Terkunci"
+                              )}
+                            </span>
+                            {locationStatus && (
+                              <span className="text-gray-500 truncate">{locationStatus}</span>
+                            )}
+                          </div>
+
+                          <div className="relative">
+                            <input
+                              type="text"
+                              value={tagLocation}
+                              onChange={(e) => setTagLocation(e.target.value)}
+                              placeholder="Keterangan nama tempat / lokasi pendaftaran..."
+                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-800"
+                            />
+                          </div>
+
+                          {latitude && longitude && (
+                            <p className="text-[11px] text-gray-400">
+                              Koordinat GPS: {latitude}, {longitude}
+                            </p>
+                          )}
+                        </div>
+                      </div>
                     </div>
 
                     {/* ================= BUTTON ================= */}
@@ -1738,11 +2018,12 @@ const GaleriKegiatan = () => {
           formData.append("foto", blob, "profile.jpg");
         }
 
-        formData.append("foto", ktaFile, ktaFileName || ktaFile.name);
-
         if (uploadFile) {
           formData.append("upload", uploadFile, fileName);
         }
+
+        formData.append("kehadiran", "HADIR");
+        formData.append("role", role || "PESERTA");
 
         await GlobalApi.addPesertaEvent(formData);
 
