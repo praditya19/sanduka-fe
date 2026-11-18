@@ -9,7 +9,8 @@ import {
   FaCheckCircle,
   FaExclamationCircle,
   FaCalendarAlt, FaEye, FaArrowRight,
-  FaCamera, FaMapMarkerAlt, FaSyncAlt, FaSpinner
+  FaCamera, FaMapMarkerAlt, FaSyncAlt, FaSpinner,
+  FaExternalLinkAlt, FaInfoCircle, FaUserCheck, FaEdit, FaUser
 } from "react-icons/fa";
 import "swiper/css";
 import "swiper/css/navigation";
@@ -809,6 +810,28 @@ const GaleriKegiatan = () => {
     const [validationErrors, setValidationErrors] = useState({});
 
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+    const [activeTab, setActiveTab] = useState("mendaftar");
+    const [isSubmittingPresensi, setIsSubmittingPresensi] = useState(false);
+    const [isEditingPresensi, setIsEditingPresensi] = useState(false);
+    const [showAdminOtherRegistration, setShowAdminOtherRegistration] = useState(false);
+
+    const activeNpa = isAdminRegistration
+      ? registrationNpa
+      : userData?.npaPgri ||
+        (typeof window !== "undefined"
+          ? sessionStorage.getItem("npa")
+          : "");
+
+    const myParticipation = eventParticipants.find(
+      (p) =>
+        ((activeNpa && p.npa === activeNpa) ||
+          (userData?.npaPgri && p.npa === userData.npaPgri)) &&
+        p.namaEvent === selectedEventDetail?.namaEvent
+    );
+
+    const isRegistered =
+      !!myParticipation ||
+      registrationStatus[selectedEventDetail?.id] === "Sudah Terdaftar";
 
     useEffect(() => {
       setFormUserData(userData);
@@ -907,6 +930,70 @@ const GaleriKegiatan = () => {
       setFotoKehadiranPreview(null);
       if (fotoKehadiranInputRef.current) fotoKehadiranInputRef.current.value = "";
       if (fotoKehadiranCameraRef.current) fotoKehadiranCameraRef.current.value = "";
+    };
+
+    const handleSubmitPresensi = async () => {
+      if (!selectedEventDetail || isSubmittingPresensi) return;
+
+      if (!fotoKehadiranFile && !myParticipation?.hasFotoKehadiran && !myParticipation?.fotoKehadiran) {
+        alert("Silakan ambil foto selfie kehadiran atau pilih foto terlebih dahulu.");
+        return;
+      }
+
+      try {
+        setIsSubmittingPresensi(true);
+        const formData = new FormData();
+        const npaToUse = myParticipation?.npa || activeNpa || userData?.npaPgri;
+        if (!npaToUse) {
+          throw new Error("NPA peserta tidak ditemukan");
+        }
+
+        formData.append("npa", npaToUse);
+        formData.append("namaEvent", selectedEventDetail.namaEvent);
+        formData.append("kehadiran", "HADIR");
+
+        if (fotoKehadiranFile) {
+          formData.append(
+            "fotoKehadiran",
+            fotoKehadiranFile,
+            fotoKehadiranFileName || "foto-kehadiran.jpg"
+          );
+        }
+        if (latitude !== null && latitude !== undefined) {
+          formData.append("latitude", latitude);
+        }
+        if (longitude !== null && longitude !== undefined) {
+          formData.append("longitude", longitude);
+        }
+        if (tagLocation && tagLocation.trim()) {
+          formData.append("tagLocation", tagLocation.trim());
+        }
+
+        if (myParticipation?.id) {
+          await GlobalApi.updatePresensiEvent(myParticipation.id, formData);
+        } else {
+          await GlobalApi.updatePresensiByNpaEvent(formData);
+        }
+
+        setNotification({
+          type: "success",
+          message: `Presensi kehadiran untuk event "${selectedEventDetail.namaEvent}" berhasil disimpan!`,
+        });
+
+        setIsEditingPresensi(false);
+        await fetchEventParticipants();
+      } catch (error) {
+        console.error("Error submitting presensi:", error);
+        setNotification({
+          type: "error",
+          message:
+            error.response?.data?.message ||
+            error.message ||
+            "Gagal menyimpan presensi kehadiran. Silakan coba lagi.",
+        });
+      } finally {
+        setIsSubmittingPresensi(false);
+      }
     };
 
     const handleCheckNpa = async () => {
@@ -1166,7 +1253,7 @@ const GaleriKegiatan = () => {
           formData.append("upload", uploadFile, fileName);
         }
 
-        // Foto Kehadiran (Bukti Presensi)
+        // Foto Kehadiran (Opsional saat pendaftaran)
         if (fotoKehadiranFile) {
           formData.append(
             "fotoKehadiran",
@@ -1175,7 +1262,7 @@ const GaleriKegiatan = () => {
           );
         }
 
-        // Koordinat Geolocation & Tag Lokasi
+        // Koordinat Geolocation & Tag Lokasi (Opsional)
         if (latitude !== null && latitude !== undefined) {
           formData.append("latitude", latitude);
         }
@@ -1186,8 +1273,9 @@ const GaleriKegiatan = () => {
           formData.append("tagLocation", tagLocation.trim());
         }
 
-        // Default Kehadiran & Role
-        formData.append("kehadiran", "HADIR");
+        // Kehadiran awal: jika foto/lokasi ada -> HADIR, jika tidak -> BELUM HADIR
+        const initialKehadiran = (fotoKehadiranFile || (latitude && longitude)) ? "HADIR" : "BELUM HADIR";
+        formData.append("kehadiran", initialKehadiran);
         const userCurrentRole = loginRole || userDataDaftar?.role || "PESERTA";
         formData.append("role", userCurrentRole);
 
@@ -1198,11 +1286,13 @@ const GaleriKegiatan = () => {
           [currentEvent.id]: "Sudah Terdaftar",
         }));
 
-        setShowEventDetailPopup(false);
         setNotification({
           type: "success",
-          message: `Selamat! Anda telah berhasil terdaftar untuk event "${currentEvent.namaEvent}".`,
+          message: `Selamat! Anda berhasil terdaftar untuk event "${currentEvent.namaEvent}". Silakan lakukan presensi kehadiran pada tab Hadir saat acara.`,
         });
+
+        // Alihkan otomatis ke tab Hadir
+        setActiveTab("hadir");
 
         fetchEventParticipants().catch((refreshError) => {
           console.error("Error refreshing event participants:", refreshError);
@@ -1217,9 +1307,6 @@ const GaleriKegiatan = () => {
         setIsSubmitting(false);
       }
     };
-
-    const isRegistered =
-      registrationStatus[selectedEventDetail.id] === "Sudah Terdaftar";
 
     return (
       <div className="fixed inset-0 flex items-center justify-center z-[1000]">
@@ -1308,594 +1395,829 @@ const GaleriKegiatan = () => {
               </div>
 
               {userData && (
-                <div className="bg-gray-50 rounded-lg p-6">
-                  {selectedEventDetail.isTerlewat && !isAdminRegistration ? (
-                    <div className="text-center py-8">
-                      <div className="inline-block p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 mb-4">
-                        <FaTimesCircle className="text-3xl text-red-500 mx-auto mb-2" />
-                        <p className="font-bold text-base">Event Sudah Terlaksana</p>
-                        <p className="text-xs text-red-600 mt-1">
-                          Pendaftaran untuk event ini telah ditutup karena kegiatan telah selesai diselenggarakan.
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                  <>
-                    <h4 className="text-xl font-bold mb-4 text-center">
-                      Form Pendaftaran Event {selectedEventDetail.isTerlewat && "(Admin Mode)"}
-                    </h4>
+                <div className="bg-gray-50 rounded-lg p-5 sm:p-6 flex flex-col h-full">
+                  {/* ================= TABS NAVIGATION ================= */}
+                  <div className="flex bg-gray-200/90 p-1 rounded-xl mb-5 shadow-inner">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("mendaftar")}
+                      className={`flex-1 py-2.5 px-3 rounded-lg font-bold text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                        activeTab === "mendaftar"
+                          ? "bg-white text-blue-700 shadow-sm"
+                          : "text-gray-600 hover:text-gray-900"
+                      }`}
+                    >
+                      <FaCalendarAlt className={activeTab === "mendaftar" ? "text-blue-600" : "text-gray-400"} />
+                      <span>Mendaftar</span>
+                      {isRegistered && (
+                        <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-[10px] rounded-full border border-green-200 font-semibold flex items-center gap-0.5">
+                          <FaCheckCircle size={9} /> Terdaftar
+                        </span>
+                      )}
+                    </button>
 
-                    {selectedEventDetail.isTerlewat && (
-                      <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-xs text-red-700 font-medium">
-                        ⚠️ Perhatian: Event ini berstatus "Sudah Terlaksana". Pendaftaran hanya diizinkan untuk Admin.
-                      </div>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab("hadir");
+                        if (!latitude || !longitude) {
+                          detectLocation();
+                        }
+                      }}
+                      className={`flex-1 py-2.5 px-3 rounded-lg font-bold text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                        activeTab === "hadir"
+                          ? "bg-white text-emerald-700 shadow-sm"
+                          : "text-gray-600 hover:text-gray-900"
+                      }`}
+                    >
+                      <FaCamera className={activeTab === "hadir" ? "text-emerald-600" : "text-gray-400"} />
+                      <span>Hadir (Presensi)</span>
+                      {myParticipation?.kehadiran === "HADIR" && (
+                        <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] rounded-full border border-emerald-200 font-semibold flex items-center gap-0.5">
+                          <FaCheckCircle size={9} /> Hadir
+                        </span>
+                      )}
+                    </button>
+                  </div>
 
-                    {/* ================= FOTO KTA ================= */}
-                    <div className="flex flex-col items-center justify-center mb-5">
-                      <div className="relative flex items-center justify-center w-24 h-24 rounded-full border-2 border-gray-300 shadow-md overflow-hidden">
-                        {formFotoBase64 ? (
-                          <Image
-                            src={`data:image/jpeg;base64,${formFotoBase64.replace(/^data:image\/[^;]+;base64,/, "")}`}
-                            width={100}
-                            height={100}
-                            alt="Foto KTA"
-                            className="w-full h-full rounded-full object-cover object-top"
-                            unoptimized={true}
-                          />
-                        ) : (
-                          <Image
-                            src={profileImageUrl}
-                            width={100}
-                            height={100}
-                            alt="Foto KTA"
-                            className="w-full h-full rounded-full object-cover object-top"
-                            unoptimized={true}
-                          />
-                        )}
-                      </div>
-
-                      <p className="text-xs text-gray-500 mt-2 text-center">
-                        Foto diambil dari KTA PGRI
-                      </p>
-                    </div>
-
-                    <div className="space-y-3">
-                      {/* ================= NAMA LENGKAP ================= */}
-                      <div className="bg-white p-3 rounded-md">
-                        <p className="text-sm text-gray-600">Nama Lengkap</p>
-
-                        <p className="text-gray-800 font-medium">
-                          {formUserData?.namaLengkap ||
-                            formUserData?.nama ||
-                            "Loading..."}
-                        </p>
-                      </div>
-
-                      {/* ================= NPA ================= */}
-                      <div className="bg-white p-3 rounded-md">
-                        <label
-                          className="text-sm text-gray-600"
-                          htmlFor="registrationNpa"
-                        >
-                          NPA PGRI
-                        </label>
-                        {isAdminRegistration ? (
-                          <div className="flex gap-2 mt-1">
-                            <input
-                              id="registrationNpa"
-                              type="text"
-                              value={registrationNpa}
-                              onChange={(e) => {
-                                setRegistrationNpa(e.target.value);
-                                setFormUserData(null);
-                                setFormFotoBase64(null);
-                                setNpaError("");
-                                setValidationErrors((prev) => ({
-                                  ...prev,
-                                  registrationNpa: true,
-                                }));
-                              }}
-                              className={`min-w-0 flex-1 p-2 border rounded-md focus:outline-none focus:ring-2 ${
-                                validationErrors.registrationNpa
-                                  ? "border-red-500 focus:ring-red-200"
-                                  : "border-gray-300 focus:ring-blue-500"
-                              }`}
-                              placeholder="Masukkan NPA anggota"
-                            />
-                            <button
-                              type="button"
-                              onClick={handleCheckNpa}
-                              disabled={
-                                isCheckingNpa || !registrationNpa.trim()
-                              }
-                              className="shrink-0 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-300"
-                            >
-                              {isCheckingNpa ? "Mengecek..." : "Cek Data"}
-                            </button>
+                  {/* ================= KONTEN TAB 1: MENDAFTAR ================= */}
+                  {activeTab === "mendaftar" && (
+                    <div>
+                      {selectedEventDetail.isTerlewat && !isAdminRegistration ? (
+                        <div className="text-center py-8">
+                          <div className="inline-block p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 mb-4">
+                            <FaTimesCircle className="text-3xl text-red-500 mx-auto mb-2" />
+                            <p className="font-bold text-base">Event Sudah Terlaksana</p>
+                            <p className="text-xs text-red-600 mt-1">
+                              Pendaftaran untuk event ini telah ditutup karena kegiatan telah selesai diselenggarakan.
+                            </p>
                           </div>
-                        ) : (
-                          <p className="text-gray-800 font-medium">
-                            {formUserData?.npaPgri || "Loading..."}
-                          </p>
-                        )}
-                        {npaError && (
-                          <p className="text-red-500 text-sm mt-1">
-                            {npaError}
-                          </p>
-                        )}
-                        {validationErrors.registrationNpa && !npaError && (
-                          <p className="text-red-500 text-sm mt-1">
-                            Masukkan NPA dan pilih Cek Data terlebih dahulu.
-                          </p>
-                        )}
-                      </div>
-
-                      {/* ================= EMAIL ================= */}
-                      <div className="bg-white p-3 rounded-md">
-                        <p className="text-sm text-gray-600">Email</p>
-
-                        <p className="text-gray-800 font-medium">
-                          {formUserData?.email || "Loading..."}
-                        </p>
-                      </div>
-
-                      {/* ================= CABANG ================= */}
-                      <div className="bg-white p-3 rounded-md">
-                        <p className="text-sm text-gray-600">Cabang</p>
-
-                        <p className="text-gray-800 font-medium">
-                          {formUserData?.cabang || "Loading..."}
-                        </p>
-                      </div>
-
-                      {/* ================= UNIT KERJA ================= */}
-                      <div className="bg-white p-3 rounded-md">
-                        <p className="text-sm text-gray-600">Unit Kerja</p>
-
-                        <p className="text-gray-800 font-medium">
-                          {formUserData?.unitKerja || "Loading..."}
-                        </p>
-                      </div>
-
-                      {/* ================= NOMOR HP ================= */}
-                      <div className="bg-white p-3 rounded-md">
-                        <p className="text-sm text-gray-600">Nomor HP</p>
-
-                        <p className="text-gray-800 font-medium">
-                          {formUserData?.noHp ||
-                            formUserData?.nomorHp ||
-                            "Loading..."}
-                        </p>
-                      </div>
-
-                      {/* ================= NAMA EVENT ================= */}
-                      <div className="bg-white p-3 rounded-md">
-                        <p className="text-sm text-gray-600">Nama Event</p>
-
-                        <p className="text-gray-800 font-medium">
-                          {currentEvent?.namaEvent || "Loading..."}
-                        </p>
-                      </div>
-
-                      {/* ================= JENIS KELAMIN ================= */}
-                      <div className="bg-white p-3 rounded-md">
-                        <label
-                          className="text-sm text-gray-600"
-                          htmlFor="jenisKelamin"
-                        >
-                          Jenis Kelamin <span className="text-red-500">*</span>
-                        </label>
-
-                        <select
-                          id="jenisKelamin"
-                          value={jenisKelamin}
-                          onChange={(e) => {
-                            setJenisKelamin(e.target.value);
-                            setValidationErrors((prev) => ({
-                              ...prev,
-                              jenisKelamin: false,
-                            }));
-                          }}
-                          className={`w-full mt-1 p-2 border rounded-md bg-white focus:outline-none focus:ring-2 ${
-                            validationErrors.jenisKelamin
-                              ? "border-red-500 focus:ring-red-200"
-                              : "border-gray-300 focus:ring-blue-500"
-                          }`}
-                          required
-                        >
-                          <option value="">Pilih Jenis Kelamin</option>
-
-                          <option value="Laki-laki">Laki-laki</option>
-
-                          <option value="Perempuan">Perempuan</option>
-                        </select>
-                      </div>
-
-                      {/* ================= JABATAN ================= */}
-                      <div className="bg-white p-3 rounded-md">
-                        <label
-                          className="text-sm text-gray-600"
-                          htmlFor="jabatan"
-                        >
-                          Keterangan{" "}
-                          <span className="text-red-500">*</span>
-                        </label>
-
-                        <input
-                          id="jabatan"
-                          type="text"
-                          value={jabatan}
-                          onChange={(e) => {
-                            setJabatan(e.target.value);
-                            setValidationErrors((prev) => ({
-                              ...prev,
-                              jabatan: false,
-                            }));
-                          }}
-                          placeholder="Isikan katerangan atau link"
-                          className={`w-full mt-1 p-2 border rounded-md focus:outline-none focus:ring-2 ${
-                            validationErrors.jabatan
-                              ? "border-red-500 focus:ring-red-200"
-                              : "border-gray-300 focus:ring-blue-500"
-                          }`}
-                          required
-                        />
-
-                        {jabatanError && (
-                          <p className="text-red-500 text-sm mt-1">
-                            {jabatanError}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* ================= TANGGAL DAFTAR ================= */}
-                      <div className="bg-white p-3 rounded-md">
-                        <label
-                          className="text-sm text-gray-600"
-                          htmlFor="tanggalDaftar"
-                        >
-                          Tanggal Daftar <span className="text-red-500">*</span>
-                        </label>
-
-                        <input
-                          id="tanggalDaftar"
-                          type="date"
-                          value={tanggalDaftar}
-                          onChange={(e) => {
-                            setTanggalDaftar(e.target.value);
-                            setValidationErrors((prev) => ({
-                              ...prev,
-                              tanggalDaftar: false,
-                            }));
-                          }}
-                          className={`w-full mt-1 p-2 border rounded-md focus:outline-none focus:ring-2 ${
-                            validationErrors.tanggalDaftar
-                              ? "border-red-500 focus:ring-red-200"
-                              : "border-gray-300 focus:ring-blue-500"
-                          }`}
-                          required
-                        />
-
-                        <p className="text-xs text-gray-500 mt-1">
-                          Tanggal otomatis menggunakan tanggal hari ini, tetapi
-                          masih dapat diubah.
-                        </p>
-                      </div>
-
-                      {/* ================= UPLOAD ================= */}
-                      <div className="bg-white p-3 rounded-md">
-                        <label
-                          className="text-sm text-gray-600"
-                          htmlFor="uploadKta"
-                        >
-                          Upload File KTA{" "}
-                          <span className="text-red-500">*</span>
-                        </label>
-
-                        <div className="flex flex-col space-y-2">
-                          <input
-                            ref={ktaFileInputRef}
-                            id="uploadKta"
-                            type="file"
-                            onChange={handleKtaFileChange}
-                            accept=".pdf,.jpg,.jpeg,.png"
-                            className="hidden"
-                          />
-
-                          <div
-                            id="uploadKtaControl"
-                            className={`w-full mt-1 border rounded-md overflow-hidden flex ${
-                              validationErrors.uploadKta
-                                ? "border-red-500"
-                                : "border-gray-300"
-                            }`}
-                          >
-                            <button
-                              type="button"
-                              onClick={() => ktaFileInputRef.current?.click()}
-                              className="bg-gray-100 hover:bg-gray-200 py-2 px-4 border-r border-gray-300 text-gray-700 font-medium transition-colors"
-                            >
-                              Choose File
-                            </button>
-
-                            <div className="flex-1 px-3 py-2 text-gray-700 overflow-hidden text-ellipsis whitespace-nowrap">
-                              {ktaFileName || "No file chosen"}
-                            </div>
-                          </div>
-
-                          {ktaFileName && (
-                            <div className="p-3 bg-green-50 border border-green-200 rounded-md flex items-start">
-                              <div className="flex-grow">
-                                <p className="text-sm text-green-700 break-words">
-                                  <span className="font-medium">
-                                    File KTA terpilih:
-                                  </span>{" "}
-                                  {ktaFileName}
+                        </div>
+                      ) : isRegistered && !showAdminOtherRegistration ? (
+                        /* ================= INFO PENDAFTARAN PERSONAL ================= */
+                        <div className="space-y-4">
+                          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 text-green-900 shadow-sm">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center flex-shrink-0">
+                                <FaCheckCircle size={22} />
+                              </div>
+                              <div>
+                                <h5 className="font-bold text-base text-green-800">
+                                  Anda Telah Terdaftar!
+                                </h5>
+                                <p className="text-xs text-green-700">
+                                  Data pendaftaran Anda telah tersimpan di sistem untuk event ini.
                                 </p>
                               </div>
-
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setKtaFileName("");
-                                  setKtaFile(null);
-
-                                  if (ktaFileInputRef.current) {
-                                    ktaFileInputRef.current.value = "";
-                                  }
-                                }}
-                                className="text-red-500 hover:text-red-700 ml-2"
-                                aria-label="Remove KTA file"
-                              >
-                                <FaTimesCircle size={18} />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-
-                        <p className="text-xs text-gray-500 mt-1">
-                          Upload file KTA PGRI dalam format PDF, JPG, JPEG, atau
-                          PNG.
-                        </p>
-                      </div>
-
-                      <div className="bg-white p-3 rounded-md">
-                        <label
-                          className="text-sm text-gray-600"
-                          htmlFor="uploadFile"
-                        >
-                          Upload Dokumen atau Video (Opsional)
-                        </label>
-
-                        <div className="flex flex-col space-y-2">
-                          <input
-                            ref={fileInputRef}
-                            id="uploadFile"
-                            type="file"
-                            onChange={handleFileChange}
-                            accept=".pdf,.jpg,.jpeg,.png,.mp4,.avi,.mov,.mpeg,.webm"
-                            className="hidden"
-                          />
-
-                          <div className="w-full mt-1 border border-gray-300 rounded-md overflow-hidden flex">
-                            <button
-                              type="button"
-                              onClick={handleCustomButtonClick}
-                              className="bg-gray-100 hover:bg-gray-200 py-2 px-4 border-r border-gray-300 text-gray-700 font-medium transition-colors"
-                            >
-                              Choose File
-                            </button>
-
-                            <div className="flex-1 px-3 py-2 text-gray-700 overflow-hidden text-ellipsis whitespace-nowrap">
-                              {fileName || "No file chosen"}
                             </div>
                           </div>
 
-                          {fileName && (
-                            <div className="p-3 bg-blue-50 border border-blue-200 rounded-md flex items-start">
-                              <div className="flex-grow">
-                                <p className="text-sm text-blue-700 break-words">
-                                  <span className="font-medium">
-                                    File terpilih:
-                                  </span>{" "}
-                                  {fileName}
-                                </p>
-                              </div>
-
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setFileName("");
-                                  setUploadFile(null);
-
-                                  if (fileInputRef.current) {
-                                    fileInputRef.current.value = "";
-                                  }
-                                }}
-                                className="text-red-500 hover:text-red-700 ml-2"
-                                aria-label="Remove file"
-                              >
-                                <FaTimesCircle size={18} />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-
-                        <p className="text-xs text-gray-500 mt-1">
-                          Format yang didukung: PDF, JPG, PNG, JPEG, MP4, AVI,
-                          MOV, MPEG, WEBM
-                        </p>
-                      </div>
-
-                      {/* ================= FOTO KEHADIRAN ================= */}
-                      <div className="bg-white p-3 rounded-md border border-gray-200">
-                        <label className="text-sm font-semibold text-gray-700 flex items-center justify-between">
-                          <span className="flex items-center gap-2">
-                            <FaCamera className="text-blue-600" />
-                            Foto Kehadiran / Selfie Pendaftaran
-                          </span>
-                          <span className="text-xs text-blue-600 font-normal">
-                            (Opsional / Bukti Kehadiran)
-                          </span>
-                        </label>
-                        <p className="text-xs text-gray-500 mt-1 mb-2">
-                          Ambil swafoto (selfie) atau unggah foto sebagai bukti kehadiran Anda pada event ini.
-                        </p>
-
-                        {/* Hidden inputs untuk Galeri & Kamera */}
-                        <input
-                          ref={fotoKehadiranInputRef}
-                          id="fotoKehadiranInput"
-                          type="file"
-                          accept="image/*"
-                          onChange={handleFotoKehadiranChange}
-                          className="hidden"
-                        />
-                        <input
-                          ref={fotoKehadiranCameraRef}
-                          id="fotoKehadiranCamera"
-                          type="file"
-                          accept="image/*"
-                          capture="user"
-                          onChange={handleFotoKehadiranChange}
-                          className="hidden"
-                        />
-
-                        {fotoKehadiranPreview ? (
-                          <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md flex items-center gap-3">
-                            <div className="w-16 h-16 rounded-md overflow-hidden bg-gray-100 flex-shrink-0 border border-blue-300">
-                              <img
-                                src={fotoKehadiranPreview}
-                                alt="Preview Kehadiran"
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-blue-900 truncate">
-                                {fotoKehadiranFileName || "Foto Kehadiran Terpilih"}
-                              </p>
-                              <span className="inline-block mt-1 px-2 py-0.5 text-xs font-semibold rounded bg-green-100 text-green-800">
-                                Siap Diunggah
+                          {/* Rincian Pendaftaran Personal */}
+                          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm space-y-3">
+                            <h6 className="font-bold text-sm text-gray-800 border-b pb-2 flex items-center justify-between">
+                              <span>Rincian Pendaftaran Personal</span>
+                              <span className="text-xs font-normal text-gray-500">
+                                {myParticipation?.tanggalDaftar ? `Tgl: ${myParticipation.tanggalDaftar}` : ""}
                               </span>
+                            </h6>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                              <div>
+                                <p className="text-gray-500">Nama Lengkap</p>
+                                <p className="font-semibold text-gray-800">
+                                  {myParticipation?.namaLengkap || formUserData?.namaLengkap || formUserData?.nama}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-gray-500">NPA PGRI</p>
+                                <p className="font-semibold text-gray-800">
+                                  {myParticipation?.npa || formUserData?.npaPgri}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-gray-500">Cabang</p>
+                                <p className="font-semibold text-gray-800">
+                                  {myParticipation?.cabang || formUserData?.cabang || "-"}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-gray-500">Unit Kerja</p>
+                                <p className="font-semibold text-gray-800">
+                                  {myParticipation?.unitKerja || formUserData?.unitKerja || "-"}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-gray-500">Nomor HP</p>
+                                <p className="font-semibold text-gray-800">
+                                  {myParticipation?.nomorHp || formUserData?.noHp || "-"}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-gray-500">Jenis Kelamin</p>
+                                <p className="font-semibold text-gray-800">
+                                  {myParticipation?.jenisKelamin || "-"}
+                                </p>
+                              </div>
+                              <div className="sm:col-span-2">
+                                <p className="text-gray-500">Keterangan</p>
+                                <p className="font-semibold text-gray-800 break-words">
+                                  {myParticipation?.jabatan || "-"}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-gray-500">File KTA</p>
+                                <p className="font-semibold text-green-700">
+                                  {myParticipation?.hasFileKta ? "✓ Berkas Tersedia" : "Belum Tersedia"}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-gray-500">Dokumen / Materi</p>
+                                <p className="font-semibold text-gray-700">
+                                  {myParticipation?.hasFileMateri ? "✓ Berkas Tersedia" : "-"}
+                                </p>
+                              </div>
                             </div>
-                            <button
-                              type="button"
-                              onClick={handleRemoveFotoKehadiran}
-                              className="text-red-500 hover:text-red-700 p-1 transition-colors"
-                              title="Hapus foto kehadiran"
-                            >
-                              <FaTimesCircle size={20} />
-                            </button>
                           </div>
-                        ) : (
-                          <div className="mt-2 flex flex-wrap gap-2">
-                            <button
-                              type="button"
-                              onClick={() => fotoKehadiranCameraRef.current?.click()}
-                              className="flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-medium transition-colors"
-                            >
-                              <FaCamera /> Ambil Selfie / Kamera
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => fotoKehadiranInputRef.current?.click()}
-                              className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 rounded text-xs font-medium transition-colors"
-                            >
-                              Pilih dari Berkas
-                            </button>
-                          </div>
-                        )}
-                      </div>
 
-                      {/* ================= AUTO TAG LOCATION ================= */}
-                      <div className="bg-white p-3 rounded-md border border-gray-200">
-                        <div className="flex items-center justify-between mb-1">
-                          <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                            <FaMapMarkerAlt className="text-red-500" />
-                            Kehadiran & Tag Location Otomatis
-                          </label>
-                          <button
-                            type="button"
-                            onClick={detectLocation}
-                            disabled={isDetectingLocation}
-                            className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors disabled:text-gray-400"
-                            title="Perbarui koordinat lokasi GPS"
-                          >
-                            <FaSyncAlt className={isDetectingLocation ? "animate-spin" : ""} size={12} />
-                            {isDetectingLocation ? "Mendeteksi..." : "Perbarui Lokasi"}
-                          </button>
+                          {/* Navigasi cepat ke Tab Hadir */}
+                          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-center">
+                            <p className="text-xs text-emerald-800 mb-2">
+                              Sudah berada di lokasi kegiatan? Lakukan selfie presensi dan tag lokasi GPS:
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveTab("hadir");
+                                if (!latitude || !longitude) detectLocation();
+                              }}
+                              className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2 shadow-sm"
+                            >
+                              <FaCamera />
+                              <span>Buka Presensi Kehadiran</span>
+                              <FaArrowRight size={12} />
+                            </button>
+                          </div>
+
+                          {/* Opsi khusus admin untuk daftarkan anggota lain */}
+                          {isAdminRegistration && (
+                            <button
+                              type="button"
+                              onClick={() => setShowAdminOtherRegistration(true)}
+                              className="w-full py-2 text-xs text-blue-600 hover:text-blue-800 font-medium underline"
+                            >
+                              + Daftarkan Peserta Lain (Admin Mode)
+                            </button>
+                          )}
                         </div>
-                        <p className="text-xs text-gray-500 mb-2">
-                          Sistem secara otomatis mendeteksi lokasi saat pendaftaran untuk verifikasi presensi.
-                        </p>
-
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2 text-xs">
-                            <span
-                              className={`px-2 py-0.5 rounded font-semibold flex items-center gap-1 ${
-                                latitude && longitude
-                                  ? "bg-green-100 text-green-800"
-                                  : isDetectingLocation
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : "bg-gray-100 text-gray-600"
-                              }`}
-                            >
-                              {latitude && longitude ? (
-                                <>
-                                  <FaCheckCircle size={11} /> Hadir (GPS Terkunci)
-                                </>
-                              ) : isDetectingLocation ? (
-                                <>
-                                  <FaSpinner className="animate-spin" size={11} /> Mendeteksi...
-                                </>
-                              ) : (
-                                "Lokasi Belum Terkunci"
-                              )}
-                            </span>
-                            {locationStatus && (
-                              <span className="text-gray-500 truncate">{locationStatus}</span>
+                      ) : (
+                        /* ================= FORM PENDAFTARAN EVENT ================= */
+                        <>
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="text-lg font-bold text-gray-800">
+                              Form Pendaftaran Event {selectedEventDetail.isTerlewat && "(Admin Mode)"}
+                            </h4>
+                            {showAdminOtherRegistration && (
+                              <button
+                                type="button"
+                                onClick={() => setShowAdminOtherRegistration(false)}
+                                className="text-xs text-red-600 hover:text-red-800 underline font-medium"
+                              >
+                                Batal
+                              </button>
                             )}
                           </div>
 
-                          <div className="relative">
+                          {selectedEventDetail.isTerlewat && (
+                            <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-md text-xs text-red-700 font-medium">
+                              ⚠️ Perhatian: Event ini berstatus "Sudah Terlaksana". Pendaftaran hanya diizinkan untuk Admin.
+                            </div>
+                          )}
+
+                          {/* Foto KTA */}
+                          <div className="flex flex-col items-center justify-center mb-4">
+                            <div className="relative flex items-center justify-center w-20 h-20 rounded-full border-2 border-gray-300 shadow-md overflow-hidden">
+                              {formFotoBase64 ? (
+                                <Image
+                                  src={`data:image/jpeg;base64,${formFotoBase64.replace(/^data:image\/[^;]+;base64,/, "")}`}
+                                  width={80}
+                                  height={80}
+                                  alt="Foto KTA"
+                                  className="w-full h-full rounded-full object-cover object-top"
+                                  unoptimized={true}
+                                />
+                              ) : (
+                                <Image
+                                  src={profileImageUrl}
+                                  width={80}
+                                  height={80}
+                                  alt="Foto KTA"
+                                  className="w-full h-full rounded-full object-cover object-top"
+                                  unoptimized={true}
+                                />
+                              )}
+                            </div>
+                            <p className="text-[11px] text-gray-500 mt-1 text-center">
+                              Foto profil dari KTA PGRI
+                            </p>
+                          </div>
+
+                          <div className="space-y-3">
+                            {/* Nama Lengkap */}
+                            <div className="bg-white p-3 rounded-md border border-gray-200">
+                              <p className="text-xs text-gray-500">Nama Lengkap</p>
+                              <p className="text-gray-800 font-semibold text-sm">
+                                {formUserData?.namaLengkap || formUserData?.nama || "Loading..."}
+                              </p>
+                            </div>
+
+                            {/* NPA PGRI */}
+                            <div className="bg-white p-3 rounded-md border border-gray-200">
+                              <label className="text-xs text-gray-500" htmlFor="registrationNpa">
+                                NPA PGRI
+                              </label>
+                              {isAdminRegistration ? (
+                                <div className="flex gap-2 mt-1">
+                                  <input
+                                    id="registrationNpa"
+                                    type="text"
+                                    value={registrationNpa}
+                                    onChange={(e) => {
+                                      setRegistrationNpa(e.target.value);
+                                      setFormUserData(null);
+                                      setFormFotoBase64(null);
+                                      setNpaError("");
+                                      setValidationErrors((prev) => ({
+                                        ...prev,
+                                        registrationNpa: true,
+                                      }));
+                                    }}
+                                    className={`min-w-0 flex-1 p-2 border rounded-md text-sm focus:outline-none focus:ring-2 ${
+                                      validationErrors.registrationNpa
+                                        ? "border-red-500 focus:ring-red-200"
+                                        : "border-gray-300 focus:ring-blue-500"
+                                    }`}
+                                    placeholder="Masukkan NPA anggota"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={handleCheckNpa}
+                                    disabled={isCheckingNpa || !registrationNpa.trim()}
+                                    className="shrink-0 px-3 py-2 bg-blue-600 text-white rounded-md text-xs font-semibold hover:bg-blue-700 disabled:bg-blue-300"
+                                  >
+                                    {isCheckingNpa ? "Mengecek..." : "Cek Data"}
+                                  </button>
+                                </div>
+                              ) : (
+                                <p className="text-gray-800 font-semibold text-sm">
+                                  {formUserData?.npaPgri || "Loading..."}
+                                </p>
+                              )}
+                              {npaError && <p className="text-red-500 text-xs mt-1">{npaError}</p>}
+                              {validationErrors.registrationNpa && !npaError && (
+                                <p className="text-red-500 text-xs mt-1">
+                                  Masukkan NPA dan pilih Cek Data terlebih dahulu.
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Email */}
+                            <div className="bg-white p-3 rounded-md border border-gray-200">
+                              <p className="text-xs text-gray-500">Email</p>
+                              <p className="text-gray-800 font-medium text-sm">
+                                {formUserData?.email || "-"}
+                              </p>
+                            </div>
+
+                            {/* Cabang & Unit Kerja */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <div className="bg-white p-3 rounded-md border border-gray-200">
+                                <p className="text-xs text-gray-500">Cabang</p>
+                                <p className="text-gray-800 font-medium text-sm">
+                                  {formUserData?.cabang || "-"}
+                                </p>
+                              </div>
+                              <div className="bg-white p-3 rounded-md border border-gray-200">
+                                <p className="text-xs text-gray-500">Unit Kerja</p>
+                                <p className="text-gray-800 font-medium text-sm">
+                                  {formUserData?.unitKerja || "-"}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Nomor HP */}
+                            <div className="bg-white p-3 rounded-md border border-gray-200">
+                              <p className="text-xs text-gray-500">Nomor HP</p>
+                              <p className="text-gray-800 font-medium text-sm">
+                                {formUserData?.noHp || formUserData?.nomorHp || "-"}
+                              </p>
+                            </div>
+
+                            {/* Jenis Kelamin */}
+                            <div className="bg-white p-3 rounded-md border border-gray-200">
+                              <label className="text-xs text-gray-500" htmlFor="jenisKelamin">
+                                Jenis Kelamin <span className="text-red-500">*</span>
+                              </label>
+                              <select
+                                id="jenisKelamin"
+                                value={jenisKelamin}
+                                onChange={(e) => {
+                                  setJenisKelamin(e.target.value);
+                                  setValidationErrors((prev) => ({ ...prev, jenisKelamin: false }));
+                                }}
+                                className={`w-full mt-1 p-2 border rounded-md text-sm bg-white focus:outline-none focus:ring-2 ${
+                                  validationErrors.jenisKelamin
+                                    ? "border-red-500 focus:ring-red-200"
+                                    : "border-gray-300 focus:ring-blue-500"
+                                }`}
+                                required
+                              >
+                                <option value="">Pilih Jenis Kelamin</option>
+                                <option value="Laki-laki">Laki-laki</option>
+                                <option value="Perempuan">Perempuan</option>
+                              </select>
+                            </div>
+
+                            {/* Keterangan */}
+                            <div className="bg-white p-3 rounded-md border border-gray-200">
+                              <label className="text-xs text-gray-500" htmlFor="jabatan">
+                                Keterangan <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                id="jabatan"
+                                type="text"
+                                value={jabatan}
+                                onChange={(e) => {
+                                  setJabatan(e.target.value);
+                                  setValidationErrors((prev) => ({ ...prev, jabatan: false }));
+                                }}
+                                placeholder="Isikan keterangan atau link"
+                                className={`w-full mt-1 p-2 border rounded-md text-sm focus:outline-none focus:ring-2 ${
+                                  validationErrors.jabatan
+                                    ? "border-red-500 focus:ring-red-200"
+                                    : "border-gray-300 focus:ring-blue-500"
+                                }`}
+                                required
+                              />
+                            </div>
+
+                            {/* Tanggal Daftar */}
+                            <div className="bg-white p-3 rounded-md border border-gray-200">
+                              <label className="text-xs text-gray-500" htmlFor="tanggalDaftar">
+                                Tanggal Daftar <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                id="tanggalDaftar"
+                                type="date"
+                                value={tanggalDaftar}
+                                onChange={(e) => {
+                                  setTanggalDaftar(e.target.value);
+                                  setValidationErrors((prev) => ({ ...prev, tanggalDaftar: false }));
+                                }}
+                                className="w-full mt-1 p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                required
+                              />
+                            </div>
+
+                            {/* Upload File KTA */}
+                            <div className="bg-white p-3 rounded-md border border-gray-200">
+                              <label className="text-xs text-gray-500" htmlFor="uploadKta">
+                                Upload File KTA <span className="text-red-500">*</span>
+                              </label>
+                              <div className="flex flex-col space-y-2 mt-1">
+                                <input
+                                  ref={ktaFileInputRef}
+                                  id="uploadKta"
+                                  type="file"
+                                  onChange={handleKtaFileChange}
+                                  accept=".pdf,.jpg,.jpeg,.png"
+                                  className="hidden"
+                                />
+                                <div
+                                  id="uploadKtaControl"
+                                  className={`w-full border rounded-md overflow-hidden flex ${
+                                    validationErrors.uploadKta ? "border-red-500" : "border-gray-300"
+                                  }`}
+                                >
+                                  <button
+                                    type="button"
+                                    onClick={() => ktaFileInputRef.current?.click()}
+                                    className="bg-gray-100 hover:bg-gray-200 py-2 px-3 border-r border-gray-300 text-gray-700 text-xs font-medium"
+                                  >
+                                    Choose File
+                                  </button>
+                                  <div className="flex-1 px-3 py-2 text-xs text-gray-700 overflow-hidden text-ellipsis whitespace-nowrap">
+                                    {ktaFileName || "No file chosen"}
+                                  </div>
+                                </div>
+                                {ktaFileName && (
+                                  <div className="p-2 bg-green-50 border border-green-200 rounded-md flex items-center justify-between text-xs text-green-700">
+                                    <span className="truncate">{ktaFileName}</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setKtaFileName("");
+                                        setKtaFile(null);
+                                        if (ktaFileInputRef.current) ktaFileInputRef.current.value = "";
+                                      }}
+                                      className="text-red-500 hover:text-red-700 ml-2"
+                                    >
+                                      <FaTimesCircle size={16} />
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Upload Dokumen atau Video */}
+                            <div className="bg-white p-3 rounded-md border border-gray-200">
+                              <label className="text-xs text-gray-500" htmlFor="uploadFile">
+                                Upload Dokumen atau Video (Opsional)
+                              </label>
+                              <div className="flex flex-col space-y-2 mt-1">
+                                <input
+                                  ref={fileInputRef}
+                                  id="uploadFile"
+                                  type="file"
+                                  onChange={handleFileChange}
+                                  accept=".pdf,.jpg,.jpeg,.png,.mp4,.avi,.mov,.mpeg,.webm"
+                                  className="hidden"
+                                />
+                                <div className="w-full border border-gray-300 rounded-md overflow-hidden flex">
+                                  <button
+                                    type="button"
+                                    onClick={handleCustomButtonClick}
+                                    className="bg-gray-100 hover:bg-gray-200 py-2 px-3 border-r border-gray-300 text-gray-700 text-xs font-medium"
+                                  >
+                                    Choose File
+                                  </button>
+                                  <div className="flex-1 px-3 py-2 text-xs text-gray-700 overflow-hidden text-ellipsis whitespace-nowrap">
+                                    {fileName || "No file chosen"}
+                                  </div>
+                                </div>
+                                {fileName && (
+                                  <div className="p-2 bg-blue-50 border border-blue-200 rounded-md flex items-center justify-between text-xs text-blue-700">
+                                    <span className="truncate">{fileName}</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setFileName("");
+                                        setUploadFile(null);
+                                        if (fileInputRef.current) fileInputRef.current.value = "";
+                                      }}
+                                      className="text-red-500 hover:text-red-700 ml-2"
+                                    >
+                                      <FaTimesCircle size={16} />
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Tombol Submit Pendaftaran */}
+                          <button
+                            type="button"
+                            onClick={handleSubmitRegistration}
+                            disabled={isSubmitting}
+                            className="mt-6 w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm transition-colors shadow-sm disabled:bg-blue-400 disabled:cursor-not-allowed"
+                          >
+                            {isSubmitting ? (
+                              <div className="flex items-center justify-center gap-2">
+                                <FaSpinner className="animate-spin" />
+                                <span>Mendaftarkan...</span>
+                              </div>
+                            ) : (
+                              "Daftar Event"
+                            )}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ================= KONTEN TAB 2: HADIR (PRESENSI) ================= */}
+                  {activeTab === "hadir" && (
+                    <div>
+                      {!isRegistered ? (
+                        /* Jika belum terdaftar */
+                        <div className="text-center py-8">
+                          <div className="inline-block p-5 bg-amber-50 border border-amber-200 rounded-2xl text-amber-800 max-w-md mx-auto shadow-sm">
+                            <FaInfoCircle className="text-4xl text-amber-500 mx-auto mb-3" />
+                            <h5 className="font-bold text-base text-amber-900 mb-1">
+                              Belum Terdaftar pada Event Ini
+                            </h5>
+                            <p className="text-xs text-amber-700 leading-relaxed mb-4">
+                              Presensi kehadiran hanya dapat dilakukan setelah Anda terdaftar sebagai peserta event.
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab("mendaftar")}
+                              className="py-2.5 px-4 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-semibold text-xs transition-colors shadow-sm inline-flex items-center gap-2"
+                            >
+                              <FaCalendarAlt />
+                              <span>Buka Form Pendaftaran</span>
+                            </button>
+                          </div>
+                        </div>
+                      ) : myParticipation?.kehadiran === "HADIR" && !isEditingPresensi ? (
+                        /* ================= INFO KEHADIRAN PERSONAL (SUDAH HADIR) ================= */
+                        <div className="space-y-4">
+                          <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-4 text-emerald-900 shadow-sm">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                                <FaUserCheck size={22} />
+                              </div>
+                              <div>
+                                <h5 className="font-bold text-base text-emerald-800">
+                                  Presensi Kehadiran Terverifikasi
+                                </h5>
+                                <p className="text-xs text-emerald-700">
+                                  Anda tercatat telah hadir pada event ini.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Rincian Kehadiran Personal */}
+                          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm space-y-4">
+                            <div className="flex items-center justify-between border-b pb-2">
+                              <h6 className="font-bold text-sm text-gray-800 flex items-center gap-2">
+                                <FaCamera className="text-emerald-600" />
+                                <span>Foto & Tag Lokasi Kehadiran</span>
+                              </h6>
+                              <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded-full">
+                                HADIR
+                              </span>
+                            </div>
+
+                            {/* Foto Selfie Kehadiran */}
+                            <div className="flex flex-col items-center justify-center">
+                              <div className="relative w-36 h-36 rounded-2xl border-2 border-emerald-300 shadow-md overflow-hidden bg-gray-100">
+                                {myParticipation?.fileKehadiranUrl ? (
+                                  <img
+                                    src={myParticipation.fileKehadiranUrl}
+                                    alt="Foto Kehadiran"
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : fotoKehadiranPreview ? (
+                                  <img
+                                    src={fotoKehadiranPreview}
+                                    alt="Foto Kehadiran"
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="flex flex-col items-center justify-center h-full text-gray-400 p-2 text-center text-xs">
+                                    <FaCamera size={28} className="mb-1 text-gray-300" />
+                                    Foto Tidak Tersedia
+                                  </div>
+                                )}
+                              </div>
+                              <p className="text-xs text-gray-500 mt-2 font-medium">
+                                Swafoto Kehadiran Personal
+                              </p>
+                            </div>
+
+                            {/* Data Lokasi GPS */}
+                            <div className="bg-gray-50 rounded-lg p-3 text-xs space-y-2 border border-gray-200">
+                              <div className="flex items-start gap-2">
+                                <FaMapMarkerAlt className="text-red-500 mt-0.5 flex-shrink-0" size={14} />
+                                <div className="flex-1">
+                                  <p className="text-gray-500 font-medium">Tag Location Terkunci:</p>
+                                  <p className="text-gray-800 font-semibold mt-0.5">
+                                    {myParticipation?.tagLocation || tagLocation || "Lokasi GPS tercatat"}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {(myParticipation?.latitude || latitude) && (
+                                <div className="flex items-center justify-between pt-1 border-t border-gray-200">
+                                  <span className="text-gray-500 text-[11px]">
+                                    Koordinat: {myParticipation?.latitude || latitude}, {myParticipation?.longitude || longitude}
+                                  </span>
+                                  <a
+                                    href={`https://www.google.com/maps?q=${myParticipation?.latitude || latitude},${myParticipation?.longitude || longitude}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:text-blue-800 font-semibold text-[11px] flex items-center gap-1"
+                                  >
+                                    Buka Google Maps <FaExternalLinkAlt size={9} />
+                                  </a>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Tombol Perbarui Presensi */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsEditingPresensi(true);
+                              detectLocation();
+                            }}
+                            className="w-full py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 rounded-lg font-semibold text-xs transition-colors flex items-center justify-center gap-2"
+                          >
+                            <FaEdit />
+                            <span>Perbarui Foto / Titik Lokasi Presensi</span>
+                          </button>
+                        </div>
+                      ) : (
+                        /* ================= FORM PRESENSI KEHADIRAN ================= */
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h5 className="font-bold text-base text-gray-800">
+                                Konfirmasi Kehadiran Event
+                              </h5>
+                              <p className="text-xs text-gray-500">
+                                Ambil swafoto dan kunci lokasi Anda untuk validasi presensi hari ini.
+                              </p>
+                            </div>
+                            {isEditingPresensi && (
+                              <button
+                                type="button"
+                                onClick={() => setIsEditingPresensi(false)}
+                                className="text-xs text-red-600 hover:text-red-800 underline font-medium"
+                              >
+                                Batal
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Identitas Peserta */}
+                          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between text-xs">
+                            <div>
+                              <span className="text-gray-500">Peserta: </span>
+                              <span className="font-bold text-blue-900">
+                                {myParticipation?.namaLengkap || formUserData?.namaLengkap || formUserData?.nama}
+                              </span>
+                              <span className="text-gray-500 ml-2">({myParticipation?.npa || formUserData?.npaPgri})</span>
+                            </div>
+                            <span className="px-2 py-0.5 bg-blue-100 text-blue-800 font-semibold rounded">
+                              {myParticipation?.unitKerja || formUserData?.unitKerja || "-"}
+                            </span>
+                          </div>
+
+                          {/* Box Foto Kehadiran */}
+                          <div className="bg-white p-3.5 rounded-xl border border-gray-200 space-y-2">
+                            <label className="text-xs font-bold text-gray-700 flex items-center justify-between">
+                              <span className="flex items-center gap-2">
+                                <FaCamera className="text-emerald-600" />
+                                Foto Kehadiran / Swafoto (Selfie)
+                              </span>
+                              <span className="text-[11px] text-red-500 font-semibold">* Wajib</span>
+                            </label>
+                            <p className="text-[11px] text-gray-500 leading-normal">
+                              Pastikan wajah terlihat jelas saat mengambil swafoto di tempat acara.
+                            </p>
+
+                            <input
+                              ref={fotoKehadiranInputRef}
+                              id="fotoKehadiranInput"
+                              type="file"
+                              accept="image/*"
+                              onChange={handleFotoKehadiranChange}
+                              className="hidden"
+                            />
+                            <input
+                              ref={fotoKehadiranCameraRef}
+                              id="fotoKehadiranCamera"
+                              type="file"
+                              accept="image/*"
+                              capture="user"
+                              onChange={handleFotoKehadiranChange}
+                              className="hidden"
+                            />
+
+                            {fotoKehadiranPreview ? (
+                              <div className="mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center gap-3">
+                                <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 border border-emerald-300 shadow-sm">
+                                  <img
+                                    src={fotoKehadiranPreview}
+                                    alt="Preview Kehadiran"
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-semibold text-emerald-900 truncate">
+                                    {fotoKehadiranFileName || "Foto Selfie Siap"}
+                                  </p>
+                                  <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-bold rounded bg-green-100 text-green-800">
+                                    ✓ Foto Siap Dikirim
+                                  </span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={handleRemoveFotoKehadiran}
+                                  className="text-red-500 hover:text-red-700 p-1 transition-colors"
+                                  title="Ganti foto"
+                                >
+                                  <FaTimesCircle size={20} />
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="mt-2 flex flex-wrap gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => fotoKehadiranCameraRef.current?.click()}
+                                  className="flex-1 min-w-[130px] flex items-center justify-center gap-2 px-3 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-colors shadow-sm"
+                                >
+                                  <FaCamera /> Ambil Selfie / Kamera
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => fotoKehadiranInputRef.current?.click()}
+                                  className="flex-1 min-w-[120px] flex items-center justify-center gap-2 px-3 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 rounded-lg text-xs font-medium transition-colors"
+                                >
+                                  Pilih dari Berkas
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Box Tag Location GPS */}
+                          <div className="bg-white p-3.5 rounded-xl border border-gray-200 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <label className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
+                                <FaMapMarkerAlt className="text-red-500" />
+                                Kehadiran & Tag Location Otomatis
+                              </label>
+                              <button
+                                type="button"
+                                onClick={detectLocation}
+                                disabled={isDetectingLocation}
+                                className="flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-800 font-semibold disabled:text-gray-400"
+                              >
+                                <FaSyncAlt className={isDetectingLocation ? "animate-spin" : ""} size={11} />
+                                {isDetectingLocation ? "Mendeteksi..." : "Perbarui Lokasi"}
+                              </button>
+                            </div>
+
+                            <div className="flex items-center gap-2 text-xs">
+                              <span
+                                className={`px-2 py-0.5 rounded-md font-semibold text-[11px] flex items-center gap-1 ${
+                                  latitude && longitude
+                                    ? "bg-green-100 text-green-800"
+                                    : isDetectingLocation
+                                    ? "bg-yellow-100 text-yellow-800"
+                                    : "bg-gray-100 text-gray-600"
+                                }`}
+                              >
+                                {latitude && longitude ? (
+                                  <>
+                                    <FaCheckCircle size={11} /> GPS Terkunci
+                                  </>
+                                ) : isDetectingLocation ? (
+                                  <>
+                                    <FaSpinner className="animate-spin" size={11} /> Mencari GPS...
+                                  </>
+                                ) : (
+                                  "GPS Belum Terkunci"
+                                )}
+                              </span>
+                              {locationStatus && (
+                                <span className="text-gray-500 text-[11px] truncate flex-1">
+                                  {locationStatus}
+                                </span>
+                              )}
+                            </div>
+
                             <input
                               type="text"
                               value={tagLocation}
                               onChange={(e) => setTagLocation(e.target.value)}
-                              placeholder="Keterangan nama tempat / lokasi pendaftaran..."
-                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-800"
+                              placeholder="Keterangan nama tempat / lokasi kehadiran..."
+                              className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 text-gray-800"
                             />
+
+                            {latitude && longitude && (
+                              <p className="text-[10px] text-gray-400">
+                                Koordinat: {latitude}, {longitude}
+                              </p>
+                            )}
                           </div>
 
-                          {latitude && longitude && (
-                            <p className="text-[11px] text-gray-400">
-                              Koordinat GPS: {latitude}, {longitude}
-                            </p>
-                          )}
+                          {/* Tombol Kirim Presensi */}
+                          <button
+                            type="button"
+                            onClick={handleSubmitPresensi}
+                            disabled={isSubmittingPresensi}
+                            className="mt-4 w-full py-3 px-6 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-sm transition-colors shadow-sm disabled:bg-emerald-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                          >
+                            {isSubmittingPresensi ? (
+                              <>
+                                <FaSpinner className="animate-spin" />
+                                <span>Menyimpan Presensi...</span>
+                              </>
+                            ) : (
+                              <>
+                                <FaCheckCircle />
+                                <span>Kirim Presensi Kehadiran</span>
+                              </>
+                            )}
+                          </button>
                         </div>
-                      </div>
-                    </div>
-
-                    {/* ================= BUTTON ================= */}
-                    <button
-                      type="button"
-                      onClick={handleSubmitRegistration}
-                      disabled={isSubmitting || isRegistered}
-                      className="mt-6 w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-semibold transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed disabled:transform-none transform hover:scale-105 duration-200"
-                    >
-                      {isSubmitting ? (
-                        <div className="flex items-center justify-center">
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                          Mendaftar...
-                        </div>
-                      ) : isRegistered ? (
-                        "Anda Telah Terdaftar"
-                      ) : (
-                        "Daftar Event"
                       )}
-                    </button>
-                  </>
+                    </div>
                   )}
                 </div>
               )}

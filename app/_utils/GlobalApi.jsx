@@ -2788,6 +2788,34 @@ const addPesertaEvent = async (formData) => {
   }
 };
 
+const updatePresensiEvent = async (id, formData) => {
+  try {
+    const response = await axiosClient.post(`/api/event/${id}/presensi`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error update presensi event by id:", error);
+    throw error;
+  }
+};
+
+const updatePresensiByNpaEvent = async (formData) => {
+  try {
+    const response = await axiosClient.post("/api/event/presensi", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error update presensi event by npa:", error);
+    throw error;
+  }
+};
+
 const getAllPeserta = async (queryString = "") => {
   try {
     const response = await axiosClient.get(
@@ -4739,6 +4767,8 @@ export default {
   deleteNamaRanting,
   getRekapRanting,
   addPesertaEvent,
+  updatePresensiEvent,
+  updatePresensiByNpaEvent,
   getAllPeserta,
   deleteKalender,
   updateKalender,
