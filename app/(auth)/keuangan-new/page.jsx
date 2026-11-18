@@ -82,7 +82,15 @@ export default function KeuanganNew() {
           tcGrouped[cabang] = { cabang: item.cabang || "Lainnya", target: 0, realisasi: 0 };
         }
         if ((item.pos || "").toUpperCase() !== "PEMASUKAN DARI BANK") {
-          tcGrouped[cabang].target += Number(item.tagihan || 0);
+          const ket = (item.keterangan || "").trim();
+          const norm = (item.pos || "").toUpperCase();
+          const isTunggakan = ket.toLowerCase().includes("tunggakan") || norm.includes("PIUTANG");
+          let tagihanItem = Number(item.tagihan || 0);
+          const pembayaranItem = Number(item.pembayaran || 0);
+          if (isTunggakan && tagihanItem === 0 && pembayaranItem > 0) {
+            tagihanItem = pembayaranItem;
+          }
+          tcGrouped[cabang].target += tagihanItem;
         }
         tcGrouped[cabang].realisasi += Number(item.pembayaran || 0);
       });
@@ -134,7 +142,7 @@ export default function KeuanganNew() {
         // realisasi = transaksi_cabang pembayaran for Pemasukan Dari Bank + potBank
         const tcRealisasi = cabangTransData
           .filter((t) => (t.cabang || "").trim().toUpperCase() === cabang && (t.pos || "").toUpperCase() === "PEMASUKAN DARI BANK")
-          .reduce((s, t) => s + Number(t.pembayaran || 0), 0);
+          .reduce((s, t) => s + Number(t.pembayaran || t.tagihan || 0), 0);
         realisasi = tcRealisasi + (bal?.potBank || 0);
 
         // Add organisasi payments
@@ -142,7 +150,98 @@ export default function KeuanganNew() {
           realisasi += orgPayments[cabang];
         }
 
-        grouped[cabang] = { cabang: tc.cabang, target, realisasi };
+        // Pos-pos tagihan (non-bank) for this cabang
+        const nonBankTrans = cabangTransData.filter(
+          (t) => (t.cabang || "").trim().toUpperCase() === cabang && (t.pos || "").toUpperCase() !== "PEMASUKAN DARI BANK"
+        );
+
+        // Group items by pos and tunggakan status
+        const posMap = {};
+        nonBankTrans.forEach((t) => {
+          const rawPos = (t.pos || "Lain-lain").trim();
+          const ket = (t.keterangan || "").trim();
+          const isTunggakan = ket.toLowerCase().includes("tunggakan") || rawPos.toUpperCase().includes("PIUTANG");
+          const posKey = isTunggakan && ket ? `${rawPos.toUpperCase()} (${ket})` : rawPos.toUpperCase();
+
+          let tagihanItem = Number(t.tagihan || 0);
+          const pembayaranItem = Number(t.pembayaran || 0);
+          if (isTunggakan && tagihanItem === 0 && pembayaranItem > 0) {
+            tagihanItem = pembayaranItem;
+          }
+
+          if (!posMap[posKey]) {
+            posMap[posKey] = {
+              pos: rawPos.toUpperCase(),
+              label: posKey,
+              tagihan: 0,
+              pembayaran: 0,
+              keterangan: ket,
+              isTunggakan,
+            };
+          }
+          posMap[posKey].tagihan += tagihanItem;
+          posMap[posKey].pembayaran += pembayaranItem;
+        });
+
+        const posList = Object.values(posMap);
+        const totalBayar = posList.reduce((s, p) => s + p.pembayaran, 0);
+
+        // Calculate shortages per pos (Tagihan > Pembayaran)
+        const unpaidPosts = [];
+        posList.forEach((p) => {
+          const kurangPos = p.tagihan - p.pembayaran;
+          if (kurangPos > 0) {
+            unpaidPosts.push({
+              nama: p.label,
+              kurang: kurangPos,
+              tagihan: p.tagihan,
+              pembayaran: p.pembayaran,
+              keterangan: `Tagihan ${formatCurrency(p.tagihan)} • Bayar ${formatCurrency(p.pembayaran)}`,
+              tipe: "pos",
+            });
+          }
+        });
+
+        // Calculate shortage on Realisasi Bank vs Pembayaran
+        const selisihBank = realisasi - totalBayar;
+        const bankList = [];
+        if (selisihBank < 0) {
+          const kurangBank = Math.abs(selisihBank);
+          bankList.push({
+            nama: "Transfer System Bank",
+            kurang: kurangBank,
+            tagihan: totalBayar,
+            pembayaran: realisasi,
+            keterangan: `Realisasi Bank (${formatCurrency(realisasi)}) < Pembayaran (${formatCurrency(totalBayar)})`,
+            tipe: "bank",
+          });
+        }
+
+        const sumberKekurangan = [...unpaidPosts, ...bankList];
+        const selisih = target - realisasi;
+        const kekurangan = selisih > 0 ? selisih : 0;
+
+        if (kekurangan > 0 && sumberKekurangan.length === 0) {
+          sumberKekurangan.push({
+            nama: "Selisih Target & Realisasi",
+            kurang: kekurangan,
+            tagihan: target,
+            pembayaran: realisasi,
+            keterangan: `Target (${formatCurrency(target)}) belum tertutup Realisasi (${formatCurrency(realisasi)})`,
+            tipe: "general",
+          });
+        }
+
+        grouped[cabang] = {
+          cabang: tc.cabang,
+          target,
+          realisasi,
+          totalBayar,
+          kekurangan,
+          selisihBank,
+          sumberKekurangan,
+          posList,
+        };
       });
 
       setTableData(Object.values(grouped).sort((a, b) => a.cabang.localeCompare(b.cabang)));
@@ -213,6 +312,7 @@ export default function KeuanganNew() {
 
   const totalTarget = filteredCabangData.reduce((sum, row) => sum + row.target, 0);
   const totalRealisasi = filteredCabangData.reduce((sum, row) => sum + row.realisasi, 0);
+  const totalKekurangan = filteredCabangData.reduce((sum, row) => sum + Math.max(0, row.target - row.realisasi), 0);
 
   if (userRole !== null && !isAdminOrSuperAdmin) {
     return (
@@ -351,6 +451,7 @@ export default function KeuanganNew() {
                         <th className="pb-5">Cabang</th>
                         <th className="pb-5 text-right">Target</th>
                         <th className="pb-5 text-right">Realisasi</th>
+                        <th className="pb-5 text-right">Kekurangan</th>
                         <th className="pb-5 text-center">Keterangan</th>
                         <th className="pb-5 text-center">View</th>
                       </tr>
@@ -363,6 +464,7 @@ export default function KeuanganNew() {
                             <td className="py-6"><div className="h-4 w-32 bg-slate-100 rounded-full" /></td>
                             <td className="py-6 text-right"><div className="h-6 w-24 bg-slate-100 ml-auto rounded-full" /></td>
                             <td className="py-6 text-right"><div className="h-6 w-24 bg-slate-100 ml-auto rounded-full" /></td>
+                            <td className="py-6 text-right"><div className="h-6 w-24 bg-slate-100 ml-auto rounded-full" /></td>
                             <td className="py-6 text-center"><div className="h-6 w-20 bg-slate-100 mx-auto rounded-full" /></td>
                             <td className="py-6 text-center"><div className="h-8 w-20 bg-slate-100 mx-auto rounded-xl" /></td>
                           </tr>
@@ -371,6 +473,17 @@ export default function KeuanganNew() {
                         filteredCabangData.map((row, i) => {
                           const selisih = row.target - row.realisasi;
                           const isLunas = selisih <= 0;
+                          const kekurangan = selisih > 0 ? selisih : 0;
+
+                          // Format sumber text cleanly (e.g. "Transfer Bank", "DASPEN", "DASPEN, Transfer Bank")
+                          const sumberText = (row.sumberKekurangan || [])
+                            .map((s) => (s.nama === "Transfer System Bank" ? "Transfer Bank" : s.nama))
+                            .join(", ");
+
+                          const tooltipText = (row.sumberKekurangan || [])
+                            .map((s) => `${s.nama}: -${formatCurrency(s.kurang)}${s.keterangan ? ` (${s.keterangan})` : ""}`)
+                            .join("\n");
+
                           return (
                             <tr key={i} className="hover:bg-slate-50/50 transition-colors group">
                               <td className="py-6 text-center text-slate-400 font-bold text-xs">{i + 1}</td>
@@ -383,8 +496,23 @@ export default function KeuanganNew() {
                               <td className="py-6 text-right">
                                 <span className="font-bold text-emerald-600 text-sm">{formatCurrency(row.realisasi)}</span>
                               </td>
+                              <td className="py-6 text-right">
+                                <div className="flex flex-col items-end">
+                                  <span className={`font-bold text-sm ${kekurangan > 0 ? "text-rose-600" : "text-slate-400"}`}>
+                                    {kekurangan > 0 ? formatCurrency(kekurangan) : "Rp 0"}
+                                  </span>
+                                  {kekurangan > 0 && sumberText && (
+                                    <span
+                                      className="text-[11px] font-semibold text-rose-500/90 tracking-tight cursor-help"
+                                      title={tooltipText || undefined}
+                                    >
+                                      ({sumberText})
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
                               <td className="py-6 text-center">
-                                <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-bold border shadow-sm ${isLunas
+                                <span className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[10px] font-bold border shadow-xs ${isLunas
                                   ? "bg-emerald-50 text-emerald-700 border-emerald-100"
                                   : "bg-rose-50 text-rose-700 border-rose-100"
                                   }`}>
@@ -409,7 +537,7 @@ export default function KeuanganNew() {
                         })
                       ) : (
                         <tr>
-                          <td colSpan="6" className="py-20 text-center">
+                          <td colSpan="7" className="py-20 text-center">
                             <div className="flex flex-col items-center">
                               <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-3">
                                 <FaChartBar className="text-slate-300" />
@@ -426,8 +554,9 @@ export default function KeuanganNew() {
                           <td colSpan="2" className="px-4 py-5 text-[10px] uppercase tracking-widest">Total</td>
                           <td className="px-4 py-5 text-right text-sm">{formatCurrency(totalTarget)}</td>
                           <td className="px-4 py-5 text-right text-sm text-emerald-300">{formatCurrency(totalRealisasi)}</td>
+                          <td className="px-4 py-5 text-right text-sm text-rose-300">{formatCurrency(totalKekurangan)}</td>
                           <td className="px-4 py-5 text-center">
-                            <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-bold border ${totalTarget - totalRealisasi <= 0
+                            <span className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[10px] font-bold border ${totalTarget - totalRealisasi <= 0
                               ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
                               : "bg-rose-500/20 text-rose-300 border-rose-500/30"
                               }`}>
