@@ -41,7 +41,9 @@ import {
   FileCheck,
   Camera,
   Clock,
+  BarChart3,
 } from "lucide-react";
+import EventStatistikBatang from "@/app/_components/EventStatistikBatang";
 import * as XLSX from "xlsx";
 import { Input } from "@/components/ui/input";
 
@@ -227,6 +229,127 @@ const formatRoleBadge = (roleStr) => {
   );
 };
 
+// --- Avatar Peserta dengan Foto Profil Asli & Fallback Inisial ---
+const PesertaAvatar = ({ item, getImageSrc, onPreview }) => {
+  const [sourceIndex, setSourceIndex] = useState(0);
+  const [loaded, setLoaded] = useState(false);
+  const npa = item?.npa || item?.npaPgri;
+
+  // Bangun daftar candidate sources foto berdasarkan prioritas:
+  // 1. Swafoto Kehadiran jika peserta sudah absen
+  // 2. Foto Profil Anggota via API (/api/foto-anggota/{npa})
+  // 3. Foto KTA (file/base64 yang diunggah saat daftar event) jika bukan PDF
+  const candidateSources = useMemo(() => {
+    const list = [];
+
+    // 1. Foto Kehadiran
+    const fotoKehadiran = getFotoKehadiranSrc(item, getImageSrc);
+    if (fotoKehadiran) {
+      list.push({ src: fotoKehadiran, type: "kehadiran" });
+    } else if (item?.fileKehadiranUrl) {
+      const url = item.fileKehadiranUrl.startsWith("http")
+        ? item.fileKehadiranUrl
+        : `${BASE_URL}${item.fileKehadiranUrl}`;
+      list.push({ src: url, type: "kehadiran" });
+    }
+
+    // 2. Foto Profil Anggota berdasarkan NPA
+    if (npa) {
+      list.push({
+        src: `${BASE_URL}/api/foto-anggota/${encodeURIComponent(npa)}`,
+        type: "anggota",
+      });
+    }
+
+    // 3. Foto KTA yang diunggah saat pendaftaran event (selama bukan file PDF)
+    const isPdfKta =
+      (item?.fileKtaName && item.fileKtaName.toLowerCase().endsWith(".pdf")) ||
+      (item?.fileKtaUrl && item.fileKtaUrl.toLowerCase().includes(".pdf"));
+
+    if (!isPdfKta) {
+      if (item?.foto) {
+        const src = getImageSrc(item.foto);
+        if (src) list.push({ src, type: "kta" });
+      }
+      if (item?.fileKtaUrl) {
+        const url = item.fileKtaUrl.startsWith("http")
+          ? item.fileKtaUrl
+          : `${BASE_URL}${item.fileKtaUrl}`;
+        list.push({ src: url, type: "kta" });
+      }
+    }
+
+    return list;
+  }, [item, npa, getImageSrc]);
+
+  // Reset state jika data item / npa berubah
+  useEffect(() => {
+    setSourceIndex(0);
+    setLoaded(false);
+  }, [item?.id, npa]);
+
+  const currentCandidate = candidateSources[sourceIndex];
+
+  const handleImgError = () => {
+    setLoaded(false);
+    setSourceIndex((prev) => prev + 1);
+  };
+
+  const handleImgLoad = (e) => {
+    if (e.currentTarget.naturalWidth === 0 || e.currentTarget.naturalHeight === 0) {
+      handleImgError();
+    } else {
+      setLoaded(true);
+    }
+  };
+
+  // Jika semua candidate sudah dicoba dan tidak ada yang berhasil, tampilkan avatar inisial
+  if (!currentCandidate || sourceIndex >= candidateSources.length) {
+    return (
+      <div
+        className="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-500 to-emerald-400 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-xs select-none"
+        title={item.namaLengkap || "Peserta"}
+      >
+        {item.namaLengkap?.charAt(0)?.toUpperCase() || "P"}
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() =>
+        onPreview &&
+        onPreview({
+          src: currentCandidate.src,
+          imageSrc: currentCandidate.src,
+          title: `Foto ${item.namaLengkap || "Peserta"}`,
+          peserta: item,
+        })
+      }
+      className="w-10 h-10 rounded-xl overflow-hidden border border-slate-200/90 shadow-xs shrink-0 hover:ring-2 hover:ring-teal-400 transition-all cursor-pointer relative bg-slate-100 flex items-center justify-center group/avatar"
+      title="Klik untuk melihat foto peserta"
+    >
+      {/* Background inisial sementara foto dimuat, cegah kotak putih kosong */}
+      <span className="absolute inset-0 flex items-center justify-center font-bold text-xs text-teal-600 select-none bg-teal-50">
+        {item.namaLengkap?.charAt(0)?.toUpperCase() || "P"}
+      </span>
+
+      <img
+        key={currentCandidate.src}
+        src={currentCandidate.src}
+        alt={item.namaLengkap || "Peserta"}
+        onError={handleImgError}
+        onLoad={handleImgLoad}
+        className={`w-full h-full object-cover object-center relative z-10 transition-opacity duration-200 ${
+          loaded ? "opacity-100" : "opacity-0"
+        } group-hover/avatar:scale-105 transition-transform`}
+        loading="lazy"
+      />
+    </button>
+  );
+};
+
 // --- Modal Detail Peserta ---
 const PesertaDetailModal = ({
   peserta,
@@ -237,13 +360,25 @@ const PesertaDetailModal = ({
   handleDownloadFile,
   cetakPdfKta,
 }) => {
+  const [modalImgIndex, setModalImgIndex] = useState(0);
   if (!peserta) return null;
+
+  const npaVal = peserta.npa || peserta.npaPgri;
 
   const ktaSrc = peserta.foto
     ? getImageSrc(peserta.foto)
     : peserta.fileKtaUrl
       ? `${BASE_URL}${peserta.fileKtaUrl}`
       : null;
+
+  const candidateModalPhotos = [
+    getFotoKehadiranSrc(peserta, getImageSrc),
+    peserta.fileKehadiranUrl ? `${BASE_URL}${peserta.fileKehadiranUrl}` : null,
+    npaVal ? `${BASE_URL}/api/foto-anggota/${encodeURIComponent(npaVal)}` : null,
+    ktaSrc,
+  ].filter(Boolean);
+
+  const activePhotoSrc = candidateModalPhotos[modalImgIndex];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -274,12 +409,13 @@ const PesertaDetailModal = ({
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 p-4 rounded-2xl bg-teal-50/50 border border-teal-100">
             {/* Avatar / Foto */}
             <div className="relative group shrink-0">
-              {ktaSrc ? (
-                <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-teal-300 shadow-md">
+              {activePhotoSrc ? (
+                <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-teal-300 shadow-md bg-white flex items-center justify-center">
                   <img
-                    src={ktaSrc}
+                    src={activePhotoSrc}
                     alt={peserta.namaLengkap || "Foto"}
-                    className="w-full h-full object-cover"
+                    onError={() => setModalImgIndex((prev) => prev + 1)}
+                    className="w-full h-full object-cover object-center"
                   />
                 </div>
               ) : (
@@ -504,7 +640,7 @@ const PesertaDetailModal = ({
             </div>
           )}
 
-          {/* Download & Cetak PDF KTA */}
+          {/* Download & Cetak Bukti Pendaftaran Event */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between p-4 rounded-2xl bg-teal-50 border border-teal-200 gap-3">
             <div className="flex items-center gap-2.5">
               <div className="p-2 bg-teal-600 text-white rounded-xl">
@@ -512,10 +648,10 @@ const PesertaDetailModal = ({
               </div>
               <div>
                 <span className="text-xs font-bold text-teal-900 block">
-                  Dokumen Kartu Tanda Anggota (KTA)
+                  Bukti Pendaftaran Event
                 </span>
                 <span className="text-[11px] text-teal-700">
-                  {ktaSrc ? "Foto KTA terlampir dan siap dicetak ke PDF" : "Bukti kepesertaan siap dicetak ke PDF"}
+                  Tanda bukti pendaftaran resmi dan identitas peserta event
                 </span>
               </div>
             </div>
@@ -524,22 +660,22 @@ const PesertaDetailModal = ({
               {ktaSrc && (
                 <a
                   href={ktaSrc}
-                  download={peserta.fileKtaName || `KTA-${peserta.namaLengkap || "peserta"}.jpg`}
+                  download={peserta.fileKtaName || `Berkas-${peserta.namaLengkap || "peserta"}.jpg`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-1 text-xs font-semibold px-3 py-2 bg-white text-teal-700 border border-teal-200 rounded-xl hover:bg-teal-100 transition shadow-sm"
                 >
                   <Download className="w-3.5 h-3.5" />
-                  Foto Asli
+                  Berkas Pendaftaran
                 </a>
               )}
               <button
                 type="button"
                 onClick={() => cetakPdfKta(peserta)}
-                className="inline-flex items-center justify-center gap-1.5 text-xs font-bold px-4 py-2 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white rounded-xl shadow-sm hover:shadow transition"
+                className="inline-flex items-center justify-center gap-1.5 text-xs font-bold px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white rounded-xl shadow-sm hover:shadow transition"
               >
                 <Printer className="w-4 h-4" />
-                Cetak PDF KTA
+                Cetak Bukti Pendaftaran (PDF)
               </button>
             </div>
           </div>
@@ -550,10 +686,10 @@ const PesertaDetailModal = ({
           <button
             type="button"
             onClick={() => cetakPdfKta(peserta)}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-3 py-1.5 rounded-lg transition"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-teal-700 hover:text-teal-800 hover:bg-teal-50 px-3.5 py-2 rounded-xl border border-teal-200 transition"
           >
-            <Printer className="w-3.5 h-3.5" />
-            Cetak KTA (PDF)
+            <Printer className="w-4 h-4 text-teal-600" />
+            Cetak Bukti Pendaftaran (PDF)
           </button>
           <button
             onClick={onClose}
@@ -608,10 +744,10 @@ const ImageLightboxModal = ({ imageSrc, title, peserta, onClose, cetakPdfKta }) 
               <button
                 type="button"
                 onClick={() => cetakPdfKta(peserta)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white text-xs font-semibold rounded-xl transition shadow-sm"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-xs font-semibold rounded-xl transition shadow-sm"
               >
                 <Printer className="w-3.5 h-3.5" />
-                Cetak PDF KTA
+                Cetak Bukti Pendaftaran
               </button>
             )}
           </div>
@@ -648,10 +784,11 @@ const Page = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(15);
 
-  // Modals
+  // Modals & Display Sections
   const [selectedPesertaDetail, setSelectedPesertaDetail] = useState(null);
   const [lightboxData, setLightboxData] = useState(null);
   const [showPdfDropdown, setShowPdfDropdown] = useState(false);
+  const [showStatistikBatang, setShowStatistikBatang] = useState(true);
 
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -856,8 +993,8 @@ const Page = () => {
     return `62${digits.startsWith("0") ? digits.slice(1) : digits}`;
   };
 
-  // --- Fungsi Cetak PDF KTA per Peserta ---
-  const cetakPdfKta = async (item) => {
+  // --- Fungsi Cetak Bukti Pendaftaran Event (PDF) ---
+  const cetakBuktiPendaftaranEvent = async (item) => {
     if (!item) return;
     try {
       setLoading(true);
@@ -891,12 +1028,17 @@ const Page = () => {
 
       doc.setFontSize(11);
       doc.setTextColor(...primaryColor);
-      doc.text("DOKUMEN KARTU TANDA ANGGOTA (KTA) & BUKTI PESERTA", 105, 23, { align: "center" });
+      doc.text("BUKTI PENDAFTARAN RESMI PESERTA EVENT", 105, 23, { align: "center" });
 
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8.5);
       doc.setTextColor(...grayColor);
-      doc.text("Sistem Informasi Manajemen Event Sanduka - PGRI", 105, 28, { align: "center" });
+      doc.text(
+        "Sistem Informasi Manajemen Event Sanduka - PGRI Kabupaten Jepara",
+        105,
+        28,
+        { align: "center" }
+      );
 
       // Divider line
       doc.setDrawColor(203, 213, 225);
@@ -906,35 +1048,59 @@ const Page = () => {
       // 3. Info Event Badge
       doc.setFillColor(240, 253, 250);
       doc.setDrawColor(204, 251, 241);
-      doc.roundedRect(15, 36, 180, 14, 2, 2, "FD");
+      doc.roundedRect(15, 36, 180, 20, 2, 2, "FD");
 
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(9);
+      doc.setFontSize(8.5);
       doc.setTextColor(...primaryColor);
-      doc.text("EVENT TERDAFTAR:", 20, 42);
+      doc.text("EVENT / KEGIATAN:", 20, 42);
 
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(9.5);
+      doc.setFontSize(10.5);
       doc.setTextColor(...darkColor);
-      doc.text(String(item.namaEvent || "-").toUpperCase(), 58, 42);
+      const eventName = String(item.namaEvent || "-").toUpperCase();
+      doc.text(eventName.length > 40 ? eventName.slice(0, 40) + "..." : eventName, 20, 48);
 
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
       doc.setTextColor(...grayColor);
-      doc.text(`Tgl Pendaftaran: ${formatTanggalDaftar(item.tanggalDaftar)}`, 20, 47);
+      doc.text(`Tgl Pendaftaran: ${formatTanggalDaftar(item.tanggalDaftar)}`, 20, 53);
+
+      // Kolom kanan Info Event: No Registrasi & Status Presensi
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8.5);
+      doc.setTextColor(...grayColor);
+      doc.text("No. Registrasi", 120, 42);
+      doc.text(":", 145, 42);
+      doc.setTextColor(...darkColor);
+      doc.text(`REG-EVT-${item.id || "001"}`, 148, 42);
+
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(...grayColor);
+      doc.text("Status", 120, 48);
+      doc.text(":", 145, 48);
+      const isHadir = String(item.kehadiran || "").toUpperCase() === "HADIR";
+      doc.setFont("helvetica", "bold");
+      if (isHadir) {
+        doc.setTextColor(16, 185, 129); // Emerald
+        doc.text("HADIR (TERVERIFIKASI)", 148, 48);
+      } else {
+        doc.setTextColor(...primaryColor);
+        doc.text("TERDAFTAR RESMI", 148, 48);
+      }
 
       // 4. Data Biodata Peserta (Box Form)
       doc.setFillColor(248, 250, 252);
       doc.setDrawColor(226, 232, 240);
-      doc.roundedRect(15, 54, 180, 52, 2, 2, "FD");
+      doc.roundedRect(15, 60, 180, 50, 2, 2, "FD");
 
       // Header Biodata
       doc.setFillColor(...primaryColor);
-      doc.roundedRect(15, 54, 180, 8, 2, 2, "F");
+      doc.roundedRect(15, 60, 180, 7.5, 2, 2, "F");
       doc.setFont("helvetica", "bold");
       doc.setFontSize(8.5);
       doc.setTextColor(255, 255, 255);
-      doc.text("BIODATA PESERTA", 20, 59.5);
+      doc.text("BIODATA PESERTA", 20, 65);
 
       // Fields Grid
       doc.setFontSize(8.5);
@@ -949,7 +1115,7 @@ const Page = () => {
         ["Nomor Handphone", item.nomorHp || "-"],
       ];
 
-      let rowY = 69;
+      let rowY = 74;
       leftLabels.forEach(([label, val]) => {
         doc.setFont("helvetica", "normal");
         doc.setTextColor(...grayColor);
@@ -958,10 +1124,10 @@ const Page = () => {
         doc.setFont("helvetica", "bold");
         doc.setTextColor(...darkColor);
         doc.text(String(val), 52, rowY);
-        rowY += 9;
+        rowY += 8.5;
       });
 
-      rowY = 69;
+      rowY = 74;
       rightLabels.forEach(([label, val]) => {
         doc.setFont("helvetica", "normal");
         doc.setTextColor(...grayColor);
@@ -972,42 +1138,46 @@ const Page = () => {
         const truncatedVal =
           String(val).length > 25 ? String(val).slice(0, 25) + "..." : String(val);
         doc.text(truncatedVal, 146, rowY);
-        rowY += 9;
+        rowY += 8.5;
       });
 
       if (item.jabatan) {
         doc.setFont("helvetica", "normal");
         doc.setTextColor(...grayColor);
-        doc.text("Keterangan", 20, 96);
-        doc.text(":", 48, 96);
+        doc.text("Keterangan / Karya", 20, 101);
+        doc.text(":", 48, 101);
         doc.setFont("helvetica", "normal");
         doc.setTextColor(...darkColor);
         const ketText =
           String(item.jabatan).length > 70
             ? String(item.jabatan).slice(0, 70) + "..."
             : String(item.jabatan);
-        doc.text(ketText, 52, 96);
+        doc.text(ketText, 52, 101);
       }
 
-      // 5. Box Lampiran Foto KTA
-      const ktaBoxY = 110;
-      const ktaBoxHeight = 125;
+      // 5. Box Lampiran Dokumen / Identitas Pendaftar
+      const ktaBoxY = 114;
+      const ktaBoxHeight = 120;
       doc.setFillColor(255, 255, 255);
       doc.setDrawColor(226, 232, 240);
       doc.roundedRect(15, ktaBoxY, 180, ktaBoxHeight, 2, 2, "FD");
 
       doc.setFillColor(241, 245, 249);
-      doc.rect(15, ktaBoxY, 180, 8, "F");
+      doc.rect(15, ktaBoxY, 180, 7.5, "F");
       doc.setFont("helvetica", "bold");
       doc.setFontSize(8.5);
       doc.setTextColor(...darkColor);
-      doc.text("LAMPIRAN FOTO / SCAN KARTU TANDA ANGGOTA (KTA)", 20, ktaBoxY + 5.5);
+      doc.text("LAMPIRAN DOKUMEN / IDENTITAS PENDAFTARAN", 20, ktaBoxY + 5.2);
 
       const rawSrc = item.foto
         ? getImageSrc(item.foto)
         : item.fileKtaUrl
           ? `${BASE_URL}${item.fileKtaUrl}`
-          : null;
+          : item.fileKehadiranUrl
+            ? `${BASE_URL}${item.fileKehadiranUrl}`
+            : item.npa
+              ? `${BASE_URL}/api/foto-anggota/${encodeURIComponent(item.npa)}`
+              : null;
 
       let imageLoaded = false;
       if (rawSrc) {
@@ -1036,7 +1206,7 @@ const Page = () => {
             });
 
             const maxW = 150;
-            const maxH = 105;
+            const maxH = 100;
             const ratio = Math.min(maxW / dims.w, maxH / dims.h);
             const renderW = dims.w * ratio;
             const renderH = dims.h * ratio;
@@ -1051,7 +1221,7 @@ const Page = () => {
             imageLoaded = true;
           }
         } catch (err) {
-          console.error("Gagal menempelkan foto KTA ke PDF:", err);
+          console.error("Gagal menempelkan foto ke Bukti Pendaftaran:", err);
         }
       }
 
@@ -1060,9 +1230,9 @@ const Page = () => {
         doc.setFontSize(9);
         doc.setTextColor(...grayColor);
         doc.text(
-          "Foto / Scan Kartu Tanda Anggota (KTA) tidak terlampir.",
+          "Dokumen identitas pendaftar terverifikasi secara digital dalam sistem.",
           105,
-          ktaBoxY + 60,
+          ktaBoxY + 58,
           { align: "center" }
         );
       }
@@ -1083,38 +1253,46 @@ const Page = () => {
       doc.setFontSize(7.5);
       doc.setTextColor(...grayColor);
       doc.text(
-        `* Dokumen ini sah dan diterbitkan otomatis oleh Sistem Sanduka PGRI pada ${dateStr} pukul ${timeStr} WIB.`,
+        `* Lembar ini merupakan Tanda Bukti Pendaftaran Resmi kegiatan PGRI Sanduka yang sah dan diterbitkan pada ${dateStr} pukul ${timeStr} WIB.`,
         15,
-        244
+        242
+      );
+      doc.text(
+        "* Harap membawa atau menunjukkan bukti pendaftaran ini saat registrasi ulang / presensi di lokasi kegiatan.",
+        15,
+        246
       );
 
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8.5);
       doc.setTextColor(...darkColor);
-      doc.text(`Dicetak pada: ${dateStr}`, 145, 253);
-      doc.text("Panitia Pelaksana Event,", 145, 258);
+      doc.text(`Dicetak pada: ${dateStr}`, 145, 255);
+      doc.text("Panitia Pelaksana Event,", 145, 260);
 
       doc.setFont("helvetica", "bold");
-      doc.text("Seksi Kepesertaan Sanduka", 145, 278);
+      doc.text("Seksi Kepesertaan Sanduka", 145, 280);
 
-      const safeName = (item.namaLengkap || "Peserta").replace(/[^a-zA-Z0-9]/g, "_");
-      const safeNpa = (item.npa || "KTA").replace(/[^a-zA-Z0-9]/g, "_");
-      doc.save(`KTA_${safeName}_${safeNpa}.pdf`);
+      const safeEvent = String(item.namaEvent || "EVENT").replace(/[^a-zA-Z0-9]/g, "_");
+      const safeName = String(item.namaLengkap || "Peserta").replace(/[^a-zA-Z0-9]/g, "_");
+      doc.save(`BUKTI_PENDAFTARAN_${safeEvent}_${safeName}.pdf`);
 
       setNotification({
         type: "success",
-        message: `PDF KTA untuk ${item.namaLengkap || "peserta"} berhasil diunduh.`,
+        message: `Bukti pendaftaran event untuk ${item.namaLengkap || "peserta"} berhasil diunduh.`,
       });
     } catch (err) {
-      console.error("Error generating KTA PDF:", err);
+      console.error("Error generating Bukti Pendaftaran PDF:", err);
       setNotification({
         type: "error",
-        message: "Gagal membuat PDF KTA: " + (err?.message || "Kesalahan"),
+        message: "Gagal membuat Bukti Pendaftaran: " + (err?.message || "Kesalahan"),
       });
     } finally {
       setLoading(false);
     }
   };
+
+  // Alias untuk kompatibilitas
+  const cetakPdfKta = cetakBuktiPendaftaranEvent;
 
   // --- Fungsi Cetak PDF Rekapitulasi Peserta ---
   const handleDownloadPdfRekap = async () => {
@@ -1958,6 +2136,38 @@ const Page = () => {
               </div>
             </div>
 
+            {/* Tombol Aksi Cepat: Statistik Batang */}
+            {role !== null && role !== "USER" && (
+              <div className="flex flex-wrap items-center gap-3 mb-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowStatistikBatang((prev) => {
+                      const nextState = !prev;
+                      if (nextState) {
+                        setTimeout(() => {
+                          document
+                            .getElementById("statistikBatangSection")
+                            ?.scrollIntoView({ behavior: "smooth" });
+                        }, 120);
+                      }
+                      return nextState;
+                    });
+                  }}
+                  className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all shadow-xs cursor-pointer ${
+                    showStatistikBatang
+                      ? "bg-teal-600 text-white shadow-teal-500/25 ring-2 ring-teal-500/20"
+                      : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
+                  }`}
+                >
+                  <BarChart3 className="w-4 h-4" />
+                  <span>
+                    {showStatistikBatang ? "Tutup Statistik Batang" : "Lihat Statistik Model Batang"}
+                  </span>
+                </button>
+              </div>
+            )}
+
             {/* SELEKTOR EVENT (Admin / Staff) */}
             {role !== null && role !== "USER" && eventOptions.length > 0 && (
               <div className="mb-6 bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200/70">
@@ -2507,12 +2717,14 @@ const Page = () => {
                                 {overallIndex}
                               </td>
 
-                              {/* 2. Peserta (Nama, NPA, JK) */}
+                              {/* 2. Peserta (Nama, NPA, JK, Foto) */}
                               <td className="py-3.5 px-4">
                                 <div className="flex items-center gap-3">
-                                  <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-500 to-emerald-400 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-sm">
-                                    {item.namaLengkap?.charAt(0)?.toUpperCase() || "P"}
-                                  </div>
+                                  <PesertaAvatar
+                                    item={item}
+                                    getImageSrc={getImageSrc}
+                                    onPreview={setLightboxData}
+                                  />
                                   <div className="min-w-0">
                                     <span className="font-bold text-slate-800 block truncate group-hover:text-teal-700 transition-colors">
                                       {item.namaLengkap || "-"}
@@ -2793,7 +3005,7 @@ const Page = () => {
                                   <button
                                     type="button"
                                     onClick={() => setSelectedPesertaDetail(item)}
-                                    title="Lihat Detail Peserta & Cetak KTA"
+                                    title="Lihat Detail & Cetak Bukti Pendaftaran"
                                     className="p-1.5 rounded-lg text-slate-500 hover:text-teal-700 hover:bg-teal-50 transition"
                                   >
                                     <Eye className="w-4 h-4" />
@@ -2891,6 +3103,20 @@ const Page = () => {
                 </>
               )}
             </div>
+
+            {/* SECTION: STATISTIK KEHADIRAN MODEL BATANG (POSISI PALING BAWAH) */}
+            {role !== null && role !== "USER" && showStatistikBatang && (
+              <div id="statistikBatangSection" className="mt-8 mb-6 animate-in fade-in duration-300">
+                <EventStatistikBatang
+                  participants={pesertaList}
+                  cabangList={cabangOptions}
+                  selectedEventName={selectedEvent}
+                  title={`Statistik Kehadiran Model Batang ${
+                    selectedEvent ? `— ${selectedEvent}` : ""
+                  }`}
+                />
+              </div>
+            )}
 
             {/* MODAL KONFIRMASI HAPUS */}
             {showDeleteModal && (

@@ -12,6 +12,8 @@ import {
   FaCamera, FaMapMarkerAlt, FaSyncAlt, FaSpinner,
   FaExternalLinkAlt, FaInfoCircle, FaUserCheck, FaEdit, FaUser
 } from "react-icons/fa";
+import { BarChart3 } from "lucide-react";
+import EventStatistikBatang from "./EventStatistikBatang";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -108,6 +110,7 @@ const GaleriKegiatan = () => {
   const [userData, setUserData] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [eventParticipants, setEventParticipants] = useState([]);
+  const [showDashboardStats, setShowDashboardStats] = useState(false);
   const [notification, setNotification] = useState(null);
   const [jabatan, setJabatan] = useState("");
   const [jabatanError, setJabatanError] = useState("");
@@ -1593,6 +1596,17 @@ const GaleriKegiatan = () => {
                             </div>
                           )}
 
+                          {/* Keterangan Form Tanda Bintang Wajib Isi */}
+                          <div className="mb-3.5 p-3 bg-amber-50/90 border border-amber-200/90 rounded-xl text-xs text-amber-900 flex items-start gap-2.5 shadow-xs">
+                            <span className="text-red-500 font-extrabold text-base leading-none mt-0.5">*</span>
+                            <div>
+                              <span className="font-bold">Ketentuan Pengisian Form:</span>
+                              <p className="text-[11px] text-amber-700 mt-0.5 leading-relaxed">
+                                Kolom yang bertanda bintang merah (<strong className="text-red-600">*</strong>) merupakan form yang wajib diisi. Sebagian form tanpa tanda bintang bersifat opsional.
+                              </p>
+                            </div>
+                          </div>
+
                           {/* Foto KTA */}
                           <div className="flex flex-col items-center justify-center mb-4">
                             <div className="relative flex items-center justify-center w-20 h-20 rounded-full border-2 border-gray-300 shadow-md overflow-hidden">
@@ -2607,6 +2621,37 @@ const GaleriKegiatan = () => {
 
         <div className="relative">
           <GallerySwiper items={eventGalleries} title="Event" />
+        </div>
+
+        {/* ========================================================
+            STATISTIK MODEL BATANG DI DASHBOARD UTAMA
+        ========================================================= */}
+        <div className="container relative mx-auto px-4 md:px-12 lg:px-24 mt-8">
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={() => setShowDashboardStats((prev) => !prev)}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-bold bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 shadow-sm transition-all cursor-pointer"
+            >
+              <BarChart3 className="w-4 h-4 text-teal-600" />
+              <span>
+                {showDashboardStats
+                  ? "Sembunyikan Grafik Statistik Kehadiran"
+                  : "Lihat Grafik Statistik Kehadiran Per Cabang"}
+              </span>
+            </button>
+          </div>
+
+          {showDashboardStats && (
+            <div className="mt-5 animate-in fade-in duration-300">
+              <EventStatistikBatang
+                participants={eventParticipants}
+                cabangList={[]}
+                selectedEventName={""}
+                title="Statistik Kehadiran Peserta Per Cabang (Dashboard Utama)"
+              />
+            </div>
+          )}
         </div>
       </div>
 
