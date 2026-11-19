@@ -789,6 +789,7 @@ const Page = () => {
   // Filter States
   const [cabangOptions, setCabangOptions] = useState([]);
   const [selectedCabang, setSelectedCabang] = useState("");
+  const [accountCabang, setAccountCabang] = useState("");
   const [showDropdownCabang, setShowDropdownCabang] = useState(false);
   const [queryCabang, setQueryCabang] = useState("");
   const [eventOptions, setEventOptions] = useState([]);
@@ -1904,8 +1905,12 @@ const Page = () => {
   };
 
   useEffect(() => {
-    dataPeserta(selectedEvent, selectedCabang);
-  }, [selectedEvent, selectedCabang]);
+    if (role === null) return;
+    const cabangFilter = role !== "SUPERADMIN" && role !== "USER"
+      ? accountCabang
+      : selectedCabang;
+    dataPeserta(selectedEvent, cabangFilter);
+  }, [selectedEvent, selectedCabang, role, accountCabang]);
 
   useEffect(() => {
     fetchCabang();
@@ -1934,6 +1939,11 @@ const Page = () => {
   useEffect(() => {
     const userRole = sessionStorage.getItem("role") || "";
     setRole(userRole);
+    const userCabang = sessionStorage.getItem("cabang") || "";
+    setAccountCabang(userCabang);
+    if (userRole !== "SUPERADMIN" && userRole !== "USER") {
+      setSelectedCabang(userCabang);
+    }
     if (userRole === "USER") {
       const nama = sessionStorage.getItem("nama") || "";
       setSearchText(nama.split(",")[0].trim());
@@ -1961,6 +1971,7 @@ const Page = () => {
   };
 
   const isSuperAdmin = role === "SUPERADMIN";
+  const canUseEventDisplay = role !== null && role !== "USER";
 
   const filteredEventOptions = useMemo(() => {
     return eventOptions.filter((e) => {
@@ -2229,7 +2240,7 @@ const Page = () => {
             </div>
 
             {/* Tombol Aksi Cepat: Statistik Batang */}
-            {role !== null && role !== "USER" && (
+            {canUseEventDisplay && (
               <div className="flex flex-wrap items-center gap-3 mb-6">
                 <button
                   type="button"
@@ -2257,7 +2268,7 @@ const Page = () => {
                     {showStatistikBatang ? "Tutup Statistik Batang" : "Lihat Statistik Model Batang"}
                   </span>
                 </button>
-                {isSuperAdmin && (
+                {canUseEventDisplay && (
                   <button
                     type="button"
                     onClick={() => {
@@ -3231,7 +3242,7 @@ const Page = () => {
               </div>
             )}
 
-            {showKehadiranSlideshow && isSuperAdmin && pesertaHadirDenganFoto.length > 0 && (
+            {showKehadiranSlideshow && canUseEventDisplay && pesertaHadirDenganFoto.length > 0 && (
               <div className="fixed inset-0 z-[100] bg-slate-950 text-white flex flex-col" role="dialog" aria-modal="true" aria-label="Slideshow foto kehadiran">
                 {(() => {
                   const peserta = pesertaHadirDenganFoto[slideshowIndex] || pesertaHadirDenganFoto[0];
