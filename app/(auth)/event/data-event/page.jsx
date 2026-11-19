@@ -42,6 +42,8 @@ import {
   Camera,
   Clock,
   BarChart3,
+  Play,
+  Pause,
 } from "lucide-react";
 import EventStatistikBatang from "@/app/_components/EventStatistikBatang";
 import * as XLSX from "xlsx";
@@ -187,6 +189,23 @@ const getFotoKehadiranSrc = (item, getImageSrc) => {
       return `${BASE_URL}${raw}`;
     }
     return getImageSrc ? getImageSrc(raw) : `data:image/jpeg;base64,${raw}`;
+  }
+  // Response ringkasan backend hanya menyertakan URL foto, sedangkan
+  // response detail dapat menyertakan byte[] fotoKehadiran.
+  if (raw instanceof Uint8Array || ArrayBuffer.isView(raw)) {
+    const bytes = Array.from(raw);
+    let binary = "";
+    for (let i = 0; i < bytes.length; i += 0x8000) {
+      binary += String.fromCharCode(...bytes.slice(i, i + 0x8000));
+    }
+    return `data:image/jpeg;base64,${window.btoa(binary)}`;
+  }
+  if (Array.isArray(raw) && raw.length) {
+    let binary = "";
+    for (let i = 0; i < raw.length; i += 0x8000) {
+      binary += String.fromCharCode(...raw.slice(i, i + 0x8000));
+    }
+    return `data:image/jpeg;base64,${window.btoa(binary)}`;
   }
   return null;
 };
@@ -789,6 +808,10 @@ const Page = () => {
   const [lightboxData, setLightboxData] = useState(null);
   const [showPdfDropdown, setShowPdfDropdown] = useState(false);
   const [showStatistikBatang, setShowStatistikBatang] = useState(true);
+  const [showKehadiranSlideshow, setShowKehadiranSlideshow] = useState(false);
+  const [slideshowIndex, setSlideshowIndex] = useState(0);
+  const [slideshowPlaying, setSlideshowPlaying] = useState(true);
+  const [slideshowInterval, setSlideshowInterval] = useState(5);
 
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -1951,6 +1974,75 @@ const Page = () => {
     });
   }, [eventOptions, eventStatusFilter, eventSearchQuery]);
 
+  const pesertaHadirDenganFoto = useMemo(
+    () =>
+      filteredPesertaList
+        .filter((item) => {
+          const hadir =
+            item.kehadiran === true ||
+            item.isHadir === true ||
+            String(item.kehadiran || item.statusKehadiran || "").trim().toUpperCase() === "HADIR" ||
+            Boolean(item.waktuKehadiran || item.jamKehadiran);
+          return hadir;
+        })
+        .map((item) => {
+          const fotoKehadiran = getFotoKehadiranSrc(item, getImageSrc) ||
+            (item.fileKehadiranUrl
+              ? (item.fileKehadiranUrl.startsWith("http")
+                  ? item.fileKehadiranUrl
+                  : `${BASE_URL}${item.fileKehadiranUrl}`)
+              : null);
+          const isPdfKta =
+            (item.fileKtaName && item.fileKtaName.toLowerCase().endsWith(".pdf")) ||
+            (item.fileKtaUrl && item.fileKtaUrl.toLowerCase().includes(".pdf"));
+          const fotoKta = !isPdfKta
+            ? (item.foto
+                ? getImageSrc(item.foto)
+                : item.fileKtaUrl
+                  ? (item.fileKtaUrl.startsWith("http") ? item.fileKtaUrl : `${BASE_URL}${item.fileKtaUrl}`)
+                  : null)
+            : null;
+
+          return {
+            ...item,
+            slideshowFoto: fotoKehadiran || fotoKta ||
+              (item.npa || item.npaPgri
+                ? `${BASE_URL}/api/foto-anggota/${encodeURIComponent(item.npa || item.npaPgri)}`
+                : null),
+            slideshowFotoType: fotoKehadiran ? "Foto Kehadiran" : fotoKta ? "Foto KTA" : "Foto Profil",
+          };
+        })
+        .filter((item) => item.slideshowFoto),
+    [filteredPesertaList]
+  );
+
+  useEffect(() => {
+    setSlideshowIndex(0);
+  }, [selectedEvent, selectedCabang, selectedTahunDaftar, searchText]);
+
+  useEffect(() => {
+    if (!showKehadiranSlideshow || !slideshowPlaying || pesertaHadirDenganFoto.length < 2) return;
+    const timer = window.setInterval(() => {
+      setSlideshowIndex((index) => (index + 1) % pesertaHadirDenganFoto.length);
+    }, slideshowInterval * 1000);
+    return () => window.clearInterval(timer);
+  }, [showKehadiranSlideshow, slideshowPlaying, slideshowInterval, pesertaHadirDenganFoto.length]);
+
+  useEffect(() => {
+    if (!showKehadiranSlideshow) return;
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setShowKehadiranSlideshow(false);
+      if (event.key === "ArrowRight") {
+        setSlideshowIndex((index) => (index + 1) % Math.max(pesertaHadirDenganFoto.length, 1));
+      }
+      if (event.key === "ArrowLeft") {
+        setSlideshowIndex((index) => (index - 1 + pesertaHadirDenganFoto.length) % Math.max(pesertaHadirDenganFoto.length, 1));
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showKehadiranSlideshow, pesertaHadirDenganFoto.length]);
+
   const activeEventsCount = useMemo(() => {
     return eventOptions.filter((e) => !e.isTerlewat).length;
   }, [eventOptions]);
@@ -2165,6 +2257,27 @@ const Page = () => {
                     {showStatistikBatang ? "Tutup Statistik Batang" : "Lihat Statistik Model Batang"}
                   </span>
                 </button>
+                {isSuperAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!pesertaHadirDenganFoto.length) {
+                        setNotification({
+                          type: "error",
+                          message: "Belum ada peserta hadir dengan foto kehadiran pada filter yang dipilih.",
+                        });
+                        return;
+                      }
+                      setSlideshowIndex(0);
+                      setSlideshowPlaying(true);
+                      setShowKehadiranSlideshow(true);
+                    }}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-sm"
+                  >
+                    <Play className="w-4 h-4" />
+                    Tampilkan Foto Hadir di Videotron ({pesertaHadirDenganFoto.length})
+                  </button>
+                )}
               </div>
             )}
 
@@ -3115,6 +3228,62 @@ const Page = () => {
                     selectedEvent ? `— ${selectedEvent}` : ""
                   }`}
                 />
+              </div>
+            )}
+
+            {showKehadiranSlideshow && isSuperAdmin && pesertaHadirDenganFoto.length > 0 && (
+              <div className="fixed inset-0 z-[100] bg-slate-950 text-white flex flex-col" role="dialog" aria-modal="true" aria-label="Slideshow foto kehadiran">
+                {(() => {
+                  const peserta = pesertaHadirDenganFoto[slideshowIndex] || pesertaHadirDenganFoto[0];
+                  return (
+                    <>
+                      <div className="absolute inset-0 overflow-hidden">
+                        <img src={peserta.slideshowFoto} alt="" className="w-full h-full object-cover opacity-20 blur-2xl scale-110" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-slate-950/90 via-slate-950/75 to-indigo-950/90" />
+                      </div>
+                      <div className="relative z-10 flex items-center justify-between gap-3 p-4 sm:p-6">
+                        <div className="min-w-0">
+                          <p className="text-xs uppercase tracking-[0.25em] text-teal-300 font-bold">Kehadiran Peserta</p>
+                          <h2 className="text-lg sm:text-2xl font-bold truncate">{selectedEvent || peserta.namaEvent || "Dokumentasi Event"}</h2>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <label className="hidden sm:flex items-center gap-2 text-xs text-slate-300">
+                            Durasi
+                            <select value={slideshowInterval} onChange={(event) => setSlideshowInterval(Number(event.target.value))} className="bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-white">
+                              {[3, 5, 8, 10, 15].map((seconds) => <option key={seconds} value={seconds}>{seconds} detik</option>)}
+                            </select>
+                          </label>
+                          <button type="button" onClick={() => setSlideshowPlaying((playing) => !playing)} className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20" aria-label={slideshowPlaying ? "Jeda slideshow" : "Putar slideshow"}>
+                            {slideshowPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                          </button>
+                          <button type="button" onClick={() => setShowKehadiranSlideshow(false)} className="p-2.5 rounded-xl bg-white/10 hover:bg-rose-500/80" aria-label="Tutup slideshow"><X className="w-5 h-5" /></button>
+                        </div>
+                      </div>
+                      <div className="relative z-10 flex-1 min-h-0 flex flex-col lg:flex-row items-center justify-center gap-6 px-4 pb-4 sm:px-10 sm:pb-8">
+                        <button type="button" onClick={() => setSlideshowIndex((slideshowIndex - 1 + pesertaHadirDenganFoto.length) % pesertaHadirDenganFoto.length)} className="hidden sm:flex p-3 rounded-full bg-white/10 hover:bg-white/20" aria-label="Foto sebelumnya"><ChevronLeft className="w-7 h-7" /></button>
+                    <div className="flex-1 min-h-0 w-full max-w-6xl flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-12">
+                          <div className="h-[55vh] lg:h-[72vh] w-full lg:w-3/5 flex items-center justify-center">
+                            <img key={peserta.id || slideshowIndex} src={peserta.slideshowFoto} alt={`Foto kehadiran ${peserta.namaLengkap || "peserta"}`} className="max-h-full max-w-full object-contain rounded-2xl shadow-2xl ring-1 ring-white/20 animate-in fade-in duration-500" />
+                          </div>
+                          <div className="w-full lg:w-2/5 text-center lg:text-left">
+                            <p className="text-sm font-semibold text-teal-300">PESERTA HADIR</p>
+                            <p className="text-xs text-slate-400 mt-1">{peserta.slideshowFotoType}</p>
+                            <h3 className="text-3xl sm:text-5xl font-black mt-2 leading-tight">{peserta.namaLengkap || "Peserta"}</h3>
+                            <p className="text-lg sm:text-2xl text-slate-300 mt-3">{peserta.cabang || peserta.unitKerja || ""}</p>
+                            {(peserta.waktuKehadiran || peserta.jamKehadiran) && <p className="text-base text-slate-300 mt-2">Waktu hadir: {peserta.waktuKehadiran || peserta.jamKehadiran}</p>}
+                            <p className="text-sm text-slate-400 mt-6">{slideshowIndex + 1} dari {pesertaHadirDenganFoto.length}</p>
+                          </div>
+                        </div>
+                        <button type="button" onClick={() => setSlideshowIndex((slideshowIndex + 1) % pesertaHadirDenganFoto.length)} className="hidden sm:flex p-3 rounded-full bg-white/10 hover:bg-white/20" aria-label="Foto berikutnya"><ChevronRight className="w-7 h-7" /></button>
+                      </div>
+                      <div className="relative z-10 flex items-center justify-center gap-4 pb-5 sm:hidden">
+                        <button type="button" onClick={() => setSlideshowIndex((slideshowIndex - 1 + pesertaHadirDenganFoto.length) % pesertaHadirDenganFoto.length)} className="p-2 rounded-xl bg-white/10"><ChevronLeft className="w-5 h-5" /></button>
+                        <span className="text-xs text-slate-300">{slideshowIndex + 1} / {pesertaHadirDenganFoto.length}</span>
+                        <button type="button" onClick={() => setSlideshowIndex((slideshowIndex + 1) % pesertaHadirDenganFoto.length)} className="p-2 rounded-xl bg-white/10"><ChevronRight className="w-5 h-5" /></button>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             )}
 
