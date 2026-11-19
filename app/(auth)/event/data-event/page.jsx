@@ -3108,7 +3108,7 @@ const Page = () => {
             {role !== null && role !== "USER" && showStatistikBatang && (
               <div id="statistikBatangSection" className="mt-8 mb-6 animate-in fade-in duration-300">
                 <EventStatistikBatang
-                  participants={pesertaList}
+                  participants={filteredPesertaList}
                   cabangList={cabangOptions}
                   selectedEventName={selectedEvent}
                   title={`Statistik Kehadiran Model Batang ${
