@@ -34,17 +34,24 @@ export default function EventStatistikBatang({
 }) {
   const [viewMode, setViewMode] = useState("vertical"); // "vertical" | "horizontal"
   const [filterMode, setFilterMode] = useState("all"); // "all" | "onlyHadir"
+  const [selectedEventFilter, setSelectedEventFilter] = useState("all");
+
+  const eventOptions = useMemo(() => {
+    const names = participants
+      .map((p) => String(p?.namaEvent || p?.event || "").trim())
+      .filter(Boolean);
+    return [...new Set(names)].sort((a, b) => a.localeCompare(b, "id"));
+  }, [participants]);
 
   // Filter peserta sesuai event jika ada selectedEventName
   const eventParticipants = useMemo(() => {
-    if (!selectedEventName || selectedEventName === "all" || selectedEventName === "Semua Event") {
-      return participants;
-    }
-    const target = selectedEventName.trim().toLowerCase();
-    return participants.filter(
-      (p) => (p.namaEvent || p.event || "").trim().toLowerCase() === target
-    );
-  }, [participants, selectedEventName]);
+    const targetEvent = selectedEventFilter === "all" ? selectedEventName : selectedEventFilter;
+    if (!targetEvent || targetEvent === "all" || targetEvent === "Semua Event") return participants;
+    const target = targetEvent.trim().toLowerCase();
+    return participants.filter((p) => (p.namaEvent || p.event || "").trim().toLowerCase() === target);
+  }, [participants, selectedEventName, selectedEventFilter]);
+
+  const activeEventName = selectedEventFilter === "all" ? selectedEventName : selectedEventFilter;
 
   // Agregasi data statistik per cabang
   const { stats, totalTerdaftar, totalHadir, topCabang, maxHadir } = useMemo(() => {
@@ -110,8 +117,8 @@ export default function EventStatistikBatang({
                 {title}
               </h3>
               <p className="text-xs text-slate-500">
-                {selectedEventName && selectedEventName !== "all"
-                  ? `Event: ${selectedEventName}`
+                {activeEventName && activeEventName !== "all"
+                  ? `Event: ${activeEventName}`
                   : "Akumulasi seluruh kegiatan event"}
               </p>
             </div>
@@ -157,6 +164,19 @@ export default function EventStatistikBatang({
             {filterMode === "onlyHadir" ? "✓ Hanya Cabang Hadir" : "Semua Cabang"}
           </button>
         </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-4">
+        <label htmlFor="statistik-event-filter" className="text-xs font-semibold text-slate-600">Filter statistik per event</label>
+        <select
+          id="statistik-event-filter"
+          value={selectedEventFilter}
+          onChange={(event) => setSelectedEventFilter(event.target.value)}
+          className="w-full sm:w-auto min-w-56 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+        >
+          <option value="all">Semua Event</option>
+          {eventOptions.map((eventName) => <option key={eventName} value={eventName}>{eventName}</option>)}
+        </select>
       </div>
 
       {/* Metric Cards Summary */}
