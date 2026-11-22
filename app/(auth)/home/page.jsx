@@ -990,16 +990,25 @@ export default function IconGrid() {
               },
             ]
           : role === "ADMIN"
-            ? icons.filter(
-                (item) =>
-                  item.label !== "Tour & Travel" &&
-                  item.label !== "Pengaturan" &&
-                  item.label !== "AI Knowledge" &&
-                  item.label !== "Event" &&
-                  item.label !== "Galeri" &&
-                  item.label !== "Eksport Foto" &&
-                  item.label !== "Keuangan",
-              )
+            ? icons
+                .filter(
+                  (item) =>
+                    item.label !== "Tour & Travel" &&
+                    item.label !== "Pengaturan" &&
+                    item.label !== "AI Knowledge" &&
+                    item.label !== "Event" &&
+                    item.label !== "Galeri" &&
+                    item.label !== "Eksport Foto" &&
+                    item.label !== "Keuangan",
+                )
+                .concat({
+                  icon: faCalendarDays,
+                  label: "Rekap Event",
+                  href: "/event/data-event",
+                  color: "text-emerald-600",
+                  bgHover: "hover:bg-emerald-100",
+                  iconColor: "text-emerald-700",
+                })
             : icons.filter((item) => item.label !== "Tour & Travel");
 
   return (
@@ -1128,7 +1137,7 @@ export default function IconGrid() {
             )}
 
             {!isMobile && (
-              <div className="px-4 mx-auto max-w-6xl -mt-10 mb-12">
+              <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] -mt-10 mb-12">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
                     <div className="flex justify-between items-center">
@@ -1220,7 +1229,7 @@ export default function IconGrid() {
             )}
           </div>
 
-          <div className="px-4 mx-auto max-w-6xl mb-12 -mt-10">
+          <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] mb-12 -mt-10">
             <div className="bg-white rounded-xl shadow-md p-6">
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 sm:gap-4">
                 {filteredIcons.map((item, index) => (
@@ -1256,7 +1265,7 @@ export default function IconGrid() {
             </div>
           </div>
 
-          <div className="px-4 mx-auto max-w-6xl mb-12 -mt-10">
+          <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] mb-12 -mt-10">
             <div className="bg-white rounded-xl p-6">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-bold text-gray-800">
@@ -1411,31 +1420,31 @@ export default function IconGrid() {
             </div>
           </div>
 
-          <div className="px-4 mx-auto max-w-6xl mb-12 -mt-10">
+          <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] mb-12 -mt-10">
             <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 w-full max-w-md sm:max-w-full">
               <News />
             </div>
           </div>
 
-          <div className="px-4 mx-auto max-w-6xl mb-12 -mt-10">
+          <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] mb-12 -mt-10">
             <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 w-full max-w-md sm:max-w-full">
               <GaleriKegiatan />
             </div>
           </div>
 
-          <div className="px-4 mx-auto max-w-6xl mb-12 -mt-10">
+          <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] mb-12 -mt-10">
             <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 w-full max-w-md sm:max-w-full">
               <BiroTravel />
             </div>
           </div>
 
-          <div className="px-4 mx-auto max-w-6xl mb-12 -mt-10">
+          <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] mb-12 -mt-10">
             <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 w-full max-w-md sm:max-w-full">
               <LembagaDisplay />
             </div>
           </div>
 
-          <div className="px-4 mx-auto max-w-6xl mb-12 -mt-10">
+          <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] mb-12 -mt-10">
             <div className="bg-white rounded-xl shadow-md p-6">
               <h2 className="text-xl font-bold text-gray-800 mb-2">
                 Maps Lokasi Rumah
@@ -1452,13 +1461,13 @@ export default function IconGrid() {
             </div>
           </div>
 
-          <div className="px-4 mx-auto max-w-6xl mb-12 -mt-10">
+          <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] mb-12 -mt-10">
             <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 w-full max-w-md sm:max-w-full">
               <Metsos />
             </div>
           </div>
 
-          <div className="px-4 mx-auto max-w-6xl mb-16 -mt-6">
+          <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] mb-16 -mt-6">
             <div className="bg-white rounded-xl shadow-md p-6 sm:p-8 w-full">
               <DevTeamCard />
             </div>
