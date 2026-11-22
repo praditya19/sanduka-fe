@@ -12,7 +12,6 @@ import {
   FaCamera, FaMapMarkerAlt, FaSyncAlt, FaSpinner,
   FaExternalLinkAlt, FaInfoCircle, FaUserCheck, FaEdit, FaUser
 } from "react-icons/fa";
-import { BarChart3 } from "lucide-react";
 import EventStatistikBatang from "./EventStatistikBatang";
 import "swiper/css";
 import "swiper/css/navigation";
@@ -110,7 +109,6 @@ const GaleriKegiatan = () => {
   const [userData, setUserData] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [eventParticipants, setEventParticipants] = useState([]);
-  const [showDashboardStats, setShowDashboardStats] = useState(false);
   const [notification, setNotification] = useState(null);
   const [jabatan, setJabatan] = useState("");
   const [jabatanError, setJabatanError] = useState("");
@@ -2627,31 +2625,12 @@ const GaleriKegiatan = () => {
             STATISTIK MODEL BATANG DI DASHBOARD UTAMA
         ========================================================= */}
         <div className="container relative mx-auto px-4 md:px-12 lg:px-24 mt-8">
-          <div className="flex justify-center">
-            <button
-              type="button"
-              onClick={() => setShowDashboardStats((prev) => !prev)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-bold bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 shadow-sm transition-all cursor-pointer"
-            >
-              <BarChart3 className="w-4 h-4 text-teal-600" />
-              <span>
-                {showDashboardStats
-                  ? "Sembunyikan Grafik Statistik Kehadiran"
-                  : "Lihat Grafik Statistik Kehadiran Per Cabang"}
-              </span>
-            </button>
-          </div>
-
-          {showDashboardStats && (
-            <div className="mt-5 animate-in fade-in duration-300">
-              <EventStatistikBatang
-                participants={eventParticipants}
-                cabangList={[]}
-                selectedEventName={""}
-                title="Statistik Kehadiran Peserta Per Cabang (Dashboard Utama)"
-              />
-            </div>
-          )}
+          <EventStatistikBatang
+            participants={eventParticipants}
+            cabangList={[]}
+            selectedEventName={""}
+            title="Statistik Kehadiran Peserta Per Cabang (Dashboard Utama)"
+          />
         </div>
       </div>
 
