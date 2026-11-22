@@ -44,6 +44,7 @@ import {
   BarChart3,
   Play,
   Pause,
+  Maximize2,
 } from "lucide-react";
 import EventStatistikBatang from "@/app/_components/EventStatistikBatang";
 import * as XLSX from "xlsx";
@@ -360,9 +361,8 @@ const PesertaAvatar = ({ item, getImageSrc, onPreview }) => {
         alt={item.namaLengkap || "Peserta"}
         onError={handleImgError}
         onLoad={handleImgLoad}
-        className={`w-full h-full object-cover object-center relative z-10 transition-opacity duration-200 ${
-          loaded ? "opacity-100" : "opacity-0"
-        } group-hover/avatar:scale-105 transition-transform`}
+        className={`w-full h-full object-cover object-center relative z-10 transition-opacity duration-200 ${loaded ? "opacity-100" : "opacity-0"
+          } group-hover/avatar:scale-105 transition-transform`}
         loading="lazy"
       />
     </button>
@@ -810,6 +810,8 @@ const Page = () => {
   const [showPdfDropdown, setShowPdfDropdown] = useState(false);
   const [showStatistikBatang, setShowStatistikBatang] = useState(true);
   const [showKehadiranSlideshow, setShowKehadiranSlideshow] = useState(false);
+  const [showVideotronDropdown, setShowVideotronDropdown] = useState(false);
+  const [isVideotronMode, setIsVideotronMode] = useState(false);
   const [slideshowIndex, setSlideshowIndex] = useState(0);
   const [slideshowPlaying, setSlideshowPlaying] = useState(true);
   const [slideshowInterval, setSlideshowInterval] = useState(5);
@@ -1294,7 +1296,7 @@ const Page = () => {
       doc.text("Panitia Pelaksana Event,", 145, 260);
 
       doc.setFont("helvetica", "bold");
-      doc.text("Seksi Kepesertaan Sanduka", 145, 280);
+      doc.text("", 145, 280);
 
       const safeEvent = String(item.namaEvent || "EVENT").replace(/[^a-zA-Z0-9]/g, "_");
       const safeName = String(item.namaLengkap || "Peserta").replace(/[^a-zA-Z0-9]/g, "_");
@@ -1754,7 +1756,7 @@ const Page = () => {
         doc.text("Panitia Pelaksana Event,", 145, 258);
 
         doc.setFont("helvetica", "bold");
-        doc.text("Seksi Kepesertaan Sanduka", 145, 278);
+        doc.text("", 145, 278);
       }
 
       const safeEvent = (selectedEvent || "Event").replace(/[^a-zA-Z0-9]/g, "_");
@@ -1925,6 +1927,9 @@ const Page = () => {
       if (!e.target.closest("#pdfDropdownContainer")) {
         setShowPdfDropdown(false);
       }
+      if (!e.target.closest("#videotronDropdownContainer")) {
+        setShowVideotronDropdown(false);
+      }
     };
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
@@ -2000,18 +2005,18 @@ const Page = () => {
           const fotoKehadiran = getFotoKehadiranSrc(item, getImageSrc) ||
             (item.fileKehadiranUrl
               ? (item.fileKehadiranUrl.startsWith("http")
-                  ? item.fileKehadiranUrl
-                  : `${BASE_URL}${item.fileKehadiranUrl}`)
+                ? item.fileKehadiranUrl
+                : `${BASE_URL}${item.fileKehadiranUrl}`)
               : null);
           const isPdfKta =
             (item.fileKtaName && item.fileKtaName.toLowerCase().endsWith(".pdf")) ||
             (item.fileKtaUrl && item.fileKtaUrl.toLowerCase().includes(".pdf"));
           const fotoKta = !isPdfKta
             ? (item.foto
-                ? getImageSrc(item.foto)
-                : item.fileKtaUrl
-                  ? (item.fileKtaUrl.startsWith("http") ? item.fileKtaUrl : `${BASE_URL}${item.fileKtaUrl}`)
-                  : null)
+              ? getImageSrc(item.foto)
+              : item.fileKtaUrl
+                ? (item.fileKtaUrl.startsWith("http") ? item.fileKtaUrl : `${BASE_URL}${item.fileKtaUrl}`)
+                : null)
             : null;
 
           return {
@@ -2053,6 +2058,60 @@ const Page = () => {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [showKehadiranSlideshow, pesertaHadirDenganFoto.length]);
+
+  const handleOpenVideotron = (isNewTab = false) => {
+    if (!pesertaHadirDenganFoto.length) {
+      setNotification({
+        type: "error",
+        message: "Belum ada peserta hadir dengan foto kehadiran pada filter yang dipilih.",
+      });
+      return;
+    }
+
+    if (isNewTab) {
+      const params = new URLSearchParams();
+      params.set("videotron", "true");
+      if (selectedEvent) params.set("event", selectedEvent);
+      if (selectedCabang) params.set("cabang", selectedCabang);
+      window.open(`/event/data-event?${params.toString()}`, "_blank");
+    } else {
+      setSlideshowIndex(0);
+      setSlideshowPlaying(true);
+      setShowKehadiranSlideshow(true);
+    }
+  };
+
+  // Cek apakah halaman dibuka dengan query parameter videotron=true
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("videotron") === "true") {
+      setIsVideotronMode(true);
+      const eventParam = urlParams.get("event");
+      const cabangParam = urlParams.get("cabang");
+      if (eventParam) setSelectedEvent(eventParam);
+      if (cabangParam) setSelectedCabang(cabangParam);
+    }
+  }, []);
+
+  // Buka slideshow otomatis jika mode videotron aktif dan data peserta telah tersedia
+  useEffect(() => {
+    if (isVideotronMode && pesertaHadirDenganFoto.length > 0 && !showKehadiranSlideshow) {
+      setSlideshowIndex(0);
+      setSlideshowPlaying(true);
+      setShowKehadiranSlideshow(true);
+    }
+  }, [isVideotronMode, pesertaHadirDenganFoto.length, showKehadiranSlideshow]);
+
+  // Polling data terbaru berkala jika dalam mode videotron
+  useEffect(() => {
+    if (!isVideotronMode || role === null) return;
+    const cabangFilter = role !== "SUPERADMIN" && role !== "USER" ? accountCabang : selectedCabang;
+    const interval = setInterval(() => {
+      dataPeserta(selectedEvent, cabangFilter);
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [isVideotronMode, selectedEvent, selectedCabang, role, accountCabang]);
 
   const activeEventsCount = useMemo(() => {
     return eventOptions.filter((e) => !e.isTerlewat).length;
@@ -2159,8 +2218,8 @@ const Page = () => {
                         type="button"
                         onClick={() => handleStatusFilterChange("all")}
                         className={`text-left rounded-2xl px-4 py-3 transition-all duration-200 border cursor-pointer ${eventStatusFilter === "all"
-                            ? "bg-teal-50 border-teal-500 shadow-sm ring-2 ring-teal-500/20"
-                            : "bg-slate-50 border-slate-200/80 hover:bg-white hover:border-slate-300"
+                          ? "bg-teal-50 border-teal-500 shadow-sm ring-2 ring-teal-500/20"
+                          : "bg-slate-50 border-slate-200/80 hover:bg-white hover:border-slate-300"
                           }`}
                         title="Klik untuk tampilkan semua event"
                       >
@@ -2184,8 +2243,8 @@ const Page = () => {
                           handleStatusFilterChange(eventStatusFilter === "active" ? "all" : "active")
                         }
                         className={`text-left rounded-2xl px-4 py-3 transition-all duration-200 border cursor-pointer ${eventStatusFilter === "active"
-                            ? "bg-emerald-100/90 border-emerald-500 shadow-sm ring-2 ring-emerald-500/30"
-                            : "bg-emerald-50/60 border-emerald-200/60 hover:bg-emerald-50 hover:border-emerald-300"
+                          ? "bg-emerald-100/90 border-emerald-500 shadow-sm ring-2 ring-emerald-500/30"
+                          : "bg-emerald-50/60 border-emerald-200/60 hover:bg-emerald-50 hover:border-emerald-300"
                           }`}
                         title="Klik untuk memfilter event yang masih aktif"
                       >
@@ -2213,8 +2272,8 @@ const Page = () => {
                           )
                         }
                         className={`hidden sm:block text-left rounded-2xl px-4 py-3 transition-all duration-200 border cursor-pointer ${eventStatusFilter === "completed"
-                            ? "bg-amber-100/90 border-amber-500 shadow-sm ring-2 ring-amber-500/30"
-                            : "bg-amber-50/60 border-amber-200/60 hover:bg-amber-50 hover:border-amber-300"
+                          ? "bg-amber-100/90 border-amber-500 shadow-sm ring-2 ring-amber-500/30"
+                          : "bg-amber-50/60 border-amber-200/60 hover:bg-amber-50 hover:border-amber-300"
                           }`}
                         title="Klik untuk memfilter event yang sudah terlaksana"
                       >
@@ -2257,11 +2316,10 @@ const Page = () => {
                       return nextState;
                     });
                   }}
-                  className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all shadow-xs cursor-pointer ${
-                    showStatistikBatang
-                      ? "bg-teal-600 text-white shadow-teal-500/25 ring-2 ring-teal-500/20"
-                      : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
-                  }`}
+                  className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all shadow-xs cursor-pointer ${showStatistikBatang
+                    ? "bg-teal-600 text-white shadow-teal-500/25 ring-2 ring-teal-500/20"
+                    : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
+                    }`}
                 >
                   <BarChart3 className="w-4 h-4" />
                   <span>
@@ -2269,25 +2327,100 @@ const Page = () => {
                   </span>
                 </button>
                 {canUseEventDisplay && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!pesertaHadirDenganFoto.length) {
-                        setNotification({
-                          type: "error",
-                          message: "Belum ada peserta hadir dengan foto kehadiran pada filter yang dipilih.",
-                        });
-                        return;
-                      }
-                      setSlideshowIndex(0);
-                      setSlideshowPlaying(true);
-                      setShowKehadiranSlideshow(true);
-                    }}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-sm"
-                  >
-                    <Play className="w-4 h-4" />
-                    Tampilkan Foto Hadir di Videotron ({pesertaHadirDenganFoto.length})
-                  </button>
+                  <div id="videotronDropdownContainer" className="relative inline-flex items-stretch rounded-2xl shadow-sm">
+                    {/* Tipe 1: Tampilkan di Sini (http://localhost:3000/event/data-event) */}
+                    <button
+                      type="button"
+                      onClick={() => handleOpenVideotron(false)}
+                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-l-2xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition cursor-pointer"
+                      title="Tipe 1: Tampilkan langsung di halaman ini (Modal)"
+                    >
+                      <Play className="w-4 h-4 fill-white" />
+                      <span>Tampilkan Foto Hadir di Videotron ({pesertaHadirDenganFoto.length})</span>
+                    </button>
+
+                    {/* Tipe 2: Buka di Tab Baru */}
+                    <button
+                      type="button"
+                      onClick={() => handleOpenVideotron(true)}
+                      className="inline-flex items-center gap-1.5 px-3 py-2.5 text-xs font-bold bg-indigo-700 text-indigo-100 hover:bg-indigo-800 hover:text-white border-l border-indigo-500/80 transition cursor-pointer"
+                      title="Tipe 2: Buka di Tab Baru (New Tab)"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Tab Baru</span>
+                    </button>
+
+                    {/* Dropdown Menu Toggle */}
+                    <button
+                      type="button"
+                      onClick={() => setShowVideotronDropdown((prev) => !prev)}
+                      className="inline-flex items-center px-2 py-2.5 rounded-r-2xl text-xs font-bold bg-indigo-700 text-indigo-100 hover:bg-indigo-800 hover:text-white border-l border-indigo-500/80 transition cursor-pointer"
+                      title="Pilih Opsi Tampilan Videotron"
+                    >
+                      <ChevronDown
+                        className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                          showVideotronDropdown ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+
+                    {/* Dropdown Menu Pilihan 2 Tipe */}
+                    {showVideotronDropdown && (
+                      <div className="absolute left-0 sm:left-auto sm:right-0 top-full mt-1.5 w-80 bg-white border border-slate-200 rounded-2xl shadow-xl z-30 p-2 animate-in fade-in zoom-in-95 text-slate-800">
+                        <div className="px-3 py-2 border-b border-slate-100">
+                          <p className="text-xs font-bold text-slate-900">Pilih Tipe Tampilan Videotron</p>
+                          <p className="text-[11px] text-slate-500">
+                            Total {pesertaHadirDenganFoto.length} peserta hadir dengan foto
+                          </p>
+                        </div>
+
+                        {/* Opsi Tipe 1 */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowVideotronDropdown(false);
+                            handleOpenVideotron(false);
+                          }}
+                          className="w-full text-left p-3 rounded-xl hover:bg-indigo-50 transition flex items-start gap-3 group mt-1 cursor-pointer"
+                        >
+                          <div className="p-2 bg-indigo-100 text-indigo-700 rounded-lg group-hover:bg-indigo-200 transition shrink-0 mt-0.5">
+                            <Play className="w-4 h-4 fill-indigo-700" />
+                          </div>
+                          <div>
+                            <div className="text-xs font-bold text-slate-800 group-hover:text-indigo-900 flex items-center gap-1.5">
+                              <span>Tipe 1: Di Halaman Ini (Modal)</span>
+                            </div>
+                            <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                              Tampilkan slideshow langsung di tab ini sebagai popup modal tanpa meninggalkan halaman data event.
+                            </p>
+                          </div>
+                        </button>
+
+                        {/* Opsi Tipe 2 */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowVideotronDropdown(false);
+                            handleOpenVideotron(true);
+                          }}
+                          className="w-full text-left p-3 rounded-xl hover:bg-teal-50 transition flex items-start gap-3 group cursor-pointer"
+                        >
+                          <div className="p-2 bg-teal-100 text-teal-700 rounded-lg group-hover:bg-teal-200 transition shrink-0 mt-0.5">
+                            <ExternalLink className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <div className="text-xs font-bold text-slate-800 group-hover:text-teal-900 flex items-center gap-1.5">
+                              <span>Tipe 2: Buka di Tab Baru (New Tab)</span>
+                              <span className="text-[10px] bg-teal-100 text-teal-700 font-semibold px-1.5 py-0.5 rounded">Rekomendasi Layar 2</span>
+                            </div>
+                            <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                              Buka di tab browser baru untuk ditarik ke layar videotron/proyektor eksternal secara terpisah.
+                            </p>
+                          </div>
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             )}
@@ -2322,8 +2455,8 @@ const Page = () => {
                         type="button"
                         onClick={() => handleStatusFilterChange("all")}
                         className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${eventStatusFilter === "all"
-                            ? "bg-white text-slate-800 shadow-sm"
-                            : "text-slate-600 hover:text-slate-900"
+                          ? "bg-white text-slate-800 shadow-sm"
+                          : "text-slate-600 hover:text-slate-900"
                           }`}
                       >
                         Semua ({eventOptions.length})
@@ -2332,8 +2465,8 @@ const Page = () => {
                         type="button"
                         onClick={() => handleStatusFilterChange("active")}
                         className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${eventStatusFilter === "active"
-                            ? "bg-white text-emerald-700 shadow-sm"
-                            : "text-emerald-700 hover:text-emerald-800"
+                          ? "bg-white text-emerald-700 shadow-sm"
+                          : "text-emerald-700 hover:text-emerald-800"
                           }`}
                       >
                         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -2343,8 +2476,8 @@ const Page = () => {
                         type="button"
                         onClick={() => handleStatusFilterChange("completed")}
                         className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${eventStatusFilter === "completed"
-                            ? "bg-white text-amber-700 shadow-sm"
-                            : "text-amber-700 hover:text-amber-800"
+                          ? "bg-white text-amber-700 shadow-sm"
+                          : "text-amber-700 hover:text-amber-800"
                           }`}
                       >
                         <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />
@@ -2374,15 +2507,15 @@ const Page = () => {
                     type="button"
                     onClick={() => setSelectedEvent("")}
                     className={`flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all duration-200 ${!selectedEvent
-                        ? "bg-gradient-to-r from-teal-50 to-emerald-50 border-teal-500 shadow-sm ring-2 ring-teal-500/20"
-                        : "bg-slate-50/50 border-slate-200 hover:bg-white hover:border-slate-300"
+                      ? "bg-gradient-to-r from-teal-50 to-emerald-50 border-teal-500 shadow-sm ring-2 ring-teal-500/20"
+                      : "bg-slate-50/50 border-slate-200 hover:bg-white hover:border-slate-300"
                       }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div
                         className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${!selectedEvent
-                            ? "bg-teal-600 text-white shadow-sm"
-                            : "bg-slate-200 text-slate-700"
+                          ? "bg-teal-600 text-white shadow-sm"
+                          : "bg-slate-200 text-slate-700"
                           }`}
                       >
                         ALL
@@ -2413,15 +2546,15 @@ const Page = () => {
                           setSelectedEvent(isSelected ? "" : target);
                         }}
                         className={`group relative flex flex-col justify-between p-3.5 rounded-2xl border text-left transition-all duration-200 ${isSelected
-                            ? "bg-gradient-to-br from-teal-50/80 to-emerald-50/80 border-teal-500 shadow-sm ring-2 ring-teal-500/20"
-                            : "bg-white border-slate-200/90 hover:border-teal-300 hover:shadow-sm"
+                          ? "bg-gradient-to-br from-teal-50/80 to-emerald-50/80 border-teal-500 shadow-sm ring-2 ring-teal-500/20"
+                          : "bg-white border-slate-200/90 hover:border-teal-300 hover:shadow-sm"
                           }`}
                       >
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <span
                             className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${event.isTerlewat
-                                ? "bg-amber-100 text-amber-800"
-                                : "bg-emerald-100 text-emerald-800"
+                              ? "bg-amber-100 text-amber-800"
+                              : "bg-emerald-100 text-emerald-800"
                               }`}
                           >
                             {event.isTerlewat ? "Terlaksana" : "Aktif"}
@@ -2489,8 +2622,8 @@ const Page = () => {
                       type="button"
                       onClick={() => handleStatusFilterChange("all")}
                       className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${eventStatusFilter === "all"
-                          ? "bg-white text-slate-800 shadow-sm"
-                          : "text-slate-600 hover:text-slate-900"
+                        ? "bg-white text-slate-800 shadow-sm"
+                        : "text-slate-600 hover:text-slate-900"
                         }`}
                     >
                       Semua
@@ -2499,8 +2632,8 @@ const Page = () => {
                       type="button"
                       onClick={() => handleStatusFilterChange("active")}
                       className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer ${eventStatusFilter === "active"
-                          ? "bg-white text-emerald-700 shadow-sm"
-                          : "text-emerald-700 hover:text-emerald-800"
+                        ? "bg-white text-emerald-700 shadow-sm"
+                        : "text-emerald-700 hover:text-emerald-800"
                         }`}
                       title="Hanya event yang masih aktif"
                     >
@@ -2511,8 +2644,8 @@ const Page = () => {
                       type="button"
                       onClick={() => handleStatusFilterChange("completed")}
                       className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer ${eventStatusFilter === "completed"
-                          ? "bg-white text-amber-700 shadow-sm"
-                          : "text-amber-700 hover:text-amber-800"
+                        ? "bg-white text-amber-700 shadow-sm"
+                        : "text-amber-700 hover:text-amber-800"
                         }`}
                       title="Hanya event yang sudah terlaksana"
                     >
@@ -2580,8 +2713,8 @@ const Page = () => {
                               type="button"
                               onClick={() => handleCabangSelect(cabang)}
                               className={`w-full text-left px-3.5 py-2.5 text-xs font-medium hover:bg-teal-50 transition flex items-center justify-between ${selectedCabang === cabang.kecamatan
-                                  ? "text-teal-700 bg-teal-50/60 font-bold"
-                                  : "text-slate-700"
+                                ? "text-teal-700 bg-teal-50/60 font-bold"
+                                : "text-slate-700"
                                 }`}
                             >
                               <span>{cabang.kecamatan}</span>
@@ -2627,8 +2760,8 @@ const Page = () => {
                   {eventStatusFilter !== "all" && (
                     <span
                       className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${eventStatusFilter === "active"
-                          ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                          : "bg-amber-50 text-amber-800 border-amber-200"
+                        ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                        : "bg-amber-50 text-amber-800 border-amber-200"
                         }`}
                     >
                       <span
@@ -3203,8 +3336,8 @@ const Page = () => {
                                   type="button"
                                   onClick={() => setCurrentPage(p)}
                                   className={`w-7 h-7 rounded-lg text-xs font-semibold transition ${currentPage === p
-                                      ? "bg-teal-600 text-white shadow-sm"
-                                      : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-100"
+                                    ? "bg-teal-600 text-white shadow-sm"
+                                    : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-100"
                                     }`}
                                 >
                                   {p}
@@ -3235,9 +3368,8 @@ const Page = () => {
                   participants={filteredPesertaList}
                   cabangList={cabangOptions}
                   selectedEventName={selectedEvent}
-                  title={`Statistik Kehadiran Model Batang ${
-                    selectedEvent ? `— ${selectedEvent}` : ""
-                  }`}
+                  title={`Statistik Kehadiran Model Batang ${selectedEvent ? `— ${selectedEvent}` : ""
+                    }`}
                 />
               </div>
             )}
@@ -3267,12 +3399,27 @@ const Page = () => {
                           <button type="button" onClick={() => setSlideshowPlaying((playing) => !playing)} className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20" aria-label={slideshowPlaying ? "Jeda slideshow" : "Putar slideshow"}>
                             {slideshowPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
                           </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (!document.fullscreenElement) {
+                                document.documentElement.requestFullscreen().catch(() => {});
+                              } else {
+                                document.exitFullscreen().catch(() => {});
+                              }
+                            }}
+                            className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20"
+                            title="Layar Penuh (Fullscreen)"
+                            aria-label="Layar Penuh (Fullscreen)"
+                          >
+                            <Maximize2 className="w-5 h-5" />
+                          </button>
                           <button type="button" onClick={() => setShowKehadiranSlideshow(false)} className="p-2.5 rounded-xl bg-white/10 hover:bg-rose-500/80" aria-label="Tutup slideshow"><X className="w-5 h-5" /></button>
                         </div>
                       </div>
                       <div className="relative z-10 flex-1 min-h-0 flex flex-col lg:flex-row items-center justify-center gap-6 px-4 pb-4 sm:px-10 sm:pb-8">
                         <button type="button" onClick={() => setSlideshowIndex((slideshowIndex - 1 + pesertaHadirDenganFoto.length) % pesertaHadirDenganFoto.length)} className="hidden sm:flex p-3 rounded-full bg-white/10 hover:bg-white/20" aria-label="Foto sebelumnya"><ChevronLeft className="w-7 h-7" /></button>
-                    <div className="flex-1 min-h-0 w-full max-w-6xl flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-12">
+                        <div className="flex-1 min-h-0 w-full max-w-6xl flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-12">
                           <div className="h-[55vh] lg:h-[72vh] w-full lg:w-3/5 flex items-center justify-center">
                             <img key={peserta.id || slideshowIndex} src={peserta.slideshowFoto} alt={`Foto kehadiran ${peserta.namaLengkap || "peserta"}`} className="max-h-full max-w-full object-contain rounded-2xl shadow-2xl ring-1 ring-white/20 animate-in fade-in duration-500" />
                           </div>
