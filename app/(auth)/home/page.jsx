@@ -38,6 +38,12 @@ import {
   faPenNib,
   faEarth,
   faBuildingColumns,
+  faCopy,
+  faSearch,
+  faPhone,
+  faArrowRight,
+  faShieldHalved,
+  faIdCard,
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import {
@@ -64,6 +70,7 @@ import { useRouter } from "next/navigation";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
 import dynamic from "next/dynamic";
+
 const MapComponent = dynamic(
   () => import("../../_components/MapComponent.jsx"),
   {
@@ -83,61 +90,50 @@ const NotificationPopup = ({ type, message, onClose }) => {
   const getBgColor = () => {
     switch (type) {
       case "success":
-        return "bg-green-100";
+        return "bg-emerald-50 border border-emerald-200 text-emerald-800";
       case "error":
-        return "bg-red-100";
+        return "bg-rose-50 border border-rose-200 text-rose-800";
       default:
-        return "bg-blue-100";
+        return "bg-blue-50 border border-blue-200 text-blue-800";
     }
   };
 
   const getIcon = () => {
     switch (type) {
       case "success":
-        return <FaCheckCircle className="text-green-500 text-3xl" />;
+        return <FaCheckCircle className="text-emerald-500 text-3xl" />;
       case "error":
-        return <FaExclamationCircle className="text-red-500 text-3xl" />;
+        return <FaExclamationCircle className="text-rose-500 text-3xl" />;
       default:
         return null;
     }
   };
 
-  const getTextColor = () => {
-    switch (type) {
-      case "success":
-        return "text-green-800";
-      case "error":
-        return "text-red-800";
-      default:
-        return "text-blue-800";
-    }
-  };
-
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50">
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
       <div
-        className="absolute inset-0 bg-black opacity-50"
+        className="absolute inset-0 bg-black/40 backdrop-blur-xs"
         onClick={onClose}
       ></div>
       <div
-        className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}
+        className={`relative ${getBgColor()} rounded-3xl p-6 sm:p-8 shadow-2xl z-10 w-full max-w-sm text-center transform transition-all duration-300 ease-in-out`}
       >
         <button
           onClick={onClose}
-          className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
+          className="absolute top-3 right-3 text-slate-400 hover:text-slate-700 transition-colors"
           aria-label="Close"
         >
-          <FaTimesCircle size={24} />
+          <FaTimesCircle size={20} />
         </button>
 
-        <div className="flex flex-col items-center space-y-4">
+        <div className="flex flex-col items-center space-y-3">
           <div className="animate-bounce">{getIcon()}</div>
-
-          <h3 className={`text-xl font-bold ${getTextColor()}`}>
-            {type === "success" ? "Berhasil!" : "Gagal!"}
+          <h3 className="text-lg font-bold">
+            {type === "success" ? "Berhasil!" : "Pemberitahuan"}
           </h3>
-
-          <div className={`${getTextColor()} text-center`}>{message}</div>
+          <div className="text-xs sm:text-sm text-center leading-relaxed">
+            {message}
+          </div>
         </div>
       </div>
     </div>
@@ -150,6 +146,7 @@ export default function IconGrid() {
   const { token } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [loadingButton, setLoadingButton] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const itemsPerPage = 5;
   const [anggotaMeninggal, setAnggotaMeninggal] = useState([]);
@@ -168,150 +165,200 @@ export default function IconGrid() {
   const [newPengaduanCount, setNewPengaduanCount] = useState(0);
   const [totalNominal, setTotalNominal] = useState(0);
 
+  // Superapp search & category filter state
+  const [searchMenuQuery, setSearchMenuQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("SEMUA");
+
   const icons = [
-    // Menu Lainnya
-    { icon: faBullhorn, label: "Lapor", href: "/lapor", color: "text-red-500" },
+    // Menu Layanan Utama & Keuangan
+    {
+      icon: faBullhorn,
+      label: "Lapor",
+      href: "/lapor",
+      color: "text-rose-600",
+      category: "LAYANAN",
+      tag: "Wajib",
+    },
     {
       icon: faCheckCircle,
       label: "Verifikasi",
       href: "/verifikasi-anggota-mutasi",
-      color: "text-blue-500",
+      color: "text-teal-600",
+      category: "ANGGOTA",
     },
     {
       icon: faUsers,
       label: "Data Anggota",
       href: "/anggota/data-anggota",
-      color: "text-orange-500",
+      color: "text-blue-600",
+      category: "ANGGOTA",
     },
     {
       icon: faSyncAlt,
       label: "Sinkronisasi",
       href: "/singkron-data",
-      color: "text-yellow-500",
+      color: "text-amber-600",
+      category: "LAYANAN",
     },
     {
       icon: faFileInvoice,
       label: "Rekap Meninggal",
       href: "/rekap-meninggal",
-      color: "text-pink-500",
+      color: "text-purple-600",
+      category: "LAYANAN",
     },
     {
       icon: faFileAlt,
       label: "Statistik",
       href: "/statistik",
-      color: "text-blue-500",
+      color: "text-teal-600",
+      category: "LAYANAN",
     },
     {
       icon: faUserGraduate,
       label: "Status Anggota",
       href: "/anggota/status-anggota",
-      color: "text-indigo-500",
+      color: "text-indigo-600",
+      category: "ANGGOTA",
     },
     {
       icon: faDatabase,
       label: "History data",
       href: "/history-data",
-      color: "text-green-500",
+      color: "text-emerald-600",
+      category: "ANGGOTA",
     },
     {
       icon: faChair,
       label: "Pensiun",
       href: "/pensiun",
       color: "text-rose-500",
+      category: "ANGGOTA",
     },
     {
       icon: faSitemap,
       label: "Data Ranting",
       href: "/ranting/data",
-      color: "text-blue-500",
+      color: "text-blue-600",
+      category: "ANGGOTA",
     },
-    // Menu Keuangan - Prioritas Utama
+    // Menu Keuangan
     {
       icon: faUbuntu,
       label: "Rekap By Nominal",
       href: "/anggota/rekap-anggota",
-      color: "text-gray-500",
+      color: "text-slate-600",
+      category: "KEUANGAN",
     },
     {
       icon: faMoneyBillTransfer,
       label: "Transaksi Bank",
       href: "/transaksi-bank",
-      color: "text-green-600",
+      color: "text-emerald-600",
+      category: "KEUANGAN",
     },
-    // {
-    //   icon: faWallet,
-    //   label: "Keuangan",
-    //   href: "/keuangan/home",
-    //   color: "text-lime-500",
-    // },
     {
       icon: faMoneyBillTransfer,
       label: "Keuangan New",
       href: "/keuangan-new",
-      color: "text-emerald-500",
+      color: "text-emerald-600",
+      category: "KEUANGAN",
     },
     {
       icon: faClipboardCheck,
       label: "Ketentuan",
       href: "/ketentuan",
-      color: "text-teal-500",
+      color: "text-teal-600",
+      category: "INFORMASI",
     },
     {
       icon: faHandsHelping,
       label: "Bantuan",
       href: "/bantuan",
-      color: "text-purple-500",
+      color: "text-purple-600",
+      category: "INFORMASI",
     },
     {
       icon: faCog,
       label: "Pengaturan",
       href: "/pengaturan/user",
-      color: "text-gray-700",
+      color: "text-slate-600",
+      category: "PENGATURAN",
     },
     {
       icon: faUsers,
       label: "Teman Unit",
       href: "/teman-unit-kerja",
-      color: "text-green-600",
+      color: "text-teal-600",
+      category: "ANGGOTA",
     },
     {
       icon: faImage,
       label: "Galeri",
       href: "/galeri",
-      color: "text-green-600",
+      color: "text-emerald-600",
+      category: "INFORMASI",
     },
     {
       icon: faExclamationCircle,
       label: "Pengaduan",
       href: "/pengaduan",
-      color: "text-red-700",
+      color: "text-rose-600",
+      category: "LAYANAN",
       badge: newPengaduanCount > 0 ? newPengaduanCount : null,
     },
     {
       icon: faImages,
       label: "Eksport Foto",
       href: "/eksport-foto",
-      color: "text-green-600",
+      color: "text-emerald-600",
+      category: "INFORMASI",
     },
     {
       icon: faPenNib,
       label: "Kontributor",
       href: "/berita/create-berita",
-      color: "text-orange-600",
+      color: "text-amber-600",
+      category: "INFORMASI",
     },
     {
       icon: faEarth,
       label: "Tour & Travel",
       href: "/biro-perjalanan/create-paket",
       color: "text-blue-600",
+      category: "LAYANAN",
     },
     {
       icon: faBuildingColumns,
       label: "Lembaga",
       href: "/lembaga",
-      color: "text-green-600",
+      color: "text-emerald-600",
+      category: "INFORMASI",
     },
   ];
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 11) return "Selamat Pagi";
+    if (hour < 15) return "Selamat Siang";
+    if (hour < 18) return "Selamat Sore";
+    return "Selamat Malam";
+  };
+
+  const copyToClipboard = (text, label) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} berhasil disalin ke clipboard!`, {
+      icon: "📋",
+      style: {
+        borderRadius: "14px",
+        background: "#0f172a",
+        color: "#fff",
+        fontSize: "12px",
+        fontWeight: "600",
+      },
+    });
+  };
 
   const sortByDate = (data) => {
     return [...data].sort((a, b) => {
@@ -504,6 +551,29 @@ export default function IconGrid() {
       }
 
       try {
+        // Admin IDs belong to the admin table, not the member table. Fetching
+        // those IDs through getUserById can return an unrelated member record.
+        if (userRole === "ADMIN" || userRole === "SUPERADMIN") {
+          const response = await GlobalApi.getAdminById(userId);
+          setUserData(response);
+
+          if (response?.foto) {
+            try {
+              setFotoBase64(atob(response.foto));
+            } catch (error) {
+              console.error("Error decoding Base64:", error);
+              setFotoBase64(null);
+            }
+          } else {
+            setFotoBase64(null);
+          }
+
+          setLatitude(response.latitude);
+          setLongitude(response.longitude);
+          setLoading(false);
+          return;
+        }
+
         let idToFetch = userId;
 
         if (userRole === "ADMIN" && npa) {
@@ -608,7 +678,8 @@ export default function IconGrid() {
   const renderCheckmark = (value) => {
     if (value === "Ya") {
       return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-[0.625rem] sm:text-xs md:text-xs font-medium bg-green-500 text-white">
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <FontAwesomeIcon icon={faCheckCircle} className="text-[10px] text-emerald-600" />
           Terdaftar
         </span>
       );
@@ -619,26 +690,25 @@ export default function IconGrid() {
       value === "TIDAK"
     ) {
       return (
-        <div className="inline-flex items-center space-x-2">
-          <div className="flex items-center">
+        <div className="inline-flex items-center gap-1.5">
+          <button
+            onClick={() => handleSync()}
+            disabled={loadingButton}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 transition cursor-pointer"
+          >
             <FontAwesomeIcon
-              icon={faInfoCircle}
-              className="w-6 h-6 text-blue-500 cursor-pointer hover:text-blue-600 mr-2"
-              onClick={handleOpenPopup}
-            />{" "}
-            <button
-              className="inline-flex items-center px-2 py-0.5 rounded text-[0.625rem] sm:text-xs md:text-xs font-medium bg-red-500 text-white sm:whitespace-normal whitespace-nowrap"
-              onClick={() => handleSync()}
-            >
-              Belum Terdaftar
-            </button>
-          </div>
-
-          <FontAwesomeIcon
-            icon={faInfoCircle}
-            className="w-6 h-6 text-white ml-2"
+              icon={faSyncAlt}
+              className={`text-[9px] ${loadingButton ? "animate-spin" : ""}`}
+            />
+            {loadingButton ? "Proses..." : "Sinkronkan"}
+          </button>
+          <button
             onClick={handleOpenPopup}
-          />
+            className="text-slate-400 hover:text-slate-600 transition"
+            title="Info Sinkronisasi"
+          >
+            <FontAwesomeIcon icon={faInfoCircle} className="text-xs" />
+          </button>
         </div>
       );
     }
@@ -749,90 +819,74 @@ export default function IconGrid() {
 
   const MobileDeceasedScroll = ({ sortedData, formatDate }) => {
     return (
-      <div className="w-full overflow-x-auto pb-4 mb-16">
-        <div className="flex space-x-4 px-4 min-w-min">
+      <div className="w-full overflow-x-auto pb-4 mb-4">
+        <div className="flex space-x-4 px-1 min-w-min">
           {sortedData.map((currentData, index) => (
             <div
               key={index}
-              className="flex-shrink-0 w-72 bg-white rounded-lg shadow-md"
+              className="flex-shrink-0 w-72 bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden flex flex-col justify-between"
             >
-              <div className="bg-gradient-to-r from-blue-400 to-blue-800 p-4 rounded-t-lg">
-                <div className="flex justify-center mb-2">
+              <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-teal-950 p-4 text-center text-white relative">
+                <div className="mx-auto w-16 h-16 rounded-2xl overflow-hidden border-2 border-white/30 shadow-md mb-2.5 bg-slate-800 flex items-center justify-center">
                   <Image
                     src={
                       currentData.foto
                         ? `data:image/jpeg;base64,${currentData.foto}`
                         : profileImageUrl
                     }
-                    width={80}
-                    height={80}
-                    alt={`Foto User ${currentData.namaLengkap}`}
-                    className="object-cover rounded"
+                    width={70}
+                    height={70}
+                    alt={`Foto ${currentData.namaLengkap}`}
+                    className="object-cover w-full h-full"
                     unoptimized={true}
                   />
                 </div>
-                <h2 className="text-base font-bold text-white text-center mb-1">
+                <h2 className="text-sm font-bold text-white truncate">
                   {currentData.namaLengkap}
                 </h2>
-                <p className="text-sm text-white text-center">
-                  Meninggal {formatDate(currentData.waktuMeninggalTerlapor)}
+                <p className="text-[11px] text-teal-200 mt-0.5">
+                  Wafat: {formatDate(currentData.waktuMeninggalTerlapor)}
                 </p>
+                {getMemberAge(currentData) && (
+                  <span className="inline-block mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-500/20 text-teal-200 border border-teal-400/30">
+                    Usia: {getMemberAge(currentData)}
+                  </span>
+                )}
               </div>
 
-              <div className="p-4">
-                <div className="text-center space-y-1 mb-3">
-                  <p className="text-sm">{currentData.npaPgri || "N/A"}</p>
-                  <p className="text-sm">
-                    {currentData.tempatLahir},{" "}
-                    {formatDate(currentData.tanggalLahir)}
+              <div className="p-4 flex-1 flex flex-col justify-between text-xs text-slate-600 space-y-2">
+                <div className="space-y-1">
+                  <p className="flex justify-between">
+                    <span className="text-slate-400">NPA:</span>
+                    <strong className="text-slate-800">{currentData.npaPgri || "N/A"}</strong>
                   </p>
-                  {getMemberAge(currentData) && (
-                    <p className="text-sm font-semibold text-blue-800">
-                      Usia: {getMemberAge(currentData)}
+                  <p className="flex justify-between">
+                    <span className="text-slate-400">Cabang:</span>
+                    <span className="text-slate-700 font-medium">{currentData.cabang || "-"}</span>
+                  </p>
+                  {currentData.unitKerja && (
+                    <p className="flex justify-between">
+                      <span className="text-slate-400">Unit:</span>
+                      <span className="text-slate-700 font-medium truncate max-w-[150px]">{currentData.unitKerja}</span>
                     </p>
                   )}
-                  <p className="text-sm">{currentData.jabatan}</p>
-                  {currentData.unitKerja &&
-                    currentData.unitKerja.toLowerCase() !== "tidak ada" &&
-                    currentData.unitKerja.toLowerCase() !== "null" && (
-                      <p className="text-sm">{currentData.unitKerja}</p>
-                    )}
-                  <p className="text-sm">{currentData.cabang}</p>
-                  <p className="text-sm">{currentData.alamat}</p>
                 </div>
 
-                {(() => {
-                  const cleanCatatan = (currentData.keteranganTerlapor || "")
-                    .replace(/(?:data\s+)?di\s*ubah\s+oleh\s+sistem(?:\s*[\r\n]+)?/gi, "")
-                    .replace(/(?:data\s+)?di\s*ubah\s+oleh\s+system(?:\s*[\r\n]+)?/gi, "")
-                    .trim();
-                  return cleanCatatan ? (
-                    <p className="text-center text-gray-600 mb-3 text-sm">
-                      Catatan: {cleanCatatan}
-                    </p>
-                  ) : null;
-                })()}
-
-                <div className="flex justify-center mb-3">
-                  <button className="bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-1 px-4 rounded-full transition duration-300">
-                    <FontAwesomeIcon icon={faLocation} className="mr-1" />{" "}
-                    Lokasi
-                  </button>
-                </div>
-
-                <div className="bg-blue-700 text-white text-sm font-medium py-1 px-3 rounded-full text-center flex items-center justify-center mb-2">
-                  <FontAwesomeIcon icon={faBullhorn} className="mr-2" /> PELAPOR
-                </div>
-
-                <div className="text-center space-y-1">
-                  <p className="text-sm">
-                    {formatDate(currentData.tanggalPelaporan)},{" "}
-                    {currentData.jamLapor}
+                <div className="bg-slate-50 border border-slate-200/70 rounded-xl p-3 text-center">
+                  <span className="inline-block bg-teal-700 text-white text-[9px] font-bold px-2 py-0.5 rounded-full mb-1">
+                    PELAPOR
+                  </span>
+                  <p className="font-semibold text-slate-800 text-[11px]">
+                    {currentData.namaPelapor || "N/A"}
                   </p>
-                  <p className="text-sm">{currentData.namaPelapor || "N/A"}</p>
-                  <p className="text-sm">
-                    📞 {currentData.nomorHpPelapor || "N/A"}
-                  </p>
+                  {currentData.nomorHpPelapor && (
+                    <a
+                      href={`tel:${currentData.nomorHpPelapor}`}
+                      className="text-teal-700 font-bold text-[11px] hover:underline mt-0.5 inline-block"
+                    >
+                      📞 {currentData.nomorHpPelapor}
+                    </a>
+                  )}
                 </div>
               </div>
             </div>
@@ -842,178 +896,197 @@ export default function IconGrid() {
     );
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
   const toggleSidebar = () => {
     const newSidebarState = !isSidebarOpen;
     setIsSidebarOpen(newSidebarState);
     localStorage.setItem("isSidebarOpen", newSidebarState);
   };
 
-  const filteredIcons =
-    role === "USER"
-      ? icons
-          .filter((item) =>
-            [
-              "Lapor",
-              "Teman Unit",
-              "Ketentuan",
-              "Bantuan",
-              "Pengaduan",
-              "Kontributor",
-            ].includes(item.label),
-          )
-          .concat({
-            icon: faUser,
-            label: "Detail Anggota",
-            href: "/anggota/detail-anggota",
-            color: "text-blue-500",
-            bgHover: "hover:bg-blue-100",
-            iconColor: "text-blue-600",
-          })
-          .concat({
-            icon: faUserPen,
-            label: "Edit Anggota",
-            href: "/anggota/edit-anggota",
-            color: "text-orange-500",
-            bgHover: "hover:bg-blue-100",
-            iconColor: "text-blue-600",
-          })
-          .concat({
-            icon: faRightLeft,
-            label: "Mutasi",
-            href: "/anggota/data-anggota/mutasiCabangUnit",
-            color: "text-cyan-500",
-          })
-          .concat({
-            icon: faFileAlt,
-            label: "Daspen",
-            href: "/daspen",
-            color: "text-teal-700",
-          })
-          .concat({
-            icon: faFileInvoiceDollar,
-            label: "Tagihan",
-            href: "/tagihan",
-            color: "text-blue-700",
-          })
+  const filteredIcons = useMemo(() => {
+    let result = [];
+    if (role === "USER") {
+      result = icons
+        .filter((item) =>
+          [
+            "Lapor",
+            "Teman Unit",
+            "Ketentuan",
+            "Bantuan",
+            "Pengaduan",
+            "Kontributor",
+          ].includes(item.label),
+        )
         .concat({
-              icon: faCalendarDays,
-              label: "Rekap Event",
-              href: "/event/data-event",
-              color: "text-emerald-600",
-              bgHover: "hover:bg-emerald-100",
-              iconColor: "text-emerald-700",
-            })
-          .sort((a, b) => {
-            const order = [
-              "Lapor",
-              "Tagihan",
-              "Detail Anggota",
-              "Edit Anggota",
-              "Mutasi",
-              "Daspen",
-              "Ketentuan",
-              "Bantuan",
-              "Teman Unit",
-              "Pengaduan",
-              "Rekap Eventdat",
-            ];
-            return order.indexOf(a.label) - order.indexOf(b.label);
-          })
-      : role === "SUPERADMIN"
-        ? icons
-            .concat({
-              icon: faNewspaper,
-              label: "Berita",
-              href: "/berita/view-berita",
-              color: "text-purple-600",
-              bgHover: "hover:bg-purple-100",
-              iconColor: "text-purple-700",
-            })
-            .concat({
-              icon: faYoutube,
-              label: "LIVE",
-              href: "/live-link",
-              color: "text-red-600",
-              bgHover: "hover:bg-red-100",
-              iconColor: "text-red-700",
-            })
-            .concat({
-              icon: faScroll,
-              label: "Running Text",
-              href: "/running-text",
-              color: "text-indigo-600",
-              bgHover: "hover:bg-indigo-100",
-              iconColor: "text-indigo-700",
-            })
-            .concat({
-              icon: faCog,
-              label: "AI Knowledge",
-              href: "/pengaturan/ai-knowledge",
-              color: "text-emerald-600",
-              bgHover: "hover:bg-emerald-100",
-              iconColor: "text-emerald-700",
-            })
-            .concat({
-              icon: faCalendarDays,
-              label: "Rekap Event",
-              href: "/event/data-event",
-              color: "text-emerald-600",
-              bgHover: "hover:bg-emerald-100",
-              iconColor: "text-emerald-700",
-            })
-        : role === "EDITOR"
-          ? [
-              ...icons.filter((item) => item.label === "Kontributor"),
-              {
-                icon: faNewspaper,
-                label: "Berita",
-                href: "/berita/view-berita",
-                color: "text-purple-600",
-                bgHover: "hover:bg-purple-100",
-                iconColor: "text-purple-700",
-              },
-            ]
-        : role === "PANITIA"
-          ? [
-              ...icons.filter((item) => item.label === "Event"),
-              {
-              icon: faCalendarDays,
-              label: "Rekap Event",
-              href: "/event/data-event",
-              color: "text-emerald-600",
-              bgHover: "hover:bg-emerald-100",
-              iconColor: "text-emerald-700",
-              },
-            ]
-          : role === "ADMIN"
-            ? icons
-                .filter(
-                  (item) =>
-                    item.label !== "Tour & Travel" &&
-                    item.label !== "Pengaturan" &&
-                    item.label !== "AI Knowledge" &&
-                    item.label !== "Event" &&
-                    item.label !== "Galeri" &&
-                    item.label !== "Eksport Foto" &&
-                    item.label !== "Keuangan",
-                )
-                .concat({
-                  icon: faCalendarDays,
-                  label: "Rekap Event",
-                  href: "/event/data-event",
-                  color: "text-emerald-600",
-                  bgHover: "hover:bg-emerald-100",
-                  iconColor: "text-emerald-700",
-                })
-            : icons.filter((item) => item.label !== "Tour & Travel");
+          icon: faUser,
+          label: "Detail Anggota",
+          href: "/anggota/detail-anggota",
+          color: "text-blue-600",
+          category: "ANGGOTA",
+        })
+        .concat({
+          icon: faUserPen,
+          label: "Edit Anggota",
+          href: "/anggota/edit-anggota",
+          color: "text-teal-600",
+          category: "ANGGOTA",
+        })
+        .concat({
+          icon: faRightLeft,
+          label: "Mutasi",
+          href: "/anggota/data-anggota/mutasiCabangUnit",
+          color: "text-cyan-600",
+          category: "ANGGOTA",
+        })
+        .concat({
+          icon: faFileAlt,
+          label: "Daspen",
+          href: "/daspen",
+          color: "text-emerald-700",
+          category: "KEUANGAN",
+        })
+        .concat({
+          icon: faFileInvoiceDollar,
+          label: "Tagihan",
+          href: "/tagihan",
+          color: "text-blue-700",
+          category: "KEUANGAN",
+        })
+        .concat({
+          icon: faCalendarDays,
+          label: "Rekap Event",
+          href: "/event/data-event",
+          color: "text-teal-600",
+          category: "INFORMASI",
+        })
+        .sort((a, b) => {
+          const order = [
+            "Lapor",
+            "Tagihan",
+            "Detail Anggota",
+            "Edit Anggota",
+            "Mutasi",
+            "Daspen",
+            "Ketentuan",
+            "Bantuan",
+            "Teman Unit",
+            "Pengaduan",
+            "Rekap Event",
+          ];
+          return order.indexOf(a.label) - order.indexOf(b.label);
+        });
+    } else if (role === "SUPERADMIN") {
+      result = icons
+        .concat({
+          icon: faNewspaper,
+          label: "Berita",
+          href: "/berita/view-berita",
+          color: "text-purple-600",
+          category: "INFORMASI",
+        })
+        .concat({
+          icon: faYoutube,
+          label: "LIVE",
+          href: "/live-link",
+          color: "text-rose-600",
+          category: "INFORMASI",
+        })
+        .concat({
+          icon: faScroll,
+          label: "Running Text",
+          href: "/running-text",
+          color: "text-indigo-600",
+          category: "INFORMASI",
+        })
+        .concat({
+          icon: faCog,
+          label: "AI Knowledge",
+          href: "/pengaturan/ai-knowledge",
+          color: "text-teal-600",
+          category: "PENGATURAN",
+        })
+        .concat({
+          icon: faCalendarDays,
+          label: "Rekap Event",
+          href: "/event/data-event",
+          color: "text-teal-600",
+          category: "INFORMASI",
+        });
+    } else if (role === "EDITOR") {
+      result = [
+        ...icons.filter((item) => item.label === "Kontributor"),
+        {
+          icon: faNewspaper,
+          label: "Berita",
+          href: "/berita/view-berita",
+          color: "text-purple-600",
+          category: "INFORMASI",
+        },
+      ];
+    } else if (role === "PANITIA") {
+      result = [
+        ...icons.filter((item) => item.label === "Event"),
+        {
+          icon: faCalendarDays,
+          label: "Rekap Event",
+          href: "/event/data-event",
+          color: "text-teal-600",
+          category: "INFORMASI",
+        },
+      ];
+    } else if (role === "ADMIN") {
+      result = icons
+        .filter(
+          (item) =>
+            item.label !== "Tour & Travel" &&
+            item.label !== "Pengaturan" &&
+            item.label !== "AI Knowledge" &&
+            item.label !== "Event" &&
+            item.label !== "Galeri" &&
+            item.label !== "Eksport Foto" &&
+            item.label !== "Keuangan",
+        )
+        .concat({
+          icon: faCalendarDays,
+          label: "Rekap Event",
+          href: "/event/data-event",
+          color: "text-teal-600",
+          category: "INFORMASI",
+        });
+    } else {
+      result = icons.filter((item) => item.label !== "Tour & Travel");
+    }
+
+    // Apply category filter if active
+    if (selectedCategory !== "SEMUA") {
+      result = result.filter((item) => item.category === selectedCategory);
+    }
+
+    // Apply search query if active
+    if (searchMenuQuery.trim()) {
+      const q = searchMenuQuery.toLowerCase();
+      result = result.filter((item) => item.label.toLowerCase().includes(q));
+    }
+
+    return result;
+  }, [role, icons, selectedCategory, searchMenuQuery]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-xs font-semibold text-slate-500 tracking-wider uppercase">
+            Memuat Layanan Sanduka...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      {isMobile ? <HeaderMobile /> : <HeaderHome />}
+    <div className="min-h-screen flex flex-col bg-slate-50/70 text-slate-800 pt-14">
+      <Toaster position="top-right" />
+      {isMobile ? <HeaderMobile showBack={false} /> : <HeaderHome showBack={false} />}
 
       <div className="flex-1">
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
@@ -1031,260 +1104,307 @@ export default function IconGrid() {
             />
           )}
 
-          <div className="relative">
-            <div className="h-48 md:h-64 overflow-hidden">
-              <img
-                src="/banner_fix.jpeg"
-                alt="Banner background"
-                className="w-full h-full object-cover object-center"
-              />
+          {/* ============================================================== */}
+          {/* PROVIDER-STYLE HERO BANNER & GREETING BAR                      */}
+          {/* ============================================================== */}
+          <div className="relative bg-gradient-to-r from-teal-900 via-teal-800 to-emerald-950 text-white overflow-hidden pb-10 sm:pb-12 pt-6 sm:pt-8">
+            {/* Background Texture & Glow Elements */}
+            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
+            <div className="absolute -top-24 -right-24 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-teal-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] relative z-10">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-white/10 backdrop-blur-md text-teal-200 border border-white/15">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                      SANDUKA PGRI DIGITAL
+                    </span>
+                    {sessionStorage.getItem("cabang") && (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold bg-white/10 backdrop-blur-md text-white border border-white/15">
+                        Cabang {sessionStorage.getItem("cabang")}
+                      </span>
+                    )}
+                  </div>
+                  <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white">
+                    {getGreeting()},{" "}
+                    <span className="text-teal-300">
+                      {userData?.namaLengkap || sessionStorage.getItem("nama") || "Sahabat Sanduka"}
+                    </span>
+                  </h1>
+                  <p className="text-xs sm:text-sm text-teal-100/80 mt-1 max-w-xl">
+                    Portal Layanan Solidaritas, Santunan Duka, dan Administrasi Terpadu PGRI Kabupaten Jepara.
+                  </p>
+                </div>
+
+                {/* Quick Action Badges */}
+                <div className="flex items-center gap-2 self-start md:self-center">
+                  <Link
+                    href="/lapor"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 text-white font-bold text-xs shadow-lg shadow-rose-900/30 transition hover:scale-[1.02] active:scale-95"
+                  >
+                    <FontAwesomeIcon icon={faBullhorn} className="text-xs" />
+                    Lapor Duka Cita
+                  </Link>
+                  <Link
+                    href="/bantuan"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/15 hover:bg-white/25 text-white font-semibold text-xs backdrop-blur-md border border-white/20 transition hover:scale-[1.02] active:scale-95"
+                  >
+                    <FontAwesomeIcon icon={faHandsHelping} className="text-xs" />
+                    Bantuan
+                  </Link>
+                </div>
+              </div>
             </div>
-
-            {(role === "USER" || role === "ADMIN") && (
-              <div className="relative mx-auto -mt-32 mb-12 px-4 max-w-md">
-                <div className="bg-white rounded-xl shadow-lg p-4 flex flex-col items-center gap-4 transition-all duration-300 hover:shadow-xl">
-                  <div className="flex flex-col items-center">
-                    <div className="h-16 w-16 md:h-20 md:w-20 flex items-center justify-center">
-                      <Image
-                        src={
-                          fotoBase64
-                            ? `data:image/jpeg;base64,${fotoBase64}`
-                            : profileImageUrl
-                        }
-                        width={80}
-                        height={80}
-                        alt={`Foto User ${userData?.name}`}
-                        className="object-contain w-full h-full"
-                        unoptimized={true}
-                      />
-                    </div>
-
-                    <div className="text-center mt-2">
-                      <h2 className="text-lg md:text-xl font-semibold text-gray-800">
-                        {userData?.namaLengkap}
-                      </h2>
-                      <p className="text-xs text-gray-500 font-medium">
-                        {userData?.npaPgri}
-                      </p>
-                      <p className="text-xs text-gray-500 font-medium">
-                        {userData?.nip}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col items-center text-center flex-1 gap-2 -mt-3">
-                    <div className="grid grid-cols-3 gap-3 w-full max-w-xs">
-                      {[
-                        { label: "Daspen", value: userData?.pesertaDaspen },
-                        {
-                          label: "KTA Digital",
-                          value: userData?.pesertaKtaDigital,
-                        },
-                        { label: "Sanduka", value: userData?.pesertaSanduka },
-                      ].map((item, index) => (
-                        <div key={index} className="flex flex-col items-center">
-                          <span className="text-xs font-medium text-gray-600">
-                            {item.label}
-                          </span>
-                          <div className="mt-1 w-8 h-8 flex justify-center items-center bg-gray-100 rounded-full shadow-sm">
-                            {renderCheckmark(item.value)}
-                            {popupVisible && (
-                              <div className="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center z-50">
-                                <div className="bg-white rounded-lg p-6 w-11/12 max-w-md text-center shadow-xl transform transition-all">
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="h-16 w-16 mx-auto text-yellow-500 mb-4"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                                    />
-                                  </svg>
-                                  <h2 className="text-xl font-semibold text-gray-800 mb-2">
-                                    Informasi Sinkronisasi{" "}
-                                  </h2>
-                                  <p className="text-gray-600 mb-6">
-                                    Data yang Anda akses melalui sistem kami
-                                    tidak langsung tersinkronisasi dengan
-                                    database DASPEN Jawa Tengah. Data yang
-                                    ditampilkan merupakan hasil identifikasi
-                                    berdasarkan Nomor Induk Pegawai (NIP) dan
-                                    Tanggal Lahir yang Anda input.
-                                  </p>
-                                  <div className="flex justify-center gap-4">
-                                    <button
-                                      onClick={handleClosePopup}
-                                      className="bg-red-500 text-white px-5 py-2 rounded-lg hover:bg-red-700 transition duration-200 font-medium"
-                                    >
-                                      Tutup
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {!isMobile && (
-              <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] -mt-10 mb-12">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-800">
-                          Lapor Meninggal
-                        </h3>
-                        <p className="text-2xl font-bold text-red-600 mt-2">
-                          {jumlahMeninggal}{" "}
-                          <span className="text-sm font-medium text-gray-500">
-                            Orang
-                          </span>
-                        </p>
-                        <p className="text-xs text-gray-500 mt-2">
-                          {new Date().toLocaleDateString("id-ID", {
-                            day: "2-digit",
-                            month: "long",
-                            year: "numeric",
-                          })}
-                        </p>
-                      </div>
-                      <div className="bg-red-100 p-3 rounded-full">
-                        <FontAwesomeIcon
-                          icon={faBullhorn}
-                          className="text-red-600 text-xl"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-800">
-                          Sanduka Diberikan
-                        </h3>
-                        <p className="text-2xl font-bold text-orange-600 mt-2">
-                          {jumlahSantunan}{" "}
-                          <span className="text-sm font-medium text-gray-500">
-                            Orang
-                          </span>
-                        </p>
-                        <p className="text-xs text-gray-500 mt-2">
-                          2020 -{" "}
-                          {new Date().toLocaleDateString("id-ID", {
-                            month: "long",
-                            year: "numeric",
-                          })}
-                        </p>
-                      </div>
-                      <div className="bg-orange-100 p-3 rounded-full">
-                        <FontAwesomeIcon
-                          icon={faUser}
-                          className="text-orange-600 text-xl"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-800">
-                          Total Santunan
-                        </h3>
-                        <p className="text-2xl font-bold text-green-600 mt-2">
-                          Rp {totalNominal.toLocaleString("id-ID")}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-2">
-                          2020 -{" "}
-                          {new Date().toLocaleDateString("id-ID", {
-                            month: "long",
-                            year: "numeric",
-                          })}
-                        </p>
-                      </div>
-                      <div className="bg-green-100 p-3 rounded-full">
-                        <FontAwesomeIcon
-                          icon={faMoneyBill}
-                          className="text-green-600 text-xl"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <VisitorCounter />
-                </div>
-              </div>
-            )}
           </div>
 
-          <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] mb-12 -mt-10">
-            <div className="bg-white rounded-xl shadow-md p-6">
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 sm:gap-4">
-                {filteredIcons.map((item, index) => (
-                  <div key={index} className="relative">
-                    <div
-                      onClick={(e) => handleMainMenuClick(e, index, item.href)}
-                      className="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-50 transition-all duration-300 cursor-pointer hover:shadow-2xl hover:shadow-indigo-200 hover:-translate-y-1"
-                    >
-                      <div
-                        className={`w-14 h-14 ${
-                          item.color.includes("text-")
-                            ? item.color.replace("text-", "bg-") + "/10"
-                            : "bg-gray-100"
-                        } rounded-full flex items-center justify-center mb-3 shadow-sm transition-all duration-300 group-hover:shadow-md`}
-                      >
-                        <FontAwesomeIcon
-                          icon={item.icon}
-                          className={`${item.color} text-2xl transition-transform duration-300 group-hover:scale-110`}
-                        />
-                        {item.badge && (
-                          <div className="absolute top-0 right-0 bg-red-500 text-white rounded-full px-2 py-1 text-xs">
-                            {item.badge}
-                          </div>
-                        )}
-                      </div>
-                      <span className="text-sm font-medium text-gray-700 text-center transition-colors duration-300 group-hover:text-gray-900">
-                        {item.label}
+          {/* ============================================================== */}
+          {/* TELECOM-STYLE USAGE / METRIC WIDGETS ROW                      */}
+          {/* ============================================================== */}
+          {!isMobile && (
+            <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Metric 1: Lapor Meninggal Bulan Ini */}
+                <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all duration-200 p-5 group flex flex-col justify-between">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                        Laporan Duka Bulan Ini
                       </span>
+                      <div className="mt-2 flex items-baseline gap-1.5">
+                        <span className="text-3xl font-black text-slate-900 tracking-tight font-mono">
+                          {jumlahMeninggal}
+                        </span>
+                        <span className="text-xs font-semibold text-slate-500">Anggota</span>
+                      </div>
+                    </div>
+                    <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                      <FontAwesomeIcon icon={faBullhorn} className="text-lg" />
                     </div>
                   </div>
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                      Status Realtime
+                    </span>
+                    <span className="font-semibold text-slate-700">
+                      {new Date().toLocaleDateString("id-ID", { month: "long", year: "numeric" })}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Metric 2: Sanduka Diberikan */}
+                <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all duration-200 p-5 group flex flex-col justify-between">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                        Penerima Manfaat
+                      </span>
+                      <div className="mt-2 flex items-baseline gap-1.5">
+                        <span className="text-3xl font-black text-amber-700 tracking-tight font-mono">
+                          {jumlahSantunan}
+                        </span>
+                        <span className="text-xs font-semibold text-slate-500">Keluarga</span>
+                      </div>
+                    </div>
+                    <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                      <FontAwesomeIcon icon={faUser} className="text-lg" />
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                    <span>Periode Akumulasi</span>
+                    <span className="font-semibold text-slate-700">2020 – Sekarang</span>
+                  </div>
+                </div>
+
+                {/* Metric 3: Total Santunan Realisasi */}
+                <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all duration-200 p-5 group flex flex-col justify-between">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                        Dana Terdistribusi
+                      </span>
+                      <div className="mt-2 flex items-baseline gap-1.5">
+                        <span className="text-2xl font-black text-emerald-700 tracking-tight font-mono">
+                          Rp {totalNominal.toLocaleString("id-ID")}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                      <FontAwesomeIcon icon={faMoneyBill} className="text-lg" />
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                    <span className="flex items-center gap-1.5 text-emerald-700 font-semibold">
+                      <FontAwesomeIcon icon={faCheckCircle} className="text-xs" />
+                      100% Tersalurkan
+                    </span>
+                    <span className="text-slate-500">Audited</span>
+                  </div>
+                </div>
+
+                {/* Metric 4: VisitorCounter */}
+                <VisitorCounter />
+              </div>
+            </div>
+          )}
+
+          {/* ============================================================== */}
+          {/* SUPERAPP APP LAUNCHER / LAYANAN & FITUR UTAMA                  */}
+          {/* ============================================================== */}
+          <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] mb-10">
+            <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-6 sm:p-8">
+              {/* Header Bar Launcher with Search & Category Pills */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-5 border-b border-slate-100">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">
+                      Layanan & Fitur Sanduka
+                    </h2>
+                    <span className="text-xs font-bold text-teal-800 bg-teal-50 border border-teal-200 px-2.5 py-0.5 rounded-full">
+                      {filteredIcons.length} Fitur
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Pilih modul layanan untuk administrasi, keuangan, dan data keanggotaan
+                  </p>
+                </div>
+
+                {/* Search Bar for Menu */}
+                <div className="w-full md:w-72 relative">
+                  <FontAwesomeIcon
+                    icon={faSearch}
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"
+                  />
+                  <input
+                    type="text"
+                    value={searchMenuQuery}
+                    onChange={(e) => setSearchMenuQuery(e.target.value)}
+                    placeholder="Cari layanan atau menu..."
+                    className="w-full pl-9 pr-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-600 focus:bg-white transition"
+                  />
+                  {searchMenuQuery && (
+                    <button
+                      onClick={() => setSearchMenuQuery("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Category Filter Tabs (Telecom style) */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-5 scrollbar-none">
+                {["SEMUA", "ANGGOTA", "KEUANGAN", "LAYANAN", "INFORMASI"].map((category) => (
+                  <button
+                    key={category}
+                    onClick={() => setSelectedCategory(category)}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
+                      selectedCategory === category
+                        ? "bg-slate-900 text-white shadow-xs"
+                        : "bg-slate-100 hover:bg-slate-200/80 text-slate-600"
+                    }`}
+                  >
+                    {category}
+                  </button>
                 ))}
               </div>
+
+              {/* Launcher Grid - Telecom Superapp Squircle Tiles */}
+              {filteredIcons.length === 0 ? (
+                <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                  <p className="text-xs font-semibold text-slate-500">
+                    Tidak ditemukan layanan dengan kata kunci "{searchMenuQuery}"
+                  </p>
+                  <button
+                    onClick={() => {
+                      setSearchMenuQuery("");
+                      setSelectedCategory("SEMUA");
+                    }}
+                    className="mt-2 text-xs text-teal-700 font-bold hover:underline"
+                  >
+                    Reset Pencarian
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+                  {filteredIcons.map((item, index) => (
+                    <div
+                      key={index}
+                      onClick={(e) => handleMainMenuClick(e, index, item.href)}
+                      className="group relative bg-white hover:bg-slate-50 border border-slate-200/80 hover:border-teal-500/50 rounded-2xl p-4 flex flex-col items-center text-center justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-1 active:scale-95"
+                    >
+                      {/* Squircle Icon Container */}
+                      <div className="w-13 h-13 rounded-2xl bg-slate-50 group-hover:bg-teal-50 border border-slate-200/60 group-hover:border-teal-200 flex items-center justify-center transition-all duration-200 shadow-2xs relative">
+                        <FontAwesomeIcon
+                          icon={item.icon}
+                          className={`${item.color} text-xl transition-transform duration-200 group-hover:scale-115`}
+                        />
+                        {item.badge && (
+                          <span className="absolute -top-1.5 -right-1.5 bg-rose-600 text-white font-bold rounded-full min-w-5 h-5 px-1 flex items-center justify-center text-[10px] ring-2 ring-white animate-pulse">
+                            {item.badge}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Label & Subtitle */}
+                      <div className="w-full mt-3">
+                        <span className="text-xs font-bold text-slate-800 group-hover:text-teal-900 transition-colors line-clamp-1 block">
+                          {item.label}
+                        </span>
+                        {item.tag && (
+                          <span className="mt-1 inline-block text-[9px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.2 rounded-md">
+                            {item.tag}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] mb-12 -mt-10">
-            <div className="bg-white rounded-xl p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-bold text-gray-800">
-                  Anggota Meninggal Bulan Ini
-                </h3>
+          {/* ============================================================== */}
+          {/* SECTION: ANGGOTA MENINGGAL BULAN INI (Solidaritas Duka)        */}
+          {/* ============================================================== */}
+          <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] mb-10">
+            <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-6 sm:p-8">
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+                      Anggota Meninggal Bulan Ini
+                    </h3>
+                    <span className="text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-full">
+                      {anggotaMeninggal.length} Terlapor
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Informasi duka cita dan penghormatan terakhir bagi anggota PGRI Kabupaten Jepara
+                  </p>
+                </div>
 
                 {!isMobile && (
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
                     <button
+                      type="button"
                       onClick={handlePrev}
-                      className="text-gray-600 bg-gray-100 hover:bg-gray-200 p-2 rounded-full transition"
+                      disabled={currentIndex === 0}
+                      className="text-slate-600 bg-slate-100 hover:bg-slate-200 disabled:opacity-40 p-2.5 rounded-xl transition cursor-pointer"
+                      aria-label="Sebelumnya"
                     >
-                      <FontAwesomeIcon icon={faChevronLeft} />
+                      <FontAwesomeIcon icon={faChevronLeft} className="w-3.5 h-3.5" />
                     </button>
                     <button
+                      type="button"
                       onClick={handleNext}
-                      className="text-gray-600 bg-gray-100 hover:bg-gray-200 p-2 rounded-full transition"
+                      className="text-slate-600 bg-slate-100 hover:bg-slate-200 p-2.5 rounded-xl transition cursor-pointer"
+                      aria-label="Selanjutnya"
                     >
-                      <FontAwesomeIcon icon={faChevronRight} />
+                      <FontAwesomeIcon icon={faChevronRight} className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 )}
@@ -1303,10 +1423,10 @@ export default function IconGrid() {
                       .map((currentData, index) => (
                         <div
                           key={index}
-                          className="border border-gray-200 rounded-xl overflow-hidden transition-all duration-300 hover:shadow-md"
+                          className="border border-slate-200/80 rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-md bg-white flex flex-col justify-between"
                         >
-                          <div className="bg-gradient-to-r from-blue-500 to-blue-700 p-4 text-center">
-                            <div className="mx-auto w-20 h-20 rounded-full overflow-hidden border-2 border-white mb-3">
+                          <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-teal-950 p-4 text-center text-white relative">
+                            <div className="mx-auto w-20 h-20 rounded-2xl overflow-hidden border-2 border-white/40 shadow-md mb-3 bg-slate-800 flex items-center justify-center ring-2 ring-white/10">
                               <Image
                                 src={
                                   currentData.foto
@@ -1320,50 +1440,48 @@ export default function IconGrid() {
                                 unoptimized={true}
                               />
                             </div>
-                            <h2 className="text-white font-bold truncate">
+                            <h2 className="text-sm font-bold text-white truncate tracking-tight">
                               {currentData.namaLengkap}
                             </h2>
-                            <p className="text-xs text-blue-100 mt-1">
-                              Meninggal{" "}
-                              {formatDate(currentData.waktuMeninggalTerlapor)}
+                            <p className="text-[11px] text-teal-200/90 mt-1 font-medium">
+                              Wafat: {formatDate(currentData.waktuMeninggalTerlapor)}
                             </p>
+                            {getMemberAge(currentData) && (
+                              <span className="inline-block mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-500/20 text-teal-200 border border-teal-400/30">
+                                Usia: {getMemberAge(currentData)}
+                              </span>
+                            )}
                           </div>
 
-                          <div className="p-4">
-                            <div className="text-xs text-gray-600 space-y-1 mb-3">
+                          <div className="p-4 flex-1 flex flex-col justify-between">
+                            <div className="text-xs text-slate-600 space-y-1.5 mb-3">
                               <p>
-                                <span className="font-medium">NPA:</span>{" "}
-                                {currentData.npaPgri || "N/A"}
+                                <span className="font-semibold text-slate-400">NPA:</span>{" "}
+                                <strong className="text-slate-800 font-mono">{currentData.npaPgri || "N/A"}</strong>
                               </p>
                               <p>
-                                <span className="font-medium">TTL:</span>{" "}
+                                <span className="font-semibold text-slate-400">TTL:</span>{" "}
                                 {currentData.tempatLahir},{" "}
                                 {formatDate(currentData.tanggalLahir)}
                               </p>
-                              {getMemberAge(currentData) && (
-                                <p>
-                                  <span className="font-medium text-blue-800">Usia:</span>{" "}
-                                  <span className="font-semibold text-blue-800">{getMemberAge(currentData)}</span>
-                                </p>
-                              )}
                               <p>
-                                <span className="font-medium">Jabatan:</span>{" "}
+                                <span className="font-semibold text-slate-400">Jabatan:</span>{" "}
                                 {currentData.jabatan}
                               </p>
                               {currentData.unitKerja &&
                                 currentData.unitKerja.toLowerCase() !== "tidak ada" &&
                                 currentData.unitKerja.toLowerCase() !== "null" && (
                                   <p>
-                                    <span className="font-medium">Unit:</span>{" "}
+                                    <span className="font-semibold text-slate-400">Unit:</span>{" "}
                                     {currentData.unitKerja}
                                   </p>
                                 )}
                               <p>
-                                <span className="font-medium">Cabang:</span>{" "}
+                                <span className="font-semibold text-slate-400">Cabang:</span>{" "}
                                 {currentData.cabang}
                               </p>
                               <p>
-                                <span className="font-medium">Alamat:</span>{" "}
+                                <span className="font-semibold text-slate-400">Alamat:</span>{" "}
                                 {currentData.alamat}
                               </p>
                             </div>
@@ -1374,42 +1492,35 @@ export default function IconGrid() {
                                 .replace(/(?:data\s+)?di\s*ubah\s+oleh\s+system(?:\s*[\r\n]+)?/gi, "")
                                 .trim();
                               return cleanCatatan ? (
-                                <div className="text-xs text-gray-600 border-t border-dashed border-gray-200 pt-2 mt-2">
-                                  <p className="font-medium">Catatan:</p>
+                                <div className="text-[11px] text-slate-500 bg-slate-50 border border-slate-200/60 rounded-xl p-2.5 mb-3">
+                                  <p className="font-semibold text-slate-700">Catatan:</p>
                                   <p className="italic">{cleanCatatan}</p>
                                 </div>
                               ) : null;
                             })()}
 
-                            <div className="mt-4">
-                              <button className="w-full bg-green-600 hover:bg-green-700 text-white text-xs font-medium py-1.5 px-3 rounded-full transition">
-                                <FontAwesomeIcon
-                                  icon={faLocation}
-                                  className="mr-1.5"
-                                />{" "}
-                                Lihat Lokasi
-                              </button>
-                            </div>
-
-                            <div className="bg-blue-50 rounded-lg p-3 mt-4">
-                              <div className="flex items-center justify-center mb-2">
-                                <span className="bg-blue-600 text-white text-xs py-1 px-3 rounded-full">
-                                  <FontAwesomeIcon
-                                    icon={faBullhorn}
-                                    className="mr-1"
-                                  />{" "}
+                            <div className="bg-slate-50 border border-slate-200/60 rounded-xl p-3 mt-auto">
+                              <div className="flex items-center justify-center mb-1.5">
+                                <span className="bg-teal-700 text-white text-[10px] font-bold py-0.5 px-2.5 rounded-full flex items-center gap-1">
+                                  <FontAwesomeIcon icon={faBullhorn} className="text-[9px]" />
                                   PELAPOR
                                 </span>
                               </div>
-                              <div className="text-xs text-gray-600 text-center">
+                              <div className="text-[11px] text-slate-500 text-center">
                                 <p>
-                                  {formatDate(currentData.tanggalPelaporan)},{" "}
-                                  {currentData.jamLapor}
+                                  {formatDate(currentData.tanggalPelaporan)}, {currentData.jamLapor}
                                 </p>
-                                <p className="font-medium mt-1">
+                                <p className="font-bold text-slate-800 mt-0.5">
                                   {currentData.namaPelapor || "N/A"}
                                 </p>
-                                <p>📞 {currentData.nomorHpPelapor || "N/A"}</p>
+                                {currentData.nomorHpPelapor && (
+                                  <a
+                                    href={`tel:${currentData.nomorHpPelapor}`}
+                                    className="text-teal-700 font-bold mt-0.5 inline-block hover:underline"
+                                  >
+                                    📞 {currentData.nomorHpPelapor}
+                                  </a>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -1420,55 +1531,82 @@ export default function IconGrid() {
             </div>
           </div>
 
-          <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] mb-12 -mt-10">
-            <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 w-full max-w-md sm:max-w-full">
+          {/* ============================================================== */}
+          {/* SECTION: BERITA TERKINI                                        */}
+          {/* ============================================================== */}
+          <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] mb-10">
+            <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-4 sm:p-6 w-full">
               <News />
             </div>
           </div>
 
-          <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] mb-12 -mt-10">
-            <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 w-full max-w-md sm:max-w-full">
+          {/* ============================================================== */}
+          {/* SECTION: GALERI KEGIATAN                                       */}
+          {/* ============================================================== */}
+          <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] mb-10">
+            <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-4 sm:p-6 w-full">
               <GaleriKegiatan />
             </div>
           </div>
 
-          <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] mb-12 -mt-10">
-            <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 w-full max-w-md sm:max-w-full">
+          {/* ============================================================== */}
+          {/* SECTION: BIRO TRAVEL                                           */}
+          {/* ============================================================== */}
+          <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] mb-10">
+            <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-4 sm:p-6 w-full">
               <BiroTravel />
             </div>
           </div>
 
-          <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] mb-12 -mt-10">
-            <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 w-full max-w-md sm:max-w-full">
+          {/* ============================================================== */}
+          {/* SECTION: LEMBAGA DISPLAY                                       */}
+          {/* ============================================================== */}
+          <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] mb-10">
+            <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-4 sm:p-6 w-full">
               <LembagaDisplay />
             </div>
           </div>
 
-          <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] mb-12 -mt-10">
-            <div className="bg-white rounded-xl shadow-md p-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-2">
-                Maps Lokasi Rumah
-              </h2>
-              <p className="text-sm text-blue-600 mb-6">
-                Anda dapat menyesuaikan lokasi dengan menggeser maps melalui
-                Menu Edit Anggota
-              </p>
+          {/* ============================================================== */}
+          {/* SECTION: MAPS LOKASI RUMAH                                     */}
+          {/* ============================================================== */}
+          <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] mb-10">
+            <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-6 sm:p-8">
+              <div className="mb-4 pb-3 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+                    Maps Lokasi Rumah
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Lokasi tempat tinggal terdaftar anggota PGRI
+                  </p>
+                </div>
+                <span className="text-xs font-semibold text-teal-700 bg-teal-50 border border-teal-200 px-3 py-1 rounded-full self-start sm:self-auto">
+                  Dapat disesuaikan via Edit Anggota
+                </span>
+              </div>
               {latitude && longitude && (
-                <div className="h-80 md:h-96 rounded-lg overflow-hidden border border-gray-200 relative z-0">
+                <div className="h-80 md:h-96 rounded-2xl overflow-hidden border border-slate-200/80 relative z-0 shadow-inner">
                   <MapComponent latitude={latitude} longitude={longitude} />
                 </div>
               )}
             </div>
           </div>
 
-          <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] mb-12 -mt-10">
-            <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 w-full max-w-md sm:max-w-full">
+          {/* ============================================================== */}
+          {/* SECTION: MEDIA SOSIAL                                          */}
+          {/* ============================================================== */}
+          <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] mb-10">
+            <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-4 sm:p-6 w-full">
               <Metsos />
             </div>
           </div>
 
-          <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] mb-16 -mt-6">
-            <div className="bg-white rounded-xl shadow-md p-6 sm:p-8 w-full">
+          {/* ============================================================== */}
+          {/* SECTION: DEV TEAM CARD                                         */}
+          {/* ============================================================== */}
+          <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] mb-14">
+            <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-6 sm:p-8 w-full">
               <DevTeamCard />
             </div>
           </div>

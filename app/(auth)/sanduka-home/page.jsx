@@ -9,7 +9,7 @@ import { LoaderIcon, Search, AlertCircle, ChevronDown, CheckCircle, XCircle, Use
 import GlobalApi from "@/app/_utils/GlobalApi";
 import Header from "@/app/_components/Header";
 
-function SandukaHome() {
+function SandukaHome({ showHeader = true }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [npaPgri, setNpa] = useState("");
   const [loader, setLoader] = useState(false);
@@ -64,9 +64,9 @@ function SandukaHome() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-teal-50 to-white">
-      <div className="container mx-auto p-4 pt-6 md:p-6 lg:p-12 max-w-md md:max-w-xl lg:max-w-3xl">
-        <Header />
+    <div id="layanan-anggota" className="min-h-screen scroll-mt-24 bg-gradient-to-b from-teal-50 to-white">
+      <div className="container mx-auto max-w-7xl p-4 pt-10 md:p-8 lg:px-10 lg:py-16">
+        {showHeader && <Header />}
 
         {/* Hero Section */}
         <div className="text-center mb-8 md:mb-12 pt-12 md:pt-16">
@@ -86,8 +86,11 @@ function SandukaHome() {
 
         {/* Search Section */}
         <div className="mb-8">
-          <div
-            className="flex justify-between items-center bg-white rounded-xl shadow-lg p-5 border border-teal-100 cursor-pointer transition-all duration-300 hover:shadow-xl hover:border-teal-200"
+          <button
+            type="button"
+            aria-expanded={isMenuOpen}
+            aria-controls="member-search-panel"
+            className="flex w-full justify-between items-center bg-white rounded-xl shadow-lg p-5 border border-teal-100 text-left transition-all duration-300 hover:shadow-xl hover:border-teal-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
             onClick={toggleMenu}
           >
             <div className="flex items-center space-x-3">
@@ -106,10 +109,10 @@ function SandukaHome() {
                 isMenuOpen ? "rotate-180" : ""
               }`}
             />
-          </div>
+          </button>
 
           {isMenuOpen && (
-            <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-gray-100 mt-4 animate-fadeIn">
+            <div id="member-search-panel" className="bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-gray-100 mt-4 animate-fadeIn">
               <div className="text-center mb-6">
                 <h2 className="font-bold text-xl md:text-2xl text-gray-800 mb-2">
                   Cari Keanggotaan Sanduka
@@ -120,10 +123,11 @@ function SandukaHome() {
               <div className="space-y-4">
                 <div className="relative">
                   <Input
-                    placeholder="Contoh: 33212345"
+                    placeholder="Masukkan NPA PGRI"
                     value={npaPgri}
-                    onChange={(e) => setNpa(e.target.value)}
-                    onKeyPress={handleKeyPress}
+                    inputMode="numeric"
+                    onChange={(e) => setNpa(e.target.value.replace(/\D/g, ""))}
+                    onKeyDown={handleKeyPress}
                     className="pl-12 py-6 text-base rounded-lg border-2 focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
                   />
                   <div className="absolute left-4 top-1/2 transform -translate-y-1/2">

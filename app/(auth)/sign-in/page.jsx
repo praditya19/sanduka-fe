@@ -192,7 +192,7 @@ function SignIn() {
   }
 
   return (
-    <div className="flex items-baseline justify-center my-8">
+    <div className="min-h-[85vh] flex items-center justify-center px-4 py-8">
       {notification && (
         <NotificationPopup
           type={notification.type}
@@ -201,32 +201,34 @@ function SignIn() {
         />
       )}
 
-      <div className="flex flex-col items-center justify-center p-6 sm:p-10 bg-gray-100 border border-gray-200 rounded-lg shadow-md w-full max-w-md sm:max-w-lg lg:w-[32%]">
-        <Image src="/sanduka.png" width={100} height={100} alt="logo" />
-        <h2 className="font-bold text-xl sm:text-2xl">Masuk ke Akun</h2>
-        <h4 className="text-gray-500 mt-2 text-center text-sm sm:text-base">
+      <div className="flex flex-col items-center justify-center p-8 sm:p-10 bg-white border border-slate-200/90 rounded-3xl shadow-sm w-full max-w-md sm:max-w-lg">
+        <div className="p-3 bg-teal-50/80 rounded-2xl border border-teal-100 mb-4 shadow-2xs">
+          <Image src="/sanduka.png" width={80} height={80} alt="logo" className="object-contain" />
+        </div>
+        <h2 className="font-bold text-2xl text-slate-800 tracking-tight">Masuk ke Akun</h2>
+        <h4 className="text-slate-500 mt-1.5 text-center text-xs sm:text-sm">
           Masukkan Email/NPA dan Password Anda untuk Masuk
         </h4>
 
         <div className="w-full mt-6">
-          {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
+          {error && <p className="text-rose-500 mb-4 text-xs font-medium text-center bg-rose-50 border border-rose-200 py-2 px-3 rounded-xl">{error}</p>}
 
           <div>
-            <div className="mb-6">
-              <Label htmlFor="email" className="block text-sm">
-                User
+            <div className="mb-5">
+              <Label htmlFor="email" className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                User / NPA / Email
               </Label>
               <Input
                 id="email"
                 placeholder="user@example.com atau 3320"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-2 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                className="mt-1.5 p-3 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 w-full transition"
               />
             </div>
 
-            <div className="mb-6 relative">
-              <Label htmlFor="password" className="block text-sm">
+            <div className="mb-5 relative">
+              <Label htmlFor="password" className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
                 {isNumericInput ? "Tanggal Lahir" : "Password"}
               </Label>
               <Input
@@ -237,7 +239,7 @@ function SignIn() {
                 type={
                   isNumericInput ? "text" : showPassword ? "text" : "password"
                 }
-                className="mt-2 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                className="mt-1.5 p-3 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 w-full transition"
               />
               {!isNumericInput && (
                 <button
@@ -247,36 +249,37 @@ function SignIn() {
                   style={{ top: "70%", transform: "translateY(-50%)" }}
                 >
                   {showPassword ? (
-                    <AiOutlineEyeInvisible className="h-5 w-5 text-gray-500" />
+                    <AiOutlineEyeInvisible className="h-5 w-5 text-slate-500 hover:text-slate-700" />
                   ) : (
-                    <AiOutlineEye className="h-5 w-5 text-gray-500" />
+                    <AiOutlineEye className="h-5 w-5 text-slate-500 hover:text-slate-700" />
                   )}
                 </button>
               )}
             </div>
           </div>
 
-          <ReCAPTCHA
-            sitekey="6Lfcxy4qAAAAACy6hmLpVgTejZFZG3xGjn0xOVmd"
-            onChange={onChange}
-            className="flex justify-center"
-          />
+          <div className="my-5 flex justify-center">
+            <ReCAPTCHA
+              sitekey="6Lfcxy4qAAAAACy6hmLpVgTejZFZG3xGjn0xOVmd"
+              onChange={onChange}
+            />
+          </div>
 
           <Button
             onClick={onSignIn}
             disabled={!email || !password || loader || !isVerified}
-            className="w-full mt-4 flex justify-center items-center"
+            className="w-full mt-2 py-3 bg-gradient-to-r from-teal-700 to-emerald-700 hover:from-teal-800 hover:to-emerald-800 text-white font-medium text-sm rounded-xl shadow-xs transition flex justify-center items-center cursor-pointer"
           >
             {loader ? <LoaderIcon className="animate-spin mr-2" /> : "Masuk"}
           </Button>
 
-          <p className="mt-4 text-sm text-center text-gray-600">
+          <p className="mt-5 text-xs text-center text-slate-600">
             Belum teregistrasi?
             <Link
               href={"/create-account/syarat-ketentuan"}
-              className="text-blue-500 ml-1 hover:underline"
+              className="text-teal-700 font-semibold ml-1 hover:underline"
             >
-              Klik di sini untuk mendaftar Anggota
+              Daftar Anggota Baru
             </Link>
           </p>
         </div>

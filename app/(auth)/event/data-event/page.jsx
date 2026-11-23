@@ -798,7 +798,7 @@ const Page = () => {
   const [searchText, setSearchText] = useState("");
   const [selectedTahunDaftar, setSelectedTahunDaftar] = useState("");
   const [eventSearchQuery, setEventSearchQuery] = useState("");
-  const [eventStatusFilter, setEventStatusFilter] = useState("all"); // "all" | "active" | "completed"
+  const [eventStatusFilter, setEventStatusFilter] = useState("active"); // "all" | "active" | "completed"
 
   // Pagination & Display
   const [currentPage, setCurrentPage] = useState(1);
@@ -2521,12 +2521,24 @@ const Page = () => {
                         ALL
                       </div>
                       <div className="truncate">
-                        <h4 className="text-sm font-bold text-slate-800">Semua Event</h4>
-                        <p className="text-xs text-slate-500">Tampilkan seluruh data</p>
+                        <h4 className="text-sm font-bold text-slate-800">
+                          {eventStatusFilter === "active"
+                            ? "Semua Event Aktif"
+                            : eventStatusFilter === "completed"
+                              ? "Semua Event Terlaksana"
+                              : "Semua Event"}
+                        </h4>
+                        <p className="text-xs text-slate-500">
+                          {eventStatusFilter === "active"
+                            ? "Tampilkan semua data event aktif"
+                            : eventStatusFilter === "completed"
+                              ? "Tampilkan semua event yang terlaksana"
+                              : "Tampilkan seluruh data"}
+                        </p>
                       </div>
                     </div>
                     <span className="text-xs font-semibold px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-slate-600 shrink-0">
-                      {pesertaList.length}
+                      {filteredPesertaList.length}
                     </span>
                   </button>
 
@@ -3427,8 +3439,15 @@ const Page = () => {
                             <p className="text-sm font-semibold text-teal-300">PESERTA HADIR</p>
                             <p className="text-xs text-slate-400 mt-1">{peserta.slideshowFotoType}</p>
                             <h3 className="text-3xl sm:text-5xl font-black mt-2 leading-tight">{peserta.namaLengkap || "Peserta"}</h3>
-                            <p className="text-lg sm:text-2xl text-slate-300 mt-3">{peserta.cabang || peserta.unitKerja || ""}</p>
-                            {(peserta.waktuKehadiran || peserta.jamKehadiran) && <p className="text-base text-slate-300 mt-2">Waktu hadir: {peserta.waktuKehadiran || peserta.jamKehadiran}</p>}
+                            {peserta.unitKerja && <p className="text-lg sm:text-2xl text-slate-300 mt-3">{peserta.unitKerja}</p>}
+                            {(peserta.waktuKehadiran || peserta.jamKehadiran) && (
+                              <p className="text-base text-slate-300 mt-2">
+                                Waktu hadir: {new Date(peserta.waktuKehadiran || peserta.jamKehadiran).toLocaleString("id-ID", {
+                                  dateStyle: "long",
+                                  timeStyle: "medium",
+                                })}
+                              </p>
+                            )}
                             <p className="text-sm text-slate-400 mt-6">{slideshowIndex + 1} dari {pesertaHadirDenganFoto.length}</p>
                           </div>
                         </div>

@@ -15,7 +15,7 @@ import { useMute } from "../MuteContext";
 import PencarianAnggota from "../_components/PencarianAnggota";
 import RunningText from "./RunningText";
 
-const HeaderHome = () => {
+const HeaderHome = ({ showBack = true }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
   const [emailCount, setEmailCount] = useState(0);
@@ -203,27 +203,32 @@ const HeaderHome = () => {
 
   return (
     <>
-      <nav className="bg-teal-500 shadow-md fixed top-0 inset-x-0 z-50">
+      <nav className="bg-gradient-to-r from-teal-800 via-teal-700 to-emerald-800 shadow-md border-b border-teal-600/30 fixed top-0 inset-x-0 z-50 text-white">
         <div className="max-w-7xl xl:max-w-[1400px] 2xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-12">
+          <div className="flex justify-between items-center h-14">
             <div className="flex items-center space-x-4">
-              <FontAwesomeIcon
-                icon={faArrowLeft}
-                size="sm"
-                onClick={handleBackClick}
-                className="cursor-pointer"
-              />
+              {showBack && (
+                <button
+                  type="button"
+                  onClick={handleBackClick}
+                  className="p-1.5 rounded-lg text-teal-100 hover:text-white hover:bg-white/10 transition cursor-pointer"
+                  aria-label="Kembali"
+                >
+                  <FontAwesomeIcon icon={faArrowLeft} size="sm" />
+                </button>
+              )}
               {/* Logo */}
               <Link
                 href="/home"
                 onClick={() => sessionStorage.removeItem("anggotaId")}
+                className="transition-transform hover:scale-105"
               >
-                <Image src="/sanduka.png" width={70} height={60} alt="logo" />
+                <Image src="/sanduka_bg_white.png" width={64} height={54} alt="Sanduka" priority />
               </Link>
             </div>
 
             <div className="hidden md:block">
-              <ul className="flex space-x-6 items-center">
+              <ul className="flex space-x-3 items-center">
                 {/* Icon Email */}
                 {sessionStorage.getItem("role") !== "USER" && (
                   <li
@@ -232,15 +237,16 @@ const HeaderHome = () => {
                     }`}
                   >
                     <button
-                      className="relative"
+                      className="relative p-2 rounded-xl text-teal-100 hover:text-white hover:bg-white/10 transition cursor-pointer"
                       onClick={() => (window.location.href = "/pensiun")}
+                      title="Pensiun"
                     >
                       <FontAwesomeIcon
                         icon={faEnvelope}
-                        className="w-5 h-5 text-gray-700"
+                        className="w-4 h-4"
                       />
                       {emailCount > 0 && (
-                        <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
+                        <span className="absolute 1 top-1 right-1 inline-flex items-center justify-center min-w-4 h-4 px-1 text-[10px] font-bold text-white bg-rose-600 rounded-full ring-2 ring-teal-800">
                           {emailCount}
                         </span>
                       )}
@@ -255,14 +261,15 @@ const HeaderHome = () => {
                 >
                   <button
                     onClick={handleNotificationClick}
-                    className="relative"
+                    className="relative p-2 rounded-xl text-teal-100 hover:text-white hover:bg-white/10 transition cursor-pointer"
+                    title="Notifikasi"
                   >
                     <FontAwesomeIcon
                       icon={faBell}
-                      className="w-5 h-5 text-gray-700"
+                      className="w-4 h-4"
                     />
                     {notificationCount > 0 && (
-                      <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
+                      <span className="absolute top-1 right-1 inline-flex items-center justify-center min-w-4 h-4 px-1 text-[10px] font-bold text-white bg-rose-600 rounded-full ring-2 ring-teal-800">
                         {notificationCount}
                       </span>
                     )}
@@ -270,32 +277,35 @@ const HeaderHome = () => {
                 </li>
                 {sessionStorage.getItem("role") !== "USER" && (
                   <li>
-                    <button onClick={handleSearchClick}>
+                    <button
+                      onClick={handleSearchClick}
+                      className="p-2 rounded-xl text-teal-100 hover:text-white hover:bg-white/10 transition cursor-pointer"
+                      title="Cari Anggota"
+                    >
                       <FontAwesomeIcon
                         icon={faSearch}
-                        className="w-5 h-5 text-gray-700"
+                        className="w-4 h-4"
                       />
                     </button>
                   </li>
                 )}
                 <li
-                  className="relative flex items-center space-x-4"
+                  className="relative flex items-center space-x-3 pl-2 border-l border-teal-600/50"
                   ref={profileMenuRef}
                 >
                   {/* Nama dan Cabang */}
-                  <div className="text-right">
-                    <p className="text-sm font-semibold text-gray-800">
+                  <div className="text-right leading-tight">
+                    <p className="text-xs sm:text-sm font-bold text-white">
                       {sessionStorage.getItem("nama") || "Nama Pengguna"}
                     </p>
-                    <p className="text-xs text-gray-500">
-                      {sessionStorage.getItem("cabang") ||
-                        "Cabang Belum Terdaftar"}
+                    <p className="text-[11px] text-teal-200 font-medium">
+                      {sessionStorage.getItem("cabang") || "Cabang Belum Terdaftar"}
                     </p>
                   </div>
                   {/* Gambar Profil */}
                   <button
                     onClick={toggleProfileMenu}
-                    className="relative flex items-center justify-center focus:outline-none w-12 h-12 rounded-full border-2 border-gray-300 hover:border-blue-500 shadow-md hover:shadow-lg transition-all duration-300 ease-in-out"
+                    className="relative flex items-center justify-center focus:outline-none w-10 h-10 rounded-full border-2 border-white/50 hover:border-white shadow-sm transition-all duration-200 cursor-pointer overflow-hidden ring-2 ring-teal-900/30"
                   >
                     <Image
                       src={
@@ -311,25 +321,35 @@ const HeaderHome = () => {
                     />
                   </button>
                   {isProfileMenuOpen && (
-                    <div className="absolute right-0 mt-36 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+                    <div className="absolute right-0 top-full mt-2 w-52 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 p-1.5 animate-in fade-in zoom-in-95 text-slate-800">
+                      <div className="px-3 py-2 border-b border-slate-100 mb-1">
+                        <p className="text-xs font-bold text-slate-900 truncate">
+                          {sessionStorage.getItem("nama") || "Pengguna"}
+                        </p>
+                        <p className="text-[11px] text-slate-500 truncate">
+                          {sessionStorage.getItem("cabang") || "PGRI Jepara"}
+                        </p>
+                      </div>
                       <Link
                         href={getEditProfilePath()}
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
+                        className="block px-3 py-2 text-xs font-semibold text-slate-700 hover:text-teal-700 hover:bg-slate-50 rounded-xl transition w-full"
                       >
-                        Edit Profile
+                        Edit Profil
                       </Link>
                       <button
-                        onClick={handleLogout}
-                        className="text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
-                      >
-                        Logout
-                      </button>
-                      <button
                         onClick={handleMuteToggle}
-                        className="text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
+                        className="text-left block px-3 py-2 text-xs font-semibold text-slate-700 hover:text-teal-700 hover:bg-slate-50 rounded-xl transition w-full cursor-pointer"
                       >
-                        {isMuted ? "Unmute" : "Mute"} Notifications
+                        {isMuted ? "Aktifkan Suara" : "Senyapkan Suara"}
                       </button>
+                      <div className="pt-1 mt-1 border-t border-slate-100">
+                        <button
+                          onClick={handleLogout}
+                          className="text-left block px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition w-full cursor-pointer"
+                        >
+                          Keluar (Logout)
+                        </button>
+                      </div>
                     </div>
                   )}
                 </li>

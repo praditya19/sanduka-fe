@@ -252,29 +252,38 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
     <div className="relative">
       {!isMobile && (
         <div>
-          <Button
+          <button
+            type="button"
             onClick={toggleSidebar}
-            className={`p-2 rounded-md text-black ${
-              isSidebarOpen ? "bg-black" : "bg-transparent"
-            } transition-colors duration-300 hover:bg-gray-500 focus:outline-none fixed top-1 left-2 sm:left-2 z-50`}
+            className="p-2 rounded-xl text-teal-100 hover:text-white hover:bg-white/15 transition-colors focus:outline-none fixed top-2 left-3 sm:left-4 z-50 cursor-pointer"
+            aria-label={isSidebarOpen ? "Tutup Sidebar" : "Buka Sidebar"}
           >
             <FontAwesomeIcon
               icon={isSidebarOpen ? faTimes : faBars}
               size="lg"
-              className={`text-black ${
-                isSidebarOpen ? "text-white" : "text-black"
-              }`}
+              className="text-white drop-shadow-sm"
             />
-          </Button>
+          </button>
         </div>
       )}
 
       <div
-        className={`fixed top-0 left-0 w-64 min-h-screen bg-white p-4 flex flex-col space-y-2 shadow-lg mt-12 transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 w-64 min-h-screen bg-white/95 backdrop-blur-md border-r border-slate-200/80 p-4 flex flex-col space-y-2 shadow-2xl mt-14 transition-transform duration-300 ease-in-out ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } overflow-hidden`}
+        } overflow-hidden z-40`}
       >
-        <div className="flex flex-col space-y-1 max-h-[calc(100vh-4rem)] overflow-y-auto">
+        <div className="px-2 py-1 mb-2 border-b border-slate-100 flex items-center justify-between">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            Navigasi Menu
+          </span>
+          {role && (
+            <span className="text-[10px] font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200">
+              {role}
+            </span>
+          )}
+        </div>
+
+        <div className="flex flex-col space-y-1 max-h-[calc(100vh-6rem)] overflow-y-auto pr-1">
           {filteredIcons.map((item, index) => {
             const isActive = currentPath === item.href;
 
@@ -282,19 +291,24 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
               <Link
                 href={item.href}
                 key={index}
-                className={`flex items-center p-3 space-x-3 transition duration-300 ease-in-out transform hover:bg-blue-500 rounded-lg hover:shadow-md ${
-                  isActive ? "bg-blue-400" : ""
+                className={`flex items-center px-3 py-2.5 space-x-3 transition-colors duration-150 rounded-xl group ${
+                  isActive
+                    ? "bg-teal-50 text-teal-800 font-bold border-l-4 border-teal-600 shadow-2xs"
+                    : "text-slate-700 hover:bg-slate-100/80 hover:text-slate-900"
                 }`}
                 onClick={() => handleIconClick(item.label)}
               >
-                <FontAwesomeIcon
-                  icon={item.icon}
-                  size="lg"
-                  className={`${item.color} w-6`}
-                />
+                <div className="w-6 flex items-center justify-center shrink-0">
+                  <FontAwesomeIcon
+                    icon={item.icon}
+                    className={`${
+                      isActive ? "text-teal-700" : item.color
+                    } text-base transition-transform group-hover:scale-110`}
+                  />
+                </div>
                 <span
-                  className={`text-sm md:text-base font-medium ${
-                    isActive ? "text-white" : "text-gray-700"
+                  className={`text-xs sm:text-sm font-semibold truncate ${
+                    isActive ? "text-teal-900" : "text-slate-700 group-hover:text-slate-900"
                   }`}
                 >
                   {item.label}
@@ -303,7 +317,7 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
                   (role === "ADMIN" || role === "SUPERADMIN") &&
                   newPengaduanCount > 0 &&
                   badgeVisible && (
-                    <div className="bg-red-500 text-white rounded-full px-2 py-1 text-xs">
+                    <div className="ml-auto bg-rose-600 text-white font-bold rounded-full px-2 py-0.5 text-[10px] shadow-2xs">
                       {newPengaduanCount}
                     </div>
                   )}

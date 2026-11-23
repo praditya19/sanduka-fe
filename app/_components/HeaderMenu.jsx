@@ -208,28 +208,35 @@ const HeaderMenu = () => {
 
   return (
     <>
-      <nav className="bg-teal-500 shadow-md fixed top-0 inset-x-0 z-50">
-        <div className="w-full px-12 sm:px-16 lg:px-20">
-          <div className="flex justify-between items-center h-12">
+      <nav className="bg-gradient-to-r from-teal-800 via-teal-700 to-emerald-800 shadow-md border-b border-teal-600/30 fixed top-0 inset-x-0 z-50 text-white">
+        <div className="w-full px-6 sm:px-12 lg:px-16">
+          <div className="flex justify-between items-center h-14">
             <div className="flex items-center space-x-4">
-              <FontAwesomeIcon
-                icon={faArrowLeft}
-                size="sm"
+              <button
+                type="button"
                 onClick={handleBackClick}
-                className="cursor-pointer text-white hover:text-gray-200 transition-colors"
-              />
+                className="p-1.5 rounded-lg text-teal-100 hover:text-white hover:bg-white/10 transition cursor-pointer"
+                aria-label="Kembali"
+              >
+                <FontAwesomeIcon
+                  icon={faArrowLeft}
+                  size="sm"
+                  className="transition-colors"
+                />
+              </button>
               {/* Logo */}
               <Link
                 href="/home"
                 onClick={() => sessionStorage.removeItem("anggotaId")}
+                className="transition-transform hover:scale-105"
               >
-                <Image src="/sanduka.png" width={70} height={60} alt="logo" />
+                <Image src="/sanduka.png" width={64} height={54} alt="logo" priority />
               </Link>
             </div>
 
             {/* Desktop Menu */}
             <div className="hidden md:block">
-              <ul className="flex space-x-6 items-center">
+              <ul className="flex space-x-3 items-center">
                 {/* Icon Email */}
                 {sessionStorage.getItem("role") !== "USER" && (
                   <li
@@ -238,15 +245,16 @@ const HeaderMenu = () => {
                     }`}
                   >
                     <button
-                      className="relative hover:scale-110 transition-transform"
+                      className="relative p-2 rounded-xl text-teal-100 hover:text-white hover:bg-white/10 transition cursor-pointer"
                       onClick={() => (window.location.href = "/pensiun")}
+                      title="Pensiun"
                     >
                       <FontAwesomeIcon
                         icon={faEnvelope}
-                        className="w-5 h-5 text-white hover:text-gray-200"
+                        className="w-4 h-4 text-white"
                       />
                       {emailCount > 0 && (
-                        <span className="absolute -top-2 -right-2 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-white bg-red-600 rounded-full">
+                        <span className="absolute top-1 right-1 inline-flex items-center justify-center min-w-4 h-4 px-1 text-[10px] font-bold text-white bg-rose-600 rounded-full ring-2 ring-teal-800">
                           {emailCount}
                         </span>
                       )}
@@ -262,14 +270,15 @@ const HeaderMenu = () => {
                 >
                   <button
                     onClick={handleNotificationClick}
-                    className="relative hover:scale-110 transition-transform"
+                    className="relative p-2 rounded-xl text-teal-100 hover:text-white hover:bg-white/10 transition cursor-pointer"
+                    title="Notifikasi"
                   >
                     <FontAwesomeIcon
                       icon={faBell}
-                      className="w-5 h-5 text-white hover:text-gray-200"
+                      className="w-4 h-4 text-white"
                     />
                     {notificationCount > 0 && (
-                      <span className="absolute -top-2 -right-2 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-white bg-red-600 rounded-full">
+                      <span className="absolute top-1 right-1 inline-flex items-center justify-center min-w-4 h-4 px-1 text-[10px] font-bold text-white bg-rose-600 rounded-full ring-2 ring-teal-800">
                         {notificationCount}
                       </span>
                     )}
@@ -280,26 +289,27 @@ const HeaderMenu = () => {
                 <li>
                   <button
                     onClick={handleSearchClick}
-                    className="hover:scale-110 transition-transform"
+                    className="p-2 rounded-xl text-teal-100 hover:text-white hover:bg-white/10 transition cursor-pointer"
+                    title="Cari Anggota"
                   >
                     <FontAwesomeIcon
                       icon={faSearch}
-                      className="w-5 h-5 text-white hover:text-gray-200"
+                      className="w-4 h-4 text-white"
                     />
                   </button>
                 </li>
 
                 {/* Profile Section */}
                 <li
-                  className="relative flex items-center space-x-4"
+                  className="relative flex items-center space-x-3 pl-2 border-l border-teal-600/50"
                   ref={profileMenuRef}
                 >
                   {/* Nama dan Cabang */}
-                  <div className="text-right">
-                    <p className="text-sm font-semibold text-white">
+                  <div className="text-right leading-tight">
+                    <p className="text-xs sm:text-sm font-bold text-white">
                       {sessionStorage.getItem("nama") || "Nama Pengguna"}
                     </p>
-                    <p className="text-xs text-gray-200">
+                    <p className="text-[11px] text-teal-200 font-medium">
                       {sessionStorage.getItem("cabang") ||
                         "Cabang Belum Terdaftar"}
                     </p>
@@ -308,7 +318,7 @@ const HeaderMenu = () => {
                   {/* Gambar Profil */}
                   <button
                     onClick={toggleProfileMenu}
-                    className="relative flex items-center justify-center focus:outline-none w-10 h-10 rounded-full border-2 border-white hover:border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 ease-in-out"
+                    className="relative flex items-center justify-center focus:outline-none w-10 h-10 rounded-full border-2 border-white/50 hover:border-white shadow-sm transition-all duration-200 cursor-pointer overflow-hidden ring-2 ring-teal-900/30"
                   >
                     <Image
                       src={
@@ -326,29 +336,37 @@ const HeaderMenu = () => {
 
                   {/* Profile Dropdown */}
                   {isProfileMenuOpen && (
-                    <div className="absolute right-0 mt-36 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+                    <div className="absolute right-0 top-full mt-2 w-52 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 p-1.5 animate-in fade-in zoom-in-95 text-slate-800">
+                      <div className="px-3 py-2 border-b border-slate-100 mb-1">
+                        <p className="text-xs font-bold text-slate-900 truncate">
+                          {sessionStorage.getItem("nama") || "Pengguna"}
+                        </p>
+                        <p className="text-[11px] text-slate-500 truncate">
+                          {sessionStorage.getItem("cabang") || "PGRI Jepara"}
+                        </p>
+                      </div>
                       {sessionStorage.getItem("role") !== "EDITOR" && (
                         <Link
                           href={getEditProfilePath()}
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
+                          className="block px-3 py-2 text-xs font-semibold text-slate-700 hover:text-teal-700 hover:bg-slate-50 rounded-xl transition w-full"
                         >
-                          Edit Profile
+                          Edit Profil
                         </Link>
                       )}
-
-                      <button
-                        onClick={handleLogout}
-                        className="text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
-                      >
-                        Logout
-                      </button>
-
                       <button
                         onClick={handleMuteToggle}
-                        className="text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
+                        className="text-left block px-3 py-2 text-xs font-semibold text-slate-700 hover:text-teal-700 hover:bg-slate-50 rounded-xl transition w-full cursor-pointer"
                       >
-                        {isMuted ? "Unmute" : "Mute"} Notifications
+                        {isMuted ? "Aktifkan Suara" : "Senyapkan Suara"}
                       </button>
+                      <div className="pt-1 mt-1 border-t border-slate-100">
+                        <button
+                          onClick={handleLogout}
+                          className="text-left block px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition w-full cursor-pointer"
+                        >
+                          Keluar (Logout)
+                        </button>
+                      </div>
                     </div>
                   )}
                 </li>

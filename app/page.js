@@ -7,10 +7,10 @@ import Header from "./_components/Header";
 import RunningText from "./_components/RunningText";
 import Footer from "./_components/Footer";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import GlobalApi from "./_utils/GlobalApi";
 import News from "./_components/News";
-import LayananKami from "./_components/LayananKami";
 import BiroTravel from "./_components/BiroTravel";
 import Tentang from "./_components/Tentang";
 import LembagaDisplay from "./_components/Lembaga";
@@ -25,12 +25,8 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    if (router.pathname !== "/") {
-      router.push("/");
-    }
-
     fetchInfoGallery();
-  }, [router]);
+  }, []);
 
   const fetchInfoGallery = async () => {
     try {
@@ -150,14 +146,58 @@ export default function Home() {
 
       <Header />
       <div className="mt-14 md:mt-20">
-      <RunningText />
+        <RunningText />
       </div>
 
       <Live />
-      <div className="pt-[120px] md:pt-[140px]">
+      <section className="relative isolate overflow-hidden bg-gradient-to-br from-teal-950 via-teal-800 to-emerald-700 text-white">
+        <div className="absolute inset-0 -z-10 opacity-15 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:20px_20px]" />
+        <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 sm:px-8 sm:py-20 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:px-10 lg:py-24">
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold tracking-wide text-teal-100 backdrop-blur">
+              <span className="h-2 w-2 rounded-full bg-emerald-300" />
+              PGRI KABUPATEN JEPARA
+            </span>
+            <h1 className="mt-6 max-w-3xl text-4xl font-black leading-tight tracking-tight sm:text-5xl lg:text-6xl">
+              Solidaritas anggota,
+              <span className="block text-teal-200">layanan dalam satu tempat.</span>
+            </h1>
+            <p className="mt-5 max-w-2xl text-base leading-relaxed text-teal-50/85 sm:text-lg">
+              Akses layanan Sanduka PGRI Jepara, cari informasi keanggotaan, dan ikuti kegiatan terbaru dengan mudah.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="#layanan-anggota"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-bold text-teal-900 shadow-lg shadow-teal-950/20 transition hover:-translate-y-0.5 hover:bg-teal-50"
+              >
+                Cari layanan anggota <span aria-hidden="true">↓</span>
+              </Link>
+              <Link
+                href="/event"
+                className="inline-flex min-h-12 items-center justify-center rounded-xl border border-white/30 bg-white/10 px-6 py-3 text-sm font-bold text-white transition hover:bg-white/20"
+              >
+                Lihat kegiatan
+              </Link>
+            </div>
+          </div>
+          <div className="relative mx-auto flex w-full max-w-md items-center justify-center rounded-[2rem] border border-white/20 bg-white/10 p-8 shadow-2xl shadow-teal-950/25 backdrop-blur-sm sm:p-10">
+            <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-emerald-300/20 blur-2xl" />
+            <Image
+              src="/sanduka_bg_white.png"
+              width={560}
+              height={280}
+              alt="Sanduka PGRI Kabupaten Jepara"
+              className="relative h-auto w-full max-w-sm object-contain"
+              priority
+            />
+          </div>
+        </div>
+      </section>
+
+      <div className="bg-gradient-to-b from-slate-50 to-white pt-10 md:pt-14">
         <News />
         <GaleriKegiatan />
-        <SandukaHome />
+        <SandukaHome showHeader={false} />
         <BiroTravel />
         <Tentang />
         <LembagaDisplay />
