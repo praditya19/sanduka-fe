@@ -779,6 +779,7 @@ const ImageLightboxModal = ({ imageSrc, title, peserta, onClose, cetakPdfKta }) 
 // --- Halaman Utama ---
 const Page = () => {
   const [pesertaList, setPesertaList] = useState([]);
+  const [allPesertaListForStats, setAllPesertaListForStats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
@@ -825,8 +826,21 @@ const Page = () => {
   const dataPeserta = async (namaEvent = "", cabang = "") => {
     setLoading(true);
     try {
-      const fetchedData = await GlobalApi.getAllDaftarPesertaEvent(namaEvent, cabang);
-      setPesertaList(fetchedData || []);
+      // Selalu ambil seluruh data peserta (semua cabang) untuk keperluan grafik batang statistik
+      const promiseAllCabang = GlobalApi.getAllDaftarPesertaEvent(namaEvent, "");
+
+      if (!cabang) {
+        const fetchedData = await promiseAllCabang;
+        setPesertaList(fetchedData || []);
+        setAllPesertaListForStats(fetchedData || []);
+      } else {
+        const [allCabangData, branchData] = await Promise.all([
+          promiseAllCabang,
+          GlobalApi.getAllDaftarPesertaEvent(namaEvent, cabang),
+        ]);
+        setAllPesertaListForStats(allCabangData || []);
+        setPesertaList(branchData || []);
+      }
     } catch (err) {
       console.error("Error mengambil data peserta:", err);
       setError(err.message);
@@ -991,6 +1005,34 @@ const Page = () => {
       );
     });
   }, [pesertaList, searchText, selectedTahunDaftar, eventStatusFilter, eventStatusMap, role]);
+
+  // Filter khusus grafik batang: Selalu menyertakan seluruh cabang (tanpa filter cabang),
+  // agar grafik batang komparasi antar-cabang selalu tampil utuh (semua cabang).
+  const chartPesertaList = useMemo(() => {
+    const sourceList =
+      allPesertaListForStats && allPesertaListForStats.length > 0
+        ? allPesertaListForStats
+        : pesertaList;
+
+    return sourceList.filter((item) => {
+      // 1. Filter status event: masih aktif vs sudah terlaksana
+      if (eventStatusFilter !== "all") {
+        const isCompleted = eventStatusMap[normalizeEventName(item?.namaEvent)];
+        if (eventStatusFilter === "active" && isCompleted) return false;
+        if (eventStatusFilter === "completed" && !isCompleted) return false;
+      }
+
+      // 2. Filter tahun jika dipilih
+      if (selectedTahunDaftar) {
+        const tahun = item?.tanggalDaftar?.[0];
+        if (String(tahun) !== String(selectedTahunDaftar)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [allPesertaListForStats, pesertaList, eventStatusFilter, eventStatusMap, selectedTahunDaftar]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -1908,7 +1950,12 @@ const Page = () => {
 
   useEffect(() => {
     if (role === null) return;
-    const cabangFilter = role !== "SUPERADMIN" && role !== "USER"
+    const isGlobalViewer =
+      role === "SUPERADMIN" ||
+      role === "PANITIA" ||
+      (role && role.toUpperCase().includes("PANITIA"));
+
+    const cabangFilter = !isGlobalViewer && role !== "USER"
       ? accountCabang
       : selectedCabang;
     dataPeserta(selectedEvent, cabangFilter);
@@ -1946,7 +1993,12 @@ const Page = () => {
     setRole(userRole);
     const userCabang = sessionStorage.getItem("cabang") || "";
     setAccountCabang(userCabang);
-    if (userRole !== "SUPERADMIN" && userRole !== "USER") {
+    const isGlobalViewer =
+      userRole === "SUPERADMIN" ||
+      userRole === "PANITIA" ||
+      userRole.toUpperCase().includes("PANITIA");
+
+    if (!isGlobalViewer && userRole !== "USER") {
       setSelectedCabang(userCabang);
     }
     if (userRole === "USER") {
@@ -1975,7 +2027,10 @@ const Page = () => {
     localStorage.setItem("isSidebarOpen", newSidebarState);
   };
 
-  const isSuperAdmin = role === "SUPERADMIN";
+  const isSuperAdmin =
+    role === "SUPERADMIN" ||
+    role === "PANITIA" ||
+    (role && role.toUpperCase().includes("PANITIA"));
   const canUseEventDisplay = role !== null && role !== "USER";
 
   const filteredEventOptions = useMemo(() => {
@@ -2106,7 +2161,12 @@ const Page = () => {
   // Polling data terbaru berkala jika dalam mode videotron
   useEffect(() => {
     if (!isVideotronMode || role === null) return;
-    const cabangFilter = role !== "SUPERADMIN" && role !== "USER" ? accountCabang : selectedCabang;
+    const isGlobalViewer =
+      role === "SUPERADMIN" ||
+      role === "PANITIA" ||
+      (role && role.toUpperCase().includes("PANITIA"));
+
+    const cabangFilter = !isGlobalViewer && role !== "USER" ? accountCabang : selectedCabang;
     const interval = setInterval(() => {
       dataPeserta(selectedEvent, cabangFilter);
     }, 30000);
@@ -3377,10 +3437,10 @@ const Page = () => {
             {role !== null && role !== "USER" && showStatistikBatang && (
               <div id="statistikBatangSection" className="mt-8 mb-6 animate-in fade-in duration-300">
                 <EventStatistikBatang
-                  participants={filteredPesertaList}
+                  participants={chartPesertaList}
                   cabangList={cabangOptions}
                   selectedEventName={selectedEvent}
-                  title={`Statistik Kehadiran Model Batang ${selectedEvent ? `— ${selectedEvent}` : ""
+                  title={`Statistik Kehadiran Model Batang ${selectedEvent ? `— ${selectedEvent}` : "Semua Cabang"
                     }`}
                 />
               </div>

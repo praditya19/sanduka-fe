@@ -101,8 +101,9 @@ const Event = () => {
 
       if (userId) {
         let response;
-        if (role === "ADMIN" || role === "SUPERADMIN") {
+        if (role === "ADMIN" || role === "SUPERADMIN" || role === "PANITIA") {
           if (npa) response = await GlobalApi.getUserByNpa(npa);
+          else response = await GlobalApi.getAdminById(userId);
         } else if (role === "USER") {
           response = await GlobalApi.getUserById(userId);
         }
