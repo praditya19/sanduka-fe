@@ -551,11 +551,24 @@ export default function IconGrid() {
       }
 
       try {
-        // Admin IDs belong to the admin table, not the member table. Fetching
+        // Admin/Panitia IDs belong to the admin table, not the member table. Fetching
         // those IDs through getUserById can return an unrelated member record.
-        if (userRole === "ADMIN" || userRole === "SUPERADMIN") {
+        const isAdminOrPanitia =
+          userRole === "ADMIN" ||
+          userRole === "SUPERADMIN" ||
+          userRole === "PANITIA" ||
+          (userRole && userRole.toUpperCase().includes("PANITIA"));
+
+        if (isAdminOrPanitia) {
           const response = await GlobalApi.getAdminById(userId);
-          setUserData(response);
+          const formattedResponse = {
+            ...response,
+            namaLengkap:
+              response?.namaLengkap ||
+              response?.nama ||
+              sessionStorage.getItem("nama"),
+          };
+          setUserData(formattedResponse);
 
           if (response?.foto) {
             try {
@@ -568,8 +581,8 @@ export default function IconGrid() {
             setFotoBase64(null);
           }
 
-          setLatitude(response.latitude);
-          setLongitude(response.longitude);
+          setLatitude(response?.latitude);
+          setLongitude(response?.longitude);
           setLoading(false);
           return;
         }
@@ -1130,7 +1143,7 @@ export default function IconGrid() {
                   <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white">
                     {getGreeting()},{" "}
                     <span className="text-teal-300">
-                      {userData?.namaLengkap || sessionStorage.getItem("nama") || "Sahabat Sanduka"}
+                      {userData?.namaLengkap || userData?.nama || sessionStorage.getItem("nama") || "Sahabat Sanduka"}
                     </span>
                   </h1>
                   <p className="text-xs sm:text-sm text-teal-100/80 mt-1 max-w-xl">

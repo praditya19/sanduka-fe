@@ -109,7 +109,7 @@ const FormStep1 = ({
 
       try {
         let response;
-        if (role === "ADMIN" || role === "SUPERADMIN") {
+        if (role === "ADMIN" || role === "SUPERADMIN" || role === "PANITIA") {
           response = await GlobalApi.getAdminById(userId);
         } else if (role === "USER") {
           response = await GlobalApi.getUserById(userId);
@@ -135,7 +135,7 @@ const FormStep1 = ({
         try {
           let laporanData;
 
-          if (role === "ADMIN" || role === "SUPERADMIN") {
+          if (role === "ADMIN" || role === "SUPERADMIN" || role === "PANITIA") {
             laporanData = await GlobalApi.getAdminById(userId);
           } else if (role === "USER") {
             laporanData = await GlobalApi.getUserById(userId);
@@ -939,7 +939,7 @@ const Resume = ({
       try {
         let laporanData;
 
-        if (role === "ADMIN" || role === "SUPERADMIN") {
+        if (role === "ADMIN" || role === "SUPERADMIN" || role === "PANITIA") {
           laporanData = await GlobalApi.getAdminById(userId);
         } else if (role === "USER") {
           laporanData = await GlobalApi.getUserById(userId);

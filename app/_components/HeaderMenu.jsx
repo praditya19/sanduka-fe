@@ -45,7 +45,12 @@ const HeaderMenu = () => {
     try {
       let response;
 
-      if (userRole === "SUPERADMIN" || userRole === "ADMIN") {
+      if (
+        userRole === "SUPERADMIN" ||
+        userRole === "ADMIN" ||
+        userRole === "PANITIA" ||
+        (userRole && userRole.toUpperCase().includes("PANITIA"))
+      ) {
         response = await GlobalApi.getAdminById(userId);
       } else if (userRole === "EDITOR" && npa) {
         const npaResponse = await GlobalApi.cekNpa(npa);

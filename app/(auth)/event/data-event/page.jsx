@@ -3440,6 +3440,13 @@ const Page = () => {
                             <p className="text-xs text-slate-400 mt-1">{peserta.slideshowFotoType}</p>
                             <h3 className="text-3xl sm:text-5xl font-black mt-2 leading-tight">{peserta.namaLengkap || "Peserta"}</h3>
                             {peserta.unitKerja && <p className="text-lg sm:text-2xl text-slate-300 mt-3">{peserta.unitKerja}</p>}
+                            {peserta.cabang && (
+                              <p className="text-base sm:text-xl text-teal-300 font-semibold mt-1">
+                                {peserta.cabang.trim().toLowerCase().startsWith("cabang")
+                                  ? peserta.cabang
+                                  : `Cabang ${peserta.cabang}`}
+                              </p>
+                            )}
                             {(peserta.waktuKehadiran || peserta.jamKehadiran) && (
                               <p className="text-base text-slate-300 mt-2">
                                 Waktu hadir: {new Date(peserta.waktuKehadiran || peserta.jamKehadiran).toLocaleString("id-ID", {
